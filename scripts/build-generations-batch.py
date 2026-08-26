@@ -23,6 +23,7 @@ BASE = FORMAT.BASE
 MODEL_ROOT = 'assets/generations_core/bedrock/pokemon/models/'
 DEFAULT_REPORT = Path('public/research/generations/semantic-coverage-report.json')
 DEFAULT_OUTPUT = Path('/tmp/pokemon-hub-generations-assets')
+SYNTHETIC_ANIMATION_HELPERS = {'blender_implicit'}
 
 
 def parse_ids(args: argparse.Namespace) -> list[int]:
@@ -51,11 +52,20 @@ def parse_ids(args: argparse.Namespace) -> list[int]:
     return ids
 
 
+def is_safe_archive_path(name: str) -> bool:
+    candidate = Path(name)
+    return not candidate.is_absolute() and '..' not in candidate.parts
+
+
 def extract_pk(archive: zipfile.ZipFile, slug: str, destination: Path) -> tuple[bytes, set[str]]:
     entry = f'{MODEL_ROOT}{slug}.pk'
     payload = archive.read(entry)
     with py7zr.SevenZipFile(io.BytesIO(payload), mode='r') as seven:
-        names = {name for name in seven.getnames() if name and name.strip()}
+        names = {
+            name
+            for name in seven.getnames()
+            if name and name.strip() and is_safe_archive_path(name)
+        }
         seven.extract(path=destination, targets=sorted(names))
     return payload, names
 
@@ -116,6 +126,15 @@ def build_species(
             mesh_bindings[mesh_name] = baked_cache[material_name]
 
         idle = FORMAT.build_motion(extracted / idle_name, 'idle')
+        ignored_animation_nodes = sorted(
+            track['name']
+            for track in idle['tracks']
+            if track['name'] not in node_names and track['name'] in SYNTHETIC_ANIMATION_HELPERS
+        )
+        if ignored_animation_nodes:
+            idle['tracks'] = [
+                track for track in idle['tracks'] if track['name'] not in SYNTHETIC_ANIMATION_HELPERS
+            ]
         missing_animation_nodes = sorted(
             track['name']
             for track in idle['tracks']
@@ -138,6 +157,7 @@ def build_species(
             'materials': mesh_bindings,
             'animations': {'idle': idle},
             'missingAnimationNodes': [],
+            'ignoredAnimationNodes': ignored_animation_nodes,
             'missingMaterials': [],
             'source': {
                 'generationPack': int(row['generationPack']),
@@ -160,6 +180,7 @@ def build_species(
             'idleFormat': row.get('idleFormat'),
             'idleFile': idle_name,
             'idleTracks': len(idle['tracks']),
+            'ignoredAnimationNodes': ignored_animation_nodes,
             'pkBytes': len(pk_payload),
             'modelBytes': len(model_bytes),
             'textureBytes': texture_bytes,
