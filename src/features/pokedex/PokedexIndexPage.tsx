@@ -226,7 +226,7 @@ export function PokedexIndexPage() {
 
         <div className="pokedex-index-type-filter">
           <span className="pokedex-index-type-label">TIPO</span>
-          <div className="pokedex-index-type-scroll" role="group" aria-label="Filtrar a Pokédex por tipo">
+          <fieldset className="pokedex-index-type-scroll" aria-label="Filtrar a Pokédex por tipo">
             <button
               type="button"
               className={!typeSlug ? 'is-active is-all' : 'is-all'}
@@ -253,7 +253,7 @@ export function PokedexIndexPage() {
                 </button>
               );
             })}
-          </div>
+          </fieldset>
         </div>
 
         <div className="pokedex-index-status">
