@@ -58,6 +58,7 @@ export function GenerationsCharmanderViewer() {
   const [matchedTracks, setMatchedTracks] = useState(0);
   const [totalTracks, setTotalTracks] = useState(0);
   const [clipInfo, setClipInfo] = useState('');
+  const [errorDetail, setErrorDetail] = useState('');
 
   useEffect(() => {
     const host = hostRef.current;
@@ -71,13 +72,16 @@ export function GenerationsCharmanderViewer() {
     async function boot(mount: HTMLDivElement) {
       try {
         setViewerState('loading');
+        setErrorDetail('');
         const base = '/research/generations/charmander';
-        const [THREE, { GLTFLoader }, { OrbitControls }, motionResponse] = await Promise.all([
-          import('three'),
-          import('three/examples/jsm/loaders/GLTFLoader.js'),
-          import('three/examples/jsm/controls/OrbitControls.js'),
-          fetch(`${base}/motion.json`),
-        ]);
+        const [THREE, { GLTFLoader }, { DRACOLoader }, { OrbitControls }, motionResponse] =
+          await Promise.all([
+            import('three'),
+            import('three/examples/jsm/loaders/GLTFLoader.js'),
+            import('three/examples/jsm/loaders/DRACOLoader.js'),
+            import('three/examples/jsm/controls/OrbitControls.js'),
+            fetch(`${base}/motion.json`),
+          ]);
 
         if (!motionResponse.ok) throw new Error(`motion.json HTTP ${motionResponse.status}`);
         const payload = (await motionResponse.json()) as MotionPayload;
@@ -103,7 +107,12 @@ export function GenerationsCharmanderViewer() {
         rim.position.set(-4, 2, -3);
         scene.add(rim);
 
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('/research/draco/');
+        dracoLoader.preload();
+
         const loader = new GLTFLoader();
+        loader.setDRACOLoader(dracoLoader);
         const textureLoader = new THREE.TextureLoader();
         const [gltf, bodyTexture, eyesTexture, fireTexture] = await Promise.all([
           loader.loadAsync(`${base}/${payload.model}`),
@@ -111,7 +120,10 @@ export function GenerationsCharmanderViewer() {
           textureLoader.loadAsync(`${base}/${payload.textures.eyes}`),
           textureLoader.loadAsync(`${base}/${payload.textures.fire}`),
         ]);
-        if (disposed) return;
+        if (disposed) {
+          dracoLoader.dispose();
+          return;
+        }
 
         for (const texture of [bodyTexture, eyesTexture, fireTexture]) {
           texture.flipY = false;
@@ -269,6 +281,7 @@ export function GenerationsCharmanderViewer() {
           resizeObserver?.disconnect();
           controls.dispose();
           mixer.stopAllAction();
+          dracoLoader.dispose();
           bodyTexture.dispose();
           eyesTexture.dispose();
           fireTexture.dispose();
@@ -284,7 +297,10 @@ export function GenerationsCharmanderViewer() {
         };
       } catch (error) {
         console.error('Generations Charmander viewer failed', error);
-        if (!disposed) setViewerState('failed');
+        if (!disposed) {
+          setErrorDetail(error instanceof Error ? error.message : String(error));
+          setViewerState('failed');
+        }
       }
     }
 
@@ -313,7 +329,10 @@ export function GenerationsCharmanderViewer() {
         />
         {viewerState === 'loading' && <div className="generations-loading">carregando rig + idle…</div>}
         {viewerState === 'failed' && (
-          <div className="generations-error">Falha ao inicializar o benchmark do Generations.</div>
+          <div className="generations-error">
+            <strong>Falha ao inicializar o benchmark do Generations.</strong>
+            {errorDetail && <code>{errorDetail}</code>}
+          </div>
         )}
         <div className="generations-status" aria-live="polite">
           <strong>{viewerState === 'ready' ? 'Generations · motion real' : 'Preparando…'}</strong>
