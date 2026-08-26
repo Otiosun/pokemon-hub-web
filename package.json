@@ -17,7 +17,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
-    "verify": "biome lint . && tsc --noEmit && vitest run && vite build"
+    "assets:probe": "node scripts/probe-glb.mjs",
+    "verify": "node scripts/probe-glb.mjs && biome lint . && tsc --noEmit && vitest run && vite build"
   },
   "dependencies": {
     "@google/model-viewer": "4.3.1",
