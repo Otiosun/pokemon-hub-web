@@ -42,7 +42,11 @@ function readSpeciesContextFilter() {
 
 function PokemonCard({ pokemon }: { pokemon: OwnedPokemonPreview }) {
   return (
-    <article className={`owned-pokemon-card${pokemon.teamSlot ? ' is-in-team' : ''}${pokemon.shiny ? ' is-shiny' : ''}`}>
+    <a
+      className={`owned-pokemon-card${pokemon.teamSlot ? ' is-in-team' : ''}${pokemon.shiny ? ' is-shiny' : ''}`}
+      href={`/pokemon/${pokemon.instanceId}`}
+      aria-label={`Abrir ${pokemon.nickname}, ${pokemon.species}, nível ${pokemon.level}`}
+    >
       <div className="owned-pokemon-card-top">
         <span>#{String(pokemon.dex).padStart(3, '0')}</span>
         <div>
@@ -79,7 +83,7 @@ function PokemonCard({ pokemon }: { pokemon: OwnedPokemonPreview }) {
           {pokemon.shiny && <strong>SHINY</strong>}
         </div>
       </div>
-    </article>
+    </a>
   );
 }
 
