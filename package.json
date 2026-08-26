@@ -17,8 +17,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
-    "probe:home": "node scripts/probe-pokemon-home.mjs",
-    "verify": "node scripts/probe-pokemon-home.mjs && biome lint . && tsc --noEmit && vitest run && vite build"
+    "probe:home": "node scripts/patch-unityfs-node.mjs && node scripts/probe-pokemon-home.mjs",
+    "verify": "node scripts/patch-unityfs-node.mjs && node scripts/probe-pokemon-home.mjs && biome lint . && tsc --noEmit && vitest run && vite build"
   },
   "dependencies": {
     "@google/model-viewer": "4.3.1",
