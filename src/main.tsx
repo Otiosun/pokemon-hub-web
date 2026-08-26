@@ -6,6 +6,7 @@ import './form-control-reset.css';
 import './field-dex-refinement.css';
 import './field-dex-product-cleanup.css';
 import './pokedex-qa-fixes.css';
+import './features/pokedex/pokedex-species-research.css';
 
 const root = document.getElementById('root');
 
