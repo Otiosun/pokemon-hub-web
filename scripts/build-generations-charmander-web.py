@@ -48,7 +48,6 @@ def unpack_quaternion(value):
     values.insert(missing, max_component)
     if packed & 0b0100:
         values = [-component for component in values]
-    # Blender's importer constructs Quaternion((w, x, y, z)). glTF/Three uses x,y,z,w.
     return [float(values[0]), float(values[1]), float(values[2]), float(values[3])]
 
 
@@ -156,6 +155,8 @@ with tempfile.TemporaryDirectory(prefix='charmander-web-') as tmp:
     document = glb_document(model.read_bytes())
     node_names = {node.get('name') for node in document.get('nodes', []) if node.get('name')}
     mesh_names = [mesh.get('name') for mesh in document.get('meshes', [])]
+    extensions_used = document.get('extensionsUsed', [])
+    extensions_required = document.get('extensionsRequired', [])
 
     for filename in (
         'model.glb',
@@ -194,6 +195,8 @@ with tempfile.TemporaryDirectory(prefix='charmander-web-') as tmp:
         'meshNames': mesh_names,
         'nodeCount': len(document.get('nodes', [])),
         'nodeNames': sorted(node_names),
+        'extensionsUsed': extensions_used,
+        'extensionsRequired': extensions_required,
         'missingAnimationNodes': missing_nodes,
         'animations': animations,
     }
@@ -204,6 +207,8 @@ with tempfile.TemporaryDirectory(prefix='charmander-web-') as tmp:
         'modelBytes': (OUTPUT / 'model.glb').stat().st_size,
         'nodeCount': payload['nodeCount'],
         'meshNames': mesh_names,
+        'extensionsUsed': extensions_used,
+        'extensionsRequired': extensions_required,
         'animationNames': list(animations),
         'idleTracks': len(animations['idle']['tracks']),
         'idleDuration': animations['idle']['duration'],
