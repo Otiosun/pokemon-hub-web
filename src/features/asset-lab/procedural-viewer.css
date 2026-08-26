@@ -1,50 +1,8 @@
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 .rig-fact {
   margin: 10px 0 0;
   color: #7a7d74;
   font-size: 0.76rem;
   font-weight: 700;
-}
-
-.viewer-mode-switch {
-  display: inline-grid;
-  min-width: 0;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 4px;
-  margin: 16px 0 0;
-  padding: 4px;
-  border: 1px solid #d8dad2;
-  border-radius: 999px;
-  background: #eff0eb;
-}
-
-.viewer-mode-switch button {
-  min-height: 36px;
-  padding: 0 14px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: #73766e;
-  cursor: pointer;
-  font-size: 0.75rem;
-  font-weight: 760;
-}
-
-.viewer-mode-switch button.is-active {
-  background: #171815;
-  color: #fff;
-  box-shadow: 0 4px 14px rgba(23, 24, 21, 0.12);
 }
 
 .procedural-viewer-shell {
@@ -64,34 +22,22 @@
   touch-action: none;
 }
 
-.procedural-poster {
-  width: min(58%, 360px);
-  height: 70%;
-  object-fit: contain;
-  opacity: 0.72;
-  pointer-events: none;
-}
-
+.procedural-loading,
 .procedural-error {
   z-index: 2;
   max-width: 280px;
   padding: 14px 16px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.9);
-  color: #7b4b47;
   font-size: 0.78rem;
   font-weight: 700;
   text-align: center;
 }
 
-@media (max-width: 760px) {
-  .viewer-mode-switch {
-    display: grid;
-    width: 100%;
-  }
+.procedural-loading {
+  color: #65685f;
+}
 
-  .viewer-mode-switch button {
-    padding: 0 9px;
-    font-size: 0.7rem;
-  }
+.procedural-error {
+  color: #7b4b47;
 }
