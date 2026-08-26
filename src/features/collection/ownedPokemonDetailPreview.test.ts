@@ -1,14 +1,32 @@
 import { describe, expect, it } from 'vitest';
+import { clearTeamDraftOrder, rememberTeamDraftOrder } from '../team/teamSession';
 import { DEFAULT_COLLECTION_FILTERS } from './collectionFilters';
 import { rememberCollectionFilters } from './collectionSession';
 import { getOwnedPokemonNeighbours } from './ownedPokemonDetailPreview';
 
 describe('owned Pokemon contextual neighbours', () => {
-  it('uses the active team order when the Pokemon was opened from Team', () => {
+  it('uses the canonical active team order when there is no draft', () => {
+    clearTeamDraftOrder();
     const neighbours = getOwnedPokemonNeighbours('pkm-charmander-a1', '/team');
 
     expect(neighbours.previous?.instanceId).toBe('pkm-dragonair-a1');
     expect(neighbours.next?.instanceId).toBe('pkm-squirtle-a1');
+  });
+
+  it('follows the unsaved team order preview while navigating owned details', () => {
+    rememberTeamDraftOrder([
+      'pkm-squirtle-a1',
+      'pkm-charmander-a1',
+      'pkm-pikachu-a1',
+      'pkm-eevee-a1',
+      'pkm-gastly-a1',
+      'pkm-dragonair-a1',
+    ]);
+
+    const neighbours = getOwnedPokemonNeighbours('pkm-charmander-a1', '/team');
+    expect(neighbours.previous?.instanceId).toBe('pkm-squirtle-a1');
+    expect(neighbours.next?.instanceId).toBe('pkm-pikachu-a1');
+    clearTeamDraftOrder();
   });
 
   it('does not invent sibling arrows when the species context has one owned instance', () => {
