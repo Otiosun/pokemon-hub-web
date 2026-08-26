@@ -8,6 +8,7 @@ import './field-dex-product-cleanup.css';
 import './pokedex-qa-fixes.css';
 import './features/pokedex/pokedex-species-research.css';
 import './features/pokedex/pokedex-index-discovery.css';
+import './features/pokedex/pokemon-asset-integration.css';
 import './features/collection/owned-pokemon-context-filter.css';
 
 const root = document.getElementById('root');
