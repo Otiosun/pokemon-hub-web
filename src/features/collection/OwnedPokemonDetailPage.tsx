@@ -1,5 +1,6 @@
 import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import { TypeBadge } from '../../visual-assets/TypeBadge';
+import { readTeamDraftOrder, readTeamDraftSlot } from '../team/teamSession';
 import { typeAccent } from '../pokemon-detail/fieldDexSpecies';
 import { getOwnedPokemonDetailPreview, getOwnedPokemonNeighbours } from './ownedPokemonDetailPreview';
 import './owned-pokemon-detail.css';
@@ -43,6 +44,15 @@ export function OwnedPokemonDetailPage({
   const neighbours = getOwnedPokemonNeighbours(instanceId, returnHref);
   const dex = String(pokemon.dex).padStart(3, '0');
   const returningToTeam = returnHref === '/team' || returnHref.startsWith('/team?');
+  const teamDraftActive = returningToTeam && Boolean(readTeamDraftOrder());
+  const draftSlot = teamDraftActive ? readTeamDraftSlot(instanceId) : null;
+  const contextualTeamSlot = draftSlot ?? pokemon.teamSlot;
+  const teamLocationLabel = contextualTeamSlot
+    ? `${teamDraftActive ? 'TIME · PRÉVIA SLOT' : 'TIME · SLOT'} ${contextualTeamSlot}`
+    : pokemon.box.toUpperCase();
+  const teamFactLabel = contextualTeamSlot
+    ? `${teamDraftActive ? 'Prévia · Slot' : 'Slot'} ${contextualTeamSlot}`
+    : 'Fora do Time';
 
   return (
     <main className="owned-detail-page">
@@ -61,7 +71,7 @@ export function OwnedPokemonDetailPage({
         <div className="owned-detail-stage">
           <div className="owned-detail-stage-meta">
             <span>NATIONAL #{dex}</span>
-            <span>{pokemon.teamSlot ? `TIME · SLOT ${pokemon.teamSlot}` : pokemon.box.toUpperCase()}</span>
+            <span>{teamLocationLabel}</span>
           </div>
 
           <div className="owned-detail-artwork">
@@ -114,7 +124,7 @@ export function OwnedPokemonDetailPage({
               <div><dt>ESPÉCIE</dt><dd>{pokemon.species}</dd></div>
               <div><dt>SEXO</dt><dd>{pokemon.sex}</dd></div>
               <div><dt>BOX</dt><dd>{pokemon.box}</dd></div>
-              <div><dt>TIME</dt><dd>{pokemon.teamSlot ? `Slot ${pokemon.teamSlot}` : 'Fora do Time'}</dd></div>
+              <div><dt>TIME</dt><dd>{teamFactLabel}</dd></div>
               <div><dt>SHINY</dt><dd>{pokemon.shiny ? 'Sim' : 'Não'}</dd></div>
               <div><dt>FAVORITO</dt><dd>{pokemon.favorite ? 'Sim' : 'Não'}</dd></div>
             </dl>
