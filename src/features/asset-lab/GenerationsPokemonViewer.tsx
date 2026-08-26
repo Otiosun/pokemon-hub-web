@@ -251,7 +251,7 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
   }, []);
 
   useEffect(() => {
-    const runtime = runtimeRef.current;
+    const runtime = runtimeRef.current!;
     if (!engineReady || !runtime) return;
 
     const loadVersion = ++loadVersionRef.current;
@@ -387,7 +387,6 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
           return;
         }
 
-        // Atomic swap: keep the previous Pokemon visible until the replacement is fully decoded.
         disposeModel(runtime);
         runtime.scene.add(model);
         runtime.model = model;
