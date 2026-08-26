@@ -140,11 +140,7 @@ export function GenerationsCharmanderViewer() {
           texture.needsUpdate = true;
         }
 
-        const bodyMaterial = new THREE.MeshStandardMaterial({
-          map: bodyTexture,
-          roughness: 0.72,
-          metalness: 0,
-        });
+        const bodyMaterial = new THREE.MeshStandardMaterial({ map: bodyTexture, roughness: 0.72, metalness: 0 });
         const eyesMaterial = new THREE.MeshStandardMaterial({
           map: eyesTexture,
           roughness: 0.6,
@@ -186,34 +182,13 @@ export function GenerationsCharmanderViewer() {
             if (!namedNodes.has(bone.name)) continue;
             matched += 1;
             if (bone.position && bone.position.times.length > 0) {
-              tracks.push(
-                new THREE.VectorKeyframeTrack(
-                  `${bone.name}.position`,
-                  bone.position.times,
-                  bone.position.values,
-                  THREE.InterpolateLinear,
-                ),
-              );
+              tracks.push(new THREE.VectorKeyframeTrack(`${bone.name}.position`, bone.position.times, bone.position.values, THREE.InterpolateLinear));
             }
             if (bone.rotation && bone.rotation.times.length > 0) {
-              tracks.push(
-                new THREE.QuaternionKeyframeTrack(
-                  `${bone.name}.quaternion`,
-                  bone.rotation.times,
-                  bone.rotation.values,
-                  THREE.InterpolateLinear,
-                ),
-              );
+              tracks.push(new THREE.QuaternionKeyframeTrack(`${bone.name}.quaternion`, bone.rotation.times, bone.rotation.values, THREE.InterpolateLinear));
             }
             if (bone.scale && bone.scale.times.length > 0) {
-              tracks.push(
-                new THREE.VectorKeyframeTrack(
-                  `${bone.name}.scale`,
-                  bone.scale.times,
-                  bone.scale.values,
-                  THREE.InterpolateLinear,
-                ),
-              );
+              tracks.push(new THREE.VectorKeyframeTrack(`${bone.name}.scale`, bone.scale.times, bone.scale.values, THREE.InterpolateLinear));
             }
           }
 
@@ -239,9 +214,7 @@ export function GenerationsCharmanderViewer() {
           currentAction = next;
           const metadata = clipMetadata.get(name) ?? clipMetadata.get('idle');
           if (metadata) {
-            setClipInfo(
-              `${metadata.keyFrames} frames · ${metadata.fps} FPS · ${metadata.duration.toFixed(2)} s`,
-            );
+            setClipInfo(`${metadata.keyFrames} frames · ${metadata.fps} FPS · ${metadata.duration.toFixed(2)} s`);
           }
           setActiveAnimation(name);
         };
@@ -277,18 +250,19 @@ export function GenerationsCharmanderViewer() {
           pointerStart = { x: event.clientX, y: event.clientY, at: performance.now() };
         };
         const handlePointerUp = (event: PointerEvent) => {
-          if (!pointerStart || viewerState === 'failed') return;
+          if (!pointerStart) return;
           const distance = Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y);
           const elapsed = performance.now() - pointerStart.at;
           pointerStart = undefined;
           if (distance <= TAP_MOVE_THRESHOLD_PX && elapsed <= TAP_TIME_THRESHOLD_MS) play('glad', 0.1);
         };
+        const handlePointerCancel = () => {
+          pointerStart = undefined;
+        };
         const canvas = renderer.domElement;
         canvas.addEventListener('pointerdown', handlePointerDown, { passive: true });
         canvas.addEventListener('pointerup', handlePointerUp, { passive: true });
-        canvas.addEventListener('pointercancel', () => {
-          pointerStart = undefined;
-        });
+        canvas.addEventListener('pointercancel', handlePointerCancel, { passive: true });
 
         const clock = new THREE.Clock();
         let inViewport = true;
@@ -347,6 +321,7 @@ export function GenerationsCharmanderViewer() {
           document.removeEventListener('visibilitychange', handleVisibility);
           canvas.removeEventListener('pointerdown', handlePointerDown);
           canvas.removeEventListener('pointerup', handlePointerUp);
+          canvas.removeEventListener('pointercancel', handlePointerCancel);
           mixer.removeEventListener('finished', handleFinished);
           controls.dispose();
           mixer.stopAllAction();
@@ -382,7 +357,7 @@ export function GenerationsCharmanderViewer() {
       resizeObserver?.disconnect();
       visibilityObserver?.disconnect();
     };
-  }, [viewerState]);
+  }, []);
 
   const playAnimation = (name: string) => {
     playRef.current?.(name);
@@ -391,12 +366,7 @@ export function GenerationsCharmanderViewer() {
   return (
     <div className="generations-demo">
       <div className="generations-viewer-shell">
-        <div
-          ref={hostRef}
-          className="generations-host"
-          role="img"
-          aria-label="Charmander 3D do Generations com animação autoral"
-        />
+        <div ref={hostRef} className="generations-host" role="img" aria-label="Charmander 3D do Generations com animação autoral" />
         {viewerState === 'loading' && <div className="generations-loading">carregando rig + idle…</div>}
         {viewerState === 'failed' && (
           <div className="generations-error">
@@ -406,24 +376,14 @@ export function GenerationsCharmanderViewer() {
         )}
         <div className="generations-status" aria-live="polite">
           <strong>{viewerState === 'ready' ? 'Generations · motion real' : 'Preparando…'}</strong>
-          {viewerState === 'ready' && (
-            <span>
-              {matchedTracks}/{totalTracks} tracks do idle ligados · {clipInfo}
-            </span>
-          )}
+          {viewerState === 'ready' && <span>{matchedTracks}/{totalTracks} tracks do idle ligados · {clipInfo}</span>}
         </div>
       </div>
 
       <fieldset className="generations-motion-controls">
         <legend>Animações reais do Charmander</legend>
         {animationOrder.map((animation) => (
-          <button
-            key={animation}
-            type="button"
-            className={activeAnimation === animation ? 'is-active' : ''}
-            disabled={viewerState !== 'ready'}
-            onClick={() => playAnimation(animation)}
-          >
+          <button key={animation} type="button" className={activeAnimation === animation ? 'is-active' : ''} disabled={viewerState !== 'ready'} onClick={() => playAnimation(animation)}>
             {labels[animation]}
           </button>
         ))}
