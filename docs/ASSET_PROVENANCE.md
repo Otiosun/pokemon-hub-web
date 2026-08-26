@@ -9,23 +9,37 @@ The presence of an asset in a public API, package, or GitHub repository is **not
 | Role | Provider | Repository / host | License / rights posture | Local policy |
 | --- | --- | --- | --- | --- |
 | animated 3D specimen | Generations x Cobblemon conversion pipeline | source packs resolved by the project pipeline | Pokémon-derived visual material; fan-project use only unless separately cleared | Primary #001–386 3D path. Convert offline; publish through replaceable external storage; never bulk-commit the GLB catalog. |
-| type symbols | partywhale / pokemon-type-icons | `partywhale/pokemon-type-icons` | MIT; copyright James Watkins (2022) | All 18 vector geometries are vendored in `TypeIcon`, normalized behind one component, with source/license recorded here. |
+| type symbols | partywhale / pokemon-type-icons | `partywhale/pokemon-type-icons` | MIT; copyright James Watkins (2022) | All 18 SVGs are vendored under `public/assets/type-icons/` and resolved only through `TypeIcon` / `TypeBadge`. |
 | HOME / official artwork / lightweight sprite | PokéAPI sprites | `PokeAPI/sprites` | Pokémon imagery remains subject to the respective rights holders | Visual fallback / lightweight species representation. Never treat repository availability as commercial permission. |
 | expressive portraits | PMDCollab / SpriteCollab | `PMDCollab/SpriteCollab` | Community submissions may use CC BY-NC 4.0 with attribution; official-derived material remains subject to original rights | Manifest must distinguish community-authored and official-derived material. Preserve contributor/source information. |
 | Box / collection mini-sprites and item visuals | PokéSprite | `msikma/pokesprite` | project code/data may be MIT; Pokémon sprite images remain © Nintendo / Creatures / GAME FREAK | Functional lightweight representation only. Do not describe Pokémon sprite images themselves as MIT. |
 | animated 2D fallback | Pokémon Showdown / Smogon sprites | Showdown / Smogon sprite hosts | code and community contributions vary; Pokémon imagery remains protected and some sprite licensing is not a clean blanket grant | Fallback/laboratory use only. Do not make this a licensing foundation. |
-| generic UI glyphs | Phosphor Icons | `phosphor-icons/*` / `@phosphor-icons/react` | MIT | Preferred family for new generic UI because weights/duotone can support the instrument language. Introduce when the global shell is implemented; do not mix icon families ad hoc. |
+| generic UI glyphs | Phosphor Icons | `phosphor-icons/*` / `@phosphor-icons/react` | MIT | Preferred family for new generic UI because weights/duotone can support the instrument language. Introduce deliberately; do not mix icon families ad hoc. |
 | existing generic UI glyphs | Lucide / local SVG | existing UI | library / local rules as recorded per asset | Existing simple glyphs may remain; migrate only when it improves consistency. |
 
 ## Pokémon type icons — verified and vendored 2026-08-26
 
-`partywhale/pokemon-type-icons` exposes the 18 standard type symbols as SVG and includes an MIT license. The vector geometry is now stored locally in `src/visual-assets/TypeIcon.tsx`; the browser does not make a runtime GitHub request to render type symbols.
+`partywhale/pokemon-type-icons` exposes the 18 standard type symbols as SVG and includes an MIT license. The adapted SVG files are now stored as static frontend assets in `public/assets/type-icons/`; the browser does not make a runtime GitHub request to render type symbols and the vector geometry is not bundled into the application JavaScript.
 
-`TypeIcon` owns PT-BR/English type resolution, normalized `viewBox`, sizing via CSS, and a deterministic fallback for unknown values. Feature code consumes the component instead of knowing the upstream provider path.
+`TypeIcon` owns PT-BR/English type resolution and deterministic fallback behavior. `TypeBadge` is the reusable labeled presentation. Feature code consumes these abstractions rather than constructing provider paths.
+
+Current functional usage includes the National Dex species record, FIELD DEX species metadata, FIELD DEX move rows, and the National Dex type-filter rail. The type filter queries one PokéAPI type endpoint on demand and caches its member IDs rather than requesting 386 Pokémon records.
 
 Types: Normal, Fire, Water, Electric, Grass, Ice, Fighting, Poison, Ground, Flying, Psychic, Bug, Rock, Ghost, Dragon, Dark, Steel, Fairy.
 
 Upstream license notice: MIT License, copyright (c) 2022 James Watkins. Keep this provenance entry with any redistribution of the adapted vector set.
+
+## Visual registry — current implementation
+
+`src/visual-assets/pokemonVisualRegistry.ts` centralizes the current 2D visual roles and their provider metadata:
+
+- HOME artwork → species first paint / visual fallback;
+- official artwork → lightweight species record;
+- Generation VIII icon → lightweight navigation/index representation;
+- PMDCollab portrait → owned-Pokémon portrait context;
+- partywhale type symbols → semantic type UI.
+
+The Generations 3D delivery path remains isolated behind its existing asset-base/provider contract and still needs to be represented by the same high-level registry before the global AssetRegistry checklist item can be considered complete.
 
 ## Generations 3D — current contract
 
