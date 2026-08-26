@@ -1,10 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { TypeIcon } from '../../visual-assets/TypeIcon';
-import {
-  FIELD_DEX_REVIEW_SPECIES,
-  getFieldDexVisual,
-  typeAccent,
-} from '../pokemon-detail/fieldDexSpecies';
+import { FIELD_DEX_REVIEW_SPECIES, getFieldDexVisual, typeAccent } from '../pokemon-detail/fieldDexSpecies';
 import {
   getCachedNationalDexCatalog,
   loadNationalDexCatalog,
@@ -16,6 +12,7 @@ import {
   rememberPokedexIndexScroll,
   type PokedexRegionFilter,
 } from './pokedexIndexSession';
+import { getSpeciesPlayerStatePreview } from './speciesPlayerStatePreview';
 import {
   getCachedTypeMembers,
   loadTypeMembers,
@@ -157,11 +154,17 @@ export function PokedexIndexPage() {
   const visibleSpecies = useMemo(() => {
     const needle = normalize(query.replace(/^#/, ''));
     return species.filter((item) => {
-      if (region !== 'Todos' && regionForDex(item.dex) !== region) return false;
-      if (typeSlug && (!typeMembers || !typeMembers.has(item.dex))) return false;
-      if (!needle) return true;
+      const playerState = getSpeciesPlayerStatePreview(item.dex);
       const paddedDex = String(item.dex).padStart(3, '0');
-      return normalize(item.name).includes(needle) || paddedDex.includes(needle) || String(item.dex) === needle;
+      if (region !== 'Todos' && regionForDex(item.dex) !== region) return false;
+      if (typeSlug) {
+        if (playerState.discovery === 'unknown') return false;
+        if (!typeMembers || !typeMembers.has(item.dex)) return false;
+      }
+      if (!needle) return true;
+      if (paddedDex.includes(needle) || String(item.dex) === needle) return true;
+      if (playerState.discovery === 'unknown') return false;
+      return normalize(item.name).includes(needle);
     });
   }, [query, region, species, typeMembers, typeSlug]);
 
@@ -268,7 +271,7 @@ export function PokedexIndexPage() {
               : typeLoading
                 ? `LENDO REGISTROS DO TIPO ${activeType?.label.toUpperCase() ?? ''}`
                 : catalogReady
-                  ? '386 REGISTROS DISPONÍVEIS'
+                  ? '386 POSIÇÕES NACIONAIS DISPONÍVEIS'
                   : 'CARREGANDO CATÁLOGO NACIONAL'}
         </div>
 
@@ -277,33 +280,42 @@ export function PokedexIndexPage() {
         ) : (
           <div className="pokedex-index-grid">
             {visibleSpecies.map((item) => {
+              const playerState = getSpeciesPlayerStatePreview(item.dex);
+              const discovered = playerState.discovery !== 'unknown';
               const review = REVIEW_BY_DEX.get(item.dex);
               const visual = getFieldDexVisual(item.dex);
               const paddedDex = String(item.dex).padStart(3, '0');
+              const displayName = discovered ? item.name : '???';
               return (
                 <a
-                  className={`pokedex-index-card${review ? ' is-available' : ''}`}
+                  className={`pokedex-index-card is-${playerState.discovery}${review && discovered ? ' is-available' : ''}`}
                   key={item.dex}
                   href={`/pokedex/${paddedDex}`}
-                  aria-label={`Abrir registro de ${item.name}, número ${item.dex}`}
+                  aria-label={discovered ? `Abrir registro de ${item.name}, número ${item.dex}` : `Abrir registro desconhecido número ${item.dex}`}
                 >
                   <div className="pokedex-index-card-top">
                     <span>#{paddedDex}</span>
-                    {review && <strong>3D DISPONÍVEL</strong>}
+                    <strong className="pokedex-index-discovery-state">
+                      {playerState.discovery === 'caught' ? 'CAPTURADO' : playerState.discovery === 'seen' ? 'AVISTADO' : 'DESCONHECIDO'}
+                    </strong>
                   </div>
                   <div className="pokedex-index-sprite-wrap">
-                    <img
-                      src={visual.icon}
-                      alt=""
-                      aria-hidden="true"
-                      loading="lazy"
-                      decoding="async"
-                      onError={(event) => { event.currentTarget.hidden = true; }}
-                    />
+                    {discovered ? (
+                      <img
+                        src={visual.icon}
+                        alt=""
+                        aria-hidden="true"
+                        loading="lazy"
+                        decoding="async"
+                        onError={(event) => { event.currentTarget.hidden = true; }}
+                      />
+                    ) : (
+                      <span className="pokedex-index-unknown-glyph" aria-hidden="true">?</span>
+                    )}
                   </div>
                   <div className="pokedex-index-card-copy">
-                    <strong>{item.name}</strong>
-                    <small>{regionForDex(item.dex).toUpperCase()}</small>
+                    <strong>{displayName}</strong>
+                    <small>{regionForDex(item.dex).toUpperCase()}{review && discovered ? ' · 3D' : ''}</small>
                   </div>
                 </a>
               );
