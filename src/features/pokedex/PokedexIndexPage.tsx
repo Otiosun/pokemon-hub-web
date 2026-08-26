@@ -125,7 +125,7 @@ export function PokedexIndexPage() {
               inputMode="search"
             />
           </label>
-          <div className="pokedex-index-regions" aria-label="Filtrar por região">
+          <div className="pokedex-index-regions" role="group" aria-label="Filtrar por região">
             {(['Todos', 'Kanto', 'Johto', 'Hoenn'] as RegionFilter[]).map((item) => (
               <button
                 key={item}
