@@ -16,6 +16,12 @@ const PokedexIndexPage = lazy(() =>
 const PokedexSpeciesPage = lazy(() =>
   import('./features/pokedex/PokedexSpeciesPage').then((module) => ({ default: module.PokedexSpeciesPage })),
 );
+const OwnedPokemonCollectionPage = lazy(() =>
+  import('./features/collection/OwnedPokemonCollectionPage').then((module) => ({ default: module.OwnedPokemonCollectionPage })),
+);
+const TeamPage = lazy(() =>
+  import('./features/team/TeamPage').then((module) => ({ default: module.TeamPage })),
+);
 const AssetLabPage = lazy(() =>
   import('./features/asset-lab/AssetLabPage').then((module) => ({ default: module.AssetLabPage })),
 );
@@ -70,17 +76,6 @@ function HomePage() {
           </a>
         </div>
       </section>
-    </main>
-  );
-}
-
-function SectionPlaceholder({ section, title, copy }: { section: HubSection; title: string; copy: string }) {
-  return (
-    <main className="shell hub-section-placeholder">
-      <p className="eyebrow">POKÉMON HUB · {section.toUpperCase()}</p>
-      <h1>{title}</h1>
-      <p className="hero-copy">{copy}</p>
-      <a className="secondary-link" href="/pokedex">Voltar à Pokédex</a>
     </main>
   );
 }
@@ -248,22 +243,18 @@ export function App() {
   if (path === '/pokemon' || path === '/pokemon/') {
     return (
       <HubFrame active="pokemon" destinations={hubDestinations}>
-        <SectionPlaceholder
-          section="pokemon"
-          title="Meus Pokémon"
-          copy="A coleção do jogador será construída aqui. Box será um modo de organização desta mesma coleção, sem esconder Pokémon que estejam no Time."
-        />
+        <Suspense fallback={<RouteFallback label="ABRINDO COLEÇÃO…" />}>
+          <OwnedPokemonCollectionPage />
+        </Suspense>
       </HubFrame>
     );
   }
   if (path === '/team' || path === '/team/') {
     return (
       <HubFrame active="team" destinations={hubDestinations}>
-        <SectionPlaceholder
-          section="team"
-          title="Meu Time"
-          copy="O workspace de seis slots entra nesta área, com troca rápida de membros e leitura de cobertura sem transformar a experiência em planilha."
-        />
+        <Suspense fallback={<RouteFallback label="ABRINDO TIME…" />}>
+          <TeamPage />
+        </Suspense>
       </HubFrame>
     );
   }
