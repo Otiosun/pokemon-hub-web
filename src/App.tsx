@@ -4,6 +4,9 @@ import { PokemonDetailRoute } from './features/pokemon-detail/PokemonDetailRoute
 const PokedexIndexPage = lazy(() =>
   import('./features/pokedex/PokedexIndexPage').then((module) => ({ default: module.PokedexIndexPage })),
 );
+const PokedexSpeciesPage = lazy(() =>
+  import('./features/pokedex/PokedexSpeciesPage').then((module) => ({ default: module.PokedexSpeciesPage })),
+);
 const AssetLabPage = lazy(() =>
   import('./features/asset-lab/AssetLabPage').then((module) => ({ default: module.AssetLabPage })),
 );
@@ -50,8 +53,18 @@ function getPokemonRouteSlug(path: string) {
   return path.split('/').filter(Boolean).at(-1) ?? 'demo-charmander';
 }
 
-function resetFieldDexViewport() {
+function getPokedexDex(path: string) {
+  const raw = path.split('/').filter(Boolean)[1] ?? '1';
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isInteger(parsed) && parsed >= 1 && parsed <= 386 ? parsed : 1;
+}
+
+function resetRecordViewport() {
   requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
+}
+
+function isRecordPath(path: string) {
+  return path.startsWith('/pokemon/') || path.startsWith('/pokedex/');
 }
 
 export function App() {
@@ -61,7 +74,7 @@ export function App() {
     const onPopState = () => {
       const nextPath = getPath();
       setPath(nextPath);
-      if (nextPath.startsWith('/pokemon/')) resetFieldDexViewport();
+      if (isRecordPath(nextPath)) resetRecordViewport();
     };
 
     const onDocumentClick = (event: MouseEvent) => {
@@ -106,8 +119,8 @@ export function App() {
       window.history.pushState({}, '', `${destination.pathname}${destination.search}${destination.hash}`);
       setPath(destination.pathname);
 
-      if (destination.pathname.startsWith('/pokemon/')) {
-        resetFieldDexViewport();
+      if (isRecordPath(destination.pathname)) {
+        resetRecordViewport();
       } else {
         window.scrollTo({ top: 0, behavior: 'auto' });
       }
@@ -124,7 +137,14 @@ export function App() {
   if (path.startsWith('/pokemon/')) {
     return <PokemonDetailRoute routeSlug={getPokemonRouteSlug(path)} />;
   }
-  if (path.startsWith('/pokedex')) {
+  if (path.startsWith('/pokedex/')) {
+    return (
+      <Suspense fallback={<RouteFallback label="ABRINDO REGISTRO NACIONAL…" />}>
+        <PokedexSpeciesPage dex={getPokedexDex(path)} />
+      </Suspense>
+    );
+  }
+  if (path === '/pokedex' || path === '/pokedex/') {
     return (
       <Suspense fallback={<RouteFallback label="CARREGANDO ÍNDICE NACIONAL…" />}>
         <PokedexIndexPage />
