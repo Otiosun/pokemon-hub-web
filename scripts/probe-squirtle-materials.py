@@ -50,9 +50,9 @@ def main() -> None:
             if not item.get('hide') and item.get('material')
         })
 
-        model_path = destination / 'model.glb'
-        document = glb_document(model_path.read_bytes())
+        document = glb_document((destination / 'model.glb').read_bytes())
         meshes = document.get('meshes') or []
+        accessors = document.get('accessors') or []
         node_reports = {}
         for node in document.get('nodes') or []:
             node_name = node.get('name')
@@ -62,10 +62,16 @@ def main() -> None:
             mesh = meshes[mesh_index]
             primitives = []
             for primitive in mesh.get('primitives') or []:
+                attributes = primitive.get('attributes') or {}
+                uv_index = attributes.get('TEXCOORD_0')
+                uv_accessor = accessors[uv_index] if isinstance(uv_index, int) and uv_index < len(accessors) else None
                 primitives.append({
-                    'attributes': sorted((primitive.get('attributes') or {}).keys()),
+                    'attributes': sorted(attributes.keys()),
                     'materialIndex': primitive.get('material'),
                     'mode': primitive.get('mode', 4),
+                    'uvAccessor': uv_index,
+                    'uvMin': uv_accessor.get('min') if uv_accessor else None,
+                    'uvMax': uv_accessor.get('max') if uv_accessor else None,
                 })
             node_reports[node_name] = {
                 'meshName': mesh.get('name'),
@@ -76,9 +82,6 @@ def main() -> None:
             'scale': config.get('scale'),
             'defaultVariant': variant,
             'usedMaterials': {name: materials.get(name) for name in used},
-            'glbMaterials': document.get('materials') or [],
-            'glbTextures': document.get('textures') or [],
-            'glbImages': document.get('images') or [],
             'nodes': node_reports,
         }
         print('SQUIRTLE_MATERIAL_CONFIG', json.dumps(report, ensure_ascii=False, sort_keys=True))
