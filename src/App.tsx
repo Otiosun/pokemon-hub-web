@@ -1,7 +1,14 @@
 import { lazy, Suspense, type ReactNode, useEffect, useState } from 'react';
-import { HubNavigation, type HubSection } from './components/HubNavigation';
+import { HubNavigation } from './components/HubNavigation';
 import { rememberPokedexIndexScroll } from './features/pokedex/pokedexIndexSession';
 import { PokemonDetailRoute } from './features/pokemon-detail/PokemonDetailRoute';
+import {
+  hubSectionForPath,
+  readHubDestinations,
+  rememberHubDestination,
+  type HubDestinations,
+  type HubSection,
+} from './navigation/hubNavigationSession';
 
 const PokedexIndexPage = lazy(() =>
   import('./features/pokedex/PokedexIndexPage').then((module) => ({ default: module.PokedexIndexPage })),
@@ -16,10 +23,29 @@ const GenerationsLabPage = lazy(() =>
   import('./features/asset-lab/GenerationsLabPage').then((module) => ({ default: module.GenerationsLabPage })),
 );
 
-function HubFrame({ active, children }: { active: HubSection | null; children: ReactNode }) {
+const SECTION_ROOTS: Record<HubSection, string> = {
+  pokedex: '/pokedex',
+  pokemon: '/pokemon',
+  team: '/team',
+};
+
+type HubHistoryState = {
+  hubSection?: HubSection;
+  hubParent?: string;
+};
+
+function HubFrame({
+  active,
+  destinations,
+  children,
+}: {
+  active: HubSection | null;
+  destinations: HubDestinations;
+  children: ReactNode;
+}) {
   return (
     <div className="hub-with-navigation">
-      <HubNavigation active={active} />
+      <HubNavigation active={active} destinations={destinations} />
       <div className="hub-navigation-content">{children}</div>
     </div>
   );
@@ -97,13 +123,42 @@ function usesSiblingHistoryReplacement(anchor: HTMLAnchorElement) {
   return Boolean(anchor.closest('.pokedex-species-side-nav, .dex-nav'));
 }
 
+function rootForPath(path: string) {
+  const section = hubSectionForPath(path);
+  return section ? SECTION_ROOTS[section] : null;
+}
+
+function parentForNavigation(currentPath: string, destinationPath: string, primaryNavigation: boolean) {
+  const currentSection = hubSectionForPath(currentPath);
+  const destinationSection = hubSectionForPath(destinationPath);
+  if (!destinationSection) return undefined;
+  const destinationRoot = SECTION_ROOTS[destinationSection];
+  if (destinationPath === destinationRoot || destinationPath === `${destinationRoot}/`) return undefined;
+  if (primaryNavigation) return destinationRoot;
+  if (currentSection === destinationSection && rootForPath(currentPath) === currentPath.replace(/\/$/, '')) {
+    return currentPath.replace(/\/$/, '');
+  }
+  return undefined;
+}
+
 export function App() {
   const [path, setPath] = useState(getPath);
+  const [hubDestinations, setHubDestinations] = useState(readHubDestinations);
+
+  useEffect(() => {
+    const initialSection = hubSectionForPath(window.location.pathname);
+    const existing = (window.history.state ?? {}) as HubHistoryState;
+    if (initialSection && !existing.hubSection) {
+      window.history.replaceState({ ...existing, hubSection: initialSection }, '', window.location.href);
+    }
+    setHubDestinations(rememberHubDestination(window.location.pathname));
+  }, []);
 
   useEffect(() => {
     const onPopState = () => {
       const nextPath = getPath();
       setPath(nextPath);
+      setHubDestinations(rememberHubDestination(nextPath));
       if (isRecordPath(nextPath)) resetRecordViewport();
     };
 
@@ -135,13 +190,11 @@ export function App() {
       if (destination.origin !== window.location.origin) return;
 
       const currentPath = window.location.pathname;
-      const staysInsideFieldDex =
-        currentPath.startsWith('/pokemon/') && destination.pathname.startsWith('/pokemon/');
       const sameDestination =
         destination.pathname === currentPath && destination.search === window.location.search;
 
       if (sameDestination) {
-        if (staysInsideFieldDex) event.preventDefault();
+        event.preventDefault();
         return;
       }
 
@@ -151,12 +204,31 @@ export function App() {
 
       event.preventDefault();
       const nextLocation = `${destination.pathname}${destination.search}${destination.hash}`;
-      if (usesSiblingHistoryReplacement(anchor)) {
-        window.history.replaceState({}, '', nextLocation);
+      const historyState = (window.history.state ?? {}) as HubHistoryState;
+      const isPrimaryNavigation = Boolean(anchor.dataset.hubPrimary);
+
+      if (anchor.dataset.navMode === 'up') {
+        if (historyState.hubParent === destination.pathname) {
+          window.history.back();
+          return;
+        }
+        const destinationSection = hubSectionForPath(destination.pathname);
+        const nextState: HubHistoryState = destinationSection ? { hubSection: destinationSection } : {};
+        window.history.replaceState(nextState, '', nextLocation);
+      } else if (usesSiblingHistoryReplacement(anchor)) {
+        window.history.replaceState(historyState, '', nextLocation);
       } else {
-        window.history.pushState({}, '', nextLocation);
+        const destinationSection = hubSectionForPath(destination.pathname);
+        const parent = parentForNavigation(currentPath, destination.pathname, isPrimaryNavigation);
+        const nextState: HubHistoryState = {
+          ...(destinationSection ? { hubSection: destinationSection } : {}),
+          ...(parent ? { hubParent: parent } : {}),
+        };
+        window.history.pushState(nextState, '', nextLocation);
       }
+
       setPath(destination.pathname);
+      setHubDestinations(rememberHubDestination(destination.pathname));
 
       if (isRecordPath(destination.pathname)) {
         resetRecordViewport();
@@ -175,7 +247,7 @@ export function App() {
 
   if (path === '/pokemon' || path === '/pokemon/') {
     return (
-      <HubFrame active="pokemon">
+      <HubFrame active="pokemon" destinations={hubDestinations}>
         <SectionPlaceholder
           section="pokemon"
           title="Meus Pokémon"
@@ -186,7 +258,7 @@ export function App() {
   }
   if (path === '/team' || path === '/team/') {
     return (
-      <HubFrame active="team">
+      <HubFrame active="team" destinations={hubDestinations}>
         <SectionPlaceholder
           section="team"
           title="Meu Time"
@@ -200,7 +272,7 @@ export function App() {
   }
   if (path.startsWith('/pokedex/')) {
     return (
-      <HubFrame active="pokedex">
+      <HubFrame active="pokedex" destinations={hubDestinations}>
         <Suspense fallback={<RouteFallback label="ABRINDO REGISTRO NACIONAL…" />}>
           <PokedexSpeciesPage dex={getPokedexDex(path)} />
         </Suspense>
@@ -209,7 +281,7 @@ export function App() {
   }
   if (path === '/pokedex' || path === '/pokedex/') {
     return (
-      <HubFrame active="pokedex">
+      <HubFrame active="pokedex" destinations={hubDestinations}>
         <Suspense fallback={<RouteFallback label="CARREGANDO ÍNDICE NACIONAL…" />}>
           <PokedexIndexPage />
         </Suspense>
@@ -231,7 +303,7 @@ export function App() {
     );
   }
   return (
-    <HubFrame active={null}>
+    <HubFrame active={null} destinations={hubDestinations}>
       <HomePage />
     </HubFrame>
   );
