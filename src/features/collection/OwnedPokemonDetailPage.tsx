@@ -19,7 +19,13 @@ function SideArrow({ direction }: { direction: 'left' | 'right' }) {
   );
 }
 
-export function OwnedPokemonDetailPage({ instanceId }: { instanceId: string }) {
+export function OwnedPokemonDetailPage({
+  instanceId,
+  returnHref = '/pokemon',
+}: {
+  instanceId: string;
+  returnHref?: string;
+}) {
   const pokemon = getOwnedPokemonDetailPreview(instanceId);
 
   if (!pokemon) {
@@ -28,21 +34,25 @@ export function OwnedPokemonDetailPage({ instanceId }: { instanceId: string }) {
         <section className="owned-detail-not-found">
           <span>REGISTRO INDISPONÍVEL</span>
           <h1>Pokémon não encontrado.</h1>
-          <a href="/pokemon" data-nav-mode="up">VOLTAR À COLEÇÃO</a>
+          <a href={returnHref} data-nav-mode="up">VOLTAR AO CONTEXTO</a>
         </section>
       </main>
     );
   }
 
-  const neighbours = getOwnedPokemonNeighbours(instanceId);
+  const neighbours = getOwnedPokemonNeighbours(instanceId, returnHref);
   const dex = String(pokemon.dex).padStart(3, '0');
+  const returningToTeam = returnHref === '/team' || returnHref.startsWith('/team?');
 
   return (
     <main className="owned-detail-page">
       <header className="owned-detail-header">
-        <a href="/pokemon" data-nav-mode="up" className="owned-detail-back">
+        <a href={returnHref} data-nav-mode="up" className="owned-detail-back">
           <span aria-hidden="true">←</span>
-          <span><strong>MEUS POKÉMON</strong><small>COLEÇÃO DO TREINADOR</small></span>
+          <span>
+            <strong>{returningToTeam ? 'MEU TIME' : 'MEUS POKÉMON'}</strong>
+            <small>{returningToTeam ? 'FORMAÇÃO ATIVA' : 'COLEÇÃO DO TREINADOR'}</small>
+          </span>
         </a>
         <div><small>INSTÂNCIA</small><strong>{pokemon.instanceId}</strong></div>
       </header>
@@ -64,7 +74,7 @@ export function OwnedPokemonDetailPage({ instanceId }: { instanceId: string }) {
             />
           </div>
 
-          <nav className="owned-pokemon-side-nav" aria-label="Pokémon anterior e próximo na coleção">
+          <nav className="owned-pokemon-side-nav" aria-label="Pokémon anterior e próximo no contexto atual">
             {neighbours.previous ? (
               <a href={`/pokemon/${neighbours.previous.instanceId}`} className="is-previous" aria-label={`Abrir ${neighbours.previous.nickname}`}>
                 <SideArrow direction="left" />
