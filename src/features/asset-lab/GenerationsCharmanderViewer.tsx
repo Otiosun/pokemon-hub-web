@@ -50,6 +50,9 @@ const labels: Record<(typeof animationOrder)[number], string> = {
   attack: 'Attack',
 };
 
+const TAP_MOVE_THRESHOLD_PX = 10;
+const TAP_TIME_THRESHOLD_MS = 450;
+
 export function GenerationsCharmanderViewer() {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const playRef = useRef<((name: string) => void) | null>(null);
@@ -67,6 +70,7 @@ export function GenerationsCharmanderViewer() {
     let disposed = false;
     let frameId = 0;
     let resizeObserver: ResizeObserver | undefined;
+    let visibilityObserver: IntersectionObserver | undefined;
     let cleanup: (() => void) | undefined;
 
     async function boot(mount: HTMLDivElement) {
@@ -87,8 +91,13 @@ export function GenerationsCharmanderViewer() {
         const payload = (await motionResponse.json()) as MotionPayload;
         if (disposed) return;
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+        const renderer = new THREE.WebGLRenderer({
+          antialias: !coarsePointer,
+          alpha: true,
+          powerPreference: 'low-power',
+        });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, coarsePointer ? 1.35 : 1.75));
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.08;
@@ -221,11 +230,13 @@ export function GenerationsCharmanderViewer() {
           }
         }
 
-        const play = (name: string) => {
+        let currentAction: AnimationAction | undefined;
+        const play = (name: string, fadeSeconds = 0.12) => {
           const next = actions.get(name) ?? actions.get('idle');
           if (!next) return;
-          for (const action of actions.values()) action.stop();
-          next.reset().fadeIn(0.08).play();
+          if (currentAction && currentAction !== next) currentAction.fadeOut(fadeSeconds);
+          next.reset().fadeIn(fadeSeconds).play();
+          currentAction = next;
           const metadata = clipMetadata.get(name) ?? clipMetadata.get('idle');
           if (metadata) {
             setClipInfo(
@@ -235,7 +246,14 @@ export function GenerationsCharmanderViewer() {
           setActiveAnimation(name);
         };
         playRef.current = play;
-        play('idle');
+
+        const happyAction = actions.get('glad');
+        const handleFinished = (event: { action?: AnimationAction }) => {
+          if (event.action === happyAction && !disposed) play('idle', 0.16);
+        };
+        mixer.addEventListener('finished', handleFinished);
+
+        play('idle', 0);
         mixer.update(0);
         model.updateMatrixWorld(true);
 
@@ -254,14 +272,59 @@ export function GenerationsCharmanderViewer() {
         controls.maxDistance = Math.max(radius * 5.2, 3.0);
         controls.update();
 
+        let pointerStart: { x: number; y: number; at: number } | undefined;
+        const handlePointerDown = (event: PointerEvent) => {
+          pointerStart = { x: event.clientX, y: event.clientY, at: performance.now() };
+        };
+        const handlePointerUp = (event: PointerEvent) => {
+          if (!pointerStart || viewerState === 'failed') return;
+          const distance = Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y);
+          const elapsed = performance.now() - pointerStart.at;
+          pointerStart = undefined;
+          if (distance <= TAP_MOVE_THRESHOLD_PX && elapsed <= TAP_TIME_THRESHOLD_MS) play('glad', 0.1);
+        };
+        const canvas = renderer.domElement;
+        canvas.addEventListener('pointerdown', handlePointerDown, { passive: true });
+        canvas.addEventListener('pointerup', handlePointerUp, { passive: true });
+        canvas.addEventListener('pointercancel', () => {
+          pointerStart = undefined;
+        });
+
         const clock = new THREE.Clock();
+        let inViewport = true;
+        let pageVisible = !document.hidden;
+        let running = false;
+
         const render = () => {
-          if (disposed) return;
+          if (disposed || !running) return;
           mixer.update(Math.min(clock.getDelta(), 0.05));
           controls.update();
           renderer.render(scene, camera);
           frameId = requestAnimationFrame(render);
         };
+        const syncLoop = () => {
+          const shouldRun = inViewport && pageVisible && !disposed;
+          if (shouldRun === running) return;
+          running = shouldRun;
+          cancelAnimationFrame(frameId);
+          if (running) {
+            clock.getDelta();
+            frameId = requestAnimationFrame(render);
+          }
+        };
+        const handleVisibility = () => {
+          pageVisible = !document.hidden;
+          syncLoop();
+        };
+        document.addEventListener('visibilitychange', handleVisibility);
+        visibilityObserver = new IntersectionObserver(
+          ([entry]) => {
+            inViewport = Boolean(entry?.isIntersecting);
+            syncLoop();
+          },
+          { rootMargin: '120px 0px' },
+        );
+        visibilityObserver.observe(mount);
 
         const resize = () => {
           const width = Math.max(mount.clientWidth, 1);
@@ -274,11 +337,17 @@ export function GenerationsCharmanderViewer() {
         resizeObserver.observe(mount);
         resize();
         setViewerState('ready');
-        frameId = requestAnimationFrame(render);
+        syncLoop();
 
         cleanup = () => {
+          running = false;
           cancelAnimationFrame(frameId);
           resizeObserver?.disconnect();
+          visibilityObserver?.disconnect();
+          document.removeEventListener('visibilitychange', handleVisibility);
+          canvas.removeEventListener('pointerdown', handlePointerDown);
+          canvas.removeEventListener('pointerup', handlePointerUp);
+          mixer.removeEventListener('finished', handleFinished);
           controls.dispose();
           mixer.stopAllAction();
           dracoLoader.dispose();
@@ -311,8 +380,9 @@ export function GenerationsCharmanderViewer() {
       cleanup?.();
       cancelAnimationFrame(frameId);
       resizeObserver?.disconnect();
+      visibilityObserver?.disconnect();
     };
-  }, []);
+  }, [viewerState]);
 
   const playAnimation = (name: string) => {
     playRef.current?.(name);
