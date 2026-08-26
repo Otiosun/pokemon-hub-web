@@ -1,6 +1,7 @@
 import { GenerationsPokemonViewer } from '../asset-lab/GenerationsPokemonViewer';
 import { demoCharmander, type PokemonDetailView } from './pokemonDetailMock';
 import './pokemon-detail.css';
+import './pokemon-detail-mobile-fix.css';
 
 const statLabels = {
   hp: 'HP',
