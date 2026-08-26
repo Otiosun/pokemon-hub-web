@@ -135,7 +135,7 @@ export function TeamPage() {
                       ))}
                     </div>
                     <div className="team-slot-status">
-                      <span><i aria-hidden="true" /> {orderIsDraft ? 'PRÉVIA' : 'PRONTO'}</span>
+                      <span><i aria-hidden="true" /> {orderIsDraft ? 'PRÉVIA' : 'NO TIME'}</span>
                       {pokemon.shiny && <strong>SHINY</strong>}
                     </div>
                   </div>
