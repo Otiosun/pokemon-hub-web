@@ -1,22 +1,23 @@
+import type { HubDestinations, HubSection } from '../navigation/hubNavigationSession';
 import './hub-navigation.css';
 
-export type HubSection = 'pokedex' | 'pokemon' | 'team';
+export type { HubSection } from '../navigation/hubNavigationSession';
 
 type HubNavigationProps = {
   active: HubSection | null;
+  destinations: HubDestinations;
 };
 
 type NavItem = {
   id: HubSection;
-  href: string;
   label: string;
   icon: 'dex' | 'pokemon' | 'team';
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'pokedex', href: '/pokedex', label: 'POKÉDEX', icon: 'dex' },
-  { id: 'pokemon', href: '/pokemon', label: 'POKÉMON', icon: 'pokemon' },
-  { id: 'team', href: '/team', label: 'TIME', icon: 'team' },
+  { id: 'pokedex', label: 'POKÉDEX', icon: 'dex' },
+  { id: 'pokemon', label: 'POKÉMON', icon: 'pokemon' },
+  { id: 'team', label: 'TIME', icon: 'team' },
 ];
 
 function NavGlyph({ icon }: { icon: NavItem['icon'] }) {
@@ -47,7 +48,7 @@ function NavGlyph({ icon }: { icon: NavItem['icon'] }) {
   );
 }
 
-export function HubNavigation({ active }: HubNavigationProps) {
+export function HubNavigation({ active, destinations }: HubNavigationProps) {
   return (
     <nav className="hub-navigation" aria-label="Navegação principal do Pokémon Hub">
       <a className="hub-navigation-mark" href="/" aria-label="Pokémon Hub">
@@ -60,8 +61,9 @@ export function HubNavigation({ active }: HubNavigationProps) {
             <a
               key={item.id}
               className={selected ? 'is-active' : undefined}
-              href={item.href}
+              href={destinations[item.id]}
               aria-current={selected ? 'page' : undefined}
+              data-hub-primary={item.id}
             >
               <NavGlyph icon={item.icon} />
               <span>{item.label}</span>
