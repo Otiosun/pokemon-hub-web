@@ -1,4 +1,5 @@
 import { AssetLabPage } from './features/asset-lab/AssetLabPage';
+import { GenerationsLabPage } from './features/asset-lab/GenerationsLabPage';
 
 function HomePage() {
   return (
@@ -19,5 +20,8 @@ function HomePage() {
 }
 
 export function App() {
-  return window.location.pathname.startsWith('/asset-lab') ? <AssetLabPage /> : <HomePage />;
+  const path = window.location.pathname;
+  if (path.startsWith('/asset-lab/generations')) return <GenerationsLabPage />;
+  if (path.startsWith('/asset-lab')) return <AssetLabPage />;
+  return <HomePage />;
 }
