@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getPokemonAssetUrl } from '../../visual-assets/assetBaseUrl';
 import { PokemonDetailPage } from './PokemonDetailPage';
 import { getFieldDexSpecies, getFieldDexVisual } from './fieldDexSpecies';
@@ -53,9 +53,18 @@ function replaceRouteWithoutReload(routeSlug: string) {
 
 export function PokemonDetailRoute({ routeSlug }: { routeSlug: string }) {
   const [committedRouteSlug, setCommittedRouteSlug] = useState(routeSlug);
+  const [committing, setCommitting] = useState(false);
+  const commitTimerRef = useRef<number | null>(null);
   const requestedSpecies = getFieldDexSpecies(routeSlug);
   const committedSpecies = getFieldDexSpecies(committedRouteSlug);
   const pending = requestedSpecies.slug !== committedSpecies.slug;
+  const busy = pending || committing;
+
+  useEffect(() => {
+    return () => {
+      if (commitTimerRef.current !== null) window.clearTimeout(commitTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!pending) return;
@@ -66,11 +75,18 @@ export function PokemonDetailRoute({ routeSlug }: { routeSlug: string }) {
     void preloadFieldDexSpecies(routeSlug, controller.signal)
       .then(() => {
         if (!current || controller.signal.aborted) return;
+        if (commitTimerRef.current !== null) window.clearTimeout(commitTimerRef.current);
+        setCommitting(true);
         setCommittedRouteSlug(routeSlug);
+        commitTimerRef.current = window.setTimeout(() => {
+          commitTimerRef.current = null;
+          setCommitting(false);
+        }, 180);
       })
       .catch((error) => {
         if (!current || controller.signal.aborted) return;
         console.error(`Field Dex preload failed for ${requestedSpecies.slug}`, error);
+        setCommitting(false);
         replaceRouteWithoutReload(committedSpecies.routeSlug);
       });
 
@@ -80,8 +96,12 @@ export function PokemonDetailRoute({ routeSlug }: { routeSlug: string }) {
     };
   }, [committedSpecies.routeSlug, pending, requestedSpecies.slug, routeSlug]);
 
+  const classes = ['dex-route'];
+  if (pending) classes.push('is-pending');
+  if (committing) classes.push('is-committing');
+
   return (
-    <div className={`dex-route${pending ? ' is-pending' : ''}`} aria-busy={pending}>
+    <div className={classes.join(' ')} aria-busy={busy}>
       <PokemonDetailPage routeSlug={committedRouteSlug} />
     </div>
   );
