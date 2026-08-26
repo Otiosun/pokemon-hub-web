@@ -200,7 +200,12 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
   return (
     <main className="pokedex-species-page">
       <header className="pokedex-index-header">
-        <a className="pokedex-index-brand" href="/pokedex" aria-label="Voltar ao Índice Nacional">
+        <a
+          className="pokedex-index-brand"
+          href="/pokedex"
+          aria-label="Voltar ao Índice Nacional"
+          data-nav-mode="up"
+        >
           <span className="pokedex-index-lens" aria-hidden="true" />
           <span>
             <strong>FIELD DEX</strong>
@@ -306,7 +311,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
           </div>
 
           <nav className="pokedex-species-nav is-index-only" aria-label="Voltar ao Índice Nacional">
-            <a className="is-index" href="/pokedex">ÍNDICE 001—386</a>
+            <a className="is-index" href="/pokedex" data-nav-mode="up">ÍNDICE 001—386</a>
           </nav>
         </div>
       </section>
