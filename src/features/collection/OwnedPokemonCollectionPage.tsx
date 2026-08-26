@@ -12,6 +12,7 @@ import {
   type CollectionFilterState,
   type CollectionLevelFilter,
   type CollectionPresenceFilter,
+  type CollectionSexFilter,
   type CollectionShinyFilter,
   type CollectionSort,
 } from './collectionFilters';
@@ -40,12 +41,19 @@ function readSpeciesContextFilter() {
   return Number.isInteger(dex) && dex >= 1 && dex <= 386 ? dex : null;
 }
 
+function sexSymbol(pokemon: OwnedPokemonPreview) {
+  if (pokemon.sex === 'M') return { glyph: '♂', label: 'Macho' };
+  if (pokemon.sex === 'F') return { glyph: '♀', label: 'Fêmea' };
+  return { glyph: '—', label: 'Sem sexo registrado' };
+}
+
 function PokemonCard({ pokemon }: { pokemon: OwnedPokemonPreview }) {
+  const sex = sexSymbol(pokemon);
   return (
     <a
       className={`owned-pokemon-card${pokemon.teamSlot ? ' is-in-team' : ''}${pokemon.shiny ? ' is-shiny' : ''}`}
       href={`/pokemon/${pokemon.instanceId}`}
-      aria-label={`Abrir ${pokemon.nickname}, ${pokemon.species}, nível ${pokemon.level}`}
+      aria-label={`Abrir ${pokemon.nickname}, ${pokemon.species}, nível ${pokemon.level}, ${sex.label}`}
     >
       <div className="owned-pokemon-card-top">
         <span>#{String(pokemon.dex).padStart(3, '0')}</span>
@@ -79,7 +87,7 @@ function PokemonCard({ pokemon }: { pokemon: OwnedPokemonPreview }) {
           ))}
         </div>
         <div className="owned-pokemon-card-foot">
-          <span>{pokemon.box.toUpperCase()}</span>
+          <span>{pokemon.box.toUpperCase()} · <span aria-label={sex.label}>{sex.glyph}</span></span>
           {pokemon.shiny && <strong>SHINY</strong>}
         </div>
       </div>
@@ -234,6 +242,16 @@ export function OwnedPokemonCollectionPage() {
               <option value="11-20">11—20</option>
               <option value="21-30">21—30</option>
               <option value="31+">31+</option>
+            </select>
+          </label>
+
+          <label>
+            <span>SEXO</span>
+            <select value={filters.sex} onChange={(event) => patchFilters({ sex: event.target.value as CollectionSexFilter })}>
+              <option value="all">Todos</option>
+              <option value="M">Macho ♂</option>
+              <option value="F">Fêmea ♀</option>
+              <option value="—">Sem registro</option>
             </select>
           </label>
 
