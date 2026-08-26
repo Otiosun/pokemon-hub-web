@@ -1,7 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.10/schema.json",
   "files": {
-    "includes": ["**", "!dist", "!node_modules", "!.vercel", "!public/research/**"]
+    "includes": ["**", "!dist", "!node_modules", "!.vercel", "!public/research"]
   },
   "formatter": {
     "enabled": true,
@@ -15,6 +15,18 @@
       "preset": "recommended"
     }
   },
+  "overrides": [
+    {
+      "includes": ["src/features/asset-lab/GenerationsPokemonViewer.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useSemanticElements": "off"
+          }
+        }
+      }
+    }
+  ],
   "javascript": {
     "formatter": {
       "quoteStyle": "single",
