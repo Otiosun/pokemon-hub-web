@@ -120,16 +120,24 @@ export function getFieldDexVisual(dex: number): FieldDexVisual {
 
 export function typeAccent(type: string) {
   const accents: Record<string, string> = {
-    Fogo: '#e35f3c',
-    Água: '#4d9bd8',
-    Inseto: '#91a735',
-    Psíquico: '#d85e91',
-    Voador: '#86a8df',
-    Dragão: '#7f67c8',
-    Normal: '#9a9d96',
-    Gelo: '#71c8ca',
-    Elétrico: '#d9b83f',
-    Sombrio: '#6f6671',
+    Normal: '#828282',
+    Fogo: '#e4613e',
+    Água: '#3099e1',
+    Elétrico: '#dfbc28',
+    Planta: '#439837',
+    Gelo: '#47c8c8',
+    Lutador: '#e49021',
+    Veneno: '#9354cb',
+    Terrestre: '#a4733c',
+    Voador: '#74aad0',
+    Psíquico: '#e96c8c',
+    Inseto: '#9f9f28',
+    Pedra: '#a9a481',
+    Fantasma: '#6f4570',
+    Dragão: '#576fbc',
+    Sombrio: '#4f4747',
+    Aço: '#74b0cb',
+    Fada: '#e18ce1',
   };
   return accents[type] ?? '#94a7aa';
 }
