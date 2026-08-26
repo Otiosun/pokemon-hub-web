@@ -189,17 +189,6 @@ const reviewSpecies: Record<string, PokemonDetailView> = {
   },
 };
 
-function currentReviewPokemon(): PokemonDetailView {
-  if (typeof window === 'undefined') return reviewSpecies['demo-charmander'];
-  const slug = window.location.pathname.split('/').filter(Boolean).at(-1) ?? 'demo-charmander';
-  return reviewSpecies[slug] ?? reviewSpecies['demo-charmander'];
+export function getReviewPokemon(routeSlug: string): PokemonDetailView {
+  return reviewSpecies[routeSlug] ?? reviewSpecies['demo-charmander'];
 }
-
-// Keep the existing import contract while making the review route species-aware.
-// The proxy is prototype-only: every property read resolves against the current URL,
-// so SPA re-renders can swap species without recreating the persistent 3D viewer.
-export const demoCharmander: PokemonDetailView = new Proxy({} as PokemonDetailView, {
-  get(_target, property: keyof PokemonDetailView) {
-    return currentReviewPokemon()[property];
-  },
-});
