@@ -141,18 +141,24 @@ export function PokedexIndexPage() {
 
         <div className="pokedex-index-status">
           <span className={catalogReady ? 'is-ready' : undefined} aria-hidden="true" />
-          {catalogReady ? 'CATÁLOGO SINCRONIZADO' : 'CARREGANDO NOMES · O ÍNDICE NUMÉRICO JÁ ESTÁ DISPONÍVEL'}
+          {catalogReady ? '386 REGISTROS DISPONÍVEIS' : 'CARREGANDO NOMES · O ÍNDICE NUMÉRICO JÁ ESTÁ DISPONÍVEL'}
         </div>
 
         <div className="pokedex-index-grid">
           {visibleSpecies.map((item) => {
             const review = REVIEW_BY_DEX.get(item.dex);
             const visual = getFieldDexVisual(item.dex);
-            const body = (
-              <>
+            const paddedDex = String(item.dex).padStart(3, '0');
+            return (
+              <a
+                className={`pokedex-index-card${review ? ' is-available' : ''}`}
+                key={item.dex}
+                href={`/pokedex/${paddedDex}`}
+                aria-label={`Abrir registro de ${item.name}, número ${item.dex}`}
+              >
                 <div className="pokedex-index-card-top">
-                  <span>#{String(item.dex).padStart(3, '0')}</span>
-                  {review && <strong>INSPECIONAR</strong>}
+                  <span>#{paddedDex}</span>
+                  {review && <strong>3D DISPONÍVEL</strong>}
                 </div>
                 <div className="pokedex-index-sprite-wrap">
                   <img
@@ -168,30 +174,7 @@ export function PokedexIndexPage() {
                   <strong>{item.name}</strong>
                   <small>{regionForDex(item.dex).toUpperCase()}</small>
                 </div>
-              </>
-            );
-
-            if (review) {
-              return (
-                <a
-                  className="pokedex-index-card is-available"
-                  key={item.dex}
-                  href={`/pokemon/${review.routeSlug}`}
-                  aria-label={`Abrir registro de ${item.name}, número ${item.dex}`}
-                >
-                  {body}
-                </a>
-              );
-            }
-
-            return (
-              <article
-                className="pokedex-index-card"
-                key={item.dex}
-                aria-label={`${item.name}, número ${item.dex}; registro detalhado ainda não carregado nesta versão`}
-              >
-                {body}
-              </article>
+              </a>
             );
           })}
         </div>
