@@ -5,6 +5,17 @@
   .provider-row small { grid-column: 2; }
 }
 
+/* FIELD DEX must remain usable when the external 3D catalog is unavailable. */
+.dex-page .dex-stage:has(.generations-error) .dex-art {
+  animation: none;
+  opacity: .68;
+  filter: saturate(.8) drop-shadow(0 30px 60px rgba(0,0,0,.28));
+}
+
+.dex-page .dex-stage:has(.generations-error) .dex-viewer .generations-error {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html:focus-within { scroll-behavior: auto; }
   *, *::before, *::after {
