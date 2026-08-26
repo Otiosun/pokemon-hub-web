@@ -1,3 +1,4 @@
+import type { AnimationAction, KeyframeTrack, Mesh } from 'three';
 import { useEffect, useRef, useState } from 'react';
 
 type MotionSeries = {
@@ -145,7 +146,7 @@ export function GenerationsCharmanderViewer() {
         const namedNodes = new Set<string>();
         model.traverse((object) => {
           if (object.name) namedNodes.add(object.name);
-          const mesh = object as THREE.Mesh;
+          const mesh = object as Mesh;
           if (!mesh.isMesh) return;
           const name = mesh.name.toLowerCase();
           if (name.includes('fire')) mesh.material = fireMaterial;
@@ -154,11 +155,11 @@ export function GenerationsCharmanderViewer() {
         });
 
         const mixer = new THREE.AnimationMixer(model);
-        const actions = new Map<string, THREE.AnimationAction>();
+        const actions = new Map<string, AnimationAction>();
         const clipMetadata = new Map<string, MotionClip>();
 
         for (const [name, motion] of Object.entries(payload.animations)) {
-          const tracks: THREE.KeyframeTrack[] = [];
+          const tracks: KeyframeTrack[] = [];
           let matched = 0;
           for (const bone of motion.tracks) {
             if (!namedNodes.has(bone.name)) continue;
@@ -275,7 +276,7 @@ export function GenerationsCharmanderViewer() {
           eyesMaterial.dispose();
           fireMaterial.dispose();
           model.traverse((object) => {
-            const mesh = object as THREE.Mesh;
+            const mesh = object as Mesh;
             if (mesh.isMesh) mesh.geometry?.dispose();
           });
           renderer.dispose();
