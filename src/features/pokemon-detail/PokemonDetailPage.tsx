@@ -20,6 +20,8 @@ function percent(current: number, max: number) {
 function DetailHero({ pokemon }: { pokemon: PokemonDetailView }) {
   const hpPercent = percent(pokemon.hp.current, pokemon.hp.max);
   const xpPercent = percent(pokemon.xp.current, pokemon.xp.nextLevel);
+  const sexLabel =
+    pokemon.sex === 'male' ? 'Macho' : pokemon.sex === 'female' ? 'Fêmea' : 'Sem gênero';
 
   return (
     <section className="pokemon-hero" aria-labelledby="pokemon-name">
@@ -38,7 +40,7 @@ function DetailHero({ pokemon }: { pokemon: PokemonDetailView }) {
         <p className="pokemon-kicker">#{String(pokemon.speciesId).padStart(3, '0')} · parceiro</p>
         <div className="pokemon-name-row">
           <h1 id="pokemon-name">{pokemon.nickname || pokemon.species}</h1>
-          <span className="sex-mark" aria-label={pokemon.sex === 'male' ? 'Macho' : 'Fêmea'}>
+          <span className="sex-mark" role="img" aria-label={sexLabel}>
             {pokemon.sex === 'male' ? '♂' : pokemon.sex === 'female' ? '♀' : '—'}
           </span>
         </div>
