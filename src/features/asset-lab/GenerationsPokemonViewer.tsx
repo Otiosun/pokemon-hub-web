@@ -251,14 +251,14 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
   }, []);
 
   useEffect(() => {
-    const runtime = runtimeRef.current!;
+    const runtime = runtimeRef.current;
     if (!engineReady || !runtime) return;
 
     const loadVersion = ++loadVersionRef.current;
     const controller = new AbortController();
     let cancelled = false;
 
-    async function loadSpecies() {
+    async function loadSpecies(runtime: Runtime) {
       setViewerState('loading');
       setErrorDetail('');
       const base = `/research/generations/${species}`;
@@ -423,7 +423,7 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
       }
     }
 
-    void loadSpecies();
+    void loadSpecies(runtime);
     return () => {
       cancelled = true;
       controller.abort();
