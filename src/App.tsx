@@ -217,8 +217,17 @@ export function App() {
       if (destination.origin !== window.location.origin) return;
 
       const currentPath = window.location.pathname;
+      const sameDocumentHash =
+        destination.pathname === currentPath &&
+        destination.search === window.location.search &&
+        Boolean(destination.hash) &&
+        destination.hash !== window.location.hash;
+      if (sameDocumentHash) return;
+
       const sameDestination =
-        destination.pathname === currentPath && destination.search === window.location.search;
+        destination.pathname === currentPath &&
+        destination.search === window.location.search &&
+        destination.hash === window.location.hash;
 
       if (sameDestination) {
         event.preventDefault();
