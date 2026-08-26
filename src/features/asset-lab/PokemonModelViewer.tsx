@@ -39,12 +39,6 @@ export function PokemonModelViewer({ pokemon, forceFallback }: Props) {
   }, []);
 
   useEffect(() => {
-    setViewerState('loading');
-    setAnimations([]);
-    setArtworkIndex(0);
-  }, [pokemon.id]);
-
-  useEffect(() => {
     const node = viewerRef.current;
     if (!node) return;
 
@@ -60,7 +54,7 @@ export function PokemonModelViewer({ pokemon, forceFallback }: Props) {
       node.removeEventListener('load', handleLoad);
       node.removeEventListener('error', handleError);
     };
-  }, [pokemon.id]);
+  }, []);
 
   const showFallback = forceFallback || viewerState === 'failed';
   const currentArtwork = artworkFallbacks[Math.min(artworkIndex, artworkFallbacks.length - 1)];
@@ -71,7 +65,9 @@ export function PokemonModelViewer({ pokemon, forceFallback }: Props) {
         <img
           src={currentArtwork}
           alt={`${pokemon.name} — fallback visual`}
-          onError={() => setArtworkIndex((index) => Math.min(index + 1, artworkFallbacks.length - 1))}
+          onError={() =>
+            setArtworkIndex((index) => Math.min(index + 1, artworkFallbacks.length - 1))
+          }
         />
         <span>3D indisponível · fallback automático</span>
       </div>
@@ -96,7 +92,11 @@ export function PokemonModelViewer({ pokemon, forceFallback }: Props) {
         <span className={`status-dot status-${viewerState}`} />
         {viewerState === 'ready' ? '3D carregado' : 'carregando 3D…'}
         {viewerState === 'ready' && (
-          <small>{animations.length > 0 ? `${animations.length} animações detectadas` : 'sem clips detectados'}</small>
+          <small>
+            {animations.length > 0
+              ? `${animations.length} animações detectadas`
+              : 'sem clips detectados'}
+          </small>
         )}
       </div>
     </div>
