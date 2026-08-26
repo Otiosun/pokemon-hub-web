@@ -18,26 +18,28 @@ type BoneMotion = {
 
 const motionProfiles: Partial<Record<StarterVisualManifest['id'], readonly BoneMotion[]>> = {
   4: [
-    { bone: 'Spine1', axis: 'x', amplitude: 0.018, speed: 1.45 },
-    { bone: 'Spine2', axis: 'x', amplitude: 0.024, speed: 1.45, phase: 0.3 },
-    { bone: 'Head', axis: 'z', amplitude: 0.018, speed: 0.72, phase: 0.5 },
-    { bone: 'LArm', axis: 'z', amplitude: 0.022, speed: 1.45, phase: 0.2 },
-    { bone: 'RArm', axis: 'z', amplitude: 0.022, speed: 1.45, phase: Math.PI + 0.2 },
-    { bone: 'Tail1', axis: 'y', amplitude: 0.025, speed: 1.0 },
-    { bone: 'Tail2', axis: 'y', amplitude: 0.035, speed: 1.0, phase: 0.35 },
-    { bone: 'Tail3', axis: 'y', amplitude: 0.045, speed: 1.0, phase: 0.7 },
-    { bone: 'Tail4', axis: 'y', amplitude: 0.055, speed: 1.0, phase: 1.05 },
-    { bone: 'Tail5', axis: 'y', amplitude: 0.065, speed: 1.0, phase: 1.4 },
-    { bone: 'Tail6', axis: 'y', amplitude: 0.075, speed: 1.0, phase: 1.75 },
+    { bone: 'Spine1', axis: 'x', amplitude: 0.045, speed: 0.34 },
+    { bone: 'Spine2', axis: 'x', amplitude: 0.06, speed: 0.34, phase: 0.45 },
+    { bone: 'Head', axis: 'x', amplitude: 0.035, speed: 0.28, phase: 0.8 },
+    { bone: 'Head', axis: 'z', amplitude: 0.045, speed: 0.18, phase: 1.1 },
+    { bone: 'LArm', axis: 'z', amplitude: 0.05, speed: 0.34, phase: 0.35 },
+    { bone: 'RArm', axis: 'z', amplitude: 0.05, speed: 0.34, phase: Math.PI + 0.35 },
+    { bone: 'Tail1', axis: 'z', amplitude: 0.05, speed: 0.24 },
+    { bone: 'Tail2', axis: 'z', amplitude: 0.075, speed: 0.24, phase: 0.35 },
+    { bone: 'Tail3', axis: 'z', amplitude: 0.1, speed: 0.24, phase: 0.7 },
+    { bone: 'Tail4', axis: 'z', amplitude: 0.125, speed: 0.24, phase: 1.05 },
+    { bone: 'Tail5', axis: 'z', amplitude: 0.15, speed: 0.24, phase: 1.4 },
+    { bone: 'Tail6', axis: 'z', amplitude: 0.175, speed: 0.24, phase: 1.75 },
   ],
   7: [
-    { bone: 'Waist', axis: 'x', amplitude: 0.018, speed: 1.35 },
-    { bone: 'Head', axis: 'z', amplitude: 0.022, speed: 0.78, phase: 0.4 },
-    { bone: 'LArm', axis: 'z', amplitude: 0.026, speed: 1.35, phase: 0.25 },
-    { bone: 'RArm', axis: 'z', amplitude: 0.026, speed: 1.35, phase: Math.PI + 0.25 },
-    { bone: 'Tail1', axis: 'y', amplitude: 0.045, speed: 0.95 },
-    { bone: 'Tail2', axis: 'y', amplitude: 0.065, speed: 0.95, phase: 0.55 },
-    { bone: 'Tail3', axis: 'y', amplitude: 0.085, speed: 0.95, phase: 1.1 },
+    { bone: 'Waist', axis: 'x', amplitude: 0.055, speed: 0.32 },
+    { bone: 'Head', axis: 'x', amplitude: 0.04, speed: 0.26, phase: 0.55 },
+    { bone: 'Head', axis: 'z', amplitude: 0.05, speed: 0.17, phase: 1.2 },
+    { bone: 'LArm', axis: 'z', amplitude: 0.055, speed: 0.32, phase: 0.25 },
+    { bone: 'RArm', axis: 'z', amplitude: 0.055, speed: 0.32, phase: Math.PI + 0.25 },
+    { bone: 'Tail1', axis: 'z', amplitude: 0.08, speed: 0.22 },
+    { bone: 'Tail2', axis: 'z', amplitude: 0.12, speed: 0.22, phase: 0.55 },
+    { bone: 'Tail3', axis: 'z', amplitude: 0.16, speed: 0.22, phase: 1.1 },
   ],
 };
 
@@ -73,12 +75,10 @@ export function ProceduralPokemonViewer({ pokemon }: Props) {
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
         renderer.outputColorSpace = THREE.SRGBColorSpace;
-        renderer.shadowMap.enabled = false;
         renderer.domElement.className = 'procedural-canvas';
         mount.replaceChildren(renderer.domElement);
 
-        const hemisphere = new THREE.HemisphereLight(0xffffff, 0x899083, 2.3);
-        scene.add(hemisphere);
+        scene.add(new THREE.HemisphereLight(0xffffff, 0x899083, 2.3));
         const key = new THREE.DirectionalLight(0xffffff, 2.4);
         key.position.set(3, 4, 5);
         scene.add(key);
@@ -142,20 +142,17 @@ export function ProceduralPokemonViewer({ pokemon }: Props) {
         setAnimatedBoneCount(motions.length);
         setViewerState('ready');
 
-        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const startedAt = performance.now();
 
         const render = (now: number) => {
           if (disposed) return;
           const seconds = (now - startedAt) / 1000;
 
-          if (!reduceMotion) {
-            for (const motion of motions) {
-              motion.bone.rotation[motion.axis] =
-                motion.base +
-                Math.sin(seconds * motion.speed * Math.PI * 2 + (motion.phase ?? 0)) *
-                  motion.amplitude;
-            }
+          for (const motion of motions) {
+            motion.bone.rotation[motion.axis] =
+              motion.base +
+              Math.sin(seconds * motion.speed * Math.PI * 2 + (motion.phase ?? 0)) *
+                motion.amplitude;
           }
 
           controls.update();
@@ -220,18 +217,16 @@ export function ProceduralPokemonViewer({ pokemon }: Props) {
         role="img"
         aria-label={`Modelo 3D vivo de ${pokemon.name}`}
       />
-      {viewerState === 'loading' && (
-        <img className="procedural-poster" src={pokemon.artworkHome.url} alt="" aria-hidden="true" />
-      )}
+      {viewerState === 'loading' && <div className="procedural-loading">carregando rig 3D…</div>}
       {viewerState === 'failed' && (
-        <div className="procedural-error">Não foi possível inicializar o idle experimental.</div>
+        <div className="procedural-error">Não foi possível inicializar o 3D vivo.</div>
       )}
       <div className="viewer-status" aria-live="polite">
         <span className={`status-dot status-${viewerState}`} />
-        {viewerState === 'ready' ? 'idle esquelético experimental' : 'preparando rig…'}
+        {viewerState === 'ready' ? 'idle esquelético ativo' : 'preparando rig…'}
         {viewerState === 'ready' && (
           <small>
-            {animatedBoneCount}/{boneCount} bones movidos
+            {animatedBoneCount}/{boneCount} bones em movimento
           </small>
         )}
       </div>
