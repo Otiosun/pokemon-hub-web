@@ -184,6 +184,17 @@ export function PokedexIndexPage() {
     : null;
   const typeLoading = Boolean(typeSlug && typeStatus === 'loading');
 
+  const chooseDiscovery = (nextDiscovery: PokedexDiscoveryFilter) => {
+    setDiscovery(nextDiscovery);
+    if (nextDiscovery === 'Desconhecidos') setTypeSlug(null);
+  };
+
+  const chooseType = (nextTypeSlug: string) => {
+    const selected = typeSlug === nextTypeSlug;
+    setTypeSlug(selected ? null : nextTypeSlug);
+    if (!selected && discovery === 'Desconhecidos') setDiscovery('Todos');
+  };
+
   return (
     <main className="pokedex-index-page">
       <header className="pokedex-index-header">
@@ -247,7 +258,7 @@ export function PokedexIndexPage() {
                 type="button"
                 className={discovery === item ? 'is-active' : undefined}
                 aria-pressed={discovery === item}
-                onClick={() => setDiscovery(item)}
+                onClick={() => chooseDiscovery(item)}
                 disabled={!catalogReady}
               >
                 {item.toUpperCase()}
@@ -275,7 +286,7 @@ export function PokedexIndexPage() {
                   key={item.slug}
                   type="button"
                   className={selected ? 'is-active' : undefined}
-                  onClick={() => setTypeSlug(selected ? null : item.slug)}
+                  onClick={() => chooseType(item.slug)}
                   disabled={!catalogReady}
                   aria-pressed={selected}
                   style={selected ? { borderColor: `${accent}99`, background: `${accent}1f` } : undefined}
