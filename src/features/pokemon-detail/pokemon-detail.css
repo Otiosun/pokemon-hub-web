@@ -605,7 +605,7 @@
   }
 
   .pokemon-stage {
-    inset-left: -18%;
+    left: -18%;
   }
 
   .vital-row {
