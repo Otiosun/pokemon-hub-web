@@ -123,17 +123,27 @@ function rootForPath(path: string) {
   return section ? SECTION_ROOTS[section] : null;
 }
 
-function parentForNavigation(currentPath: string, destinationPath: string, primaryNavigation: boolean) {
+function parentForNavigation(currentPath: string, destinationPath: string) {
   const currentSection = hubSectionForPath(currentPath);
   const destinationSection = hubSectionForPath(destinationPath);
-  if (!destinationSection) return undefined;
+  if (!destinationSection || currentSection !== destinationSection) return undefined;
   const destinationRoot = SECTION_ROOTS[destinationSection];
   if (destinationPath === destinationRoot || destinationPath === `${destinationRoot}/`) return undefined;
-  if (primaryNavigation) return destinationRoot;
-  if (currentSection === destinationSection && rootForPath(currentPath) === currentPath.replace(/\/$/, '')) {
+  if (rootForPath(currentPath) === currentPath.replace(/\/$/, '')) {
     return currentPath.replace(/\/$/, '');
   }
   return undefined;
+}
+
+function stateForPrimaryDestination(destinationPath: string): HubHistoryState {
+  const destinationSection = hubSectionForPath(destinationPath);
+  if (!destinationSection) return {};
+  const destinationRoot = SECTION_ROOTS[destinationSection];
+  const isRoot = destinationPath === destinationRoot || destinationPath === `${destinationRoot}/`;
+  return {
+    hubSection: destinationSection,
+    ...(!isRoot ? { hubParent: destinationRoot } : {}),
+  };
 }
 
 export function App() {
@@ -144,7 +154,18 @@ export function App() {
     const initialSection = hubSectionForPath(window.location.pathname);
     const existing = (window.history.state ?? {}) as HubHistoryState;
     if (initialSection && !existing.hubSection) {
-      window.history.replaceState({ ...existing, hubSection: initialSection }, '', window.location.href);
+      const root = SECTION_ROOTS[initialSection];
+      const currentPath = window.location.pathname;
+      const isRoot = currentPath === root || currentPath === `${root}/`;
+      window.history.replaceState(
+        {
+          ...existing,
+          hubSection: initialSection,
+          ...(!isRoot ? { hubParent: root } : {}),
+        },
+        '',
+        window.location.href,
+      );
     }
     setHubDestinations(rememberHubDestination(window.location.pathname));
   }, []);
@@ -203,18 +224,16 @@ export function App() {
       const isPrimaryNavigation = Boolean(anchor.dataset.hubPrimary);
 
       if (anchor.dataset.navMode === 'up') {
-        if (historyState.hubParent === destination.pathname) {
-          window.history.back();
-          return;
-        }
         const destinationSection = hubSectionForPath(destination.pathname);
         const nextState: HubHistoryState = destinationSection ? { hubSection: destinationSection } : {};
         window.history.replaceState(nextState, '', nextLocation);
+      } else if (isPrimaryNavigation) {
+        window.history.replaceState(stateForPrimaryDestination(destination.pathname), '', nextLocation);
       } else if (usesSiblingHistoryReplacement(anchor)) {
         window.history.replaceState(historyState, '', nextLocation);
       } else {
         const destinationSection = hubSectionForPath(destination.pathname);
-        const parent = parentForNavigation(currentPath, destination.pathname, isPrimaryNavigation);
+        const parent = parentForNavigation(currentPath, destination.pathname);
         const nextState: HubHistoryState = {
           ...(destinationSection ? { hubSection: destinationSection } : {}),
           ...(parent ? { hubParent: parent } : {}),
