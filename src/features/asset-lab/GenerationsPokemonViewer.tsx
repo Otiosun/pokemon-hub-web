@@ -70,6 +70,8 @@ type Props = {
   species: string;
   name: string;
   onReadyChange?: (ready: boolean) => void;
+  onDisplayedSpeciesChange?: (species: string) => void;
+  onFailedSpeciesChange?: (species: string) => void;
 };
 
 function disposeModel(runtime: Runtime) {
@@ -127,20 +129,40 @@ function frameModel(runtime: Runtime, model: Group) {
   camera.lookAt(center);
 
   controls.target.copy(center);
-  // Keep interaction useful without allowing the specimen to become a tiny dot or a cropped close-up.
   controls.minDistance = Math.max(distance * 0.9, maxDimension * 0.78);
   controls.maxDistance = Math.max(distance * 1.42, maxDimension * 1.7);
   controls.update();
 }
 
-export function GenerationsPokemonViewer({ species, name, onReadyChange }: Props) {
+function waitForSwap(ms: number) {
+  return new Promise<void>((resolve) => window.setTimeout(resolve, ms));
+}
+
+export function GenerationsPokemonViewer({
+  species,
+  name,
+  onReadyChange,
+  onDisplayedSpeciesChange,
+  onFailedSpeciesChange,
+}: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const runtimeRef = useRef<Runtime | null>(null);
   const loadVersionRef = useRef(0);
+  const displayedSpeciesCallbackRef = useRef(onDisplayedSpeciesChange);
+  const failedSpeciesCallbackRef = useRef(onFailedSpeciesChange);
   const [engineReady, setEngineReady] = useState(false);
   const [viewerState, setViewerState] = useState<ViewerState>('loading');
   const [displayedName, setDisplayedName] = useState('');
   const [errorDetail, setErrorDetail] = useState('');
+  const [isSwapping, setIsSwapping] = useState(false);
+
+  useEffect(() => {
+    displayedSpeciesCallbackRef.current = onDisplayedSpeciesChange;
+  }, [onDisplayedSpeciesChange]);
+
+  useEffect(() => {
+    failedSpeciesCallbackRef.current = onFailedSpeciesChange;
+  }, [onFailedSpeciesChange]);
 
   useEffect(() => {
     onReadyChange?.(viewerState === 'ready');
@@ -176,7 +198,6 @@ export function GenerationsPokemonViewer({ species, name, onReadyChange }: Props
         });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isTouch ? 1.15 : 1.6));
         renderer.outputColorSpace = THREE.SRGBColorSpace;
-        // Preserve source texture color. ACES was flattening the warm orange into a beige/tan specimen.
         renderer.toneMapping = THREE.NoToneMapping;
         renderer.toneMappingExposure = 1;
         renderer.domElement.className = 'generations-canvas';
@@ -206,7 +227,6 @@ export function GenerationsPokemonViewer({ species, name, onReadyChange }: Props
         controls.enablePan = false;
         controls.rotateSpeed = isTouch ? 0.55 : 0.7;
         controls.zoomSpeed = 0.62;
-        // Field Dex = controlled specimen observation, not a free-flight 3D inspector.
         controls.minPolarAngle = THREE.MathUtils.degToRad(66);
         controls.maxPolarAngle = THREE.MathUtils.degToRad(108);
 
@@ -227,12 +247,16 @@ export function GenerationsPokemonViewer({ species, name, onReadyChange }: Props
         runtimeRef.current = runtime;
 
         const clock = new THREE.Clock();
-        const render = () => {
+        const frameInterval = isTouch ? 1000 / 30 : 0;
+        let lastRenderedAt = 0;
+        const render = (timestamp: number) => {
           if (disposed || !running) return;
+          frameId = requestAnimationFrame(render);
+          if (frameInterval > 0 && timestamp - lastRenderedAt < frameInterval) return;
+          lastRenderedAt = timestamp;
           runtime.mixer?.update(Math.min(clock.getDelta(), 0.05));
           controls.update();
           renderer.render(scene, camera);
-          frameId = requestAnimationFrame(render);
         };
         const syncLoop = () => {
           const shouldRun = inViewport && !document.hidden && !disposed;
@@ -316,11 +340,12 @@ export function GenerationsPokemonViewer({ species, name, onReadyChange }: Props
       let pendingTextures: Texture[] = [];
       let pendingMaterials: Material[] = [];
       let pendingModel: Group | null = null;
+      let pendingMixer: AnimationMixer | null = null;
 
       try {
         const assetResponse = await fetch(getPokemonAssetUrl(species, 'asset.json'), {
           signal: controller.signal,
-          cache: 'no-cache',
+          cache: 'force-cache',
         });
         if (!assetResponse.ok) throw new Error(`asset.json HTTP ${assetResponse.status}`);
         const contentType = assetResponse.headers.get('content-type') ?? '';
@@ -435,6 +460,7 @@ export function GenerationsPokemonViewer({ species, name, onReadyChange }: Props
         }
         const clip = new activeRuntime.THREE.AnimationClip('Generations:idle', motion.duration, tracks);
         const mixer = new activeRuntime.THREE.AnimationMixer(model);
+        pendingMixer = mixer;
         const idle = mixer.clipAction(clip);
         idle.setLoop(activeRuntime.THREE.LoopRepeat, Infinity);
         idle.play();
@@ -447,6 +473,19 @@ export function GenerationsPokemonViewer({ species, name, onReadyChange }: Props
           return;
         }
 
+        const replacingVisibleModel = Boolean(activeRuntime.model);
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (replacingVisibleModel) {
+          setIsSwapping(true);
+          await waitForSwap(reducedMotion ? 16 : 110);
+          if (cancelled || loadVersion !== loadVersionRef.current) {
+            setIsSwapping(false);
+            mixer.stopAllAction();
+            disposeDetached(model, pendingTextures, pendingMaterials);
+            return;
+          }
+        }
+
         disposeModel(activeRuntime);
         activeRuntime.scene.add(model);
         activeRuntime.model = model;
@@ -456,11 +495,16 @@ export function GenerationsPokemonViewer({ species, name, onReadyChange }: Props
         pendingTextures = [];
         pendingMaterials = [];
         pendingModel = null;
+        pendingMixer = null;
 
         frameModel(activeRuntime, model);
         setDisplayedName(name);
+        displayedSpeciesCallbackRef.current?.(species);
         setViewerState('ready');
+        setIsSwapping(false);
       } catch (error) {
+        pendingMixer?.stopAllAction();
+        setIsSwapping(false);
         if (pendingModel) disposeDetached(pendingModel, pendingTextures, pendingMaterials);
         else {
           for (const texture of pendingTextures) texture.dispose();
@@ -468,6 +512,7 @@ export function GenerationsPokemonViewer({ species, name, onReadyChange }: Props
         }
         if (controller.signal.aborted || cancelled || loadVersion !== loadVersionRef.current) return;
         console.error(`Generations ${species} viewer failed`, error);
+        failedSpeciesCallbackRef.current?.(species);
         setErrorDetail(error instanceof Error ? error.message : String(error));
         setViewerState('failed');
       }
@@ -477,19 +522,22 @@ export function GenerationsPokemonViewer({ species, name, onReadyChange }: Props
     return () => {
       cancelled = true;
       controller.abort();
+      setIsSwapping(false);
     };
   }, [engineReady, name, species]);
 
   return (
     <div className="generations-demo">
-      <div className="generations-viewer-shell">
+      <div className={`generations-viewer-shell${isSwapping ? ' is-swapping' : ''}`}>
         <div
           ref={hostRef}
           className="generations-host"
           role="region"
           aria-label={`${displayedName || name} em 3D. Arraste para girar e use roda ou pinça para zoom.`}
         />
-        {viewerState === 'loading' && <div className="generations-loading">carregando {name}…</div>}
+        {viewerState === 'loading' && !displayedName && (
+          <div className="generations-loading">carregando {name}…</div>
+        )}
         {viewerState === 'failed' && (
           <div className="generations-error">
             <strong>Falha ao carregar {name}.</strong>
