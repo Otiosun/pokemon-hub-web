@@ -1,8 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { rememberHubDestination } from '../../navigation/hubNavigationSession';
+import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import { TypeBadge } from '../../visual-assets/TypeBadge';
-import { getPokemonSpeciesVisualAssets } from '../../visual-assets/pokemonVisualRegistry';
+import { TypeIcon } from '../../visual-assets/TypeIcon';
 import { typeAccent } from '../pokemon-detail/fieldDexSpecies';
+import { POKEDEX_TYPE_FILTERS } from '../pokedex/pokedexTypeFilter';
+import {
+  applyCollectionFilters,
+  countCollectionFilters,
+  DEFAULT_COLLECTION_FILTERS,
+  type CollectionFilterState,
+  type CollectionLevelFilter,
+  type CollectionPresenceFilter,
+  type CollectionShinyFilter,
+  type CollectionSort,
+} from './collectionFilters';
 import {
   readCollectionSession,
   rememberCollectionFilters,
@@ -11,6 +23,7 @@ import {
 } from './collectionSession';
 import { OWNED_POKEMON_PREVIEW, type OwnedPokemonPreview } from './ownedPokemonPreview';
 import './owned-pokemon-collection.css';
+import './owned-pokemon-filters.css';
 
 function normalize(value: string) {
   return value
@@ -28,7 +41,6 @@ function readSpeciesContextFilter() {
 }
 
 function PokemonCard({ pokemon }: { pokemon: OwnedPokemonPreview }) {
-  const visual = getPokemonSpeciesVisualAssets(pokemon.dex);
   return (
     <article className={`owned-pokemon-card${pokemon.teamSlot ? ' is-in-team' : ''}${pokemon.shiny ? ' is-shiny' : ''}`}>
       <div className="owned-pokemon-card-top">
@@ -39,13 +51,14 @@ function PokemonCard({ pokemon }: { pokemon: OwnedPokemonPreview }) {
         </div>
       </div>
       <div className="owned-pokemon-visual">
-        <img
-          src={visual.icon}
+        <PokemonAssetImage
+          dex={pokemon.dex}
+          role="icon"
           alt=""
           aria-hidden="true"
           loading="lazy"
           decoding="async"
-          onError={(event) => { event.currentTarget.hidden = true; }}
+          fallbackLabel="?"
         />
       </div>
       <div className="owned-pokemon-copy">
@@ -74,12 +87,13 @@ export function OwnedPokemonCollectionPage() {
   const initial = useMemo(readCollectionSession, []);
   const [mode, setMode] = useState<CollectionMode>(initial.mode);
   const [query, setQuery] = useState(initial.query);
+  const [filters, setFilters] = useState<CollectionFilterState>(initial.filters);
   const [speciesContextDex, setSpeciesContextDex] = useState(readSpeciesContextFilter);
   const restoredScroll = useRef(false);
 
   useEffect(() => {
-    rememberCollectionFilters(mode, query);
-  }, [mode, query]);
+    rememberCollectionFilters(mode, query, filters);
+  }, [filters, mode, query]);
 
   useEffect(() => {
     if (restoredScroll.current) return;
@@ -96,13 +110,14 @@ export function OwnedPokemonCollectionPage() {
 
   const visible = useMemo(() => {
     const needle = normalize(query);
-    return OWNED_POKEMON_PREVIEW.filter((pokemon) => {
+    const base = OWNED_POKEMON_PREVIEW.filter((pokemon) => {
       if (speciesContextDex && pokemon.dex !== speciesContextDex) return false;
       if (mode === 'favorites' && !pokemon.favorite) return false;
       if (!needle) return true;
       return normalize(pokemon.nickname).includes(needle) || normalize(pokemon.species).includes(needle);
     });
-  }, [mode, query, speciesContextDex]);
+    return applyCollectionFilters(base, filters);
+  }, [filters, mode, query, speciesContextDex]);
 
   const boxes = useMemo(() => {
     const grouped = new Map<string, OwnedPokemonPreview[]>();
@@ -116,9 +131,14 @@ export function OwnedPokemonCollectionPage() {
 
   const teamCount = OWNED_POKEMON_PREVIEW.filter((pokemon) => pokemon.teamSlot !== null).length;
   const favoriteCount = OWNED_POKEMON_PREVIEW.filter((pokemon) => pokemon.favorite).length;
+  const activeFilterCount = countCollectionFilters(filters);
   const contextualSpecies = speciesContextDex
     ? OWNED_POKEMON_PREVIEW.find((pokemon) => pokemon.dex === speciesContextDex)?.species ?? `#${String(speciesContextDex).padStart(3, '0')}`
     : null;
+
+  const patchFilters = (patch: Partial<CollectionFilterState>) => {
+    setFilters((current) => ({ ...current, ...patch }));
+  };
 
   const clearSpeciesContext = () => {
     setSpeciesContextDex(null);
@@ -183,8 +203,68 @@ export function OwnedPokemonCollectionPage() {
         </label>
       </section>
 
+      <section className="owned-pokemon-filter-shell" aria-label="Filtros e ordenação da coleção">
+        <header>
+          <span>FILTROS{activeFilterCount > 0 ? ` · ${activeFilterCount}` : ''}</span>
+          {activeFilterCount > 0 && (
+            <button type="button" onClick={() => setFilters({ ...DEFAULT_COLLECTION_FILTERS })}>LIMPAR</button>
+          )}
+        </header>
+        <div className="owned-pokemon-filter-strip">
+          <label>
+            <span className="owned-pokemon-filter-label">
+              {filters.type && <TypeIcon type={filters.type} fallbackColor={typeAccent(filters.type)} />}
+              TIPO
+            </span>
+            <select value={filters.type ?? ''} onChange={(event) => patchFilters({ type: event.target.value || null })}>
+              <option value="">Todos</option>
+              {POKEDEX_TYPE_FILTERS.map((item) => <option key={item.slug} value={item.label}>{item.label}</option>)}
+            </select>
+          </label>
+
+          <label>
+            <span>NÍVEL</span>
+            <select value={filters.level} onChange={(event) => patchFilters({ level: event.target.value as CollectionLevelFilter })}>
+              <option value="all">Todos</option>
+              <option value="1-10">1—10</option>
+              <option value="11-20">11—20</option>
+              <option value="21-30">21—30</option>
+              <option value="31+">31+</option>
+            </select>
+          </label>
+
+          <label>
+            <span>LOCAL</span>
+            <select value={filters.presence} onChange={(event) => patchFilters({ presence: event.target.value as CollectionPresenceFilter })}>
+              <option value="all">Todos</option>
+              <option value="team">No Time</option>
+              <option value="storage">Fora do Time</option>
+            </select>
+          </label>
+
+          <label>
+            <span>SHINY</span>
+            <select value={filters.shiny} onChange={(event) => patchFilters({ shiny: event.target.value as CollectionShinyFilter })}>
+              <option value="all">Todos</option>
+              <option value="shiny">Somente shiny</option>
+              <option value="regular">Não shiny</option>
+            </select>
+          </label>
+
+          <label>
+            <span>ORDENAR</span>
+            <select value={filters.sort} onChange={(event) => patchFilters({ sort: event.target.value as CollectionSort })}>
+              <option value="dex">Nº da Pokédex</option>
+              <option value="name">Nome A—Z</option>
+              <option value="level-desc">Nível ↓</option>
+              <option value="level-asc">Nível ↑</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
       <div className="owned-pokemon-runtime-note">
-        <span aria-hidden="true" /> DADOS DE ESTRUTURA · INTEGRAÇÃO COM O RPG PENDENTE
+        <span aria-hidden="true" /> {visible.length} RESULTADO{visible.length === 1 ? '' : 'S'} · DADOS DE ESTRUTURA · INTEGRAÇÃO COM O RPG PENDENTE
       </div>
 
       {mode === 'boxes' ? (
@@ -207,7 +287,7 @@ export function OwnedPokemonCollectionPage() {
       {visible.length === 0 && (
         <div className="owned-pokemon-empty">
           <strong>Nenhum Pokémon encontrado.</strong>
-          <span>Ajuste a busca ou o modo da coleção.</span>
+          <span>Ajuste a busca ou os filtros da coleção.</span>
         </div>
       )}
     </main>
