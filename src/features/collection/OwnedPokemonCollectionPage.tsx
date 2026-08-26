@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { rememberHubDestination } from '../../navigation/hubNavigationSession';
 import { TypeBadge } from '../../visual-assets/TypeBadge';
 import { getPokemonSpeciesVisualAssets } from '../../visual-assets/pokemonVisualRegistry';
 import { typeAccent } from '../pokemon-detail/fieldDexSpecies';
@@ -123,7 +124,9 @@ export function OwnedPokemonCollectionPage() {
     setSpeciesContextDex(null);
     const url = new URL(window.location.href);
     url.searchParams.delete('species');
-    window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+    const nextLocation = `${url.pathname}${url.search}${url.hash}`;
+    window.history.replaceState(window.history.state, '', nextLocation);
+    rememberHubDestination('/pokemon');
   };
 
   return (
