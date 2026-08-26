@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { AssetLabPage } from './features/asset-lab/AssetLabPage';
 import { GenerationsLabPage } from './features/asset-lab/GenerationsLabPage';
 import { PokemonDetailPage } from './features/pokemon-detail/PokemonDetailPage';
@@ -25,8 +26,45 @@ function HomePage() {
   );
 }
 
+function getPath() {
+  return window.location.pathname;
+}
+
 export function App() {
-  const path = window.location.pathname;
+  const [path, setPath] = useState(getPath);
+
+  useEffect(() => {
+    const onPopState = () => setPath(getPath());
+    const onDocumentClick = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return;
+      }
+
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const anchor = target.closest('a[href]');
+      if (!(anchor instanceof HTMLAnchorElement)) return;
+      if (anchor.target && anchor.target !== '_self') return;
+      if (anchor.hasAttribute('download')) return;
+
+      const destination = new URL(anchor.href, window.location.href);
+      if (destination.origin !== window.location.origin) return;
+      if (destination.pathname === window.location.pathname && destination.search === window.location.search) return;
+
+      event.preventDefault();
+      window.history.pushState({}, '', `${destination.pathname}${destination.search}${destination.hash}`);
+      setPath(destination.pathname);
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    };
+
+    window.addEventListener('popstate', onPopState);
+    document.addEventListener('click', onDocumentClick);
+    return () => {
+      window.removeEventListener('popstate', onPopState);
+      document.removeEventListener('click', onDocumentClick);
+    };
+  }, []);
+
   if (path.startsWith('/pokemon/')) return <PokemonDetailPage />;
   if (path.startsWith('/asset-lab/generations')) return <GenerationsLabPage />;
   if (path.startsWith('/asset-lab')) return <AssetLabPage />;
