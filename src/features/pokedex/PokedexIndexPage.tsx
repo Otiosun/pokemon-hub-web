@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { TypeIcon } from '../../visual-assets/TypeIcon';
 import {
   FIELD_DEX_REVIEW_SPECIES,
   getFieldDexVisual,
+  typeAccent,
 } from '../pokemon-detail/fieldDexSpecies';
 import {
   getCachedNationalDexCatalog,
@@ -14,6 +16,11 @@ import {
   rememberPokedexIndexScroll,
   type PokedexRegionFilter,
 } from './pokedexIndexSession';
+import {
+  getCachedTypeMembers,
+  loadTypeMembers,
+  POKEDEX_TYPE_FILTERS,
+} from './pokedexTypeFilter';
 import './pokedex-index.css';
 
 const REVIEW_BY_DEX = new Map(FIELD_DEX_REVIEW_SPECIES.map((species) => [species.dex, species]));
@@ -22,6 +29,8 @@ const SKELETON_KEYS = [
   'dex-skeleton-05', 'dex-skeleton-06', 'dex-skeleton-07', 'dex-skeleton-08',
   'dex-skeleton-09', 'dex-skeleton-10', 'dex-skeleton-11', 'dex-skeleton-12',
 ] as const;
+
+type TypeFilterStatus = 'idle' | 'loading' | 'ready' | 'failed';
 
 function regionForDex(dex: number): Exclude<PokedexRegionFilter, 'Todos'> {
   if (dex <= 151) return 'Kanto';
@@ -58,9 +67,17 @@ function CatalogSkeleton() {
 export function PokedexIndexPage() {
   const initialSession = useMemo(readPokedexIndexSession, []);
   const cachedCatalog = getCachedNationalDexCatalog();
+  const initialTypeMembers = initialSession.typeSlug
+    ? getCachedTypeMembers(initialSession.typeSlug)
+    : null;
   const [species, setSpecies] = useState<NationalDexSpeciesItem[]>(cachedCatalog ?? []);
   const [query, setQuery] = useState(initialSession.query);
   const [region, setRegion] = useState<PokedexRegionFilter>(initialSession.region);
+  const [typeSlug, setTypeSlug] = useState<string | null>(initialSession.typeSlug);
+  const [typeMembers, setTypeMembers] = useState<ReadonlySet<number> | null>(initialTypeMembers);
+  const [typeStatus, setTypeStatus] = useState<TypeFilterStatus>(
+    initialSession.typeSlug ? (initialTypeMembers ? 'ready' : 'loading') : 'idle',
+  );
   const [catalogReady, setCatalogReady] = useState(Boolean(cachedCatalog));
   const [catalogFailed, setCatalogFailed] = useState(false);
   const restoredScroll = useRef(false);
@@ -85,8 +102,42 @@ export function PokedexIndexPage() {
   }, []);
 
   useEffect(() => {
-    rememberPokedexIndexFilters(query, region);
-  }, [query, region]);
+    if (!typeSlug) {
+      setTypeMembers(null);
+      setTypeStatus('idle');
+      return;
+    }
+
+    const cached = getCachedTypeMembers(typeSlug);
+    if (cached) {
+      setTypeMembers(cached);
+      setTypeStatus('ready');
+      return;
+    }
+
+    let active = true;
+    setTypeMembers(null);
+    setTypeStatus('loading');
+    void loadTypeMembers(typeSlug)
+      .then((members) => {
+        if (!active) return;
+        setTypeMembers(members);
+        setTypeStatus('ready');
+      })
+      .catch((error) => {
+        if (!active) return;
+        console.warn(`National Dex type filter ${typeSlug} unavailable`, error);
+        setTypeMembers(new Set());
+        setTypeStatus('failed');
+      });
+    return () => {
+      active = false;
+    };
+  }, [typeSlug]);
+
+  useEffect(() => {
+    rememberPokedexIndexFilters(query, region, typeSlug);
+  }, [query, region, typeSlug]);
 
   useEffect(() => {
     if (!catalogReady || restoredScroll.current) return;
@@ -107,11 +158,17 @@ export function PokedexIndexPage() {
     const needle = normalize(query.replace(/^#/, ''));
     return species.filter((item) => {
       if (region !== 'Todos' && regionForDex(item.dex) !== region) return false;
+      if (typeSlug && (!typeMembers || !typeMembers.has(item.dex))) return false;
       if (!needle) return true;
       const paddedDex = String(item.dex).padStart(3, '0');
       return normalize(item.name).includes(needle) || paddedDex.includes(needle) || String(item.dex) === needle;
     });
-  }, [query, region, species]);
+  }, [query, region, species, typeMembers, typeSlug]);
+
+  const activeType = typeSlug
+    ? POKEDEX_TYPE_FILTERS.find((item) => item.slug === typeSlug) ?? null
+    : null;
+  const typeLoading = Boolean(typeSlug && typeStatus === 'loading');
 
   return (
     <main className="pokedex-index-page">
@@ -137,7 +194,7 @@ export function PokedexIndexPage() {
             <p>Consulta rápida das espécies registradas entre Kanto, Johto e Hoenn.</p>
           </div>
           <div className="pokedex-index-readout" aria-live="polite">
-            <span>{catalogReady ? visibleSpecies.length : '—'}</span>
+            <span>{catalogReady && !typeLoading ? visibleSpecies.length : '—'}</span>
             <small>RESULTADOS</small>
           </div>
         </div>
@@ -167,16 +224,55 @@ export function PokedexIndexPage() {
           </fieldset>
         </div>
 
-        <div className="pokedex-index-status">
-          <span className={catalogReady ? 'is-ready' : catalogFailed ? 'is-failed' : undefined} aria-hidden="true" />
-          {catalogReady
-            ? '386 REGISTROS DISPONÍVEIS'
-            : catalogFailed
-              ? 'CATÁLOGO INDISPONÍVEL · TENTE NOVAMENTE MAIS TARDE'
-              : 'CARREGANDO CATÁLOGO NACIONAL'}
+        <div className="pokedex-index-type-filter">
+          <span className="pokedex-index-type-label">TIPO</span>
+          <div className="pokedex-index-type-scroll" role="group" aria-label="Filtrar a Pokédex por tipo">
+            <button
+              type="button"
+              className={!typeSlug ? 'is-active is-all' : 'is-all'}
+              onClick={() => setTypeSlug(null)}
+              disabled={!catalogReady}
+            >
+              TODOS
+            </button>
+            {POKEDEX_TYPE_FILTERS.map((item) => {
+              const selected = typeSlug === item.slug;
+              const accent = typeAccent(item.label);
+              return (
+                <button
+                  key={item.slug}
+                  type="button"
+                  className={selected ? 'is-active' : undefined}
+                  onClick={() => setTypeSlug(selected ? null : item.slug)}
+                  disabled={!catalogReady}
+                  aria-pressed={selected}
+                  style={selected ? { borderColor: `${accent}99`, background: `${accent}1f` } : undefined}
+                >
+                  <TypeIcon type={item.label} fallbackColor={accent} />
+                  <span>{item.label.toUpperCase()}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {!catalogReady ? (
+        <div className="pokedex-index-status">
+          <span
+            className={catalogReady && typeStatus !== 'failed' ? 'is-ready' : catalogFailed || typeStatus === 'failed' ? 'is-failed' : undefined}
+            aria-hidden="true"
+          />
+          {catalogFailed
+            ? 'CATÁLOGO INDISPONÍVEL · TENTE NOVAMENTE MAIS TARDE'
+            : typeStatus === 'failed'
+              ? `FILTRO ${activeType?.label.toUpperCase() ?? ''} INDISPONÍVEL`
+              : typeLoading
+                ? `LENDO REGISTROS DO TIPO ${activeType?.label.toUpperCase() ?? ''}`
+                : catalogReady
+                  ? '386 REGISTROS DISPONÍVEIS'
+                  : 'CARREGANDO CATÁLOGO NACIONAL'}
+        </div>
+
+        {!catalogReady || typeLoading ? (
           <CatalogSkeleton />
         ) : (
           <div className="pokedex-index-grid">
