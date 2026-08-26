@@ -214,7 +214,12 @@ export function ProceduralPokemonViewer({ pokemon }: Props) {
 
   return (
     <div className="viewer-shell procedural-viewer-shell">
-      <div ref={hostRef} className="procedural-host" aria-label={`Modelo 3D vivo de ${pokemon.name}`} />
+      <div
+        ref={hostRef}
+        className="procedural-host"
+        role="img"
+        aria-label={`Modelo 3D vivo de ${pokemon.name}`}
+      />
       {viewerState === 'loading' && (
         <img className="procedural-poster" src={pokemon.artworkHome.url} alt="" aria-hidden="true" />
       )}
