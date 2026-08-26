@@ -30,13 +30,24 @@ function getPath() {
   return window.location.pathname;
 }
 
+function getPokemonRouteSlug(path: string) {
+  return path.split('/').filter(Boolean).at(-1) ?? 'demo-charmander';
+}
+
 export function App() {
   const [path, setPath] = useState(getPath);
 
   useEffect(() => {
     const onPopState = () => setPath(getPath());
     const onDocumentClick = (event: MouseEvent) => {
-      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
         return;
       }
 
@@ -49,12 +60,20 @@ export function App() {
 
       const destination = new URL(anchor.href, window.location.href);
       if (destination.origin !== window.location.origin) return;
-      if (destination.pathname === window.location.pathname && destination.search === window.location.search) return;
+      if (
+        destination.pathname === window.location.pathname &&
+        destination.search === window.location.search
+      ) {
+        return;
+      }
 
       event.preventDefault();
       window.history.pushState({}, '', `${destination.pathname}${destination.search}${destination.hash}`);
       setPath(destination.pathname);
-      window.scrollTo({ top: 0, behavior: 'auto' });
+
+      const staysInsideFieldDex =
+        window.location.pathname.startsWith('/pokemon/') && destination.pathname.startsWith('/pokemon/');
+      if (!staysInsideFieldDex) window.scrollTo({ top: 0, behavior: 'auto' });
     };
 
     window.addEventListener('popstate', onPopState);
@@ -65,7 +84,9 @@ export function App() {
     };
   }, []);
 
-  if (path.startsWith('/pokemon/')) return <PokemonDetailPage />;
+  if (path.startsWith('/pokemon/')) {
+    return <PokemonDetailPage routeSlug={getPokemonRouteSlug(path)} />;
+  }
   if (path.startsWith('/asset-lab/generations')) return <GenerationsLabPage />;
   if (path.startsWith('/asset-lab')) return <AssetLabPage />;
   return <HomePage />;
