@@ -189,8 +189,12 @@ const reviewSpecies: Record<string, PokemonDetailView> = {
   },
 };
 
-const fallbackReviewPokemon = reviewSpecies['demo-charmander'];
-if (!fallbackReviewPokemon) throw new Error('Charmander review fixture is missing');
+function requireReviewPokemon(pokemon: PokemonDetailView | undefined): PokemonDetailView {
+  if (!pokemon) throw new Error('Charmander review fixture is missing');
+  return pokemon;
+}
+
+const fallbackReviewPokemon = requireReviewPokemon(reviewSpecies['demo-charmander']);
 
 export function getReviewPokemon(routeSlug: string): PokemonDetailView {
   return reviewSpecies[routeSlug] ?? fallbackReviewPokemon;

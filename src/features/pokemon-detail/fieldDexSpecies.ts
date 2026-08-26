@@ -86,8 +86,12 @@ const reviewSpecies = [
   },
 ] satisfies FieldDexSpecies[];
 
-const defaultSpecies = reviewSpecies.at(0);
-if (!defaultSpecies) throw new Error('Field Dex review registry is empty');
+function requireSpecies(species: FieldDexSpecies | undefined): FieldDexSpecies {
+  if (!species) throw new Error('Field Dex review registry is empty');
+  return species;
+}
+
+const defaultSpecies = requireSpecies(reviewSpecies[0]);
 
 export const FIELD_DEX_REVIEW_SPECIES: readonly FieldDexSpecies[] = reviewSpecies;
 
@@ -97,7 +101,10 @@ export function getFieldDexSpecies(routeSlug: string): FieldDexSpecies {
   return byRoute.get(routeSlug) ?? defaultSpecies;
 }
 
-export function getFieldDexNeighbours(routeSlug: string) {
+export function getFieldDexNeighbours(routeSlug: string): {
+  previous: FieldDexSpecies;
+  next: FieldDexSpecies;
+} {
   const index = Math.max(
     0,
     reviewSpecies.findIndex((species) => species.routeSlug === routeSlug),
