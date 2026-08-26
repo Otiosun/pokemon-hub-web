@@ -218,7 +218,15 @@
   }
 
   .dex-page .dex-nav a {
-    min-width: 82px;
+    min-width: 92px;
+    gap: 4px;
+    padding-inline: 6px;
+  }
+
+  .dex-page .dex-nav-sprite {
+    display: block;
+    width: 22px;
+    height: 20px;
   }
 
   .dex-page .dex-nav-copy strong {
