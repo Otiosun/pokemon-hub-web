@@ -26,7 +26,7 @@ function PokemonCard({ pokemon }: { pokemon: OwnedPokemonPreview }) {
       <div className="owned-pokemon-card-top">
         <span>#{String(pokemon.dex).padStart(3, '0')}</span>
         <div>
-          {pokemon.favorite && <span className="owned-pokemon-favorite" title="Favorito" aria-label="Favorito">★</span>}
+          {pokemon.favorite && <span className="owned-pokemon-favorite" title="Favorito" aria-hidden="true">★</span>}
           {pokemon.teamSlot && <strong>TIME · {pokemon.teamSlot}</strong>}
         </div>
       </div>
@@ -115,7 +115,7 @@ export function OwnedPokemonCollectionPage() {
           <h1>Meus Pokémon</h1>
           <p>Todos os Pokémon pertencentes ao jogador continuam visíveis aqui, inclusive os seis ativos no Time.</p>
         </div>
-        <div className="owned-pokemon-summary" aria-label="Resumo da coleção">
+        <div className="owned-pokemon-summary">
           <div><strong>{OWNED_POKEMON_PREVIEW.length}</strong><span>POKÉMON</span></div>
           <div><strong>{teamCount}</strong><span>NO TIME</span></div>
           <div><strong>{favoriteCount}</strong><span>FAVORITOS</span></div>
@@ -123,7 +123,7 @@ export function OwnedPokemonCollectionPage() {
       </header>
 
       <section className="owned-pokemon-toolbar" aria-label="Ferramentas da coleção">
-        <div className="owned-pokemon-modes" role="group" aria-label="Modo da coleção">
+        <fieldset className="owned-pokemon-modes" aria-label="Modo da coleção">
           {([
             ['all', 'TODOS'],
             ['boxes', 'BOXES'],
@@ -139,7 +139,7 @@ export function OwnedPokemonCollectionPage() {
               {label}
             </button>
           ))}
-        </div>
+        </fieldset>
         <label className="owned-pokemon-search">
           <span>BUSCAR</span>
           <input
