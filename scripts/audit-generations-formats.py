@@ -1,16 +1,25 @@
 from __future__ import annotations
 
+import importlib.util
 import io
 import json
-import re
-import urllib.request
 import zipfile
 from collections import Counter
 from pathlib import Path
 
 import py7zr
 
-from audit_generations_gen1_3 import PROJECTS, download_pack, expected_species, latest_pack, normalize
+AUDIT_PATH = Path(__file__).with_name('audit-generations-gen1-3.py')
+SPEC = importlib.util.spec_from_file_location('generations_coverage_audit', AUDIT_PATH)
+if SPEC is None or SPEC.loader is None:
+    raise RuntimeError(f'Unable to load audit helpers from {AUDIT_PATH}')
+AUDIT = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(AUDIT)
+
+download_pack = AUDIT.download_pack
+expected_species = AUDIT.expected_species
+latest_pack = AUDIT.latest_pack
+normalize = AUDIT.normalize
 
 MODEL_ROOT = 'assets/generations_core/bedrock/pokemon/models/'
 REPORT_PATH = Path('public/research/generations/format-report.json')
@@ -39,16 +48,20 @@ def inspect_names(payload: bytes) -> dict:
     config = 'config.json' if 'config.json' in names else None
 
     idle_like = sorted(
-        name for name in names
-        if 'idle' in Path(name).stem.lower() and Path(name).suffix.lower() in {'.tranm', '.smd', '.smdx'}
+        name
+        for name in names
+        if 'idle' in Path(name).stem.lower()
+        and Path(name).suffix.lower() in {'.tranm', '.smd', '.smdx'}
     )
     happy_like = sorted(
-        name for name in names
+        name
+        for name in names
         if any(word in Path(name).stem.lower() for word in ('glad', 'happy'))
         and Path(name).suffix.lower() in {'.tranm', '.smd', '.smdx'}
     )
     model_like = sorted(
-        name for name in names
+        name
+        for name in names
         if Path(name).stem.lower() == 'model' or Path(name).suffix.lower() in {'.glb', '.smdx'}
     )
 
@@ -65,10 +78,6 @@ def inspect_names(payload: bytes) -> dict:
         'modelLike': model_like[:12],
         'innerFileCount': len(names),
     }
-
-
-def request(url: str):
-    return urllib.request.Request(url, headers={'User-Agent': 'PokemonHubFormatAudit/0.1'})
 
 
 def main() -> None:
