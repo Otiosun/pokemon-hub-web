@@ -67,6 +67,11 @@ export function App() {
       if (anchor.target && anchor.target !== '_self') return;
       if (anchor.hasAttribute('download')) return;
 
+      if (anchor.closest('.dex-route.is-pending .dex-nav')) {
+        event.preventDefault();
+        return;
+      }
+
       const destination = new URL(anchor.href, window.location.href);
       if (destination.origin !== window.location.origin) return;
 
