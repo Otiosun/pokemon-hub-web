@@ -20,10 +20,10 @@ export function GenerationsLabPage() {
       <header className="generations-header">
         <div>
           <p className="eyebrow">PROVIDER BENCHMARK · GENERATIONS</p>
-          <h1>Idle vivo. Toque curto, reação Happy.</h1>
+          <h1>3D vivo, simples e leve.</h1>
           <p className="hero-copy">
-            Só duas animações entram no produto: Idle em loop e Happy uma vez por interação. Enquanto
-            Happy toca, novos toques são ignorados; ao terminar, o Pokémon volta ao Idle.
+            O produto usa somente o Idle real de cada Pokémon. Giro e zoom continuam interativos; nenhuma
+            animação é disparada por toque.
           </p>
         </div>
         <a className="text-link" href="/asset-lab">
@@ -53,17 +53,17 @@ export function GenerationsLabPage() {
           </div>
           <div className="generations-proof">
             <strong>Generations · pipeline semântico automático</strong>
-            <span>GLB + materiais bakeados + somente Idle/Happy · fonte {active.format}</span>
+            <span>GLB + materiais bakeados + Idle real · fonte {active.format}</span>
           </div>
         </div>
 
-        <GenerationsPokemonViewer key={active.slug} species={active.slug} name={active.name} />
-        <p className="gesture-hint">Toque curto = Happy · arraste = girar · roda ou pinça = zoom</p>
+        <GenerationsPokemonViewer species={active.slug} name={active.name} />
+        <p className="gesture-hint">Arraste = girar · roda ou pinça = zoom</p>
       </section>
 
       <p className="lab-note">
-        Só um WebGL existe por vez. Bulbasaur/Charmander/Squirtle validam o produto; Caterpie, Ledyba e
-        Rayquaza validam GFBANM, SMD e Idle semântico. Trocar de Pokémon desmonta e libera o viewer anterior.
+        Um único contexto WebGL permanece ativo. Ao trocar de Pokémon, o atual continua visível enquanto o
+        próximo é carregado e só é substituído quando o novo modelo está pronto.
       </p>
     </main>
   );
