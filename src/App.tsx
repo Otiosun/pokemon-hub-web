@@ -67,12 +67,13 @@ export function App() {
         return;
       }
 
+      const currentPath = window.location.pathname;
+      const staysInsideFieldDex =
+        currentPath.startsWith('/pokemon/') && destination.pathname.startsWith('/pokemon/');
+
       event.preventDefault();
       window.history.pushState({}, '', `${destination.pathname}${destination.search}${destination.hash}`);
       setPath(destination.pathname);
-
-      const staysInsideFieldDex =
-        window.location.pathname.startsWith('/pokemon/') && destination.pathname.startsWith('/pokemon/');
       if (!staysInsideFieldDex) window.scrollTo({ top: 0, behavior: 'auto' });
     };
 
