@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getPokemonAssetUrl } from '../../visual-assets/assetBaseUrl';
-import { TypeIcon } from '../../visual-assets/TypeIcon';
+import { TypeBadge } from '../../visual-assets/TypeBadge';
 import {
   FIELD_DEX_REVIEW_SPECIES,
   getFieldDexVisual,
@@ -263,10 +263,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
             <h1>{activeRecord.name}</h1>
             <div className="pokedex-species-types">
               {activeRecord.types.map((type) => (
-                <span key={type} style={{ borderColor: `${typeAccent(type)}70` }}>
-                  <TypeIcon type={type} fallbackColor={typeAccent(type)} />
-                  {type.toUpperCase()}
-                </span>
+                <TypeBadge key={type} type={type} accent={typeAccent(type)} />
               ))}
             </div>
           </div>
@@ -289,7 +286,16 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
 
           <dl className="pokedex-species-facts">
             <div><dt>REGIÃO</dt><dd>{region}</dd></div>
-            <div><dt>TIPO</dt><dd>{activeRecord.types.join(' · ') || '—'}</dd></div>
+            <div>
+              <dt>TIPO</dt>
+              <dd className="pokedex-species-fact-types">
+                {activeRecord.types.length > 0
+                  ? activeRecord.types.map((type) => (
+                      <TypeBadge key={type} type={type} accent={typeAccent(type)} compact />
+                    ))
+                  : '—'}
+              </dd>
+            </div>
             <div><dt>ALTURA</dt><dd>{activeRecord.height}</dd></div>
             <div><dt>PESO</dt><dd>{activeRecord.weight}</dd></div>
           </dl>
