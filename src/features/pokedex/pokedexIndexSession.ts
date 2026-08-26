@@ -1,8 +1,10 @@
 export type PokedexRegionFilter = 'Todos' | 'Kanto' | 'Johto' | 'Hoenn';
+export type PokedexDiscoveryFilter = 'Todos' | 'Avistados' | 'Capturados' | 'Desconhecidos';
 
 type PokedexIndexSession = {
   query: string;
   region: PokedexRegionFilter;
+  discovery: PokedexDiscoveryFilter;
   typeSlug: string | null;
   scrollY: number;
 };
@@ -10,6 +12,7 @@ type PokedexIndexSession = {
 const session: PokedexIndexSession = {
   query: '',
   region: 'Todos',
+  discovery: 'Todos',
   typeSlug: null,
   scrollY: 0,
 };
@@ -21,10 +24,12 @@ export function readPokedexIndexSession(): PokedexIndexSession {
 export function rememberPokedexIndexFilters(
   query: string,
   region: PokedexRegionFilter,
+  discovery: PokedexDiscoveryFilter,
   typeSlug: string | null,
 ) {
   session.query = query;
   session.region = region;
+  session.discovery = discovery;
   session.typeSlug = typeSlug;
 }
 
