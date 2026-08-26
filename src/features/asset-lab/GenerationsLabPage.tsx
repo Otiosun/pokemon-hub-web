@@ -2,15 +2,18 @@ import { useState } from 'react';
 import { GenerationsPokemonViewer } from './GenerationsPokemonViewer';
 import './generations-lab.css';
 
-const starters = [
-  { slug: 'bulbasaur', name: 'Bulbasaur', dex: 1, type: 'GRASS · POISON' },
-  { slug: 'charmander', name: 'Charmander', dex: 4, type: 'FIRE' },
-  { slug: 'squirtle', name: 'Squirtle', dex: 7, type: 'WATER' },
+const samples = [
+  { slug: 'bulbasaur', name: 'Bulbasaur', dex: 1, type: 'GRASS · POISON', format: 'TRANM' },
+  { slug: 'charmander', name: 'Charmander', dex: 4, type: 'FIRE', format: 'TRANM' },
+  { slug: 'squirtle', name: 'Squirtle', dex: 7, type: 'WATER', format: 'TRANM' },
+  { slug: 'caterpie', name: 'Caterpie', dex: 10, type: 'BUG', format: 'GFBANM' },
+  { slug: 'ledyba', name: 'Ledyba', dex: 165, type: 'BUG · FLYING', format: 'SMD' },
+  { slug: 'rayquaza', name: 'Rayquaza', dex: 384, type: 'DRAGON · FLYING', format: 'FLYIDLE · TRANM' },
 ] as const;
 
 export function GenerationsLabPage() {
-  const [activeSlug, setActiveSlug] = useState<(typeof starters)[number]['slug']>('charmander');
-  const active = starters.find((starter) => starter.slug === activeSlug) ?? starters[1];
+  const [activeSlug, setActiveSlug] = useState<(typeof samples)[number]['slug']>('charmander');
+  const active = samples.find((sample) => sample.slug === activeSlug) ?? samples[1];
 
   return (
     <main className="shell generations-lab">
@@ -28,16 +31,16 @@ export function GenerationsLabPage() {
         </a>
       </header>
 
-      <nav className="starter-switcher" aria-label="Escolher starter para testar">
-        {starters.map((starter) => (
+      <nav className="starter-switcher" aria-label="Escolher Pokémon para testar">
+        {samples.map((sample) => (
           <button
-            key={starter.slug}
+            key={sample.slug}
             type="button"
-            className={starter.slug === active.slug ? 'is-active' : ''}
-            onClick={() => setActiveSlug(starter.slug)}
+            className={sample.slug === active.slug ? 'is-active' : ''}
+            onClick={() => setActiveSlug(sample.slug)}
           >
-            <span>#{String(starter.dex).padStart(3, '0')}</span>
-            <strong>{starter.name}</strong>
+            <span>#{String(sample.dex).padStart(3, '0')} · {sample.format}</span>
+            <strong>{sample.name}</strong>
           </button>
         ))}
       </nav>
@@ -49,8 +52,8 @@ export function GenerationsLabPage() {
             <h2>{active.name}</h2>
           </div>
           <div className="generations-proof">
-            <strong>Generations Gen 1 · pipeline automático</strong>
-            <span>GLB + materiais bakeados + Idle/Happy TRANM</span>
+            <strong>Generations · pipeline semântico automático</strong>
+            <span>GLB + materiais bakeados + somente Idle/Happy · fonte {active.format}</span>
           </div>
         </div>
 
@@ -59,8 +62,8 @@ export function GenerationsLabPage() {
       </section>
 
       <p className="lab-note">
-        Só um WebGL existe por vez. Trocar de Pokémon desmonta e libera o viewer anterior. Esta página
-        valida o pipeline genérico antes da auditoria e conversão em lote da National Dex #001–386.
+        Só um WebGL existe por vez. Bulbasaur/Charmander/Squirtle validam o produto; Caterpie, Ledyba e
+        Rayquaza validam GFBANM, SMD e Idle semântico. Trocar de Pokémon desmonta e libera o viewer anterior.
       </p>
     </main>
   );
