@@ -17,8 +17,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
-    "probe:generations": "PYTHONPATH=/tmp/pokemon-hub-py python3 scripts/probe-generations-gen1.py",
-    "verify": "python3 -m pip install --disable-pip-version-check --quiet --target /tmp/pokemon-hub-py py7zr && PYTHONPATH=/tmp/pokemon-hub-py python3 scripts/probe-generations-gen1.py && biome lint . && tsc --noEmit && vitest run && vite build"
+    "probe:generations": "PYTHONPATH=scripts:/tmp/pokemon-hub-py python3 scripts/probe-generations-gen1.py",
+    "verify": "python3 -m pip install --disable-pip-version-check --quiet --target /tmp/pokemon-hub-py py7zr && PYTHONPATH=scripts:/tmp/pokemon-hub-py python3 scripts/probe-generations-gen1.py && biome lint . && tsc --noEmit && vitest run && vite build"
   },
   "dependencies": {
     "@google/model-viewer": "4.3.1",
