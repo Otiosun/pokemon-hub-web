@@ -1,4 +1,5 @@
 import { GenerationsCharmanderViewer } from './GenerationsCharmanderViewer';
+import './generations-lab.css';
 
 export function GenerationsLabPage() {
   return (
