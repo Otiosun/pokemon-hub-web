@@ -33,7 +33,9 @@ export function AssetLabPage() {
             Este laboratório testa o pipeline visual antes de desenharmos Time, Box e Pokédex.
           </p>
         </div>
-        <a className="text-link" href="/">← início</a>
+        <a className="text-link" href="/">
+          ← início
+        </a>
       </header>
 
       <nav className="starter-tabs" aria-label="Escolher Pokémon do laboratório">
@@ -59,7 +61,9 @@ export function AssetLabPage() {
         <div className="stage-viewer">
           <div className="stage-heading">
             <div>
-              <p className="card-kicker">#{pokemon.dex} · {pokemon.types.join(' / ')}</p>
+              <p className="card-kicker">
+                #{pokemon.dex} · {pokemon.types.join(' / ')}
+              </p>
               <h2>{pokemon.name}</h2>
             </div>
             <button
@@ -71,7 +75,11 @@ export function AssetLabPage() {
             </button>
           </div>
 
-          <PokemonModelViewer pokemon={pokemon} forceFallback={forceFallback} />
+          <PokemonModelViewer
+            key={pokemon.id}
+            pokemon={pokemon}
+            forceFallback={forceFallback}
+          />
           <p className="gesture-hint">Arraste para girar · use a roda ou pinça para zoom</p>
         </div>
 
@@ -82,9 +90,11 @@ export function AssetLabPage() {
           <div>
             <p className="card-kicker">PMD PORTRAIT</p>
             <h3>{emotion}</h3>
-            <p className="emotion-copy">Uma segunda representação deixa o Pokémon expressivo sem depender do 3D.</p>
+            <p className="emotion-copy">
+              Uma segunda representação deixa o Pokémon expressivo sem depender do 3D.
+            </p>
           </div>
-          <div className="emotion-buttons" aria-label="Expressões">
+          <div className="emotion-buttons" role="group" aria-label="Expressões">
             {emotions.map((item) => (
               <button
                 type="button"
@@ -120,7 +130,8 @@ export function AssetLabPage() {
       </section>
 
       <p className="lab-note">
-        Spike técnico: ainda não é a página final do Pokémon. O objetivo aqui é quebrar assets, medir cobertura e descobrir limitações antes de investir no design definitivo.
+        Spike técnico: ainda não é a página final do Pokémon. O objetivo aqui é quebrar assets,
+        medir cobertura e descobrir limitações antes de investir no design definitivo.
       </p>
     </main>
   );
