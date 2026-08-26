@@ -17,13 +17,15 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
-    "verify": "biome lint . && tsc --noEmit && vitest run && vite build"
+    "probe:home": "node scripts/probe-pokemon-home.mjs",
+    "verify": "node scripts/probe-pokemon-home.mjs && biome lint . && tsc --noEmit && vitest run && vite build"
   },
   "dependencies": {
     "@google/model-viewer": "4.3.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "three": "0.183.2"
+    "three": "0.183.2",
+    "unityfs-js": "0.2.8"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.10",
