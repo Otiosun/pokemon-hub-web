@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getPokemonAssetUrl } from '../../visual-assets/assetBaseUrl';
+import { TypeIcon } from '../../visual-assets/TypeIcon';
 import {
   FIELD_DEX_REVIEW_SPECIES,
   getFieldDexVisual,
@@ -124,6 +125,21 @@ async function warmReview3d(review: FieldDexSpecies) {
   }
 }
 
+function SideArrow({ direction }: { direction: 'left' | 'right' }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d={direction === 'left' ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function PokedexSpeciesPage({ dex }: { dex: number }) {
   const validDex = Number.isInteger(dex) && dex >= 1 && dex <= TOTAL ? dex : 1;
   const review = useMemo(() => readDexReview(validDex), [validDex]);
@@ -219,13 +235,36 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
             />
           </div>
 
+          <nav className="pokedex-species-side-nav" aria-label="Espécies anterior e próxima">
+            {previousDex ? (
+              <a
+                className="is-previous"
+                href={neighbourHref(previousDex)}
+                aria-label={`Abrir espécie anterior, número ${String(previousDex).padStart(3, '0')}`}
+              >
+                <SideArrow direction="left" />
+                <span>#{String(previousDex).padStart(3, '0')}</span>
+              </a>
+            ) : <span className="is-placeholder" aria-hidden="true" />}
+            {nextDex ? (
+              <a
+                className="is-next"
+                href={neighbourHref(nextDex)}
+                aria-label={`Abrir próxima espécie, número ${String(nextDex).padStart(3, '0')}`}
+              >
+                <span>#{String(nextDex).padStart(3, '0')}</span>
+                <SideArrow direction="right" />
+              </a>
+            ) : <span className="is-placeholder" aria-hidden="true" />}
+          </nav>
+
           <div className="pokedex-species-identity">
             <span className="pokedex-species-mode">ARQUIVO 2D · ESPÉCIE</span>
             <h1>{activeRecord.name}</h1>
             <div className="pokedex-species-types">
               {activeRecord.types.map((type) => (
                 <span key={type} style={{ borderColor: `${typeAccent(type)}70` }}>
-                  <i style={{ background: typeAccent(type) }} aria-hidden="true" />
+                  <TypeIcon type={type} fallbackColor={typeAccent(type)} />
                   {type.toUpperCase()}
                 </span>
               ))}
@@ -260,20 +299,8 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
             <p>Este registro leve não carrega WebGL. O modelo 3D é ativado apenas quando a espécie possui um pacote publicado para inspeção.</p>
           </div>
 
-          <nav className="pokedex-species-nav" aria-label="Navegação pelo Índice Nacional">
-            {previousDex ? (
-              <a href={neighbourHref(previousDex)}>
-                <span>ANTERIOR</span>
-                <strong>#{String(previousDex).padStart(3, '0')}</strong>
-              </a>
-            ) : <span />}
+          <nav className="pokedex-species-nav is-index-only" aria-label="Voltar ao Índice Nacional">
             <a className="is-index" href="/pokedex">ÍNDICE 001—386</a>
-            {nextDex ? (
-              <a href={neighbourHref(nextDex)}>
-                <span>PRÓXIMO</span>
-                <strong>#{String(nextDex).padStart(3, '0')}</strong>
-              </a>
-            ) : <span />}
           </nav>
         </div>
       </section>
