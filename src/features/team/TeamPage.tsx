@@ -205,23 +205,23 @@ export function TeamPage() {
             <button type="button" onClick={closePicker}>FECHAR</button>
           </header>
 
-          <div className="team-picker-candidates" role="list" aria-label="Pokémon disponíveis fora do Time">
+          <ul className="team-picker-candidates" aria-label="Pokémon disponíveis fora do Time">
             {storageCandidates.map((pokemon) => (
-              <button
-                type="button"
-                role="listitem"
-                key={pokemon.instanceId}
-                className={candidateId === pokemon.instanceId ? 'is-selected' : undefined}
-                onClick={() => setCandidateId(pokemon.instanceId)}
-              >
-                <PokemonAssetImage dex={pokemon.dex} role="icon" alt="" aria-hidden="true" loading="lazy" fallbackLabel="?" />
-                <span><strong>{pokemon.nickname}</strong><small>NV. {pokemon.level} · {pokemon.box}</small></span>
-                <span className="team-picker-types">
-                  {pokemon.types.map((type) => <TypeBadge key={type} type={type} accent={typeAccent(type)} compact />)}
-                </span>
-              </button>
+              <li key={pokemon.instanceId}>
+                <button
+                  type="button"
+                  className={candidateId === pokemon.instanceId ? 'is-selected' : undefined}
+                  onClick={() => setCandidateId(pokemon.instanceId)}
+                >
+                  <PokemonAssetImage dex={pokemon.dex} role="icon" alt="" aria-hidden="true" loading="lazy" fallbackLabel="?" />
+                  <span><strong>{pokemon.nickname}</strong><small>NV. {pokemon.level} · {pokemon.box}</small></span>
+                  <span className="team-picker-types">
+                    {pokemon.types.map((type) => <TypeBadge key={type} type={type} accent={typeAccent(type)} compact />)}
+                  </span>
+                </button>
+              </li>
             ))}
-          </div>
+          </ul>
 
           <div className={`team-swap-preview${candidate ? ' is-ready' : ''}`}>
             {candidate ? (
