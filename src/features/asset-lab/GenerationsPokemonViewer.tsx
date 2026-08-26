@@ -13,6 +13,7 @@ import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js
 import type { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import type { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { useEffect, useRef, useState } from 'react';
+import { getPokemonAssetUrl } from '../../visual-assets/assetBaseUrl';
 
 type MotionSeries = { times: number[]; values: number[] };
 type BoneMotion = {
@@ -261,13 +262,12 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
     async function loadSpecies(runtime: Runtime) {
       setViewerState('loading');
       setErrorDetail('');
-      const base = `/research/generations/${species}`;
       let pendingTextures: Texture[] = [];
       let pendingMaterials: Material[] = [];
       let pendingModel: Group | null = null;
 
       try {
-        const assetResponse = await fetch(`${base}/asset.json`, {
+        const assetResponse = await fetch(getPokemonAssetUrl(species, 'asset.json'), {
           signal: controller.signal,
           cache: 'force-cache',
         });
@@ -284,7 +284,9 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
         const [texturePairs, modelResponse] = await Promise.all([
           Promise.all(
             textureNames.map(async (textureName) => {
-              const texture = await runtime.textureLoader.loadAsync(`${base}/${textureName}`);
+              const texture = await runtime.textureLoader.loadAsync(
+                getPokemonAssetUrl(species, textureName),
+              );
               texture.flipY = false;
               texture.wrapS = runtime.THREE.RepeatWrapping;
               texture.wrapT = runtime.THREE.RepeatWrapping;
@@ -294,11 +296,14 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
               return [textureName, texture] as const;
             }),
           ),
-          fetch(`${base}/${payload.model}`, { signal: controller.signal, cache: 'force-cache' }),
+          fetch(getPokemonAssetUrl(species, payload.model), {
+            signal: controller.signal,
+            cache: 'force-cache',
+          }),
         ]);
         if (!modelResponse.ok) throw new Error(`model.glb HTTP ${modelResponse.status}`);
         const modelBuffer = await modelResponse.arrayBuffer();
-        const gltf = await runtime.gltfLoader.parseAsync(modelBuffer, `${base}/`);
+        const gltf = await runtime.gltfLoader.parseAsync(modelBuffer, '');
         pendingModel = gltf.scene;
 
         if (cancelled || loadVersion !== loadVersionRef.current) {
