@@ -1,3 +1,8 @@
+import {
+  getPokemonSpeciesVisualAssets,
+  type PokemonSpeciesVisualAssets,
+} from '../../visual-assets/pokemonVisualRegistry';
+
 export type FieldDexSpecies = {
   routeSlug: string;
   dex: number;
@@ -11,12 +16,7 @@ export type FieldDexSpecies = {
   types: string[];
 };
 
-export type FieldDexVisual = {
-  artworkHome: string;
-  artworkOfficial: string;
-  icon: string;
-  portrait: string;
-};
+export type FieldDexVisual = PokemonSpeciesVisualAssets;
 
 const reviewSpecies = [
   {
@@ -115,14 +115,7 @@ export function getFieldDexNeighbours(routeSlug: string): {
 }
 
 export function getFieldDexVisual(dex: number): FieldDexVisual {
-  const padded = String(dex).padStart(4, '0');
-  const pokeApiRoot = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
-  return {
-    artworkHome: `${pokeApiRoot}/other/home/${dex}.png`,
-    artworkOfficial: `${pokeApiRoot}/other/official-artwork/${dex}.png`,
-    icon: `${pokeApiRoot}/versions/generation-viii/icons/${dex}.png`,
-    portrait: `https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/portrait/${padded}/Normal.png`,
-  };
+  return getPokemonSpeciesVisualAssets(dex);
 }
 
 export function typeAccent(type: string) {
