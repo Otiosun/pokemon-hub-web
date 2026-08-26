@@ -19,6 +19,9 @@ const PokedexSpeciesPage = lazy(() =>
 const OwnedPokemonCollectionPage = lazy(() =>
   import('./features/collection/OwnedPokemonCollectionPage').then((module) => ({ default: module.OwnedPokemonCollectionPage })),
 );
+const OwnedPokemonDetailPage = lazy(() =>
+  import('./features/collection/OwnedPokemonDetailPage').then((module) => ({ default: module.OwnedPokemonDetailPage })),
+);
 const TeamPage = lazy(() =>
   import('./features/team/TeamPage').then((module) => ({ default: module.TeamPage })),
 );
@@ -100,6 +103,10 @@ function getPokemonRouteSlug(path: string) {
   return path.split('/').filter(Boolean).at(-1) ?? 'demo-charmander';
 }
 
+function isLegacyFieldDexPath(path: string) {
+  return path.startsWith('/pokemon/demo-');
+}
+
 function getPokedexDex(path: string) {
   const raw = path.split('/').filter(Boolean)[1] ?? '1';
   const parsed = Number.parseInt(raw, 10);
@@ -119,7 +126,7 @@ function isPokedexIndexPath(path: string) {
 }
 
 function usesSiblingHistoryReplacement(anchor: HTMLAnchorElement) {
-  return Boolean(anchor.closest('.pokedex-species-side-nav, .dex-nav'));
+  return Boolean(anchor.closest('.pokedex-species-side-nav, .dex-nav, .owned-pokemon-side-nav'));
 }
 
 function rootForPath(path: string) {
@@ -281,8 +288,17 @@ export function App() {
       </HubFrame>
     );
   }
-  if (path.startsWith('/pokemon/')) {
+  if (isLegacyFieldDexPath(path)) {
     return <PokemonDetailRoute routeSlug={getPokemonRouteSlug(path)} />;
+  }
+  if (path.startsWith('/pokemon/')) {
+    return (
+      <HubFrame active="pokemon" destinations={hubDestinations}>
+        <Suspense fallback={<RouteFallback label="ABRINDO POKÉMON…" />}>
+          <OwnedPokemonDetailPage instanceId={getPokemonRouteSlug(path)} />
+        </Suspense>
+      </HubFrame>
+    );
   }
   if (path.startsWith('/pokedex/')) {
     return (
