@@ -1,9 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
+import { getPokemonAssetUrl } from '../../visual-assets/assetBaseUrl';
 import {
   FIELD_DEX_REVIEW_SPECIES,
   getFieldDexVisual,
   typeAccent,
+  type FieldDexSpecies,
 } from '../pokemon-detail/fieldDexSpecies';
+import {
+  formatNationalDexName,
+  getCachedNationalDexName,
+} from './nationalDexRuntime';
 import './pokedex-index.css';
 import './pokedex-species.css';
 
@@ -15,6 +21,7 @@ type PokemonPayload = {
 };
 
 type RecordState = {
+  dex: number;
   status: 'loading' | 'ready' | 'failed';
   name: string;
   height: string;
@@ -22,7 +29,13 @@ type RecordState = {
   types: string[];
 };
 
+type ReviewAssetPayload = {
+  model?: string;
+  materials?: Record<string, { texture?: string }>;
+};
+
 const TOTAL = 386;
+const warmedReviewSpecies = new Set<string>();
 const TYPE_LABELS: Record<string, string> = {
   normal: 'Normal',
   fire: 'Fogo',
@@ -50,16 +63,8 @@ function regionForDex(dex: number) {
   return 'Hoenn';
 }
 
-function formatSpeciesName(value: string) {
-  return value
-    .split('-')
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}
-
 function translateType(value: string) {
-  return TYPE_LABELS[value] ?? formatSpeciesName(value);
+  return TYPE_LABELS[value] ?? formatNationalDexName(value);
 }
 
 function formatMetric(value: number | undefined, divisor: number, unit: string) {
@@ -75,27 +80,66 @@ function neighbourHref(dex: number) {
   return `/pokedex/${String(dex).padStart(3, '0')}`;
 }
 
+function initialRecord(dex: number, review: FieldDexSpecies | undefined): RecordState {
+  return {
+    dex,
+    status: 'loading',
+    name: review?.name ?? getCachedNationalDexName(dex) ?? `Nº ${String(dex).padStart(3, '0')}`,
+    height: review?.height ?? '—',
+    weight: review?.weight ?? '—',
+    types: review?.types ?? [],
+  };
+}
+
+async function warmReview3d(review: FieldDexSpecies) {
+  if (warmedReviewSpecies.has(review.slug)) return;
+  warmedReviewSpecies.add(review.slug);
+
+  try {
+    const assetPromise = fetch(getPokemonAssetUrl(review.slug, 'asset.json'), { cache: 'force-cache' });
+    await Promise.all([
+      import('three'),
+      import('three/examples/jsm/loaders/GLTFLoader.js'),
+      import('three/examples/jsm/loaders/DRACOLoader.js'),
+      import('three/examples/jsm/controls/OrbitControls.js'),
+    ]);
+
+    const assetResponse = await assetPromise;
+    if (!assetResponse.ok) throw new Error(`asset.json HTTP ${assetResponse.status}`);
+    const payload = (await assetResponse.json()) as ReviewAssetPayload;
+    if (!payload.model) return;
+
+    const textureNames = Object.values(payload.materials ?? {})
+      .map((binding) => binding.texture)
+      .filter((value): value is string => Boolean(value));
+    const assetNames = [payload.model, ...new Set(textureNames)];
+    await Promise.all(
+      assetNames.map((assetName) =>
+        fetch(getPokemonAssetUrl(review.slug, assetName), { cache: 'force-cache' }).catch(() => undefined),
+      ),
+    );
+  } catch (error) {
+    warmedReviewSpecies.delete(review.slug);
+    console.warn(`3D warmup failed for ${review.slug}`, error);
+  }
+}
+
 export function PokedexSpeciesPage({ dex }: { dex: number }) {
   const validDex = Number.isInteger(dex) && dex >= 1 && dex <= TOTAL ? dex : 1;
   const review = useMemo(() => readDexReview(validDex), [validDex]);
   const visual = getFieldDexVisual(validDex);
-  const [record, setRecord] = useState<RecordState>({
-    status: 'loading',
-    name: review?.name ?? `Espécie ${String(validDex).padStart(3, '0')}`,
-    height: review?.height ?? '—',
-    weight: review?.weight ?? '—',
-    types: review?.types ?? [],
-  });
+  const [record, setRecord] = useState<RecordState>(() => initialRecord(validDex, review));
+  const [artworkReadyDex, setArtworkReadyDex] = useState<number | null>(null);
+  const activeRecord = record.dex === validDex ? record : initialRecord(validDex, review);
+  const artworkReady = artworkReadyDex === validDex;
+
+  useEffect(() => {
+    if (review) void warmReview3d(review);
+  }, [review]);
 
   useEffect(() => {
     const controller = new AbortController();
-    setRecord({
-      status: 'loading',
-      name: review?.name ?? `Espécie ${String(validDex).padStart(3, '0')}`,
-      height: review?.height ?? '—',
-      weight: review?.weight ?? '—',
-      types: review?.types ?? [],
-    });
+    setRecord(initialRecord(validDex, review));
 
     async function loadRecord() {
       try {
@@ -112,8 +156,9 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
           .map(translateType);
 
         setRecord({
+          dex: validDex,
           status: 'ready',
-          name: payload.name ? formatSpeciesName(payload.name) : review?.name ?? `Espécie ${validDex}`,
+          name: payload.name ? formatNationalDexName(payload.name) : review?.name ?? `Nº ${String(validDex).padStart(3, '0')}`,
           height: formatMetric(payload.height, 10, 'm'),
           weight: formatMetric(payload.weight, 10, 'kg'),
           types: types.length > 0 ? types : review?.types ?? [],
@@ -121,7 +166,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
       } catch (error) {
         if (controller.signal.aborted) return;
         console.warn(`National Dex record ${validDex} unavailable`, error);
-        setRecord((current) => ({ ...current, status: 'failed' }));
+        setRecord((current) => current.dex === validDex ? { ...current, status: 'failed' } : current);
       }
     }
 
@@ -153,28 +198,32 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
       </header>
 
       <section className="pokedex-species-shell">
-        <div className="pokedex-species-stage">
+        <div className={`pokedex-species-stage${artworkReady ? ' is-artwork-ready' : ' is-artwork-loading'}`}>
           <div className="pokedex-species-stage-top">
             <span>NATIONAL {String(validDex).padStart(3, '0')} · {region.toUpperCase()}</span>
-            <span className={`pokedex-species-sync is-${record.status}`}>
+            <span className={`pokedex-species-sync is-${activeRecord.status}`}>
               <i aria-hidden="true" />
-              {record.status === 'ready' ? 'ARQUIVO SINCRONIZADO' : record.status === 'failed' ? 'MODO OFFLINE' : 'SINCRONIZANDO'}
+              {activeRecord.status === 'ready' ? 'ARQUIVO SINCRONIZADO' : activeRecord.status === 'failed' ? 'MODO OFFLINE' : 'SINCRONIZANDO'}
             </span>
           </div>
 
-          <img
-            className="pokedex-species-artwork"
-            src={visual.artworkOfficial}
-            alt={`Ilustração de ${record.name}`}
-            decoding="async"
-            fetchPriority="high"
-          />
+          <div className="pokedex-species-artwork-slot">
+            <img
+              key={validDex}
+              className="pokedex-species-artwork"
+              src={visual.artworkOfficial}
+              alt={`Ilustração de ${activeRecord.name}`}
+              decoding="async"
+              fetchPriority="high"
+              onLoad={() => setArtworkReadyDex(validDex)}
+            />
+          </div>
 
           <div className="pokedex-species-identity">
             <span className="pokedex-species-mode">ARQUIVO 2D · ESPÉCIE</span>
-            <h1>{record.name}</h1>
+            <h1>{activeRecord.name}</h1>
             <div className="pokedex-species-types">
-              {record.types.map((type) => (
+              {activeRecord.types.map((type) => (
                 <span key={type} style={{ borderColor: `${typeAccent(type)}70` }}>
                   <i style={{ background: typeAccent(type) }} aria-hidden="true" />
                   {type.toUpperCase()}
@@ -201,9 +250,9 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
 
           <dl className="pokedex-species-facts">
             <div><dt>REGIÃO</dt><dd>{region}</dd></div>
-            <div><dt>TIPO</dt><dd>{record.types.join(' · ') || '—'}</dd></div>
-            <div><dt>ALTURA</dt><dd>{record.height}</dd></div>
-            <div><dt>PESO</dt><dd>{record.weight}</dd></div>
+            <div><dt>TIPO</dt><dd>{activeRecord.types.join(' · ') || '—'}</dd></div>
+            <div><dt>ALTURA</dt><dd>{activeRecord.height}</dd></div>
+            <div><dt>PESO</dt><dd>{activeRecord.weight}</dd></div>
           </dl>
 
           <div className="pokedex-species-note">
