@@ -226,6 +226,7 @@ def main() -> None:
                             'failed': len(failures),
                         }
                     ),
+                    flush=True,
                 )
     finally:
         for _, archive in packs.values():
@@ -261,8 +262,10 @@ def main() -> None:
             },
             ensure_ascii=False,
         ),
+        flush=True,
     )
     if failures:
+        print('GENERATIONS_BATCH_FAILURES', json.dumps(failures, ensure_ascii=False), flush=True)
         raise SystemExit(1)
 
 
