@@ -89,7 +89,8 @@ export function AssetLabPage() {
           </div>
 
           {canUseProceduralIdle && !forceFallback && (
-            <div className="viewer-mode-switch" aria-label="Comparar movimento 3D">
+            <fieldset className="viewer-mode-switch">
+              <legend className="sr-only">Comparar movimento 3D</legend>
               <button
                 type="button"
                 className={viewerMode === 'source' ? 'is-active' : ''}
@@ -104,7 +105,7 @@ export function AssetLabPage() {
               >
                 Idle experimental
               </button>
-            </div>
+            </fieldset>
           )}
 
           {viewerMode === 'procedural' && canUseProceduralIdle && !forceFallback ? (
