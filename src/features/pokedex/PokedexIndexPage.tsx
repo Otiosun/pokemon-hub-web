@@ -13,6 +13,11 @@ import './pokedex-index.css';
 type RegionFilter = 'Todos' | 'Kanto' | 'Johto' | 'Hoenn';
 
 const REVIEW_BY_DEX = new Map(FIELD_DEX_REVIEW_SPECIES.map((species) => [species.dex, species]));
+const SKELETON_KEYS = [
+  'dex-skeleton-01', 'dex-skeleton-02', 'dex-skeleton-03', 'dex-skeleton-04',
+  'dex-skeleton-05', 'dex-skeleton-06', 'dex-skeleton-07', 'dex-skeleton-08',
+  'dex-skeleton-09', 'dex-skeleton-10', 'dex-skeleton-11', 'dex-skeleton-12',
+] as const;
 
 function regionForDex(dex: number): Exclude<RegionFilter, 'Todos'> {
   if (dex <= 151) return 'Kanto';
@@ -35,8 +40,8 @@ function Lens() {
 function CatalogSkeleton() {
   return (
     <div className="pokedex-index-grid is-loading" aria-hidden="true">
-      {Array.from({ length: 12 }, (_, index) => (
-        <div className="pokedex-index-card is-skeleton" key={index}>
+      {SKELETON_KEYS.map((key) => (
+        <div className="pokedex-index-card is-skeleton" key={key}>
           <div className="pokedex-index-card-top"><span /></div>
           <div className="pokedex-index-sprite-wrap" />
           <div className="pokedex-index-card-copy"><strong /><small /></div>
