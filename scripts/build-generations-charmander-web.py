@@ -19,6 +19,8 @@ from GFLib.Anim.Animation import AnimationT
 
 ZIP_PATH = Path('/tmp/generations-gen1.zip')
 OUTPUT = Path('public/research/generations/charmander')
+DRACO_SOURCE = Path('node_modules/three/examples/jsm/libs/draco')
+DRACO_OUTPUT = Path('public/research/draco')
 PK_PATH = 'assets/generations_core/bedrock/pokemon/models/charmander.pk'
 
 SCALE = 0x7FFF
@@ -134,6 +136,8 @@ def glb_document(data: bytes):
 
 if not ZIP_PATH.exists():
     raise RuntimeError('Generation 1 zip is missing; run probe-generations-gen1.py first')
+if not DRACO_SOURCE.exists():
+    raise RuntimeError(f'Draco decoder directory missing: {DRACO_SOURCE}')
 
 OUTPUT.mkdir(parents=True, exist_ok=True)
 for child in OUTPUT.iterdir():
@@ -141,6 +145,10 @@ for child in OUTPUT.iterdir():
         child.unlink()
     elif child.is_dir():
         shutil.rmtree(child)
+
+if DRACO_OUTPUT.exists():
+    shutil.rmtree(DRACO_OUTPUT)
+shutil.copytree(DRACO_SOURCE, DRACO_OUTPUT)
 
 with zipfile.ZipFile(ZIP_PATH) as outer:
     pk_payload = outer.read(PK_PATH)
@@ -209,6 +217,7 @@ with tempfile.TemporaryDirectory(prefix='charmander-web-') as tmp:
         'meshNames': mesh_names,
         'extensionsUsed': extensions_used,
         'extensionsRequired': extensions_required,
+        'dracoFiles': sorted(path.name for path in DRACO_OUTPUT.iterdir() if path.is_file()),
         'animationNames': list(animations),
         'idleTracks': len(animations['idle']['tracks']),
         'idleDuration': animations['idle']['duration'],
