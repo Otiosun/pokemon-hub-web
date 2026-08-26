@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, type ReactNode, useEffect, useState } from 'react';
+import { HubNavigation, type HubSection } from './components/HubNavigation';
 import { PokemonDetailRoute } from './features/pokemon-detail/PokemonDetailRoute';
 
 const PokedexIndexPage = lazy(() =>
@@ -13,6 +14,15 @@ const AssetLabPage = lazy(() =>
 const GenerationsLabPage = lazy(() =>
   import('./features/asset-lab/GenerationsLabPage').then((module) => ({ default: module.GenerationsLabPage })),
 );
+
+function HubFrame({ active, children }: { active: HubSection | null; children: ReactNode }) {
+  return (
+    <div className="hub-with-navigation">
+      <HubNavigation active={active} />
+      <div className="hub-navigation-content">{children}</div>
+    </div>
+  );
+}
 
 function HomePage() {
   return (
@@ -33,6 +43,17 @@ function HomePage() {
           </a>
         </div>
       </section>
+    </main>
+  );
+}
+
+function SectionPlaceholder({ section, title, copy }: { section: HubSection; title: string; copy: string }) {
+  return (
+    <main className="shell hub-section-placeholder">
+      <p className="eyebrow">POKÉMON HUB · {section.toUpperCase()}</p>
+      <h1>{title}</h1>
+      <p className="hero-copy">{copy}</p>
+      <a className="secondary-link" href="/pokedex">Voltar à Pokédex</a>
     </main>
   );
 }
@@ -134,21 +155,47 @@ export function App() {
     };
   }, []);
 
+  if (path === '/pokemon' || path === '/pokemon/') {
+    return (
+      <HubFrame active="pokemon">
+        <SectionPlaceholder
+          section="pokemon"
+          title="Meus Pokémon"
+          copy="A coleção do jogador será construída aqui. Box será um modo de organização desta mesma coleção, sem esconder Pokémon que estejam no Time."
+        />
+      </HubFrame>
+    );
+  }
+  if (path === '/team' || path === '/team/') {
+    return (
+      <HubFrame active="team">
+        <SectionPlaceholder
+          section="team"
+          title="Meu Time"
+          copy="O workspace de seis slots entra nesta área, com troca rápida de membros e leitura de cobertura sem transformar a experiência em planilha."
+        />
+      </HubFrame>
+    );
+  }
   if (path.startsWith('/pokemon/')) {
     return <PokemonDetailRoute routeSlug={getPokemonRouteSlug(path)} />;
   }
   if (path.startsWith('/pokedex/')) {
     return (
-      <Suspense fallback={<RouteFallback label="ABRINDO REGISTRO NACIONAL…" />}>
-        <PokedexSpeciesPage dex={getPokedexDex(path)} />
-      </Suspense>
+      <HubFrame active="pokedex">
+        <Suspense fallback={<RouteFallback label="ABRINDO REGISTRO NACIONAL…" />}>
+          <PokedexSpeciesPage dex={getPokedexDex(path)} />
+        </Suspense>
+      </HubFrame>
     );
   }
   if (path === '/pokedex' || path === '/pokedex/') {
     return (
-      <Suspense fallback={<RouteFallback label="CARREGANDO ÍNDICE NACIONAL…" />}>
-        <PokedexIndexPage />
-      </Suspense>
+      <HubFrame active="pokedex">
+        <Suspense fallback={<RouteFallback label="CARREGANDO ÍNDICE NACIONAL…" />}>
+          <PokedexIndexPage />
+        </Suspense>
+      </HubFrame>
     );
   }
   if (path.startsWith('/asset-lab/generations')) {
@@ -165,5 +212,9 @@ export function App() {
       </Suspense>
     );
   }
-  return <HomePage />;
+  return (
+    <HubFrame active={null}>
+      <HomePage />
+    </HubFrame>
+  );
 }
