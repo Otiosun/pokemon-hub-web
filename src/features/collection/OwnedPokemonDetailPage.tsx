@@ -57,7 +57,7 @@ export function OwnedPokemonDetailPage({ instanceId }: { instanceId: string }) {
           <div className="owned-detail-artwork">
             <PokemonAssetImage
               dex={pokemon.dex}
-              role="artwork"
+              role="official-artwork"
               alt={`Ilustração de ${pokemon.species}`}
               fallbackLabel={pokemon.species.slice(0, 1)}
               decoding="async"
