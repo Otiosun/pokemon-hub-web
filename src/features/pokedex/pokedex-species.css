@@ -184,30 +184,10 @@
   margin-top: 11px;
 }
 
-.pokedex-species-types > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 30px;
-  padding: 4px 9px 4px 5px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 999px;
+.pokedex-species-types > .pokemon-type-badge {
+  color: #edf6f5;
+  border-color: rgba(255, 255, 255, 0.16);
   background: rgba(255, 255, 255, 0.05);
-  font-size: 0.6rem;
-  font-weight: 700;
-}
-
-.pokemon-type-icon {
-  display: block;
-  width: 20px;
-  height: 20px;
-  flex: none;
-  object-fit: contain;
-}
-
-.pokemon-type-icon-fallback {
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
 }
 
 .pokedex-species-data {
@@ -305,6 +285,16 @@
 
 .pokedex-species-facts dd {
   font: 600 0.85rem 'Space Grotesk', sans-serif;
+}
+
+.pokedex-species-fact-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.pokedex-species-fact-types .pokemon-type-badge {
+  color: #253033;
 }
 
 .pokedex-species-note {
@@ -431,15 +421,10 @@
     font-size: clamp(1.9rem, 9vw, 2.5rem);
   }
 
-  .pokedex-species-types > span {
+  .pokedex-species-types > .pokemon-type-badge {
     min-height: 28px;
     padding-right: 8px;
     font-size: 0.56rem;
-  }
-
-  .pokemon-type-icon {
-    width: 18px;
-    height: 18px;
   }
 
   .pokedex-species-data {
