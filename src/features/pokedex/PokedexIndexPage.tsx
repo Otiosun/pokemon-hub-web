@@ -10,6 +10,7 @@ import {
   readPokedexIndexSession,
   rememberPokedexIndexFilters,
   rememberPokedexIndexScroll,
+  type PokedexDiscoveryFilter,
   type PokedexRegionFilter,
 } from './pokedexIndexSession';
 import { getSpeciesPlayerStatePreview } from './speciesPlayerStatePreview';
@@ -26,6 +27,7 @@ const SKELETON_KEYS = [
   'dex-skeleton-05', 'dex-skeleton-06', 'dex-skeleton-07', 'dex-skeleton-08',
   'dex-skeleton-09', 'dex-skeleton-10', 'dex-skeleton-11', 'dex-skeleton-12',
 ] as const;
+const DISCOVERY_FILTERS: readonly PokedexDiscoveryFilter[] = ['Todos', 'Avistados', 'Capturados', 'Desconhecidos'];
 
 type TypeFilterStatus = 'idle' | 'loading' | 'ready' | 'failed';
 
@@ -61,6 +63,13 @@ function CatalogSkeleton() {
   );
 }
 
+function matchesDiscoveryFilter(filter: PokedexDiscoveryFilter, discovery: 'unknown' | 'seen' | 'caught') {
+  if (filter === 'Todos') return true;
+  if (filter === 'Avistados') return discovery === 'seen';
+  if (filter === 'Capturados') return discovery === 'caught';
+  return discovery === 'unknown';
+}
+
 export function PokedexIndexPage() {
   const initialSession = useMemo(readPokedexIndexSession, []);
   const cachedCatalog = getCachedNationalDexCatalog();
@@ -70,6 +79,7 @@ export function PokedexIndexPage() {
   const [species, setSpecies] = useState<NationalDexSpeciesItem[]>(cachedCatalog ?? []);
   const [query, setQuery] = useState(initialSession.query);
   const [region, setRegion] = useState<PokedexRegionFilter>(initialSession.region);
+  const [discovery, setDiscovery] = useState<PokedexDiscoveryFilter>(initialSession.discovery);
   const [typeSlug, setTypeSlug] = useState<string | null>(initialSession.typeSlug);
   const [typeMembers, setTypeMembers] = useState<ReadonlySet<number> | null>(initialTypeMembers);
   const [typeStatus, setTypeStatus] = useState<TypeFilterStatus>(
@@ -133,8 +143,8 @@ export function PokedexIndexPage() {
   }, [typeSlug]);
 
   useEffect(() => {
-    rememberPokedexIndexFilters(query, region, typeSlug);
-  }, [query, region, typeSlug]);
+    rememberPokedexIndexFilters(query, region, discovery, typeSlug);
+  }, [discovery, query, region, typeSlug]);
 
   useEffect(() => {
     if (!catalogReady || restoredScroll.current) return;
@@ -157,6 +167,7 @@ export function PokedexIndexPage() {
       const playerState = getSpeciesPlayerStatePreview(item.dex);
       const paddedDex = String(item.dex).padStart(3, '0');
       if (region !== 'Todos' && regionForDex(item.dex) !== region) return false;
+      if (!matchesDiscoveryFilter(discovery, playerState.discovery)) return false;
       if (typeSlug) {
         if (playerState.discovery === 'unknown') return false;
         if (!typeMembers || !typeMembers.has(item.dex)) return false;
@@ -166,7 +177,7 @@ export function PokedexIndexPage() {
       if (playerState.discovery === 'unknown') return false;
       return normalize(item.name).includes(needle);
     });
-  }, [query, region, species, typeMembers, typeSlug]);
+  }, [discovery, query, region, species, typeMembers, typeSlug]);
 
   const activeType = typeSlug
     ? POKEDEX_TYPE_FILTERS.find((item) => item.slug === typeSlug) ?? null
@@ -220,6 +231,24 @@ export function PokedexIndexPage() {
                 type="button"
                 className={region === item ? 'is-active' : undefined}
                 onClick={() => setRegion(item)}
+              >
+                {item.toUpperCase()}
+              </button>
+            ))}
+          </fieldset>
+        </div>
+
+        <div className="pokedex-index-discovery-filter">
+          <span>PROGRESSO</span>
+          <fieldset aria-label="Filtrar a Pokédex por progresso de descoberta">
+            {DISCOVERY_FILTERS.map((item) => (
+              <button
+                key={item}
+                type="button"
+                className={discovery === item ? 'is-active' : undefined}
+                aria-pressed={discovery === item}
+                onClick={() => setDiscovery(item)}
+                disabled={!catalogReady}
               >
                 {item.toUpperCase()}
               </button>
