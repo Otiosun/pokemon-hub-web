@@ -1,12 +1,37 @@
+import { useMemo, useState } from 'react';
+import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import { TypeBadge } from '../../visual-assets/TypeBadge';
-import { getPokemonSpeciesVisualAssets } from '../../visual-assets/pokemonVisualRegistry';
 import { typeAccent } from '../pokemon-detail/fieldDexSpecies';
-import { getTeamPreview } from '../collection/ownedPokemonPreview';
+import { getTeamPreview, OWNED_POKEMON_PREVIEW } from '../collection/ownedPokemonPreview';
 import './team-page.css';
+import './team-picker.css';
 
 export function TeamPage() {
   const team = getTeamPreview();
   const representedTypes = [...new Set(team.flatMap((pokemon) => pokemon.types))];
+  const [editingSlot, setEditingSlot] = useState<number | null>(null);
+  const [candidateId, setCandidateId] = useState<string | null>(null);
+
+  const storageCandidates = useMemo(
+    () => OWNED_POKEMON_PREVIEW.filter((pokemon) => pokemon.teamSlot === null),
+    [],
+  );
+  const candidate = candidateId
+    ? storageCandidates.find((pokemon) => pokemon.instanceId === candidateId) ?? null
+    : null;
+  const editingPokemon = editingSlot
+    ? team.find((pokemon) => pokemon.teamSlot === editingSlot) ?? null
+    : null;
+
+  const openPicker = (slot: number) => {
+    setEditingSlot(slot);
+    setCandidateId(null);
+  };
+
+  const closePicker = () => {
+    setEditingSlot(null);
+    setCandidateId(null);
+  };
 
   return (
     <main className="team-page">
@@ -14,7 +39,7 @@ export function TeamPage() {
         <div>
           <span className="team-kicker">FORMAÇÃO ATIVA</span>
           <h1>Meu Time</h1>
-          <p>Seis parceiros, leitura imediata. Edição de slots e análise mecânica entram quando o contrato real do RPG estiver conectado.</p>
+          <p>Seis parceiros, leitura imediata. Trocas podem ser preparadas aqui; a mutação real só será confirmada pela API do RPG.</p>
         </div>
         <div className="team-readout">
           <strong>{team.length}/6</strong>
@@ -23,27 +48,27 @@ export function TeamPage() {
       </header>
 
       <div className="team-runtime-note">
-        <span aria-hidden="true" /> ESTRUTURA DE TIME · SEM MUTAÇÃO LOCAL
+        <span aria-hidden="true" /> ESTRUTURA DE TIME · TROCA EM PRÉVIA · SEM MUTAÇÃO LOCAL
       </div>
 
       <section className="team-workbench" aria-label="Time ativo">
         <div className="team-grid">
-          {team.map((pokemon) => {
-            const visual = getPokemonSpeciesVisualAssets(pokemon.dex);
-            return (
-              <article className="team-slot" key={pokemon.instanceId}>
-                <div className="team-slot-number">
-                  <span>SLOT</span>
-                  <strong>{String(pokemon.teamSlot ?? 0).padStart(2, '0')}</strong>
-                </div>
+          {team.map((pokemon) => (
+            <article className={`team-slot${editingSlot === pokemon.teamSlot ? ' is-editing' : ''}`} key={pokemon.instanceId}>
+              <div className="team-slot-number">
+                <span>SLOT</span>
+                <strong>{String(pokemon.teamSlot ?? 0).padStart(2, '0')}</strong>
+              </div>
+              <a className="team-slot-open" href={`/pokemon/${pokemon.instanceId}`} aria-label={`Abrir build de ${pokemon.nickname}`}>
                 <div className="team-slot-visual">
-                  <img
-                    src={visual.icon}
+                  <PokemonAssetImage
+                    dex={pokemon.dex}
+                    role="icon"
                     alt=""
                     aria-hidden="true"
                     loading="lazy"
                     decoding="async"
-                    onError={(event) => { event.currentTarget.hidden = true; }}
+                    fallbackLabel="?"
                   />
                 </div>
                 <div className="team-slot-main">
@@ -64,9 +89,17 @@ export function TeamPage() {
                     {pokemon.shiny && <strong>SHINY</strong>}
                   </div>
                 </div>
-              </article>
-            );
-          })}
+              </a>
+              <button
+                className="team-slot-swap"
+                type="button"
+                onClick={() => openPicker(pokemon.teamSlot ?? 1)}
+                aria-expanded={editingSlot === pokemon.teamSlot}
+              >
+                TROCAR
+              </button>
+            </article>
+          ))}
         </div>
 
         <aside className="team-analysis" aria-label="Leitura do conjunto">
@@ -89,6 +122,49 @@ export function TeamPage() {
           </dl>
         </aside>
       </section>
+
+      {editingSlot && editingPokemon && (
+        <section className="team-picker" aria-label={`Substituir membro do slot ${editingSlot}`}>
+          <header className="team-picker-head">
+            <div>
+              <span>SUBSTITUIR SLOT {String(editingSlot).padStart(2, '0')}</span>
+              <strong>{editingPokemon.nickname}</strong>
+            </div>
+            <button type="button" onClick={closePicker}>FECHAR</button>
+          </header>
+
+          <div className="team-picker-candidates" role="list" aria-label="Pokémon disponíveis fora do Time">
+            {storageCandidates.map((pokemon) => (
+              <button
+                type="button"
+                role="listitem"
+                key={pokemon.instanceId}
+                className={candidateId === pokemon.instanceId ? 'is-selected' : undefined}
+                onClick={() => setCandidateId(pokemon.instanceId)}
+              >
+                <PokemonAssetImage dex={pokemon.dex} role="icon" alt="" aria-hidden="true" loading="lazy" fallbackLabel="?" />
+                <span><strong>{pokemon.nickname}</strong><small>NV. {pokemon.level} · {pokemon.box}</small></span>
+                <span className="team-picker-types">
+                  {pokemon.types.map((type) => <TypeBadge key={type} type={type} accent={typeAccent(type)} compact />)}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <div className={`team-swap-preview${candidate ? ' is-ready' : ''}`}>
+            {candidate ? (
+              <>
+                <div><span>SAI</span><strong>{editingPokemon.nickname}</strong></div>
+                <span aria-hidden="true">→</span>
+                <div><span>ENTRA</span><strong>{candidate.nickname}</strong></div>
+                <button type="button" disabled title="Requer API do RPG">APLICAR COM API</button>
+              </>
+            ) : (
+              <p>Escolha um Pokémon armazenado para visualizar a troca. Nenhuma mudança é aplicada localmente.</p>
+            )}
+          </div>
+        </section>
+      )}
     </main>
   );
 }
