@@ -92,6 +92,10 @@ function getPath() {
   return window.location.pathname;
 }
 
+function getHubLocation() {
+  return `${window.location.pathname}${window.location.search}`;
+}
+
 function getPokemonRouteSlug(path: string) {
   return path.split('/').filter(Boolean).at(-1) ?? 'demo-charmander';
 }
@@ -167,14 +171,14 @@ export function App() {
         window.location.href,
       );
     }
-    setHubDestinations(rememberHubDestination(window.location.pathname));
+    setHubDestinations(rememberHubDestination(getHubLocation()));
   }, []);
 
   useEffect(() => {
     const onPopState = () => {
       const nextPath = getPath();
       setPath(nextPath);
-      setHubDestinations(rememberHubDestination(nextPath));
+      setHubDestinations(rememberHubDestination(getHubLocation()));
       if (isRecordPath(nextPath)) resetRecordViewport();
     };
 
@@ -242,7 +246,7 @@ export function App() {
       }
 
       setPath(destination.pathname);
-      setHubDestinations(rememberHubDestination(destination.pathname));
+      setHubDestinations(rememberHubDestination(`${destination.pathname}${destination.search}`));
 
       if (isRecordPath(destination.pathname)) {
         resetRecordViewport();
