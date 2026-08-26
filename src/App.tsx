@@ -1,6 +1,9 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { PokemonDetailRoute } from './features/pokemon-detail/PokemonDetailRoute';
 
+const PokedexIndexPage = lazy(() =>
+  import('./features/pokedex/PokedexIndexPage').then((module) => ({ default: module.PokedexIndexPage })),
+);
 const AssetLabPage = lazy(() =>
   import('./features/asset-lab/AssetLabPage').then((module) => ({ default: module.AssetLabPage })),
 );
@@ -12,18 +15,18 @@ function HomePage() {
   return (
     <main className="shell">
       <section className="hero">
-        <p className="eyebrow">POKÉMON HUB · FASE 1</p>
-        <h1>Uma casa visual para cada Pokémon do jogador.</h1>
+        <p className="eyebrow">POKÉMON HUB · FIELD DEX</p>
+        <h1>Explore o Índice Nacional.</h1>
         <p className="hero-copy">
-          Time, Box e Pokédex serão construídos em torno de uma camada visual híbrida que continua
-          funcionando mesmo quando o 3D não está disponível.
+          Consulte o catálogo de espécies e abra os registros que já estão disponíveis para inspeção
+          no Field Dex.
         </p>
         <div className="hero-actions">
-          <a className="primary-link" href="/pokemon/demo-charmander">
-            Abrir página do Pokémon
+          <a className="primary-link" href="/pokedex">
+            Abrir Pokédex
           </a>
-          <a className="secondary-link" href="/asset-lab">
-            Asset Lab
+          <a className="secondary-link" href="/pokemon/demo-charmander">
+            Abrir Field Dex
           </a>
         </div>
       </section>
@@ -31,10 +34,10 @@ function HomePage() {
   );
 }
 
-function LabRouteFallback() {
+function RouteFallback({ label }: { label: string }) {
   return (
     <main className="shell" aria-busy="true">
-      <p className="eyebrow">CARREGANDO LABORATÓRIO…</p>
+      <p className="eyebrow">{label}</p>
     </main>
   );
 }
@@ -80,10 +83,7 @@ export function App() {
       if (anchor.target && anchor.target !== '_self') return;
       if (anchor.hasAttribute('download')) return;
 
-      if (
-        anchor.closest('.dex-route.is-pending .dex-nav') ||
-        anchor.closest('.dex-route.is-pending .dex-review-rail')
-      ) {
+      if (anchor.closest('.dex-route.is-pending .dex-nav')) {
         event.preventDefault();
         return;
       }
@@ -108,7 +108,7 @@ export function App() {
 
       if (destination.pathname.startsWith('/pokemon/')) {
         resetFieldDexViewport();
-      } else if (!staysInsideFieldDex) {
+      } else {
         window.scrollTo({ top: 0, behavior: 'auto' });
       }
     };
@@ -124,16 +124,23 @@ export function App() {
   if (path.startsWith('/pokemon/')) {
     return <PokemonDetailRoute routeSlug={getPokemonRouteSlug(path)} />;
   }
+  if (path.startsWith('/pokedex')) {
+    return (
+      <Suspense fallback={<RouteFallback label="CARREGANDO ÍNDICE NACIONAL…" />}>
+        <PokedexIndexPage />
+      </Suspense>
+    );
+  }
   if (path.startsWith('/asset-lab/generations')) {
     return (
-      <Suspense fallback={<LabRouteFallback />}>
+      <Suspense fallback={<RouteFallback label="CARREGANDO LABORATÓRIO…" />}>
         <GenerationsLabPage />
       </Suspense>
     );
   }
   if (path.startsWith('/asset-lab')) {
     return (
-      <Suspense fallback={<LabRouteFallback />}>
+      <Suspense fallback={<RouteFallback label="CARREGANDO LABORATÓRIO…" />}>
         <AssetLabPage />
       </Suspense>
     );
