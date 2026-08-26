@@ -1,0 +1,123 @@
+.pokedex-index-search input:disabled,
+.pokedex-index-regions:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.pokedex-index-status > span.is-failed {
+  background: #d9433f;
+}
+
+.pokedex-index-sprite-wrap {
+  position: relative;
+}
+
+.pokedex-index-sprite-wrap::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 30px;
+  height: 30px;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(123, 155, 158, 0.16);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 8px rgba(123, 155, 158, 0.025);
+}
+
+.pokedex-index-sprite-wrap img {
+  position: relative;
+  z-index: 1;
+}
+
+.pokedex-index-grid.is-loading {
+  pointer-events: none;
+}
+
+.pokedex-index-card.is-skeleton {
+  overflow: hidden;
+}
+
+.pokedex-index-card.is-skeleton .pokedex-index-card-top span,
+.pokedex-index-card.is-skeleton .pokedex-index-card-copy strong,
+.pokedex-index-card.is-skeleton .pokedex-index-card-copy small {
+  display: block;
+  border-radius: 2px;
+  background: rgba(143, 165, 167, 0.09);
+}
+
+.pokedex-index-card.is-skeleton .pokedex-index-card-top span {
+  width: 34px;
+  height: 8px;
+}
+
+.pokedex-index-card.is-skeleton .pokedex-index-card-copy strong {
+  width: 72%;
+  height: 10px;
+}
+
+.pokedex-index-card.is-skeleton .pokedex-index-card-copy small {
+  width: 44%;
+  height: 7px;
+  margin-top: 6px;
+}
+
+.pokedex-species-artwork-slot {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  pointer-events: none;
+}
+
+.pokedex-species-artwork-slot::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 92px;
+  height: 92px;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(135, 225, 231, 0.12);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 22px rgba(135, 225, 231, 0.018),
+    inset 0 0 0 1px rgba(135, 225, 231, 0.035);
+  transition: opacity 120ms ease;
+}
+
+.pokedex-species-stage.is-artwork-ready .pokedex-species-artwork-slot::before {
+  opacity: 0;
+}
+
+.pokedex-species-artwork-slot .pokedex-species-artwork {
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.pokedex-species-stage.is-artwork-ready .pokedex-species-artwork {
+  opacity: 1;
+}
+
+/* FIELD DEX 3D: never flash official/HOME artwork before WebGL. */
+.dex-page .dex-art {
+  display: none;
+}
+
+.dex-page .dex-viewer .generations-loading {
+  display: block;
+  bottom: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(191, 214, 215, 0.54);
+  backdrop-filter: none;
+  font-size: 0.48rem;
+  letter-spacing: 0.06em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pokedex-species-artwork-slot::before,
+  .pokedex-species-artwork-slot .pokedex-species-artwork {
+    transition: none;
+  }
+}
