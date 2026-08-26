@@ -1,16 +1,42 @@
 import { readFile, writeFile } from 'node:fs/promises';
 
-const file = new URL('../node_modules/unityfs-js/assetManager.js', import.meta.url);
-const source = await readFile(file, 'utf8');
-const target = "import { processLive2DModel, exportSprite } from './exporters/index.js'";
-const replacement = [
-  "const processLive2DModel = async () => { throw new Error('Live2D exporter disabled in Node research probe') }",
-  "const exportSprite = async () => { throw new Error('Sprite exporter disabled in Node research probe') }",
-].join('\n');
+async function patchFile(relativePath, replacements) {
+  const file = new URL(`../node_modules/unityfs-js/${relativePath}`, import.meta.url);
+  let source = await readFile(file, 'utf8');
+  let changed = false;
 
-if (!source.includes(target)) {
-  console.log('UNITYFS_NODE_PATCH already applied or upstream changed');
-} else {
-  await writeFile(file, source.replace(target, replacement), 'utf8');
-  console.log('UNITYFS_NODE_PATCH applied');
+  for (const [target, replacement] of replacements) {
+    if (source.includes(target)) {
+      source = source.replace(target, replacement);
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    await writeFile(file, source, 'utf8');
+    console.log(`UNITYFS_NODE_PATCH applied ${relativePath}`);
+  } else {
+    console.log(`UNITYFS_NODE_PATCH unchanged ${relativePath}`);
+  }
 }
+
+await patchFile('assetManager.js', [
+  [
+    "import { processLive2DModel, exportSprite } from './exporters/index.js'",
+    [
+      "const processLive2DModel = async () => { throw new Error('Live2D exporter disabled in Node research probe') }",
+      "const exportSprite = async () => { throw new Error('Sprite exporter disabled in Node research probe') }",
+    ].join('\n'),
+  ],
+]);
+
+await patchFile('decoders/DecoderManager.js', [
+  [
+    "import { decodeTexture2D } from './drivers/Texture2DDecoder.js'",
+    "const decodeTexture2D = async () => { throw new Error('Texture decoding disabled in Node research probe') }",
+  ],
+  [
+    "import { decodeAudioFSB5 } from './drivers/AudioFSB5Decoder.js'",
+    "const decodeAudioFSB5 = async () => { throw new Error('Audio decoding disabled in Node research probe') }",
+  ],
+]);
