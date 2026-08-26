@@ -9,18 +9,17 @@ import { PokemonModelViewer } from './PokemonModelViewer';
 import { ProceduralPokemonViewer } from './ProceduralPokemonViewer';
 
 const emotions: readonly PortraitEmotion[] = ['Normal', 'Happy', 'Angry', 'Pain'];
-type ViewerMode = 'source' | 'procedural';
 
 const rigFacts: Record<StarterId, string> = {
   1: '56 bones · 9 clips nativos',
-  4: '45 bones · 0 clips · idle próprio em teste',
-  7: '26 bones · 0 clips · idle próprio em teste',
+  4: '45 bones · 0 clips · idle esquelético próprio',
+  7: '26 bones · 0 clips · idle esquelético próprio',
 };
 
 const providerPlan = [
   ['3D', 'Pokémon 3D API', 'GLB otimizado + skeleton preservado'],
-  ['Motion', 'Pokémon Hub', 'clips nativos quando bons; idle esquelético quando faltarem'],
-  ['Artwork', 'PokéAPI', 'HOME → Official Artwork'],
+  ['Motion', 'Pokémon Hub', 'clips nativos quando existirem; idle esquelético quando faltarem'],
+  ['Artwork', 'PokéAPI', 'fallback apenas quando o 3D realmente falhar'],
   ['Portrait', 'PMD Collab', 'Normal / Happy / Angry / Pain'],
   ['Fallback', 'Pokémon Showdown', 'sprite animado final da cadeia 2D'],
 ] as const;
@@ -28,10 +27,8 @@ const providerPlan = [
 export function AssetLabPage() {
   const [selectedId, setSelectedId] = useState<StarterId>(4);
   const [emotion, setEmotion] = useState<PortraitEmotion>('Normal');
-  const [forceFallback, setForceFallback] = useState(false);
-  const [viewerMode, setViewerMode] = useState<ViewerMode>('procedural');
   const pokemon = getStarterVisual(selectedId);
-  const canUseProceduralIdle = selectedId === 4 || selectedId === 7;
+  const usesProceduralIdle = selectedId === 4 || selectedId === 7;
 
   return (
     <main className="shell asset-lab">
@@ -40,8 +37,8 @@ export function AssetLabPage() {
           <p className="eyebrow">ANIMATION COVERAGE LAB · 001 / 004 / 007</p>
           <h1>Um modelo parado não basta.</h1>
           <p className="hero-copy">
-            Agora testamos se cada Pokémon realmente parece vivo. Charmander e Squirtle mantêm o
-            rig completo, então o Hub pode gerar um idle esquelético sem trocar a malha.
+            Aqui só avaliamos o 3D vivo. Bulbasaur usa animações do próprio GLB; Charmander e
+            Squirtle usam o rig preservado para receber movimento esquelético do Hub.
           </p>
         </div>
         <a className="text-link" href="/">
@@ -58,8 +55,6 @@ export function AssetLabPage() {
             onClick={() => {
               setSelectedId(starter.id);
               setEmotion('Normal');
-              setForceFallback(false);
-              setViewerMode(starter.id === 1 ? 'source' : 'procedural');
             }}
           >
             <img src={starter.icon.url} alt="" aria-hidden="true" />
@@ -79,42 +74,15 @@ export function AssetLabPage() {
               <h2>{pokemon.name}</h2>
               <p className="rig-fact">{rigFacts[pokemon.id]}</p>
             </div>
-            <button
-              type="button"
-              className={forceFallback ? 'lab-toggle is-active' : 'lab-toggle'}
-              onClick={() => setForceFallback((value) => !value)}
-            >
-              {forceFallback ? 'Restaurar visual' : 'Testar fallback'}
-            </button>
           </div>
 
-          {canUseProceduralIdle && !forceFallback && (
-            <fieldset className="viewer-mode-switch">
-              <legend className="sr-only">Comparar movimento 3D</legend>
-              <button
-                type="button"
-                className={viewerMode === 'source' ? 'is-active' : ''}
-                onClick={() => setViewerMode('source')}
-              >
-                Original estático
-              </button>
-              <button
-                type="button"
-                className={viewerMode === 'procedural' ? 'is-active' : ''}
-                onClick={() => setViewerMode('procedural')}
-              >
-                Idle experimental
-              </button>
-            </fieldset>
-          )}
-
-          {viewerMode === 'procedural' && canUseProceduralIdle && !forceFallback ? (
+          {usesProceduralIdle ? (
             <ProceduralPokemonViewer key={`procedural-${pokemon.id}`} pokemon={pokemon} />
           ) : (
             <PokemonModelViewer
               key={`source-${pokemon.id}`}
               pokemon={pokemon}
-              forceFallback={forceFallback}
+              forceFallback={false}
             />
           )}
           <p className="gesture-hint">Arraste para girar · use a roda ou pinça para zoom</p>
@@ -128,7 +96,7 @@ export function AssetLabPage() {
             <p className="card-kicker">PMD PORTRAIT</p>
             <h3>{emotion}</h3>
             <p className="emotion-copy">
-              Uma segunda representação deixa o Pokémon expressivo sem depender do 3D.
+              Representação expressiva complementar; não substitui o 3D nesta avaliação.
             </p>
           </div>
           <section className="emotion-buttons" aria-label="Expressões">
@@ -153,7 +121,7 @@ export function AssetLabPage() {
       <section className="pipeline-panel">
         <div>
           <p className="eyebrow">VISUAL ASSET SYSTEM</p>
-          <h2>O melhor visual pode combinar asset externo com movimento nosso.</h2>
+          <h2>O 3D principal precisa parecer uma criatura, não um boneco de catálogo.</h2>
         </div>
         <div className="provider-list">
           {providerPlan.map(([kind, provider, use]) => (
@@ -167,8 +135,8 @@ export function AssetLabPage() {
       </section>
 
       <p className="lab-note">
-        Spike técnico: o idle procedural só será promovido se a deformação parecer natural em
-        desktop e mobile. Caso contrário, o provider continua podendo ser trocado por espécie.
+        Spike técnico: se o idle próprio não for claramente perceptível e natural, ele é rejeitado.
+        Imagem estática não conta como alternativa nesta etapa.
       </p>
     </main>
   );
