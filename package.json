@@ -17,7 +17,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
-    "verify": "biome lint . && tsc --noEmit && vitest run && vite build"
+    "probe:generations": "python3 scripts/probe-generations-gen1.py",
+    "verify": "python3 scripts/probe-generations-gen1.py && biome lint . && tsc --noEmit && vitest run && vite build"
   },
   "dependencies": {
     "@google/model-viewer": "4.3.1",
