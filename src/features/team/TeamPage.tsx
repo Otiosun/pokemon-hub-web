@@ -68,6 +68,10 @@ export function TeamPage() {
     closePicker();
   };
 
+  const previewLabels = [orderIsDraft ? 'ORDEM EM PRÉVIA' : null, editingSlot ? 'TROCA EM PRÉVIA' : null]
+    .filter(Boolean)
+    .join(' · ');
+
   return (
     <main className="team-page">
       <header className="team-header">
@@ -83,7 +87,7 @@ export function TeamPage() {
       </header>
 
       <div className="team-runtime-note">
-        <span aria-hidden="true" /> {orderIsDraft ? 'ORDEM EM PRÉVIA · ' : ''}TROCA EM PRÉVIA · SEM MUTAÇÃO LOCAL
+        <span aria-hidden="true" /> {previewLabels ? `${previewLabels} · ` : ''}SEM MUTAÇÃO LOCAL
       </div>
 
       {orderIsDraft && (
