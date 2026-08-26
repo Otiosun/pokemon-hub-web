@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   FIELD_DEX_REVIEW_SPECIES,
   getFieldDexVisual,
@@ -8,9 +8,13 @@ import {
   loadNationalDexCatalog,
   type NationalDexSpeciesItem,
 } from './nationalDexRuntime';
+import {
+  readPokedexIndexSession,
+  rememberPokedexIndexFilters,
+  rememberPokedexIndexScroll,
+  type PokedexRegionFilter,
+} from './pokedexIndexSession';
 import './pokedex-index.css';
-
-type RegionFilter = 'Todos' | 'Kanto' | 'Johto' | 'Hoenn';
 
 const REVIEW_BY_DEX = new Map(FIELD_DEX_REVIEW_SPECIES.map((species) => [species.dex, species]));
 const SKELETON_KEYS = [
@@ -19,7 +23,7 @@ const SKELETON_KEYS = [
   'dex-skeleton-09', 'dex-skeleton-10', 'dex-skeleton-11', 'dex-skeleton-12',
 ] as const;
 
-function regionForDex(dex: number): Exclude<RegionFilter, 'Todos'> {
+function regionForDex(dex: number): Exclude<PokedexRegionFilter, 'Todos'> {
   if (dex <= 151) return 'Kanto';
   if (dex <= 251) return 'Johto';
   return 'Hoenn';
@@ -52,12 +56,14 @@ function CatalogSkeleton() {
 }
 
 export function PokedexIndexPage() {
+  const initialSession = useMemo(readPokedexIndexSession, []);
   const cachedCatalog = getCachedNationalDexCatalog();
   const [species, setSpecies] = useState<NationalDexSpeciesItem[]>(cachedCatalog ?? []);
-  const [query, setQuery] = useState('');
-  const [region, setRegion] = useState<RegionFilter>('Todos');
+  const [query, setQuery] = useState(initialSession.query);
+  const [region, setRegion] = useState<PokedexRegionFilter>(initialSession.region);
   const [catalogReady, setCatalogReady] = useState(Boolean(cachedCatalog));
   const [catalogFailed, setCatalogFailed] = useState(false);
+  const restoredScroll = useRef(false);
 
   useEffect(() => {
     if (getCachedNationalDexCatalog()) return;
@@ -75,6 +81,25 @@ export function PokedexIndexPage() {
       });
     return () => {
       active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    rememberPokedexIndexFilters(query, region);
+  }, [query, region]);
+
+  useEffect(() => {
+    if (!catalogReady || restoredScroll.current) return;
+    restoredScroll.current = true;
+    const frame = requestAnimationFrame(() => {
+      window.scrollTo({ top: initialSession.scrollY, behavior: 'auto' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [catalogReady, initialSession.scrollY]);
+
+  useEffect(() => {
+    return () => {
+      rememberPokedexIndexScroll(window.scrollY);
     };
   }, []);
 
@@ -129,7 +154,7 @@ export function PokedexIndexPage() {
             />
           </label>
           <fieldset className="pokedex-index-regions" aria-label="Filtrar por região" disabled={!catalogReady}>
-            {(['Todos', 'Kanto', 'Johto', 'Hoenn'] as RegionFilter[]).map((item) => (
+            {(['Todos', 'Kanto', 'Johto', 'Hoenn'] as PokedexRegionFilter[]).map((item) => (
               <button
                 key={item}
                 type="button"
