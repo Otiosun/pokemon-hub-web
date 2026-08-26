@@ -1,0 +1,372 @@
+.team-page {
+  min-height: 100svh;
+  padding: clamp(22px, 4vw, 52px) clamp(14px, 3vw, 34px) 80px;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(217, 67, 63, 0.08), transparent 25rem),
+    #0d1112;
+  color: #edf6f5;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+.team-header {
+  width: min(1240px, 100%);
+  margin: 0 auto;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(201, 230, 231, 0.12);
+}
+
+.team-kicker,
+.team-readout span,
+.team-runtime-note,
+.team-slot-number,
+.team-slot-heading em,
+.team-slot-status,
+.team-analysis-head span,
+.team-analysis-facts dt {
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 0.075em;
+}
+
+.team-kicker {
+  color: #d9433f;
+  font-size: 0.54rem;
+}
+
+.team-header h1 {
+  margin: 7px 0 7px;
+  font: 700 clamp(2.2rem, 5vw, 4.3rem)/0.95 'Space Grotesk', sans-serif;
+  letter-spacing: -0.05em;
+}
+
+.team-header p {
+  max-width: 680px;
+  margin: 0;
+  color: #91a2a4;
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.team-readout {
+  flex: none;
+  min-width: 130px;
+  padding: 14px 16px;
+  border: 1px solid rgba(192, 226, 228, 0.13);
+  background: #12191b;
+  text-align: right;
+}
+
+.team-readout strong {
+  display: block;
+  font: 700 1.55rem 'Space Grotesk', sans-serif;
+}
+
+.team-readout span {
+  color: #697a7d;
+  font-size: 0.43rem;
+}
+
+.team-runtime-note {
+  width: min(1240px, 100%);
+  min-height: 42px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #697a7d;
+  font-size: 0.44rem;
+}
+
+.team-runtime-note > span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f2c94c;
+}
+
+.team-workbench {
+  width: min(1240px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.55fr);
+  gap: 12px;
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.team-slot {
+  min-height: 188px;
+  display: grid;
+  grid-template-columns: 48px 112px minmax(0, 1fr);
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid rgba(181, 215, 217, 0.12);
+  background:
+    linear-gradient(rgba(191, 224, 225, 0.03) 1px, transparent 1px) 0 0 / 28px 28px,
+    linear-gradient(90deg, rgba(191, 224, 225, 0.03) 1px, transparent 1px) 0 0 / 28px 28px,
+    #12191b;
+}
+
+.team-slot-number {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 4px;
+  border-right: 1px solid rgba(194, 224, 225, 0.09);
+  color: #687a7d;
+}
+
+.team-slot-number span {
+  font-size: 0.4rem;
+}
+
+.team-slot-number strong {
+  color: #65d8e8;
+  font-size: 0.72rem;
+}
+
+.team-slot-visual {
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at center, rgba(101, 216, 232, 0.07), transparent 64%);
+}
+
+.team-slot-visual img {
+  width: 92px;
+  height: 72px;
+  object-fit: contain;
+}
+
+.team-slot-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 16px 14px 8px;
+}
+
+.team-slot-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.team-slot-heading > div {
+  min-width: 0;
+}
+
+.team-slot-heading strong {
+  display: block;
+  overflow: hidden;
+  font: 700 1rem 'Space Grotesk', sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-slot-heading span {
+  display: block;
+  margin-top: 3px;
+  color: #748588;
+  font-size: 0.6rem;
+}
+
+.team-slot-heading em {
+  flex: none;
+  color: #93a5a7;
+  font-size: 0.48rem;
+  font-style: normal;
+}
+
+.team-slot-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 11px;
+}
+
+.team-slot-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+  color: #728487;
+  font-size: 0.41rem;
+}
+
+.team-slot-status > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.team-slot-status i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #79c98d;
+}
+
+.team-slot-status strong {
+  color: #f2c94c;
+  font-size: 0.41rem;
+}
+
+.team-analysis {
+  align-self: start;
+  padding: 24px;
+  border: 1px solid rgba(190, 226, 228, 0.12);
+  background:
+    linear-gradient(90deg, rgba(191, 224, 225, 0.025) 1px, transparent 1px) 0 0 / 32px 100%,
+    #141b1d;
+}
+
+.team-analysis-head {
+  display: grid;
+  gap: 5px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(194, 224, 225, 0.11);
+}
+
+.team-analysis-head span {
+  color: #65d8e8;
+  font-size: 0.46rem;
+}
+
+.team-analysis-head strong {
+  font: 700 1.35rem 'Space Grotesk', sans-serif;
+}
+
+.team-analysis > p {
+  margin: 16px 0;
+  color: #8fa0a2;
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.team-type-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.team-analysis-facts {
+  margin: 20px 0 0;
+  border-top: 1px solid rgba(194, 224, 225, 0.11);
+}
+
+.team-analysis-facts > div {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(194, 224, 225, 0.08);
+}
+
+.team-analysis-facts dt,
+.team-analysis-facts dd {
+  margin: 0;
+}
+
+.team-analysis-facts dt {
+  color: #718285;
+  font-size: 0.43rem;
+}
+
+.team-analysis-facts dd {
+  color: #e4eeee;
+  font: 600 0.72rem 'IBM Plex Mono', monospace;
+}
+
+@media (max-width: 1050px) {
+  .team-workbench {
+    grid-template-columns: 1fr;
+  }
+
+  .team-analysis {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 22px;
+  }
+
+  .team-analysis-head,
+  .team-analysis > p {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 800px) {
+  .team-page {
+    padding-bottom: 28px;
+  }
+
+  .team-header {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .team-readout {
+    width: 100%;
+    text-align: left;
+  }
+}
+
+@media (max-width: 680px) {
+  .team-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .team-analysis {
+    display: block;
+  }
+}
+
+@media (max-width: 480px) {
+  .team-page {
+    padding-inline: 10px;
+    padding-top: 22px;
+  }
+
+  .team-header h1 {
+    font-size: 2.3rem;
+  }
+
+  .team-header p {
+    font-size: 0.77rem;
+  }
+
+  .team-slot {
+    min-height: 166px;
+    grid-template-columns: 40px 88px minmax(0, 1fr);
+  }
+
+  .team-slot-visual img {
+    width: 76px;
+    height: 60px;
+  }
+
+  .team-slot-main {
+    padding: 15px 12px 12px 7px;
+  }
+
+  .team-slot-types .pokemon-type-badge span:last-child {
+    display: none;
+  }
+
+  .team-slot-types .pokemon-type-badge {
+    padding-inline: 4px;
+  }
+
+  .team-analysis {
+    padding: 18px;
+  }
+}
