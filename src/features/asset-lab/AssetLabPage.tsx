@@ -94,7 +94,7 @@ export function AssetLabPage() {
               Uma segunda representação deixa o Pokémon expressivo sem depender do 3D.
             </p>
           </div>
-          <div className="emotion-buttons" role="group" aria-label="Expressões">
+          <section className="emotion-buttons" aria-label="Expressões">
             {emotions.map((item) => (
               <button
                 type="button"
@@ -105,7 +105,7 @@ export function AssetLabPage() {
                 {item}
               </button>
             ))}
-          </div>
+          </section>
           <div className="fallback-preview">
             <span>Fallback animado</span>
             <img src={pokemon.animatedSprite.url} alt={`${pokemon.name} animado`} />
