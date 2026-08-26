@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import './styles.css';
 import './field-dex-refinement.css';
+import './field-dex-product-cleanup.css';
 
 const root = document.getElementById('root');
 

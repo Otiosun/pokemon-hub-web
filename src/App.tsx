@@ -1,7 +1,12 @@
-import { useEffect, useState } from 'react';
-import { AssetLabPage } from './features/asset-lab/AssetLabPage';
-import { GenerationsLabPage } from './features/asset-lab/GenerationsLabPage';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { PokemonDetailRoute } from './features/pokemon-detail/PokemonDetailRoute';
+
+const AssetLabPage = lazy(() =>
+  import('./features/asset-lab/AssetLabPage').then((module) => ({ default: module.AssetLabPage })),
+);
+const GenerationsLabPage = lazy(() =>
+  import('./features/asset-lab/GenerationsLabPage').then((module) => ({ default: module.GenerationsLabPage })),
+);
 
 function HomePage() {
   return (
@@ -22,6 +27,14 @@ function HomePage() {
           </a>
         </div>
       </section>
+    </main>
+  );
+}
+
+function LabRouteFallback() {
+  return (
+    <main className="shell" aria-busy="true">
+      <p className="eyebrow">CARREGANDO LABORATÓRIO…</p>
     </main>
   );
 }
@@ -67,7 +80,10 @@ export function App() {
       if (anchor.target && anchor.target !== '_self') return;
       if (anchor.hasAttribute('download')) return;
 
-      if (anchor.closest('.dex-route.is-pending .dex-nav')) {
+      if (
+        anchor.closest('.dex-route.is-pending .dex-nav') ||
+        anchor.closest('.dex-route.is-pending .dex-review-rail')
+      ) {
         event.preventDefault();
         return;
       }
@@ -108,7 +124,19 @@ export function App() {
   if (path.startsWith('/pokemon/')) {
     return <PokemonDetailRoute routeSlug={getPokemonRouteSlug(path)} />;
   }
-  if (path.startsWith('/asset-lab/generations')) return <GenerationsLabPage />;
-  if (path.startsWith('/asset-lab')) return <AssetLabPage />;
+  if (path.startsWith('/asset-lab/generations')) {
+    return (
+      <Suspense fallback={<LabRouteFallback />}>
+        <GenerationsLabPage />
+      </Suspense>
+    );
+  }
+  if (path.startsWith('/asset-lab')) {
+    return (
+      <Suspense fallback={<LabRouteFallback />}>
+        <AssetLabPage />
+      </Suspense>
+    );
+  }
   return <HomePage />;
 }

@@ -86,7 +86,8 @@ const reviewSpecies = [
   },
 ] satisfies FieldDexSpecies[];
 
-const defaultSpecies = reviewSpecies[0]!;
+const defaultSpecies = reviewSpecies.at(0);
+if (!defaultSpecies) throw new Error('Field Dex review registry is empty');
 
 export const FIELD_DEX_REVIEW_SPECIES: readonly FieldDexSpecies[] = reviewSpecies;
 
@@ -101,8 +102,8 @@ export function getFieldDexNeighbours(routeSlug: string) {
     0,
     reviewSpecies.findIndex((species) => species.routeSlug === routeSlug),
   );
-  const previous = reviewSpecies[(index - 1 + reviewSpecies.length) % reviewSpecies.length]!;
-  const next = reviewSpecies[(index + 1) % reviewSpecies.length]!;
+  const previous = reviewSpecies[(index - 1 + reviewSpecies.length) % reviewSpecies.length] ?? defaultSpecies;
+  const next = reviewSpecies[(index + 1) % reviewSpecies.length] ?? defaultSpecies;
   return { previous, next };
 }
 
