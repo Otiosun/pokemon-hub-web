@@ -5,7 +5,7 @@
   "type": "module",
   "packageManager": "pnpm@11.23.0",
   "engines": {
-    "node": ">=24.19.0"
+    "node": ">=24.19.0 <25"
   },
   "scripts": {
     "dev": "vite",
@@ -17,13 +17,13 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
-    "verify": "pnpm check && pnpm typecheck && pnpm test:run && pnpm build"
+    "verify": "biome lint . && tsc --noEmit && vitest run && vite build"
   },
   "dependencies": {
     "@google/model-viewer": "4.3.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "three": "0.185.1"
+    "three": "0.183.2"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.10",
