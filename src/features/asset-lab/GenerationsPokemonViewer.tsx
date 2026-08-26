@@ -127,8 +127,8 @@ function frameModel(runtime: Runtime, model: Group) {
   camera.lookAt(center);
 
   controls.target.copy(center);
-  controls.minDistance = Math.max(distance * 0.68, maxDimension * 0.72);
-  controls.maxDistance = Math.max(distance * 2.6, maxDimension * 4.2);
+  controls.minDistance = Math.max(distance * 0.82, maxDimension * 0.86);
+  controls.maxDistance = Math.max(distance * 2.35, maxDimension * 3.8);
   controls.update();
 }
 
@@ -176,17 +176,17 @@ export function GenerationsPokemonViewer({ species, name, onReadyChange }: Props
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isTouch ? 1.15 : 1.6));
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.08;
+        renderer.toneMappingExposure = 0.95;
         renderer.domElement.className = 'generations-canvas';
         mount.replaceChildren(renderer.domElement);
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(32, 1, 0.01, 100);
-        scene.add(new THREE.HemisphereLight(0xffffff, 0x758070, 2.25));
-        const key = new THREE.DirectionalLight(0xffffff, 3.0);
+        scene.add(new THREE.HemisphereLight(0xffffff, 0x758070, 1.6));
+        const key = new THREE.DirectionalLight(0xffffff, 2.2);
         key.position.set(4, 6, 5);
         scene.add(key);
-        const rim = new THREE.DirectionalLight(0xffd8b2, 1.1);
+        const rim = new THREE.DirectionalLight(0xffd8b2, 0.75);
         rim.position.set(-4, 2, -3);
         scene.add(rim);
 
@@ -199,6 +199,12 @@ export function GenerationsPokemonViewer({ species, name, onReadyChange }: Props
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.enablePan = false;
+        controls.rotateSpeed = isTouch ? 0.58 : 0.72;
+        controls.zoomSpeed = 0.78;
+        // A Pokédex is a specimen viewer, not a free-flight model inspector.
+        // Keep full horizontal rotation, but prevent the Pokémon from being flipped upside down.
+        controls.minPolarAngle = THREE.MathUtils.degToRad(58);
+        controls.maxPolarAngle = THREE.MathUtils.degToRad(116);
 
         const runtime: Runtime = {
           THREE,
@@ -309,9 +315,15 @@ export function GenerationsPokemonViewer({ species, name, onReadyChange }: Props
       try {
         const assetResponse = await fetch(getPokemonAssetUrl(species, 'asset.json'), {
           signal: controller.signal,
-          cache: 'force-cache',
+          // The branch-preview hostname is stable across deploys. Never pin a stale SPA fallback
+          // for asset.json in the browser cache; models/textures remain aggressively cached below.
+          cache: 'no-cache',
         });
         if (!assetResponse.ok) throw new Error(`asset.json HTTP ${assetResponse.status}`);
+        const contentType = assetResponse.headers.get('content-type') ?? '';
+        if (!contentType.toLowerCase().includes('json')) {
+          throw new Error(`asset.json retornou ${contentType || 'conteúdo não JSON'}`);
+        }
         const payload = (await assetResponse.json()) as AssetPayload;
         if (payload.missingAnimationNodes.length > 0) {
           throw new Error(`animation nodes ausentes: ${payload.missingAnimationNodes.join(', ')}`);
