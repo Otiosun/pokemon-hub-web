@@ -190,5 +190,5 @@ const reviewSpecies: Record<string, PokemonDetailView> = {
 };
 
 export function getReviewPokemon(routeSlug: string): PokemonDetailView {
-  return reviewSpecies[routeSlug] ?? reviewSpecies['demo-charmander'];
+  return reviewSpecies[routeSlug] ?? reviewSpecies['demo-charmander']!;
 }
