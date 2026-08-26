@@ -178,8 +178,12 @@ function Stage({
           species={viewerSpecies.slug}
           name={viewerSpecies.name}
           onReadyChange={handleReadyChange}
-          onDisplayedSpeciesChange={onViewerDisplayedSpeciesChange}
-          onFailedSpeciesChange={onViewerFailedSpeciesChange}
+          {...(onViewerDisplayedSpeciesChange
+            ? { onDisplayedSpeciesChange: onViewerDisplayedSpeciesChange }
+            : {})}
+          {...(onViewerFailedSpeciesChange
+            ? { onFailedSpeciesChange: onViewerFailedSpeciesChange }
+            : {})}
         />
       </div>
       <Navigator routeSlug={species.routeSlug} />
@@ -315,8 +319,8 @@ export function PokemonDetailPage({
             pokemon={pokemon}
             species={species}
             viewerSpecies={viewerSpecies}
-            onViewerDisplayedSpeciesChange={onViewerDisplayedSpeciesChange}
-            onViewerFailedSpeciesChange={onViewerFailedSpeciesChange}
+            {...(onViewerDisplayedSpeciesChange ? { onViewerDisplayedSpeciesChange } : {})}
+            {...(onViewerFailedSpeciesChange ? { onViewerFailedSpeciesChange } : {})}
           />
           <DataPanel pokemon={pokemon} species={species} />
         </div>
