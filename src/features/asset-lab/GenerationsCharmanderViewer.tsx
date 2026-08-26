@@ -324,7 +324,11 @@ export function GenerationsCharmanderViewer() {
         </div>
       </div>
 
-      <div className="generations-motion-controls" aria-label="Animações reais do Charmander">
+      <div
+        className="generations-motion-controls"
+        role="group"
+        aria-label="Animações reais do Charmander"
+      >
         {animationOrder.map((animation) => (
           <button
             key={animation}
