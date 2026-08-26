@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AssetLabPage } from './features/asset-lab/AssetLabPage';
 import { GenerationsLabPage } from './features/asset-lab/GenerationsLabPage';
-import { PokemonDetailPage } from './features/pokemon-detail/PokemonDetailPage';
+import { PokemonDetailRoute } from './features/pokemon-detail/PokemonDetailRoute';
 
 function HomePage() {
   return (
@@ -34,11 +34,20 @@ function getPokemonRouteSlug(path: string) {
   return path.split('/').filter(Boolean).at(-1) ?? 'demo-charmander';
 }
 
+function resetFieldDexViewport() {
+  requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
+}
+
 export function App() {
   const [path, setPath] = useState(getPath);
 
   useEffect(() => {
-    const onPopState = () => setPath(getPath());
+    const onPopState = () => {
+      const nextPath = getPath();
+      setPath(nextPath);
+      if (nextPath.startsWith('/pokemon/')) resetFieldDexViewport();
+    };
+
     const onDocumentClick = (event: MouseEvent) => {
       if (
         event.defaultPrevented ||
@@ -60,21 +69,27 @@ export function App() {
 
       const destination = new URL(anchor.href, window.location.href);
       if (destination.origin !== window.location.origin) return;
-      if (
-        destination.pathname === window.location.pathname &&
-        destination.search === window.location.search
-      ) {
-        return;
-      }
 
       const currentPath = window.location.pathname;
       const staysInsideFieldDex =
         currentPath.startsWith('/pokemon/') && destination.pathname.startsWith('/pokemon/');
+      const sameDestination =
+        destination.pathname === currentPath && destination.search === window.location.search;
+
+      if (sameDestination) {
+        if (staysInsideFieldDex) event.preventDefault();
+        return;
+      }
 
       event.preventDefault();
       window.history.pushState({}, '', `${destination.pathname}${destination.search}${destination.hash}`);
       setPath(destination.pathname);
-      if (!staysInsideFieldDex) window.scrollTo({ top: 0, behavior: 'auto' });
+
+      if (destination.pathname.startsWith('/pokemon/')) {
+        resetFieldDexViewport();
+      } else if (!staysInsideFieldDex) {
+        window.scrollTo({ top: 0, behavior: 'auto' });
+      }
     };
 
     window.addEventListener('popstate', onPopState);
@@ -86,7 +101,7 @@ export function App() {
   }, []);
 
   if (path.startsWith('/pokemon/')) {
-    return <PokemonDetailPage routeSlug={getPokemonRouteSlug(path)} />;
+    return <PokemonDetailRoute routeSlug={getPokemonRouteSlug(path)} />;
   }
   if (path.startsWith('/asset-lab/generations')) return <GenerationsLabPage />;
   if (path.startsWith('/asset-lab')) return <AssetLabPage />;
