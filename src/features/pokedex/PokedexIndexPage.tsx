@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import { TypeIcon } from '../../visual-assets/TypeIcon';
-import { FIELD_DEX_REVIEW_SPECIES, getFieldDexVisual, typeAccent } from '../pokemon-detail/fieldDexSpecies';
+import { FIELD_DEX_REVIEW_SPECIES, typeAccent } from '../pokemon-detail/fieldDexSpecies';
 import {
   getCachedNationalDexCatalog,
   loadNationalDexCatalog,
@@ -179,6 +180,17 @@ export function PokedexIndexPage() {
     });
   }, [discovery, query, region, species, typeMembers, typeSlug]);
 
+  const dexProgress = useMemo(() => {
+    let seen = 0;
+    let caught = 0;
+    for (const item of species) {
+      const state = getSpeciesPlayerStatePreview(item.dex);
+      if (state.discovery !== 'unknown') seen += 1;
+      if (state.discovery === 'caught') caught += 1;
+    }
+    return { seen, caught };
+  }, [species]);
+
   const activeType = typeSlug
     ? POKEDEX_TYPE_FILTERS.find((item) => item.slug === typeSlug) ?? null
     : null;
@@ -218,9 +230,10 @@ export function PokedexIndexPage() {
             <h1>Índice Nacional</h1>
             <p>Consulta rápida das espécies registradas entre Kanto, Johto e Hoenn.</p>
           </div>
-          <div className="pokedex-index-readout" aria-live="polite">
-            <span>{catalogReady && !typeLoading ? visibleSpecies.length : '—'}</span>
-            <small>RESULTADOS</small>
+          <div className="pokedex-index-progress-readout" aria-live="polite">
+            <div><span>{catalogReady && !typeLoading ? visibleSpecies.length : '—'}</span><small>RESULTADOS</small></div>
+            <div><span>{catalogReady ? dexProgress.seen : '—'}</span><small>AVISTADOS</small></div>
+            <div><span>{catalogReady ? dexProgress.caught : '—'}</span><small>CAPTURADOS</small></div>
           </div>
         </div>
 
@@ -323,7 +336,6 @@ export function PokedexIndexPage() {
               const playerState = getSpeciesPlayerStatePreview(item.dex);
               const discovered = playerState.discovery !== 'unknown';
               const review = REVIEW_BY_DEX.get(item.dex);
-              const visual = getFieldDexVisual(item.dex);
               const paddedDex = String(item.dex).padStart(3, '0');
               const displayName = discovered ? item.name : '???';
               return (
@@ -341,13 +353,14 @@ export function PokedexIndexPage() {
                   </div>
                   <div className="pokedex-index-sprite-wrap">
                     {discovered ? (
-                      <img
-                        src={visual.icon}
+                      <PokemonAssetImage
+                        dex={item.dex}
+                        role="icon"
                         alt=""
                         aria-hidden="true"
                         loading="lazy"
                         decoding="async"
-                        onError={(event) => { event.currentTarget.hidden = true; }}
+                        fallbackLabel="?"
                       />
                     ) : (
                       <span className="pokedex-index-unknown-glyph" aria-hidden="true">?</span>
