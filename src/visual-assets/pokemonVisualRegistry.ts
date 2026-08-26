@@ -1,3 +1,4 @@
+import { getPokemonAssetUrl } from './assetBaseUrl';
 import { resolveTypeIconPath } from './TypeIcon';
 
 export type PokemonSpeciesVisualAssets = {
@@ -7,12 +8,18 @@ export type PokemonSpeciesVisualAssets = {
   portrait: string;
 };
 
+export type Pokemon3dAssetUrls = {
+  manifest: string;
+  asset: (filename: string) => string;
+};
+
 export type VisualProviderId =
   | 'pokeapi-home'
   | 'pokeapi-official-artwork'
   | 'pokeapi-gen8-icon'
   | 'pmdcollab-portrait'
-  | 'partywhale-type-icons';
+  | 'partywhale-type-icons'
+  | 'generations-cobblemon-3d';
 
 export const POKEMON_VISUAL_PROVIDERS: Readonly<Record<VisualProviderId, {
   role: string;
@@ -44,6 +51,11 @@ export const POKEMON_VISUAL_PROVIDERS: Readonly<Record<VisualProviderId, {
     source: 'partywhale/pokemon-type-icons',
     rights: 'MIT',
   },
+  'generations-cobblemon-3d': {
+    role: 'field-dex-specimen-3d',
+    source: 'Generations x Cobblemon conversion pipeline',
+    rights: 'pokemon-derived / project pipeline; external distribution required',
+  },
 };
 
 const POKEAPI_SPRITES_ROOT = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
@@ -56,6 +68,13 @@ export function getPokemonSpeciesVisualAssets(dex: number): PokemonSpeciesVisual
     artworkOfficial: `${POKEAPI_SPRITES_ROOT}/other/official-artwork/${dex}.png`,
     icon: `${POKEAPI_SPRITES_ROOT}/versions/generation-viii/icons/${dex}.png`,
     portrait: `${PMD_PORTRAIT_ROOT}/${padded}/Normal.png`,
+  };
+}
+
+export function getPokemon3dAssets(speciesSlug: string): Pokemon3dAssetUrls {
+  return {
+    manifest: getPokemonAssetUrl(speciesSlug, 'asset.json'),
+    asset: (filename: string) => getPokemonAssetUrl(speciesSlug, filename),
   };
 }
 
