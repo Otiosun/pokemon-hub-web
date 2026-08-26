@@ -131,12 +131,32 @@ function TypeBadge({ type }: { type: string }) {
   );
 }
 
-function Stage({ pokemon, species }: { pokemon: PokemonDetailView; species: FieldDexSpecies }) {
+type StageProps = {
+  pokemon: PokemonDetailView;
+  species: FieldDexSpecies;
+  viewerSpecies: FieldDexSpecies;
+  onViewerDisplayedSpeciesChange?: (species: string) => void;
+  onViewerFailedSpeciesChange?: (species: string) => void;
+};
+
+function Stage({
+  pokemon,
+  species,
+  viewerSpecies,
+  onViewerDisplayedSpeciesChange,
+  onViewerFailedSpeciesChange,
+}: StageProps) {
   const visual = getFieldDexVisual(species.dex);
   const [modelReady, setModelReady] = useState(false);
+  const [hasShownModel, setHasShownModel] = useState(false);
   const displayName = pokemon.nickname || species.name;
   const sexMark = pokemon.sex === 'male' ? '♂' : pokemon.sex === 'female' ? '♀' : '—';
   const sexLabel = pokemon.sex === 'male' ? 'Macho' : pokemon.sex === 'female' ? 'Fêmea' : 'Sem gênero';
+
+  const handleReadyChange = (ready: boolean) => {
+    setModelReady(ready);
+    if (ready) setHasShownModel(true);
+  };
 
   return (
     <section className="dex-stage" aria-labelledby="dex-name">
@@ -147,7 +167,7 @@ function Stage({ pokemon, species }: { pokemon: PokemonDetailView; species: Fiel
         <div className="dex-state"><span aria-hidden="true" /> CAPTURADO</div>
       </div>
       <img
-        className={`dex-art${modelReady ? ' is-ready' : ''}`}
+        className={`dex-art${modelReady || hasShownModel ? ' is-ready' : ''}`}
         src={visual.artworkHome}
         alt=""
         aria-hidden="true"
@@ -155,9 +175,11 @@ function Stage({ pokemon, species }: { pokemon: PokemonDetailView; species: Fiel
       />
       <div className="dex-viewer">
         <GenerationsPokemonViewer
-          species={species.slug}
-          name={species.name}
-          onReadyChange={setModelReady}
+          species={viewerSpecies.slug}
+          name={viewerSpecies.name}
+          onReadyChange={handleReadyChange}
+          onDisplayedSpeciesChange={onViewerDisplayedSpeciesChange}
+          onFailedSpeciesChange={onViewerFailedSpeciesChange}
         />
       </div>
       <Navigator routeSlug={species.routeSlug} />
@@ -267,8 +289,21 @@ function DataPanel({ pokemon, species }: { pokemon: PokemonDetailView; species: 
   );
 }
 
-export function PokemonDetailPage({ routeSlug }: { routeSlug: string }) {
+type PokemonDetailPageProps = {
+  routeSlug: string;
+  viewerRouteSlug?: string;
+  onViewerDisplayedSpeciesChange?: (species: string) => void;
+  onViewerFailedSpeciesChange?: (species: string) => void;
+};
+
+export function PokemonDetailPage({
+  routeSlug,
+  viewerRouteSlug = routeSlug,
+  onViewerDisplayedSpeciesChange,
+  onViewerFailedSpeciesChange,
+}: PokemonDetailPageProps) {
   const species = getFieldDexSpecies(routeSlug);
+  const viewerSpecies = getFieldDexSpecies(viewerRouteSlug);
   const pokemon = getReviewPokemon(species.routeSlug);
   return (
     <main className="dex-page">
@@ -276,7 +311,13 @@ export function PokemonDetailPage({ routeSlug }: { routeSlug: string }) {
       <section className="dex-shell" aria-label={`Field Dex — registro de ${species.name}`}>
         <Header species={species} />
         <div className="dex-body">
-          <Stage pokemon={pokemon} species={species} />
+          <Stage
+            pokemon={pokemon}
+            species={species}
+            viewerSpecies={viewerSpecies}
+            onViewerDisplayedSpeciesChange={onViewerDisplayedSpeciesChange}
+            onViewerFailedSpeciesChange={onViewerFailedSpeciesChange}
+          />
           <DataPanel pokemon={pokemon} species={species} />
         </div>
       </section>
