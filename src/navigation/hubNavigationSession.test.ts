@@ -6,10 +6,11 @@ describe('hub navigation session', () => {
     expect(hubSectionForPath('/pokedex')).toBe('pokedex');
     expect(hubSectionForPath('/pokedex/025')).toBe('pokedex');
     expect(hubSectionForPath('/pokemon')).toBe('pokemon');
+    expect(hubSectionForPath('/pokemon?species=4')).toBe('pokemon');
     expect(hubSectionForPath('/pokemon/pkm-charmander-a1')).toBe('pokemon');
     expect(hubSectionForPath('/pokemon/demo-charmander')).toBeNull();
     expect(hubSectionForPath('/team')).toBe('team');
-    expect(hubSectionForPath('/team/edit')).toBe('team');
+    expect(hubSectionForPath('/team/edit?slot=2')).toBe('team');
   });
 
   it('has stable roots when browser session storage is unavailable', () => {
