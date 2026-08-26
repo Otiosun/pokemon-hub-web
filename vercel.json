@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm verify",
+  "buildCommand": "npm run verify",
   "outputDirectory": "dist",
   "rewrites": [
     {
