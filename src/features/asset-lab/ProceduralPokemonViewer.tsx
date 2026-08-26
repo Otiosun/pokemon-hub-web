@@ -55,7 +55,7 @@ export function ProceduralPokemonViewer({ pokemon }: Props) {
     let frame = 0;
     let resizeObserver: ResizeObserver | undefined;
 
-    async function boot() {
+    async function boot(mount: HTMLDivElement) {
       try {
         setViewerState('loading');
 
@@ -75,7 +75,7 @@ export function ProceduralPokemonViewer({ pokemon }: Props) {
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.shadowMap.enabled = false;
         renderer.domElement.className = 'procedural-canvas';
-        host.replaceChildren(renderer.domElement);
+        mount.replaceChildren(renderer.domElement);
 
         const hemisphere = new THREE.HemisphereLight(0xffffff, 0x899083, 2.3);
         scene.add(hemisphere);
@@ -164,15 +164,15 @@ export function ProceduralPokemonViewer({ pokemon }: Props) {
         };
 
         const resize = () => {
-          const width = Math.max(host.clientWidth, 1);
-          const height = Math.max(host.clientHeight, 1);
+          const width = Math.max(mount.clientWidth, 1);
+          const height = Math.max(mount.clientHeight, 1);
           renderer.setSize(width, height, false);
           camera.aspect = width / height;
           camera.updateProjectionMatrix();
         };
 
         resizeObserver = new ResizeObserver(resize);
-        resizeObserver.observe(host);
+        resizeObserver.observe(mount);
         resize();
         frame = requestAnimationFrame(render);
 
@@ -199,7 +199,7 @@ export function ProceduralPokemonViewer({ pokemon }: Props) {
     }
 
     let cleanup: (() => void) | undefined;
-    void boot().then((result) => {
+    void boot(host).then((result) => {
       cleanup = result;
       if (disposed) cleanup?.();
     });
