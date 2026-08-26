@@ -76,7 +76,7 @@ function Header({ species }: { species: FieldDexSpecies }) {
           <small>{species.region.toUpperCase()} · RESEARCH DEVICE</small>
         </div>
       </div>
-      <div className="dex-progress" role="group" aria-label={`Entrada ${dex} de 386 na Pokédex Nacional`}>
+      <div className="dex-progress">
         <small>NATIONAL INDEX</small>
         <strong>{dex} / 386</strong>
       </div>
