@@ -135,7 +135,7 @@ def build_smd_animation(path: Path, name: str) -> dict:
         raise RuntimeError(f'{path.name}: SMD contains no animation tracks')
     return {
         'name': name,
-        'loop': name == 'idle',
+        'loop': True,
         'fps': fps,
         'keyFrames': key_frames,
         'duration': max(max_frame / fps, 1 / fps),
@@ -147,7 +147,7 @@ def build_motion(path: Path, name: str) -> dict:
     suffix = path.suffix.lower()
     if suffix in {'.tranm', '.gfbanm'}:
         motion = BASE.build_animation(path, name)
-        motion['loop'] = name == 'idle'
+        motion['loop'] = True
         return motion
     if suffix == '.smd':
         return build_smd_animation(path, name)
@@ -185,14 +185,10 @@ def build_species(archive: zipfile.ZipFile, metadata: dict, sample: dict) -> dic
         pk_payload, names = extract_pk(archive, slug, extracted)
         poser = load_poser(archive, slug)
         idle_pose, idle_stem = SEMANTIC.choose_idle(poser)
-        happy_stem = SEMANTIC.choose_happy(poser)
         idle_name = SEMANTIC.find_resource(names, idle_stem)
-        happy_name = SEMANTIC.find_resource(names, happy_stem)
         model_name = SEMANTIC.choose_glb(names, slug)
-        if not idle_name or not happy_name or not model_name:
-            raise RuntimeError(
-                f'{slug}: semantic assets missing model={model_name} idle={idle_name} happy={happy_name}'
-            )
+        if not idle_name or not model_name:
+            raise RuntimeError(f'{slug}: semantic assets missing model={model_name} idle={idle_name}')
 
         config = json.loads((extracted / 'config.json').read_text('utf-8'))
         model_source = extracted / model_name
@@ -220,15 +216,12 @@ def build_species(archive: zipfile.ZipFile, metadata: dict, sample: dict) -> dic
                 )
             mesh_bindings[mesh_name] = baked_cache[material_name]
 
-        animations = {
-            'idle': build_motion(extracted / idle_name, 'idle'),
-            'happy': build_motion(extracted / happy_name, 'happy'),
-        }
+        idle = build_motion(extracted / idle_name, 'idle')
+        animations = {'idle': idle}
         missing_animation_nodes = sorted(
             {
                 track['name']
-                for animation in animations.values()
-                for track in animation['tracks']
+                for track in idle['tracks']
                 if track['name'] not in node_names
             }
         )
@@ -249,7 +242,6 @@ def build_species(archive: zipfile.ZipFile, metadata: dict, sample: dict) -> dic
                 'modelFile': model_name,
                 'idlePose': idle_pose,
                 'idleFile': idle_name,
-                'happyFile': happy_name,
             },
         }
         (output / 'asset.json').write_text(json.dumps(payload, separators=(',', ':')), 'utf-8')
@@ -258,12 +250,10 @@ def build_species(archive: zipfile.ZipFile, metadata: dict, sample: dict) -> dic
             'dex': sample['dex'],
             'modelFile': model_name,
             'idleFile': idle_name,
-            'happyFile': happy_name,
             'pkBytes': len(pk_payload),
             'modelBytes': len(model_bytes),
             'assetJsonBytes': (output / 'asset.json').stat().st_size,
-            'idleTracks': len(animations['idle']['tracks']),
-            'happyTracks': len(animations['happy']['tracks']),
+            'idleTracks': len(idle['tracks']),
             'missingAnimationNodes': missing_animation_nodes,
             'missingMaterials': missing_materials,
         }
