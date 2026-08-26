@@ -1,4 +1,6 @@
-import { OWNED_POKEMON_PREVIEW, type OwnedPokemonPreview } from './ownedPokemonPreview';
+import { applyCollectionFilters } from './collectionFilters';
+import { readCollectionSession } from './collectionSession';
+import { getTeamPreview, OWNED_POKEMON_PREVIEW, type OwnedPokemonPreview } from './ownedPokemonPreview';
 
 export type OwnedMovePreview = {
   name: string;
@@ -30,6 +32,38 @@ const BUILD_BY_DEX: Record<number, Pick<OwnedPokemonDetailPreview, 'sex' | 'natu
   197: { sex: 'M', nature: 'Cauta', ability: 'Synchronize', heldItem: 'Black Glasses', origin: 'Evolução por vínculo', moves: [{ name: 'Confuse Ray', type: 'Fantasma', pp: '10/10' }, { name: 'Feint Attack', type: 'Sombrio', pp: '20/20' }, { name: 'Moonlight', type: 'Fada', pp: '5/5' }, { name: 'Quick Attack', type: 'Normal', pp: '30/30' }] },
 };
 
+function normalize(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function parseContextLocation(returnHref: string) {
+  return new URL(returnHref, 'https://pokemon-hub.local');
+}
+
+function collectionContextSequence(returnHref: string) {
+  const context = parseContextLocation(returnHref);
+  if (context.pathname === '/team' || context.pathname === '/team/') {
+    return getTeamPreview();
+  }
+
+  const session = readCollectionSession();
+  const speciesRaw = context.searchParams.get('species');
+  const speciesDex = speciesRaw ? Number.parseInt(speciesRaw, 10) : null;
+  const needle = normalize(session.query);
+  const base = OWNED_POKEMON_PREVIEW.filter((pokemon) => {
+    if (speciesDex && pokemon.dex !== speciesDex) return false;
+    if (session.mode === 'favorites' && !pokemon.favorite) return false;
+    if (!needle) return true;
+    return normalize(pokemon.nickname).includes(needle) || normalize(pokemon.species).includes(needle);
+  });
+
+  return applyCollectionFilters(base, session.filters);
+}
+
 export function getOwnedPokemonDetailPreview(instanceId: string): OwnedPokemonDetailPreview | null {
   const pokemon = OWNED_POKEMON_PREVIEW.find((item) => item.instanceId === instanceId);
   if (!pokemon) return null;
@@ -44,10 +78,17 @@ export function getOwnedPokemonDetailPreview(instanceId: string): OwnedPokemonDe
   return { ...pokemon, ...build };
 }
 
-export function getOwnedPokemonNeighbours(instanceId: string) {
-  const index = OWNED_POKEMON_PREVIEW.findIndex((item) => item.instanceId === instanceId);
+export function getOwnedPokemonNeighbours(instanceId: string, returnHref = '/pokemon') {
+  const contextual = collectionContextSequence(returnHref);
+  const sequence = contextual.some((item) => item.instanceId === instanceId)
+    ? contextual
+    : [...OWNED_POKEMON_PREVIEW];
+
+  if (sequence.length <= 1) return { previous: null, next: null };
+
+  const index = sequence.findIndex((item) => item.instanceId === instanceId);
   if (index < 0) return { previous: null, next: null };
-  const previous = OWNED_POKEMON_PREVIEW[(index - 1 + OWNED_POKEMON_PREVIEW.length) % OWNED_POKEMON_PREVIEW.length] ?? null;
-  const next = OWNED_POKEMON_PREVIEW[(index + 1) % OWNED_POKEMON_PREVIEW.length] ?? null;
+  const previous = sequence[(index - 1 + sequence.length) % sequence.length] ?? null;
+  const next = sequence[(index + 1) % sequence.length] ?? null;
   return { previous, next };
 }
