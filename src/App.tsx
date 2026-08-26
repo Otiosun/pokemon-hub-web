@@ -107,6 +107,10 @@ function isLegacyFieldDexPath(path: string) {
   return path.startsWith('/pokemon/demo-');
 }
 
+function isOwnedPokemonInstancePath(path: string) {
+  return path.startsWith('/pokemon/') && !isLegacyFieldDexPath(path);
+}
+
 function getPokedexDex(path: string) {
   const raw = path.split('/').filter(Boolean)[1] ?? '1';
   const parsed = Number.parseInt(raw, 10);
@@ -134,14 +138,26 @@ function rootForPath(path: string) {
   return section ? SECTION_ROOTS[section] : null;
 }
 
-function parentForNavigation(currentPath: string, destinationPath: string) {
+function parentForNavigation(currentPath: string, currentSearch: string, destinationPath: string) {
   const currentSection = hubSectionForPath(currentPath);
   const destinationSection = hubSectionForPath(destinationPath);
+  const currentRoot = rootForPath(currentPath);
+  const normalizedCurrent = currentPath.replace(/\/$/, '');
+
+  if (
+    isOwnedPokemonInstancePath(destinationPath) &&
+    currentRoot &&
+    normalizedCurrent === currentRoot &&
+    (currentRoot === '/pokemon' || currentRoot === '/team')
+  ) {
+    return `${normalizedCurrent}${currentSearch}`;
+  }
+
   if (!destinationSection || currentSection !== destinationSection) return undefined;
   const destinationRoot = SECTION_ROOTS[destinationSection];
   if (destinationPath === destinationRoot || destinationPath === `${destinationRoot}/`) return undefined;
-  if (rootForPath(currentPath) === currentPath.replace(/\/$/, '')) {
-    return currentPath.replace(/\/$/, '');
+  if (currentRoot === normalizedCurrent) {
+    return `${normalizedCurrent}${currentSearch}`;
   }
   return undefined;
 }
@@ -253,7 +269,7 @@ export function App() {
         window.history.replaceState(historyState, '', nextLocation);
       } else {
         const destinationSection = hubSectionForPath(destination.pathname);
-        const parent = parentForNavigation(currentPath, destination.pathname);
+        const parent = parentForNavigation(currentPath, window.location.search, destination.pathname);
         const nextState: HubHistoryState = {
           ...(destinationSection ? { hubSection: destinationSection } : {}),
           ...(parent ? { hubParent: parent } : {}),
@@ -300,11 +316,15 @@ export function App() {
   if (isLegacyFieldDexPath(path)) {
     return <PokemonDetailRoute routeSlug={getPokemonRouteSlug(path)} />;
   }
-  if (path.startsWith('/pokemon/')) {
+  if (isOwnedPokemonInstancePath(path)) {
+    const historyState = (window.history.state ?? {}) as HubHistoryState;
     return (
       <HubFrame active="pokemon" destinations={hubDestinations}>
         <Suspense fallback={<RouteFallback label="ABRINDO POKÉMON…" />}>
-          <OwnedPokemonDetailPage instanceId={getPokemonRouteSlug(path)} />
+          <OwnedPokemonDetailPage
+            instanceId={getPokemonRouteSlug(path)}
+            returnHref={historyState.hubParent ?? '/pokemon'}
+          />
         </Suspense>
       </HubFrame>
     );
