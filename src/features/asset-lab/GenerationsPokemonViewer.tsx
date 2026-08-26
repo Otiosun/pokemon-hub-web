@@ -101,6 +101,7 @@ function disposeDetached(model: Group, textures: Texture[], materials: Material[
 function frameModel(runtime: Runtime, model: Group) {
   const { THREE, camera, controls } = runtime;
   model.updateMatrixWorld(true);
+
   const box = new THREE.Box3().setFromObject(model);
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
@@ -114,8 +115,7 @@ function frameModel(runtime: Runtime, model: Group) {
   const aspectMargin = camera.aspect < 0.72 ? 1.34 : camera.aspect < 1 ? 1.25 : 1.16;
   const distance = Math.max((Math.max(fitHeight, fitWidth) + depthAllowance) * aspectMargin, 0.8);
 
-  // A slight three-quarter angle keeps tails/wings readable without turning the viewer into a beauty shot.
-  const yaw = camera.aspect < 0.8 ? 0.09 : 0.13;
+  const yaw = camera.aspect < 0.8 ? 0.08 : 0.12;
   camera.position.set(
     center.x + Math.sin(yaw) * distance,
     center.y + size.y * 0.015,
@@ -127,8 +127,9 @@ function frameModel(runtime: Runtime, model: Group) {
   camera.lookAt(center);
 
   controls.target.copy(center);
-  controls.minDistance = Math.max(distance * 0.82, maxDimension * 0.86);
-  controls.maxDistance = Math.max(distance * 2.35, maxDimension * 3.8);
+  // Keep interaction useful without allowing the specimen to become a tiny dot or a cropped close-up.
+  controls.minDistance = Math.max(distance * 0.9, maxDimension * 0.78);
+  controls.maxDistance = Math.max(distance * 1.42, maxDimension * 1.7);
   controls.update();
 }
 
@@ -175,18 +176,22 @@ export function GenerationsPokemonViewer({ species, name, onReadyChange }: Props
         });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isTouch ? 1.15 : 1.6));
         renderer.outputColorSpace = THREE.SRGBColorSpace;
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 0.95;
+        // Preserve source texture color. ACES was flattening the warm orange into a beige/tan specimen.
+        renderer.toneMapping = THREE.NoToneMapping;
+        renderer.toneMappingExposure = 1;
         renderer.domElement.className = 'generations-canvas';
         mount.replaceChildren(renderer.domElement);
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(32, 1, 0.01, 100);
-        scene.add(new THREE.HemisphereLight(0xffffff, 0x758070, 1.6));
-        const key = new THREE.DirectionalLight(0xffffff, 2.2);
+        scene.add(new THREE.HemisphereLight(0xffffff, 0x73807b, 1.35));
+        const key = new THREE.DirectionalLight(0xffffff, 1.65);
         key.position.set(4, 6, 5);
         scene.add(key);
-        const rim = new THREE.DirectionalLight(0xffd8b2, 0.75);
+        const fill = new THREE.DirectionalLight(0xddeeff, 0.45);
+        fill.position.set(-4, 1, 4);
+        scene.add(fill);
+        const rim = new THREE.DirectionalLight(0xffd6ae, 0.5);
         rim.position.set(-4, 2, -3);
         scene.add(rim);
 
@@ -199,12 +204,11 @@ export function GenerationsPokemonViewer({ species, name, onReadyChange }: Props
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.enablePan = false;
-        controls.rotateSpeed = isTouch ? 0.58 : 0.72;
-        controls.zoomSpeed = 0.78;
-        // A Pokédex is a specimen viewer, not a free-flight model inspector.
-        // Keep full horizontal rotation, but prevent the Pokémon from being flipped upside down.
-        controls.minPolarAngle = THREE.MathUtils.degToRad(58);
-        controls.maxPolarAngle = THREE.MathUtils.degToRad(116);
+        controls.rotateSpeed = isTouch ? 0.55 : 0.7;
+        controls.zoomSpeed = 0.62;
+        // Field Dex = controlled specimen observation, not a free-flight 3D inspector.
+        controls.minPolarAngle = THREE.MathUtils.degToRad(66);
+        controls.maxPolarAngle = THREE.MathUtils.degToRad(108);
 
         const runtime: Runtime = {
           THREE,
@@ -241,6 +245,7 @@ export function GenerationsPokemonViewer({ species, name, onReadyChange }: Props
             cancelAnimationFrame(frameId);
           }
         };
+
         const onVisibilityChange = () => syncLoop();
         document.addEventListener('visibilitychange', onVisibilityChange);
         removeVisibilityListener = () => document.removeEventListener('visibilitychange', onVisibilityChange);
@@ -315,8 +320,6 @@ export function GenerationsPokemonViewer({ species, name, onReadyChange }: Props
       try {
         const assetResponse = await fetch(getPokemonAssetUrl(species, 'asset.json'), {
           signal: controller.signal,
-          // The branch-preview hostname is stable across deploys. Never pin a stale SPA fallback
-          // for asset.json in the browser cache; models/textures remain aggressively cached below.
           cache: 'no-cache',
         });
         if (!assetResponse.ok) throw new Error(`asset.json HTTP ${assetResponse.status}`);
@@ -375,6 +378,7 @@ export function GenerationsPokemonViewer({ species, name, onReadyChange }: Props
           if (!binding) return;
           const texture = textures.get(binding.texture);
           if (!texture) return;
+
           const side = binding.doubleSided ? activeRuntime.THREE.DoubleSide : activeRuntime.THREE.FrontSide;
           const common = {
             map: texture,
@@ -385,7 +389,11 @@ export function GenerationsPokemonViewer({ species, name, onReadyChange }: Props
           const material =
             !binding.useLight || mesh.name.toLowerCase().includes('fire')
               ? new activeRuntime.THREE.MeshBasicMaterial({ ...common, depthWrite: !binding.transparent })
-              : new activeRuntime.THREE.MeshStandardMaterial({ ...common, roughness: 0.72, metalness: 0 });
+              : new activeRuntime.THREE.MeshStandardMaterial({
+                  ...common,
+                  roughness: 0.82,
+                  metalness: 0,
+                });
           mesh.material = material;
           pendingMaterials.push(material);
         });
@@ -450,7 +458,6 @@ export function GenerationsPokemonViewer({ species, name, onReadyChange }: Props
         pendingModel = null;
 
         frameModel(activeRuntime, model);
-
         setDisplayedName(name);
         setViewerState('ready');
       } catch (error) {
