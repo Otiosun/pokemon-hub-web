@@ -45,6 +45,8 @@ A future catalog release becomes `pokemon/v2/`; do not overwrite a published rel
 
 The conversion pipeline is an offline/release process. It must not run during every normal Vercel application deploy.
 
+Normal application deploys run only a representative converter smoke set. The smoke intentionally covers TRANM, GFBANM, SMD, Scyther/Shedinja and the two converter regressions Suicune #245 and Lugia #249.
+
 ## Storage direction
 
 Cloudflare R2 is the preferred candidate for the first hosted catalog because the generated Gen I-III catalog is roughly hundreds of MB, should not live in Git, and object delivery should not consume the application's deployment size budget. Storage/provider remains replaceable behind the base URL contract.
