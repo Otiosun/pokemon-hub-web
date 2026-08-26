@@ -10,11 +10,16 @@ const DEFAULT_DESTINATIONS: HubDestinations = {
   team: '/team',
 };
 
+function pathnameOf(location: string) {
+  return location.split(/[?#]/, 1)[0] || '/';
+}
+
 function isLegacyFieldDexPath(path: string) {
   return path.startsWith('/pokemon/demo-');
 }
 
-export function hubSectionForPath(path: string): HubSection | null {
+export function hubSectionForPath(location: string): HubSection | null {
+  const path = pathnameOf(location);
   if (path === '/pokedex' || path === '/pokedex/' || path.startsWith('/pokedex/')) return 'pokedex';
   if (path === '/team' || path === '/team/' || path.startsWith('/team/')) return 'team';
   if (
@@ -28,7 +33,7 @@ export function hubSectionForPath(path: string): HubSection | null {
 }
 
 function isDestinationValid(section: HubSection, value: unknown): value is string {
-  return typeof value === 'string' && hubSectionForPath(value) === section;
+  return typeof value === 'string' && value.startsWith('/') && hubSectionForPath(value) === section;
 }
 
 export function readHubDestinations(): HubDestinations {
@@ -47,11 +52,11 @@ export function readHubDestinations(): HubDestinations {
   }
 }
 
-export function rememberHubDestination(path: string): HubDestinations {
-  const section = hubSectionForPath(path);
+export function rememberHubDestination(location: string): HubDestinations {
+  const section = hubSectionForPath(location);
   const current = readHubDestinations();
   if (!section) return current;
-  const next = { ...current, [section]: path };
+  const next = { ...current, [section]: location };
   if (typeof window !== 'undefined') {
     try {
       window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(next));
