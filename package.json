@@ -17,7 +17,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
-    "verify": "biome lint . && tsc --noEmit && vitest run && vite build"
+    "verify": "rm -rf /tmp/poke-importer /tmp/pokemon-hub-py /tmp/generations-smoke && git clone --depth 1 --quiet https://github.com/ChicoEevee/Pokemon-Switch-Model-Importer-Blender.git /tmp/poke-importer && python3 -m pip install --disable-pip-version-check --quiet --target /tmp/pokemon-hub-py py7zr flatbuffers pillow numpy && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/build-generations-format-samples.py && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/audit-generations-semantic.py && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/build-generations-batch.py --dex 1,7,10,123,165,245,249,292,384 --output /tmp/generations-smoke && biome lint . && tsc --noEmit && vitest run && vite build"
   },
   "dependencies": {
     "@google/model-viewer": "4.3.1",
@@ -29,6 +29,7 @@
     "@biomejs/biome": "2.5.10",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "@types/three": "^0.183.0",
     "@vitejs/plugin-react": "6.1.0",
     "typescript": "7.0.2",
     "vite": "8.2.2",
