@@ -1,10 +1,36 @@
-import { load } from 'unityfs-js';
+import { UnityFS } from '../node_modules/unityfs-js/unityfs/unityFile.js';
+import { ObjectRegistry } from '../node_modules/unityfs-js/core/registry.js';
+import { AnimationClip } from '../node_modules/unityfs-js/unityfs/classes/animationClip.js';
+import { AnimatorController } from '../node_modules/unityfs-js/unityfs/classes/animatorController.js';
 
 const starters = [
   { dex: '001', name: 'Bulbasaur', fileId: '1ob8kkVaOeaVhx3Yer8araVjyRsWIaoPq' },
   { dex: '004', name: 'Charmander', fileId: '1oQlfpTSHcurqC-uUjXOpd50fyfa-t7nf' },
   { dex: '007', name: 'Squirtle', fileId: '1o3dihw_MQscSPhw4L2XKOZ00pr_GWVyY' },
 ];
+
+const classNames = new Map([
+  [1, 'GameObject'],
+  [4, 'Transform'],
+  [21, 'Material'],
+  [28, 'Texture2D'],
+  [43, 'Mesh'],
+  [48, 'Shader'],
+  [74, 'AnimationClip'],
+  [90, 'Avatar'],
+  [91, 'AnimatorController'],
+  [95, 'Animator'],
+  [114, 'MonoBehaviour'],
+  [115, 'MonoScript'],
+  [137, 'SkinnedMeshRenderer'],
+  [142, 'AssetBundle'],
+]);
+
+for (const [classId, className] of classNames) {
+  ObjectRegistry.registerFallbackName(classId, className);
+}
+ObjectRegistry.register(74, 'AnimationClip', AnimationClip);
+ObjectRegistry.register(91, 'AnimatorController', AnimatorController);
 
 const interestingClasses = [
   'AnimationClip',
@@ -69,12 +95,18 @@ function summarizeAnimation(info) {
   }
 }
 
+function parseBundle(bytes) {
+  const unity = new UnityFS(bytes, { unityRevision: '2020.3.11f1' });
+  unity.parse();
+  return unity.assetManager;
+}
+
 for (const starter of starters) {
   console.log(`\nHOME_PROBE #${starter.dex} ${starter.name}`);
   const bytes = await downloadBundle(starter.fileId);
   console.log(`downloaded=${bytes.byteLength} signature=UnityFS`);
 
-  const manager = await load(bytes, { unityRevision: '2020.3.11f1' });
+  const manager = parseBundle(bytes);
   try {
     console.log('metadata=', JSON.stringify(manager.getMetadata()));
     console.log('stats=', JSON.stringify(manager.getStats()));
@@ -83,7 +115,7 @@ for (const starter of starters) {
       const infos = manager.getObjectInfosByClass(className);
       if (infos.length === 0) continue;
       console.log(`${className}=${infos.length}`);
-      for (const info of infos.slice(0, 40)) {
+      for (const info of infos.slice(0, 60)) {
         const base = {
           pathID: info.pathID.toString(),
           name: safeName(info),
