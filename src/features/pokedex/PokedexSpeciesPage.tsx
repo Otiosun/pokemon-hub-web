@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import { getPokemonAssetUrl } from '../../visual-assets/assetBaseUrl';
 import { TypeBadge } from '../../visual-assets/TypeBadge';
 import {
   FIELD_DEX_REVIEW_SPECIES,
-  getFieldDexVisual,
   typeAccent,
   type FieldDexSpecies,
 } from '../pokemon-detail/fieldDexSpecies';
@@ -196,13 +196,14 @@ function EvolutionTree({ stages }: { stages: EvolutionSpecies[][] }) {
           <div>
             {stage.map((species) => (
               <a href={neighbourHref(species.dex)} key={species.dex}>
-                <img
-                  src={getFieldDexVisual(species.dex).icon}
+                <PokemonAssetImage
+                  dex={species.dex}
+                  role="icon"
                   alt=""
                   aria-hidden="true"
                   loading="lazy"
                   decoding="async"
-                  onError={(event) => { event.currentTarget.hidden = true; }}
+                  fallbackLabel="?"
                 />
                 <span>#{String(species.dex).padStart(3, '0')}</span>
                 <strong>{species.name}</strong>
@@ -219,7 +220,6 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
   const validDex = Number.isInteger(dex) && dex >= 1 && dex <= TOTAL ? dex : 1;
   const review = useMemo(() => readDexReview(validDex), [validDex]);
   const playerState = useMemo(() => getSpeciesPlayerStatePreview(validDex), [validDex]);
-  const visual = getFieldDexVisual(validDex);
   const [record, setRecord] = useState<RecordState>(() => initialRecord(validDex, review, playerState));
   const [artworkReadyDex, setArtworkReadyDex] = useState<number | null>(null);
   const cryAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -323,18 +323,19 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
 
           <div className="pokedex-species-artwork-slot">
             {discovered ? (
-              <img
+              <PokemonAssetImage
                 key={validDex}
+                dex={validDex}
+                role="official-artwork"
                 className="pokedex-species-artwork"
-                src={visual.artworkOfficial}
                 alt={`Ilustração de ${displayName}`}
                 decoding="async"
                 fetchPriority="high"
-                onLoad={() => setArtworkReadyDex(validDex)}
-                onError={() => setArtworkReadyDex(validDex)}
+                fallbackLabel="?"
+                onResolved={() => setArtworkReadyDex(validDex)}
               />
             ) : (
-              <div className="pokedex-species-unknown-mark" aria-label="Espécie ainda não identificada">
+              <div className="pokedex-species-unknown-mark" aria-hidden="true">
                 <span>?</span>
               </div>
             )}
