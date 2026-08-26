@@ -1,0 +1,62 @@
+.pokedex-index-progress-readout {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(68px, auto));
+  border: 1px solid rgba(215, 238, 238, 0.1);
+  background: rgba(18, 25, 27, 0.72);
+}
+
+.pokedex-index-progress-readout > div {
+  min-width: 76px;
+  display: grid;
+  justify-items: end;
+  gap: 1px;
+  padding: 9px 10px;
+}
+
+.pokedex-index-progress-readout > div + div {
+  border-left: 1px solid rgba(215, 238, 238, 0.08);
+}
+
+.pokedex-index-progress-readout span {
+  color: #edf7f7;
+  font: 700 1rem 'Space Grotesk', sans-serif;
+}
+
+.pokedex-index-progress-readout small {
+  color: #6d7e81;
+  font: 500 0.4rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.07em;
+}
+
+.pokedex-index-sprite-wrap .pokemon-asset-placeholder {
+  width: 64px;
+  height: 52px;
+  font-size: 1.25rem;
+}
+
+@media (max-width: 620px) {
+  .pokedex-index-intro {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pokedex-index-progress-readout {
+    width: 100%;
+  }
+
+  .pokedex-index-progress-readout > div {
+    min-width: 0;
+    justify-items: start;
+  }
+}
+
+@media (max-width: 360px) {
+  .pokedex-index-progress-readout small {
+    font-size: 0.36rem;
+  }
+
+  .pokedex-index-progress-readout > div {
+    padding-inline: 7px;
+  }
+}
