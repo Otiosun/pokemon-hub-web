@@ -1,3 +1,4 @@
+// Prototype-only data source. Replace this mock with the RPG API adapter without moving mechanics into the frontend.
 export type PokemonMoveView = {
   name: string;
   type: string;
