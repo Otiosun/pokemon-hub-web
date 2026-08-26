@@ -30,7 +30,7 @@ type AssetPayload = {
   scale: number;
   model: string;
   materials: Record<string, MaterialBinding>;
-  animations: { idle: MotionClip; happy: MotionClip };
+  animations: { idle: MotionClip; happy?: MotionClip };
   missingAnimationNodes: string[];
   missingMaterials: string[];
 };
@@ -47,6 +47,7 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
   const pointerRef = useRef<{ id: number; x: number; y: number; moved: boolean } | null>(null);
   const [viewerState, setViewerState] = useState<ViewerState>('loading');
   const [emotion, setEmotion] = useState<'idle' | 'happy'>('idle');
+  const [hasHappy, setHasHappy] = useState(false);
   const [errorDetail, setErrorDetail] = useState('');
 
   useEffect(() => {
@@ -63,6 +64,7 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
       try {
         setViewerState('loading');
         setEmotion('idle');
+        setHasHappy(false);
         setErrorDetail('');
         const base = `/research/generations/${species}`;
         const [THREE, { GLTFLoader }, { DRACOLoader }, { OrbitControls }, assetResponse] =
@@ -119,6 +121,8 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
           textureNames.map(async (textureName) => {
             const texture = await textureLoader.loadAsync(`${base}/${textureName}`);
             texture.flipY = false;
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
             texture.colorSpace = THREE.SRGBColorSpace;
             texture.needsUpdate = true;
             return [textureName, texture] as const;
@@ -201,35 +205,39 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
           const clip = new THREE.AnimationClip(`Generations:${animationName}`, motion.duration, tracks);
           const action = mixer.clipAction(clip);
           action.clampWhenFinished = animationName === 'happy';
-          action.setLoop(animationName === 'idle' ? THREE.LoopRepeat : THREE.LoopOnce, animationName === 'idle' ? Infinity : 1);
+          action.setLoop(
+            animationName === 'idle' ? THREE.LoopRepeat : THREE.LoopOnce,
+            animationName === 'idle' ? Infinity : 1,
+          );
           actions.set(animationName, action);
         }
 
         const idle = actions.get('idle');
         const happy = actions.get('happy');
-        if (!idle || !happy) throw new Error('par Idle/Happy não foi criado');
+        if (!idle) throw new Error('Idle não foi criado');
         let reacting = false;
 
         const playIdle = () => {
-          happy.stop();
+          happy?.stop();
           idle.reset().fadeIn(0.12).play();
           reacting = false;
           setEmotion('idle');
         };
         const playHappy = () => {
-          if (reacting) return;
+          if (!happy || reacting) return;
           reacting = true;
           idle.fadeOut(0.1);
           happy.reset().fadeIn(0.1).play();
           setEmotion('happy');
         };
         const handleFinished = (event: { action: AnimationAction }) => {
-          if (event.action !== happy) return;
+          if (!happy || event.action !== happy) return;
           happy.fadeOut(0.08);
           playIdle();
         };
         mixer.addEventListener('finished', handleFinished);
-        triggerHappyRef.current = playHappy;
+        triggerHappyRef.current = happy ? playHappy : null;
+        setHasHappy(Boolean(happy));
         playIdle();
         mixer.update(0);
         model.updateMatrixWorld(true);
@@ -343,31 +351,47 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
           className="generations-host"
           role="button"
           tabIndex={0}
-          aria-label={`${name} 3D. Toque para ele reagir feliz.`}
+          aria-label={
+            hasHappy
+              ? `${name} 3D. Toque para ele reagir feliz.`
+              : `${name} 3D. Arraste para girar o Pokémon.`
+          }
           onKeyDown={(event) => {
+            if (!hasHappy) return;
             if (event.key === 'Enter' || event.key === ' ') {
               event.preventDefault();
               triggerHappy();
             }
           }}
           onPointerDown={(event) => {
-            pointerRef.current = { id: event.pointerId, x: event.clientX, y: event.clientY, moved: false };
+            pointerRef.current = {
+              id: event.pointerId,
+              x: event.clientX,
+              y: event.clientY,
+              moved: false,
+            };
           }}
           onPointerMove={(event) => {
             const pointer = pointerRef.current;
             if (!pointer || pointer.id !== event.pointerId) return;
-            if (Math.hypot(event.clientX - pointer.x, event.clientY - pointer.y) > 8) pointer.moved = true;
+            if (Math.hypot(event.clientX - pointer.x, event.clientY - pointer.y) > 8) {
+              pointer.moved = true;
+            }
           }}
           onPointerUp={(event) => {
             const pointer = pointerRef.current;
             pointerRef.current = null;
-            if (pointer && pointer.id === event.pointerId && !pointer.moved) triggerHappy();
+            if (hasHappy && pointer && pointer.id === event.pointerId && !pointer.moved) {
+              triggerHappy();
+            }
           }}
           onPointerCancel={() => {
             pointerRef.current = null;
           }}
         />
-        {viewerState === 'loading' && <div className="generations-loading">carregando {name}…</div>}
+        {viewerState === 'loading' && (
+          <div className="generations-loading">carregando {name}…</div>
+        )}
         {viewerState === 'failed' && (
           <div className="generations-error">
             <strong>Falha ao carregar {name}.</strong>
@@ -375,8 +399,14 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
           </div>
         )}
         <div className="generations-status" aria-live="polite">
-          <strong>{viewerState === 'ready' ? `${name} · ${emotion === 'happy' ? 'Happy' : 'Idle'}` : 'Preparando…'}</strong>
-          {viewerState === 'ready' && <span>toque curto = Happy · arraste = girar</span>}
+          <strong>
+            {viewerState === 'ready'
+              ? `${name} · ${emotion === 'happy' ? 'Happy' : 'Idle'}`
+              : 'Preparando…'}
+          </strong>
+          {viewerState === 'ready' && (
+            <span>{hasHappy ? 'toque curto = Happy · arraste = girar' : 'arraste = girar'}</span>
+          )}
         </div>
       </div>
     </div>
