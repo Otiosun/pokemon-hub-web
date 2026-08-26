@@ -86,12 +86,14 @@ const reviewSpecies = [
   },
 ] satisfies FieldDexSpecies[];
 
+const defaultSpecies = reviewSpecies[0]!;
+
 export const FIELD_DEX_REVIEW_SPECIES: readonly FieldDexSpecies[] = reviewSpecies;
 
 const byRoute = new Map(reviewSpecies.map((species) => [species.routeSlug, species]));
 
 export function getFieldDexSpecies(routeSlug: string): FieldDexSpecies {
-  return byRoute.get(routeSlug) ?? reviewSpecies[0];
+  return byRoute.get(routeSlug) ?? defaultSpecies;
 }
 
 export function getFieldDexNeighbours(routeSlug: string) {
@@ -99,8 +101,8 @@ export function getFieldDexNeighbours(routeSlug: string) {
     0,
     reviewSpecies.findIndex((species) => species.routeSlug === routeSlug),
   );
-  const previous = reviewSpecies[(index - 1 + reviewSpecies.length) % reviewSpecies.length];
-  const next = reviewSpecies[(index + 1) % reviewSpecies.length];
+  const previous = reviewSpecies[(index - 1 + reviewSpecies.length) % reviewSpecies.length]!;
+  const next = reviewSpecies[(index + 1) % reviewSpecies.length]!;
   return { previous, next };
 }
 
