@@ -1,5 +1,6 @@
 import { lazy, Suspense, type ReactNode, useEffect, useState } from 'react';
 import { HubNavigation, type HubSection } from './components/HubNavigation';
+import { rememberPokedexIndexScroll } from './features/pokedex/pokedexIndexSession';
 import { PokemonDetailRoute } from './features/pokemon-detail/PokemonDetailRoute';
 
 const PokedexIndexPage = lazy(() =>
@@ -88,6 +89,14 @@ function isRecordPath(path: string) {
   return path.startsWith('/pokemon/') || path.startsWith('/pokedex/');
 }
 
+function isPokedexIndexPath(path: string) {
+  return path === '/pokedex' || path === '/pokedex/';
+}
+
+function usesSiblingHistoryReplacement(anchor: HTMLAnchorElement) {
+  return Boolean(anchor.closest('.pokedex-species-side-nav, .dex-nav'));
+}
+
 export function App() {
   const [path, setPath] = useState(getPath);
 
@@ -136,13 +145,22 @@ export function App() {
         return;
       }
 
+      if (isPokedexIndexPath(currentPath)) {
+        rememberPokedexIndexScroll(window.scrollY);
+      }
+
       event.preventDefault();
-      window.history.pushState({}, '', `${destination.pathname}${destination.search}${destination.hash}`);
+      const nextLocation = `${destination.pathname}${destination.search}${destination.hash}`;
+      if (usesSiblingHistoryReplacement(anchor)) {
+        window.history.replaceState({}, '', nextLocation);
+      } else {
+        window.history.pushState({}, '', nextLocation);
+      }
       setPath(destination.pathname);
 
       if (isRecordPath(destination.pathname)) {
         resetRecordViewport();
-      } else {
+      } else if (!isPokedexIndexPath(destination.pathname)) {
         window.scrollTo({ top: 0, behavior: 'auto' });
       }
     };
