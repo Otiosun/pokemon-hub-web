@@ -3,17 +3,20 @@
   background: #0d1113;
 }
 
-.dex-route.is-pending .dex-nav a {
+.dex-route.is-pending .dex-nav a,
+.dex-route.is-committing .dex-nav a {
   pointer-events: none;
   opacity: 0.5;
 }
 
+.dex-route.is-committing .dex-art,
 .dex-page .dex-stage:has(.generations-loading) .dex-art {
   z-index: 4;
   opacity: 0.92;
   filter: saturate(0.96) drop-shadow(0 26px 52px rgba(0, 0, 0, 0.27));
 }
 
+.dex-route.is-committing .generations-host,
 .dex-page .dex-stage:has(.generations-loading) .dex-viewer .generations-host {
   opacity: 0;
 }
