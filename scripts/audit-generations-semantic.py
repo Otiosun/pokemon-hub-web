@@ -67,20 +67,15 @@ def choose_idle(poser: dict) -> tuple[str | None, str | None]:
     return pose_key, motion
 
 
-def choose_happy(poser: dict) -> str | None:
-    animations = poser.get('animations') or {}
-    for key in ('glad', 'happy'):
-        motion = animation_name(animations.get(key))
-        if motion:
-            return motion
-    return None
-
-
 def find_resource(names: set[str], stem: str | None) -> str | None:
     if not stem:
         return None
     clean = Path(stem).stem
-    candidates = [name for name in names if Path(name).stem == clean and Path(name).suffix.lower() in SUPPORTED_MOTIONS]
+    candidates = [
+        name
+        for name in names
+        if Path(name).stem == clean and Path(name).suffix.lower() in SUPPORTED_MOTIONS
+    ]
     if not candidates:
         return None
     order = {'.tranm': 0, '.gfbanm': 1, '.smd': 2, '.smdx': 3}
@@ -106,10 +101,8 @@ def inspect_pk(payload: bytes, slug: str, poser: dict) -> dict:
         names = {name for name in seven.getnames() if name and name.strip()}
 
     idle_pose, idle_stem = choose_idle(poser)
-    happy_stem = choose_happy(poser)
     model = choose_glb(names, slug)
     idle = find_resource(names, idle_stem)
-    happy = find_resource(names, happy_stem)
     config = 'config.json' if 'config.json' in names else None
     return {
         'model': model,
@@ -118,10 +111,7 @@ def inspect_pk(payload: bytes, slug: str, poser: dict) -> dict:
         'idleStem': idle_stem,
         'idle': idle,
         'idleFormat': Path(idle).suffix.lower().lstrip('.') if idle else 'missing',
-        'happyStem': happy_stem,
-        'happy': happy,
-        'happyFormat': Path(happy).suffix.lower().lstrip('.') if happy else 'missing',
-        'ready': bool(model and config and idle and happy),
+        'ready': bool(model and config and idle),
         'innerFileCount': len(names),
     }
 
@@ -211,7 +201,11 @@ def main() -> None:
         poser_archive = packs[matching_poser['generationPack']]['archive']
         poser = json.loads(poser_archive.read(matching_poser['entry']).decode('utf-8'))
         inspection = inspect_pk(model_archive.read(model_source['entry']), model_source['slug'], poser)
-        combo = f"glb+{inspection['idleFormat']}+{inspection['happyFormat']}" if inspection['model'] else f"missing+{inspection['idleFormat']}+{inspection['happyFormat']}"
+        combo = (
+            f"glb+{inspection['idleFormat']}"
+            if inspection['model']
+            else f"missing+{inspection['idleFormat']}"
+        )
         combinations[combo] += 1
         if inspection['idleStem']:
             idle_stems[inspection['idleStem']] += 1
@@ -231,7 +225,7 @@ def main() -> None:
         'scope': '#001-386',
         'expectedSpecies': 386,
         'resolvedSpecies': len(rows),
-        'readyIdleHappy': sum(1 for row in rows if row['ready']),
+        'readyIdle': sum(1 for row in rows if row['ready']),
         'unresolved': len(unresolved),
         'formatCombinations': dict(combinations),
         'idleMotionNames': dict(idle_stems.most_common()),
@@ -252,8 +246,8 @@ def main() -> None:
     }
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
     REPORT_PATH.write_text(json.dumps(payload, ensure_ascii=False, separators=(',', ':')), 'utf-8')
-    print('SEMANTIC_COVERAGE_TOTAL', json.dumps(summary, ensure_ascii=False))
-    print('SEMANTIC_COVERAGE_UNRESOLVED', json.dumps(unresolved[:60], ensure_ascii=False))
+    print('SEMANTIC_IDLE_COVERAGE_TOTAL', json.dumps(summary, ensure_ascii=False))
+    print('SEMANTIC_IDLE_COVERAGE_UNRESOLVED', json.dumps(unresolved[:60], ensure_ascii=False))
 
     for data in packs.values():
         data['archive'].close()
