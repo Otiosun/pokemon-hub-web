@@ -1,0 +1,117 @@
+/* Species record polish: preserve the 2D/3D stage while removing debug-like noise. */
+.pokedex-species-page.is-caught .pokedex-species-stage,
+.pokedex-species-page.is-seen .pokedex-species-stage,
+.pokedex-species-page.is-unknown .pokedex-species-stage {
+  box-shadow: inset 0 -2px 0 rgba(190, 226, 228, 0.13);
+}
+
+.pokedex-species-sync,
+.pokedex-species-mode,
+.pokedex-species-note {
+  display: none;
+}
+
+.pokedex-species-stage-top {
+  color: #89999b;
+  font-size: 0.62rem;
+  letter-spacing: 0.055em;
+}
+
+.pokedex-species-view-modes button {
+  font-size: 0.58rem;
+}
+
+.pokedex-species-view-modes button.is-active {
+  box-shadow: inset 0 -2px 0 rgba(235, 242, 242, 0.62);
+}
+
+.pokedex-species-model-hint {
+  font-size: 0.55rem;
+}
+
+.pokedex-species-side-nav a {
+  font-size: 0.58rem;
+}
+
+.pokedex-species-data-head span,
+.pokedex-species-facts dt,
+.pokedex-species-nav span,
+.pokedex-species-discovery span,
+.pokedex-species-owned-readout span,
+.pokedex-species-research > div > span,
+.pokedex-species-field-grid span,
+.pokedex-species-varieties header,
+.pokedex-species-evolution header span,
+.pokedex-species-evolution header strong,
+.pokedex-species-owned-link span,
+.pokedex-species-owned-link strong,
+.pokedex-species-cry {
+  font-size: 0.58rem;
+  letter-spacing: 0.055em;
+}
+
+.pokedex-species-discovery.is-unknown strong,
+.pokedex-species-discovery.is-seen strong,
+.pokedex-species-discovery.is-caught strong {
+  color: #4f5b5e;
+}
+
+.pokedex-species-player-state {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.pokedex-species-research-meter span.is-filled {
+  background: #6f7e80;
+}
+
+.pokedex-species-owned-readout small {
+  color: #7f8b8d;
+  font-size: 0.54rem;
+}
+
+.pokedex-species-field-grid small {
+  color: #7e898b;
+  font-size: 0.53rem;
+}
+
+.pokedex-species-evolution header strong,
+.pokedex-species-owned-link strong {
+  color: #4d5a5d;
+}
+
+.pokedex-species-cry {
+  border-color: rgba(23, 32, 36, 0.16);
+  color: #465255;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.pokedex-species-cry:hover,
+.pokedex-species-cry:focus-visible {
+  border-color: rgba(23, 32, 36, 0.3);
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.pokedex-species-owned-link {
+  border-color: rgba(23, 32, 36, 0.15);
+  color: #334044;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+@media (max-width: 520px) {
+  .pokedex-species-stage-top {
+    font-size: 0.59rem;
+  }
+
+  .pokedex-species-data-head span,
+  .pokedex-species-facts dt,
+  .pokedex-species-discovery span,
+  .pokedex-species-owned-readout span,
+  .pokedex-species-research > div > span,
+  .pokedex-species-field-grid span,
+  .pokedex-species-evolution header span,
+  .pokedex-species-evolution header strong,
+  .pokedex-species-owned-link span,
+  .pokedex-species-owned-link strong {
+    font-size: 0.56rem;
+  }
+}
