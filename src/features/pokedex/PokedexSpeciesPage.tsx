@@ -47,6 +47,7 @@ type ReviewAssetPayload = {
 const TOTAL = 386;
 const warmedReviewSpecies = new Set<string>();
 const RESEARCH_STEPS = [1, 2, 3, 4, 5] as const;
+const FIELDSET_RESET = { border: 0, margin: 0, padding: 0, minInlineSize: 0 } as const;
 const TYPE_LABELS: Record<string, string> = {
   normal: 'Normal',
   fire: 'Fogo',
@@ -232,20 +233,21 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
   const playerState = useMemo(() => getSpeciesPlayerStatePreview(validDex), [validDex]);
   const [record, setRecord] = useState<RecordState>(() => initialRecord(validDex, review, playerState));
   const [artworkReadyDex, setArtworkReadyDex] = useState<number | null>(null);
-  const [visualMode, setVisualMode] = useState<VisualMode>('artwork');
+  const [visualModeState, setVisualModeState] = useState<{ dex: number; mode: VisualMode }>({
+    dex: validDex,
+    mode: 'artwork',
+  });
   const cryAudioRef = useRef<HTMLAudioElement | null>(null);
   const activeRecord = record.dex === validDex ? record : initialRecord(validDex, review, playerState);
   const artworkReady = artworkReadyDex === validDex;
+  const visualMode = visualModeState.dex === validDex ? visualModeState.mode : 'artwork';
+  const setVisualMode = (mode: VisualMode) => setVisualModeState({ dex: validDex, mode });
   const discovered = playerState.discovery !== 'unknown';
   const canShow3d = Boolean(review && discovered);
   const showing3d = canShow3d && visualMode === 'model';
   const factsUnlocked = playerState.researchLevel >= 2;
   const ecologyUnlocked = playerState.researchLevel >= 3;
   const evolutionUnlocked = playerState.researchLevel >= 4;
-
-  useEffect(() => {
-    setVisualMode('artwork');
-  }, [validDex]);
 
   useEffect(() => {
     if (review && discovered) void warmReview3d(review);
@@ -339,7 +341,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
           </div>
 
           {canShow3d && (
-            <div className="pokedex-species-view-modes" role="group" aria-label="Modo de visualização da espécie">
+            <fieldset className="pokedex-species-view-modes" style={FIELDSET_RESET} aria-label="Modo de visualização da espécie">
               <button
                 type="button"
                 className={visualMode === 'artwork' ? 'is-active' : undefined}
@@ -356,7 +358,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
               >
                 3D
               </button>
-            </div>
+            </fieldset>
           )}
 
           {!showing3d && (
@@ -464,7 +466,12 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
             </div>
           </div>
 
-          {activeRecord.cryUrl && <audio ref={cryAudioRef} src={activeRecord.cryUrl} preload="none" />}
+          {activeRecord.cryUrl && (
+            <>
+              {/* biome-ignore lint/a11y/useMediaCaption: Pokémon cries contain no speech or dialogue to caption. */}
+              <audio ref={cryAudioRef} src={activeRecord.cryUrl} preload="none" />
+            </>
+          )}
 
           <p className="pokedex-species-description">{description}</p>
 

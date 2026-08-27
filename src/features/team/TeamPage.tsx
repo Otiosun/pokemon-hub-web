@@ -20,6 +20,8 @@ function resolveDraftTeam(
   return ordered.length === canonicalTeam.length ? ordered : [...canonicalTeam];
 }
 
+const FIELDSET_RESET = { border: 0, margin: 0, padding: 0, minInlineSize: 0 } as const;
+
 export function TeamPage() {
   const canonicalTeam = useMemo(() => getTeamPreview(), []);
   const [draftOrder, setDraftOrder] = useState<string[] | null>(readTeamDraftOrder);
@@ -100,10 +102,10 @@ export function TeamPage() {
               <span>ORDEM NÃO SALVA</span>
               <strong>A formação abaixo é apenas uma prévia local.</strong>
             </div>
-            <div role="group" aria-label="Confirmar ou descartar ordem em prévia">
+            <fieldset style={FIELDSET_RESET} aria-label="Confirmar ou descartar ordem em prévia">
               <button type="button" onClick={discardOrder}>DESCARTAR</button>
               <button type="button" disabled title="Requer API do RPG">SALVAR COM API</button>
-            </div>
+            </fieldset>
           </section>
         )}
 
@@ -149,8 +151,12 @@ export function TeamPage() {
                     </div>
                   </a>
 
-                  <div className="team-slot-controls" role="group" aria-label={`Controles de ${pokemon.nickname}`}>
-                    <div className="team-slot-order-controls" role="group" aria-label="Alterar ordem">
+                  <fieldset
+                    className="team-slot-controls"
+                    style={FIELDSET_RESET}
+                    aria-label={`Controles de ${pokemon.nickname}`}
+                  >
+                    <fieldset className="team-slot-order-controls" style={FIELDSET_RESET} aria-label="Alterar ordem">
                       <button
                         type="button"
                         onClick={() => moveMember(index, -1)}
@@ -167,7 +173,7 @@ export function TeamPage() {
                       >
                         ↓
                       </button>
-                    </div>
+                    </fieldset>
                     <button
                       className="team-slot-swap"
                       type="button"
@@ -176,7 +182,7 @@ export function TeamPage() {
                     >
                       TROCAR
                     </button>
-                  </div>
+                  </fieldset>
                 </article>
               );
             })}
