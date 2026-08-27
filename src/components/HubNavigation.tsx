@@ -13,6 +13,7 @@ type NavItem = {
   id: HubSection;
   label: string;
   description: string;
+  index: string;
   icon: 'journey' | 'dex' | 'box';
 };
 
@@ -21,9 +22,9 @@ type MenuHistoryState = Record<string, unknown> & {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'journey', label: 'JORNADA', description: 'Continue a aventura', icon: 'journey' },
-  { id: 'pokedex', label: 'POKÉDEX', description: 'Espécies e pesquisa', icon: 'dex' },
-  { id: 'box', label: 'BOX', description: 'Seus Pokémon e Time', icon: 'box' },
+  { id: 'journey', label: 'JORNADA', description: 'Retorne ao RPG e ao contexto atual', index: '01', icon: 'journey' },
+  { id: 'pokedex', label: 'POKÉDEX', description: 'Espécies, descoberta e pesquisa', index: '02', icon: 'dex' },
+  { id: 'box', label: 'BOX', description: 'Time, coleção e organização', index: '03', icon: 'box' },
 ];
 
 const HUB_ROUTE_PRELOADERS: Record<HubSection, () => Promise<unknown>> = {
@@ -185,14 +186,13 @@ export function HubNavigation({ active, destinations }: HubNavigationProps) {
             className="hub-menu-panel"
             role="dialog"
             aria-modal="true"
-            aria-label="Menu principal do Pokémon Hub"
+            aria-label="Navegação principal do Pokémon Hub"
             onKeyDown={onMenuKeyDown}
           >
             <header className="hub-menu-header">
               <div>
                 <span className="hub-menu-kicker">POKÉMON HUB</span>
-                <h2>Menu</h2>
-                <p>Escolha uma ferramenta sem perder o ponto em que você estava.</p>
+                <p>JORNADA · POKÉDEX · BOX</p>
               </div>
               <button type="button" className="hub-menu-close" onClick={closeMenu} aria-label="Fechar menu">
                 ×
@@ -222,6 +222,7 @@ export function HubNavigation({ active, destinations }: HubNavigationProps) {
                     onPointerDown={warmRoute}
                     onPointerEnter={warmRoute}
                   >
+                    <span className="hub-menu-tile-index" aria-hidden="true">{item.index}</span>
                     <span className="hub-menu-tile-icon">
                       <NavGlyph icon={item.icon} />
                     </span>
@@ -234,6 +235,11 @@ export function HubNavigation({ active, destinations }: HubNavigationProps) {
                 );
               })}
             </nav>
+
+            <footer className="hub-menu-foot">
+              <span>TIME</span>
+              <strong>DENTRO DA BOX</strong>
+            </footer>
           </div>
         </div>
       ) : null}
