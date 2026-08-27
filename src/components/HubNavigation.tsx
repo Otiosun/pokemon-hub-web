@@ -202,7 +202,14 @@ export function HubNavigation({ active, destinations }: HubNavigationProps) {
                     href={destinations[item.id]}
                     aria-current={selected ? 'page' : undefined}
                     data-hub-primary={item.id}
-                    onClick={() => setOpen(false)}
+                    onClick={(event) => {
+                      if (selected) {
+                        event.preventDefault();
+                        closeMenu();
+                        return;
+                      }
+                      setOpen(false);
+                    }}
                     onFocus={warmRoute}
                     onPointerDown={warmRoute}
                     onPointerEnter={warmRoute}
