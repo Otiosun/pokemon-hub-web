@@ -140,6 +140,7 @@ export function HubNavigation({ active, destinations }: HubNavigationProps) {
     if (focusable.length < 2) return;
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
+    if (!first || !last) return;
     if (event.shiftKey && document.activeElement === first) {
       event.preventDefault();
       last.focus();

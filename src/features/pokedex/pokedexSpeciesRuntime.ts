@@ -88,9 +88,13 @@ function buildEvolutionStages(chain: EvolutionChainNode | undefined) {
   return stages.filter((stage) => stage.length > 0);
 }
 
+function requestInit(signal?: AbortSignal): RequestInit {
+  return signal ? { signal, cache: 'force-cache' } : { cache: 'force-cache' };
+}
+
 async function loadEvolutionStages(url: string | undefined, signal?: AbortSignal) {
   if (!url) return [];
-  const response = await fetch(url, { signal, cache: 'force-cache' });
+  const response = await fetch(url, requestInit(signal));
   if (!response.ok) throw new Error(`PokéAPI evolution HTTP ${response.status}`);
   const payload = (await response.json()) as EvolutionPayload;
   return buildEvolutionStages(payload.chain);
@@ -105,8 +109,8 @@ export async function loadPokedexSpeciesRuntime(dex: number, signal?: AbortSigna
   if (cached) return cached;
 
   const [pokemonResponse, speciesResponse] = await Promise.all([
-    fetch(`https://pokeapi.co/api/v2/pokemon/${dex}`, { signal, cache: 'force-cache' }),
-    fetch(`https://pokeapi.co/api/v2/pokemon-species/${dex}`, { signal, cache: 'force-cache' }),
+    fetch(`https://pokeapi.co/api/v2/pokemon/${dex}`, requestInit(signal)),
+    fetch(`https://pokeapi.co/api/v2/pokemon-species/${dex}`, requestInit(signal)),
   ]);
 
   if (!pokemonResponse.ok) throw new Error(`PokéAPI pokemon HTTP ${pokemonResponse.status}`);

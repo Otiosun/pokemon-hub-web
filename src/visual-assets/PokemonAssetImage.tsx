@@ -85,10 +85,13 @@ function shouldNormalizeAlpha(assetRole: PokemonImageRole) {
 function readTransformScale(transform: string) {
   if (!transform || transform === 'none') return 1;
   const match = transform.match(/^matrix\(([^)]+)\)$/);
-  if (!match) return 1;
-  const values = match[1].split(',').map(Number);
-  if (values.length < 2 || values.some((value) => !Number.isFinite(value))) return 1;
-  return Math.hypot(values[0], values[1]) || 1;
+  const rawValues = match?.[1];
+  if (!rawValues) return 1;
+  const values = rawValues.split(',').map(Number);
+  const a = values[0];
+  const b = values[1];
+  if (a === undefined || b === undefined || !Number.isFinite(a) || !Number.isFinite(b)) return 1;
+  return Math.hypot(a, b) || 1;
 }
 
 export function calculatePokemonAlphaTransform({
@@ -171,7 +174,7 @@ async function scanAlphaBounds(src: string): Promise<PokemonAlphaBounds | null> 
 
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
-      const alpha = pixels[(y * width + x) * 4 + 3];
+      const alpha = pixels[(y * width + x) * 4 + 3] ?? 0;
       if (alpha <= ALPHA_THRESHOLD) continue;
       minX = Math.min(minX, x);
       minY = Math.min(minY, y);
@@ -237,8 +240,9 @@ export function PokemonAssetImage({
   const [alphaState, setAlphaState] = useState<AlphaRenderState | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const baseScaleRef = useRef<{ src: string; scale: number } | null>(null);
-  const activeBounds = alphaState?.src === source?.src ? alphaState.bounds : null;
-  const alphaTransform = alphaState?.src === source?.src ? alphaState.transform : null;
+  const activeAlphaState = alphaState && alphaState.src === source?.src ? alphaState : null;
+  const activeBounds = activeAlphaState?.bounds ?? null;
+  const alphaTransform = activeAlphaState?.transform ?? null;
 
   useEffect(() => {
     const image = imageRef.current;
