@@ -4,11 +4,22 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/__cloudflare-probe",
+      "destination": "https://feat-pokemon-detail-v1-pokemon-hub-web.natanaelgames19.workers.dev/deploy-probe-v3.txt"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
+    {
+      "source": "/__cloudflare-probe",
+      "headers": [
+        { "key": "x-vercel-enable-rewrite-caching", "value": "0" },
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [
