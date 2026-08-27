@@ -1,3 +1,4 @@
+import { HubModuleHeader } from '../../components/HubModuleHeader';
 import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import { TypeBadge } from '../../visual-assets/TypeBadge';
 import { readTeamDraftOrder, readTeamDraftSlot } from '../team/teamSession';
@@ -32,6 +33,7 @@ export function OwnedPokemonDetailPage({
   if (!pokemon) {
     return (
       <main className="owned-detail-page">
+        <HubModuleHeader module="pokemon" metaLabel="REGISTRO" metaValue="INDISPONÍVEL" />
         <section className="owned-detail-not-found">
           <span>REGISTRO INDISPONÍVEL</span>
           <h1>Pokémon não encontrado.</h1>
@@ -56,21 +58,30 @@ export function OwnedPokemonDetailPage({
 
   return (
     <main className="owned-detail-page">
-      <header className="owned-detail-header">
+      <HubModuleHeader
+        module="pokemon"
+        metaLabel="POKÉMON POSSUÍDO"
+        metaValue={`#${dex} · NV. ${pokemon.level}`}
+      />
+
+      <div className="owned-detail-context-bar">
         <a href={returnHref} data-nav-mode="up" className="owned-detail-back">
-          <span aria-hidden="true">←</span>
+          <span className="owned-detail-back-arrow" aria-hidden="true">←</span>
           <span>
-            <strong>{returningToTeam ? 'MEU TIME' : 'MEUS POKÉMON'}</strong>
-            <small>{returningToTeam ? 'FORMAÇÃO ATIVA' : 'COLEÇÃO DO TREINADOR'}</small>
+            <strong>{returningToTeam ? 'VOLTAR AO TIME' : 'VOLTAR À COLEÇÃO'}</strong>
+            <small>{returningToTeam ? 'FORMAÇÃO ATIVA' : 'CONTEXTO PRESERVADO'}</small>
           </span>
         </a>
-        <div><small>INSTÂNCIA</small><strong>{pokemon.instanceId}</strong></div>
-      </header>
+        <div className="owned-detail-context-meta">
+          <small>INSTÂNCIA</small>
+          <strong>{pokemon.instanceId}</strong>
+        </div>
+      </div>
 
       <section className="owned-detail-shell">
         <div className="owned-detail-stage">
           <div className="owned-detail-stage-meta">
-            <span>NATIONAL #{dex}</span>
+            <span>POKÉMON POSSUÍDO · NATIONAL #{dex}</span>
             <span>{teamLocationLabel}</span>
           </div>
 
