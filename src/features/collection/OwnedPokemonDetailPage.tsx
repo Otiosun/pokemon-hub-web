@@ -1,10 +1,15 @@
+import { useState } from 'react';
 import { HubModuleHeader } from '../../components/HubModuleHeader';
 import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import { TypeBadge } from '../../visual-assets/TypeBadge';
-import { readTeamDraftOrder, readTeamDraftSlot } from '../team/teamSession';
+import { GenerationsPokemonViewer } from '../asset-lab/GenerationsPokemonViewer';
 import { typeAccent } from '../pokemon-detail/fieldDexSpecies';
+import { readTeamDraftOrder, readTeamDraftSlot } from '../team/teamSession';
 import { getOwnedPokemonDetailPreview, getOwnedPokemonNeighbours } from './ownedPokemonDetailPreview';
 import './owned-pokemon-detail.css';
+
+type OwnedDetailTab = 'summary' | 'combat' | 'history';
+type OwnedVisualMode = '2d' | '3d';
 
 function SideArrow({ direction }: { direction: 'left' | 'right' }) {
   return (
@@ -21,6 +26,27 @@ function SideArrow({ direction }: { direction: 'left' | 'right' }) {
   );
 }
 
+function speciesAssetSlug(species: string) {
+  return species
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function sexLabel(sex: string) {
+  if (sex === 'M') return 'Macho';
+  if (sex === 'F') return 'Fêmea';
+  return 'Sem registro';
+}
+
+function sexGlyph(sex: string) {
+  if (sex === 'M') return '♂';
+  if (sex === 'F') return '♀';
+  return '—';
+}
+
 export function OwnedPokemonDetailPage({
   instanceId,
   returnHref = '/pokemon',
@@ -28,6 +54,9 @@ export function OwnedPokemonDetailPage({
   instanceId: string;
   returnHref?: string;
 }) {
+  const [activeTab, setActiveTab] = useState<OwnedDetailTab>('summary');
+  const [visualMode, setVisualMode] = useState<OwnedVisualMode>('2d');
+  const [viewerReady, setViewerReady] = useState(false);
   const pokemon = getOwnedPokemonDetailPreview(instanceId);
 
   if (!pokemon) {
@@ -49,129 +78,216 @@ export function OwnedPokemonDetailPage({
   const teamDraftActive = returningToTeam && Boolean(readTeamDraftOrder());
   const draftSlot = teamDraftActive ? readTeamDraftSlot(instanceId) : null;
   const contextualTeamSlot = draftSlot ?? pokemon.teamSlot;
-  const teamLocationLabel = contextualTeamSlot
+  const locationLabel = contextualTeamSlot
     ? `${teamDraftActive ? 'TIME · PRÉVIA SLOT' : 'TIME · SLOT'} ${contextualTeamSlot}`
     : pokemon.box.toUpperCase();
-  const teamFactLabel = contextualTeamSlot
-    ? `${teamDraftActive ? 'Prévia · Slot' : 'Slot'} ${contextualTeamSlot}`
-    : 'Fora do Time';
+  const speciesSlug = speciesAssetSlug(pokemon.species);
+  const identityLine = pokemon.nickname === pokemon.species
+    ? `#${dex} · NV. ${pokemon.level} · ${sexLabel(pokemon.sex)}`
+    : `${pokemon.species} · #${dex} · NV. ${pokemon.level} · ${sexLabel(pokemon.sex)}`;
 
   return (
     <main className="owned-detail-page">
-      <HubModuleHeader
-        module="pokemon"
-        metaLabel="POKÉMON POSSUÍDO"
-        metaValue={`#${dex} · NV. ${pokemon.level}`}
-      />
-
-      <div className="owned-detail-context-bar">
-        <a href={returnHref} data-nav-mode="up" className="owned-detail-back">
-          <span className="owned-detail-back-arrow" aria-hidden="true">←</span>
-          <span>
-            <strong>{returningToTeam ? 'VOLTAR AO TIME' : 'VOLTAR À COLEÇÃO'}</strong>
-            <small>{returningToTeam ? 'FORMAÇÃO ATIVA' : 'CONTEXTO PRESERVADO'}</small>
-          </span>
-        </a>
-        <div className="owned-detail-context-meta">
-          <small>INSTÂNCIA</small>
-          <strong>{pokemon.instanceId}</strong>
-        </div>
-      </div>
-
       <section className="owned-detail-shell">
         <div className="owned-detail-stage">
-          <div className="owned-detail-stage-meta">
-            <span>POKÉMON POSSUÍDO · NATIONAL #{dex}</span>
-            <span>{teamLocationLabel}</span>
-          </div>
+          <div className="owned-detail-stage-grid" aria-hidden="true" />
+          <div className="owned-detail-ruler" aria-hidden="true"><strong>HEIGHT</strong></div>
 
-          <div className="owned-detail-artwork">
-            <PokemonAssetImage
-              dex={pokemon.dex}
-              assetRole="official-artwork"
-              alt={`Ilustração de ${pokemon.species}`}
-              fallbackLabel={pokemon.species.slice(0, 1)}
-              decoding="async"
-            />
+          <a href={returnHref} data-nav-mode="up" className="owned-detail-stage-back">
+            <SideArrow direction="left" />
+            <span>{returningToTeam ? 'TIME' : 'BOX'}</span>
+          </a>
+
+          <fieldset className="owned-detail-view-switch" aria-label="Visual do Pokémon">
+            <button
+              type="button"
+              aria-pressed={visualMode === '2d'}
+              onClick={() => {
+                setViewerReady(false);
+                setVisualMode('2d');
+              }}
+            >
+              2D
+            </button>
+            <button
+              type="button"
+              aria-pressed={visualMode === '3d'}
+              onClick={() => setVisualMode('3d')}
+            >
+              3D
+            </button>
+          </fieldset>
+
+          <div className={`owned-detail-visual${visualMode === '3d' ? ' is-3d' : ''}`}>
+            <div className={`owned-detail-artwork${visualMode === '3d' && viewerReady ? ' is-hidden' : ''}`}>
+              <PokemonAssetImage
+                dex={pokemon.dex}
+                assetRole="official-artwork"
+                alt={`Ilustração de ${pokemon.species}`}
+                fallbackLabel={pokemon.species.slice(0, 1)}
+                decoding="async"
+              />
+            </div>
+            {visualMode === '3d' ? (
+              <div className={`owned-detail-viewer${viewerReady ? ' is-ready' : ''}`}>
+                <GenerationsPokemonViewer
+                  species={speciesSlug}
+                  name={pokemon.species}
+                  onReadyChange={setViewerReady}
+                  onFailedSpeciesChange={() => {
+                    setViewerReady(false);
+                    setVisualMode('2d');
+                  }}
+                />
+              </div>
+            ) : null}
           </div>
 
           <nav className="owned-pokemon-side-nav" aria-label="Pokémon anterior e próximo no contexto atual">
             {neighbours.previous ? (
-              <a href={`/pokemon/${neighbours.previous.instanceId}`} className="is-previous" aria-label={`Abrir ${neighbours.previous.nickname}`}>
+              <a
+                href={`/pokemon/${neighbours.previous.instanceId}`}
+                className="is-previous"
+                aria-label={`Abrir ${neighbours.previous.nickname}`}
+              >
                 <SideArrow direction="left" />
-                <span>{neighbours.previous.nickname}</span>
+                <PokemonAssetImage
+                  dex={neighbours.previous.dex}
+                  assetRole="icon"
+                  alt=""
+                  aria-hidden="true"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <span>
+                  <small>ANTERIOR</small>
+                  <strong>{neighbours.previous.nickname}</strong>
+                </span>
               </a>
             ) : <span />}
             {neighbours.next ? (
-              <a href={`/pokemon/${neighbours.next.instanceId}`} className="is-next" aria-label={`Abrir ${neighbours.next.nickname}`}>
-                <span>{neighbours.next.nickname}</span>
+              <a
+                href={`/pokemon/${neighbours.next.instanceId}`}
+                className="is-next"
+                aria-label={`Abrir ${neighbours.next.nickname}`}
+              >
+                <span>
+                  <small>PRÓXIMO</small>
+                  <strong>{neighbours.next.nickname}</strong>
+                </span>
+                <PokemonAssetImage
+                  dex={neighbours.next.dex}
+                  assetRole="icon"
+                  alt=""
+                  aria-hidden="true"
+                  loading="lazy"
+                  decoding="async"
+                />
                 <SideArrow direction="right" />
               </a>
             ) : <span />}
           </nav>
 
-          <div className="owned-detail-identity">
-            <span>{pokemon.shiny ? 'SHINY · ' : ''}{pokemon.favorite ? 'FAVORITO · ' : ''}POKÉMON POSSUÍDO</span>
-            <h1>{pokemon.nickname}</h1>
-            {pokemon.nickname !== pokemon.species && <p>{pokemon.species}</p>}
-            <div className="owned-detail-types">
-              {pokemon.types.map((type) => (
-                <TypeBadge key={type} type={type} accent={typeAccent(type)} />
-              ))}
-            </div>
+          <div className="owned-detail-location-chip">
+            <span>{locationLabel}</span>
           </div>
         </div>
 
         <div className="owned-detail-data">
+          <header className="owned-detail-record-head">
+            <div>
+              <span>REGISTRO DO POKÉMON</span>
+              <h1>{pokemon.nickname}</h1>
+              <p>{identityLine}</p>
+            </div>
+            <div className="owned-detail-record-state" aria-label="Estado do Pokémon">
+              {pokemon.favorite ? <span title="Favorito" aria-label="Favorito">★</span> : null}
+              {pokemon.shiny ? <strong>SHINY</strong> : null}
+            </div>
+          </header>
+
           <nav className="owned-detail-tabs" aria-label="Seções do Pokémon">
-            <a href="#resumo">RESUMO</a>
-            <a href="#build">BUILD</a>
-            <a href="#historico">HISTÓRICO</a>
+            <button
+              type="button"
+              aria-selected={activeTab === 'summary'}
+              onClick={() => setActiveTab('summary')}
+            >
+              RESUMO
+            </button>
+            <button
+              type="button"
+              aria-selected={activeTab === 'combat'}
+              onClick={() => setActiveTab('combat')}
+            >
+              COMBATE
+            </button>
+            <button
+              type="button"
+              aria-selected={activeTab === 'history'}
+              onClick={() => setActiveTab('history')}
+            >
+              HISTÓRICO
+            </button>
           </nav>
 
-          <section id="resumo" className="owned-detail-section">
-            <header><span>RESUMO</span><strong>NV. {pokemon.level}</strong></header>
-            <dl className="owned-detail-facts">
-              <div><dt>ESPÉCIE</dt><dd>{pokemon.species}</dd></div>
-              <div><dt>SEXO</dt><dd>{pokemon.sex}</dd></div>
-              <div><dt>BOX</dt><dd>{pokemon.box}</dd></div>
-              <div><dt>TIME</dt><dd>{teamFactLabel}</dd></div>
-              <div><dt>SHINY</dt><dd>{pokemon.shiny ? 'Sim' : 'Não'}</dd></div>
-              <div><dt>FAVORITO</dt><dd>{pokemon.favorite ? 'Sim' : 'Não'}</dd></div>
-            </dl>
-            <a className="owned-detail-species-link" href={`/pokedex/${dex}`}>
-              VER ESPÉCIE NA POKÉDEX <strong>#{dex} →</strong>
-            </a>
-          </section>
+          {activeTab === 'summary' ? (
+            <section className="owned-detail-tab-panel" aria-label="Resumo do Pokémon">
+              <dl className="owned-detail-facts">
+                <div className="is-wide">
+                  <dt>TIPO</dt>
+                  <dd className="owned-detail-types">
+                    {pokemon.types.map((type) => (
+                      <TypeBadge key={type} type={type} accent={typeAccent(type)} />
+                    ))}
+                  </dd>
+                </div>
+                <div><dt>NÍVEL</dt><dd>{pokemon.level}</dd></div>
+                <div><dt>SEXO</dt><dd><span className="owned-detail-sex">{sexGlyph(pokemon.sex)}</span> {sexLabel(pokemon.sex)}</dd></div>
+                <div><dt>SHINY</dt><dd>{pokemon.shiny ? 'Sim' : 'Não'}</dd></div>
+                <div><dt>FAVORITO</dt><dd>{pokemon.favorite ? 'Sim' : 'Não'}</dd></div>
+                <div className="is-wide"><dt>LOCAL ATUAL</dt><dd>{locationLabel}</dd></div>
+              </dl>
 
-          <section id="build" className="owned-detail-section owned-detail-build">
-            <header><span>BUILD</span><strong>ESTRUTURA READ-ONLY</strong></header>
-            <div className="owned-detail-build-core">
-              <div><span>NATUREZA</span><strong>{pokemon.nature}</strong></div>
-              <div><span>HABILIDADE</span><strong>{pokemon.ability}</strong></div>
-              <div><span>ITEM</span><strong>{pokemon.heldItem}</strong></div>
-            </div>
-            <div className="owned-detail-moves">
-              {pokemon.moves.length > 0 ? pokemon.moves.map((move) => (
-                <article key={move.name}>
-                  <TypeBadge type={move.type} accent={typeAccent(move.type)} compact />
-                  <strong>{move.name}</strong>
-                  <span>PP {move.pp}</span>
-                </article>
-              )) : <div className="owned-detail-empty-block">Golpes ainda não integrados.</div>}
-            </div>
-          </section>
+              <a className="owned-detail-species-link" href={`/pokedex/${dex}`}>
+                <span>
+                  <small>ESPÉCIE</small>
+                  <strong>VER {pokemon.species.toUpperCase()} NA POKÉDEX</strong>
+                </span>
+                <span aria-hidden="true">→</span>
+              </a>
+            </section>
+          ) : null}
 
-          <section id="historico" className="owned-detail-section">
-            <header><span>HISTÓRICO</span><strong>BACKEND PENDENTE</strong></header>
-            <div className="owned-detail-history-row">
-              <span>ORIGEM REGISTRADA</span>
-              <strong>{pokemon.origin}</strong>
-            </div>
-            <p className="owned-detail-runtime-note">
-              Captura, evolução, marcos e memórias só aparecerão aqui quando o RPG persistir esses eventos. O frontend não inventa histórico.
-            </p>
-          </section>
+          {activeTab === 'combat' ? (
+            <section className="owned-detail-tab-panel" aria-label="Dados de combate do Pokémon">
+              <dl className="owned-detail-combat-core">
+                <div><dt>NATUREZA</dt><dd>{pokemon.nature}</dd></div>
+                <div><dt>HABILIDADE</dt><dd>{pokemon.ability}</dd></div>
+                <div className="is-wide"><dt>ITEM</dt><dd>{pokemon.heldItem}</dd></div>
+              </dl>
+
+              <div className="owned-detail-moves">
+                <header><span>GOLPES</span><small>{pokemon.moves.length}/4</small></header>
+                {pokemon.moves.length > 0 ? pokemon.moves.map((move) => (
+                  <article key={move.name}>
+                    <TypeBadge type={move.type} accent={typeAccent(move.type)} compact />
+                    <strong>{move.name}</strong>
+                    <span>PP {move.pp}</span>
+                  </article>
+                )) : <p className="owned-detail-empty-block">Nenhum golpe registrado.</p>}
+              </div>
+            </section>
+          ) : null}
+
+          {activeTab === 'history' ? (
+            <section className="owned-detail-tab-panel" aria-label="Histórico do Pokémon">
+              <div className="owned-detail-history-row">
+                <span>ORIGEM</span>
+                <strong>{pokemon.origin}</strong>
+              </div>
+              <p className="owned-detail-history-empty">Nenhum outro marco registrado para este Pokémon.</p>
+            </section>
+          ) : null}
         </div>
       </section>
     </main>

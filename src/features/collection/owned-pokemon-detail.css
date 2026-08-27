@@ -1,433 +1,565 @@
 .owned-detail-page {
-  --owned-cyan: #65d8e8;
-  --owned-cyan-deep: #187c8d;
-  --owned-yellow: #f2c94c;
+  --owned-red: #d43a46;
+  --owned-red-dark: #9f2630;
+  --owned-screen: #142025;
+  --owned-paper: #f2f0e8;
+  --owned-ink: #172024;
+  --owned-muted: #717b7f;
+  --owned-line: rgba(23, 32, 36, 0.13);
+  --owned-cyan: #87e1e7;
   min-height: 100svh;
-  padding-bottom: 72px;
-  background:
-    linear-gradient(rgba(192, 229, 231, 0.018) 1px, transparent 1px) 0 0 / 44px 44px,
-    linear-gradient(90deg, rgba(192, 229, 231, 0.018) 1px, transparent 1px) 0 0 / 44px 44px,
-    #0d1112;
-  color: #eef5f4;
-}
-
-.owned-detail-context-bar {
-  min-height: 58px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 8px clamp(16px, 4vw, 42px);
-  border-bottom: 2px solid rgba(101, 216, 232, 0.16);
-  background: rgba(13, 19, 21, 0.97);
-}
-
-.owned-detail-back {
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: inherit;
-  text-decoration: none;
-}
-
-.owned-detail-back-arrow {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border: 1px solid rgba(101, 216, 232, 0.18);
-  border-bottom-width: 3px;
-  color: var(--owned-cyan);
-  background: #11191b;
-  font-size: 1rem;
-}
-
-.owned-detail-back > span:last-child {
-  display: grid;
-  gap: 2px;
-}
-
-.owned-detail-back strong {
-  font: 700 0.68rem 'Space Grotesk', sans-serif;
-  letter-spacing: 0.02em;
-}
-
-.owned-detail-back small,
-.owned-detail-context-meta small,
-.owned-detail-stage-meta,
-.owned-detail-identity > span,
-.owned-detail-tabs a,
-.owned-detail-section header span,
-.owned-detail-section dt,
-.owned-detail-build-core span,
-.owned-detail-history-row span {
-  color: #809194;
-  font: 600 0.5rem 'IBM Plex Mono', monospace;
-  letter-spacing: 0.075em;
-}
-
-.owned-detail-context-meta {
-  display: grid;
-  justify-items: end;
-  gap: 3px;
-  min-width: 0;
-}
-
-.owned-detail-context-meta strong {
-  max-width: 38vw;
-  overflow: hidden;
-  color: #c9d8d9;
-  font: 600 0.56rem 'IBM Plex Mono', monospace;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.owned-detail-back:focus-visible,
-.owned-detail-species-link:focus-visible,
-.owned-pokemon-side-nav a:focus-visible,
-.owned-detail-tabs a:focus-visible {
-  outline: 2px solid rgba(101, 216, 232, 0.78);
-  outline-offset: 3px;
+  padding: 12px 12px 96px;
+  background: #0d1113;
+  color: var(--owned-ink);
 }
 
 .owned-detail-shell {
-  width: min(1180px, calc(100% - 24px));
-  margin: 14px auto 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
+  width: min(940px, 100%);
+  margin: 0 auto;
   overflow: hidden;
-  border: 1px solid rgba(220, 240, 241, 0.12);
-  border-bottom: 4px solid var(--owned-cyan-deep);
-  border-radius: 18px;
-  background: #11191b;
-  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-right: 7px solid var(--owned-red);
+  border-left: 7px solid var(--owned-red);
+  border-radius: 24px;
+  background: var(--owned-screen);
+  box-shadow: 0 30px 78px rgba(0, 0, 0, 0.42);
 }
 
 .owned-detail-stage {
   position: relative;
-  min-height: 720px;
+  min-height: min(72svh, 760px);
   overflow: hidden;
+  color: #eef8f8;
   background:
-    linear-gradient(rgba(190, 225, 228, 0.052) 1px, transparent 1px) 0 0 / 44px 44px,
-    linear-gradient(90deg, rgba(190, 225, 228, 0.052) 1px, transparent 1px) 0 0 / 44px 44px,
-    radial-gradient(circle at 50% 42%, rgba(101, 216, 232, 0.14), transparent 39%),
-    #10191c;
-  box-shadow: inset 4px 0 0 rgba(101, 216, 232, 0.78);
+    radial-gradient(circle at 50% 43%, rgba(91, 151, 157, 0.12), transparent 38%),
+    linear-gradient(150deg, #19272b, #10181b 76%);
 }
 
 .owned-detail-stage::after {
   content: '';
   position: absolute;
+  z-index: 2;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 47%, rgba(3, 8, 10, 0.25) 100%);
+  pointer-events: none;
+}
+
+.owned-detail-stage-grid {
+  position: absolute;
   z-index: 1;
-  inset: 18px;
-  border: 1px solid rgba(135, 225, 231, 0.09);
+  inset: 0;
+  opacity: 0.72;
+  background:
+    linear-gradient(rgba(188, 226, 229, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(188, 226, 229, 0.07) 1px, transparent 1px);
+  background-size: 46px 46px;
   pointer-events: none;
 }
 
-.owned-detail-stage-meta {
+.owned-detail-ruler {
   position: absolute;
-  z-index: 6;
-  top: 24px;
-  left: 30px;
-  right: 30px;
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
+  z-index: 5;
+  top: 88px;
+  bottom: 106px;
+  left: 24px;
+  width: 22px;
+  border-left: 1px solid rgba(192, 229, 231, 0.22);
+  background: repeating-linear-gradient(180deg, transparent 0 24px, rgba(192, 229, 231, 0.2) 24px 25px);
   pointer-events: none;
 }
 
-.owned-detail-stage-meta span:last-child {
-  color: var(--owned-cyan);
-}
-
-.owned-detail-artwork {
+.owned-detail-ruler strong {
   position: absolute;
-  z-index: 2;
-  inset: 74px 64px 154px;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
+  top: -23px;
+  left: -2px;
+  color: rgba(220, 241, 241, 0.52);
+  font: 600 0.5rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
 }
 
-.owned-detail-artwork::after {
-  content: '';
+.owned-detail-stage-back {
   position: absolute;
-  right: 18%;
-  bottom: 8px;
-  left: 18%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(101, 216, 232, 0.34), transparent);
-}
-
-.owned-detail-artwork img {
-  position: relative;
-  z-index: 2;
-  width: min(82%, 560px);
-  height: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  object-position: center center;
-  filter: drop-shadow(0 30px 46px rgba(0, 0, 0, 0.3));
-}
-
-.owned-pokemon-side-nav {
-  position: absolute;
-  z-index: 8;
-  left: 20px;
-  right: 20px;
-  top: 43%;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: center;
-  pointer-events: none;
-  transform: translateY(-50%);
-}
-
-.owned-pokemon-side-nav a {
-  width: fit-content;
+  z-index: 12;
+  top: 20px;
+  left: 22px;
   min-width: 58px;
-  min-height: 52px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   padding: 0 10px;
-  border: 1px solid rgba(196, 229, 232, 0.2);
-  border-bottom-width: 3px;
-  background: rgba(10, 18, 20, 0.74);
-  color: #d9e8e9;
+  border: 1px solid rgba(212, 233, 234, 0.15);
+  border-radius: 12px;
+  color: rgba(236, 248, 248, 0.82);
+  background: rgba(7, 12, 14, 0.48);
+  text-decoration: none;
+  backdrop-filter: blur(8px);
+  font: 600 0.52rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.06em;
+}
+
+.owned-detail-stage-back svg {
+  width: 18px;
+  height: 18px;
+}
+
+.owned-detail-view-switch {
+  position: absolute;
+  z-index: 12;
+  top: 20px;
+  right: 22px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3px;
+  margin: 0;
+  padding: 3px;
+  border: 1px solid rgba(210, 235, 236, 0.18);
+  border-radius: 999px;
+  background: rgba(9, 15, 17, 0.66);
+  backdrop-filter: blur(9px);
+}
+
+.owned-detail-view-switch button {
+  min-width: 48px;
+  min-height: 36px;
+  border: 0;
+  border-radius: 999px;
+  color: rgba(225, 242, 243, 0.48);
+  background: transparent;
+  cursor: pointer;
+  font: 600 0.64rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.06em;
+}
+
+.owned-detail-view-switch button[aria-pressed='true'] {
+  color: #152024;
+  background: #f2f0e8;
+  box-shadow: 0 3px 13px rgba(0, 0, 0, 0.2);
+}
+
+.owned-detail-visual {
+  position: absolute;
+  z-index: 3;
+  inset: 68px 48px 104px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.owned-detail-artwork,
+.owned-detail-viewer {
+  position: absolute;
+  inset: 0;
+}
+
+.owned-detail-artwork {
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  opacity: 1;
+  transition: opacity 180ms ease;
+}
+
+.owned-detail-artwork.is-hidden {
+  opacity: 0;
+}
+
+.owned-detail-artwork img {
+  width: min(84%, 610px);
+  height: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+  filter: saturate(0.94) drop-shadow(0 28px 48px rgba(0, 0, 0, 0.3));
+}
+
+.owned-detail-viewer {
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.owned-detail-viewer.is-ready {
+  opacity: 1;
+}
+
+.owned-detail-viewer .generations-demo,
+.owned-detail-viewer .generations-viewer-shell,
+.owned-detail-viewer .generations-host {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.owned-detail-viewer .generations-status,
+.owned-detail-viewer .generations-error {
+  display: none;
+}
+
+.owned-detail-viewer .generations-loading {
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  padding: 7px 10px;
+  border: 1px solid rgba(141, 231, 235, 0.13);
+  border-radius: 10px;
+  color: #bfd6d7;
+  background: rgba(5, 11, 13, 0.54);
+  backdrop-filter: blur(8px);
+  font: 500 0.54rem 'IBM Plex Mono', monospace;
+}
+
+.owned-pokemon-side-nav {
+  position: absolute;
+  z-index: 10;
+  right: 18px;
+  bottom: 22px;
+  left: 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: end;
+  pointer-events: none;
+}
+
+.owned-pokemon-side-nav > a {
+  width: fit-content;
+  min-width: 118px;
+  min-height: 54px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 9px;
+  border: 1px solid rgba(199, 229, 230, 0.14);
+  border-radius: 11px;
+  color: rgba(230, 245, 245, 0.84);
+  background: rgba(7, 12, 14, 0.5);
   text-decoration: none;
   pointer-events: auto;
   backdrop-filter: blur(8px);
-  font: 600 0.5rem 'IBM Plex Mono', monospace;
-  transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease;
 }
 
-.owned-pokemon-side-nav a:hover,
-.owned-pokemon-side-nav a:focus-visible {
-  border-color: rgba(101, 216, 232, 0.7);
-  background: rgba(18, 38, 42, 0.92);
-}
-
-.owned-pokemon-side-nav a:active {
-  transform: scale(0.96);
-}
-
-.owned-pokemon-side-nav .is-next {
+.owned-pokemon-side-nav > a.is-next {
   justify-self: end;
+  text-align: right;
 }
 
-.owned-pokemon-side-nav svg {
-  width: 21px;
-  height: 21px;
+.owned-pokemon-side-nav > a > svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
 }
 
-.owned-detail-identity {
+.owned-pokemon-side-nav > a > img {
+  width: 34px;
+  height: 28px;
+  flex: none;
+  object-fit: contain;
+}
+
+.owned-pokemon-side-nav > a > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.owned-pokemon-side-nav > a small {
+  color: rgba(226, 246, 246, 0.42);
+  font: 500 0.43rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.06em;
+}
+
+.owned-pokemon-side-nav > a strong {
+  max-width: 100px;
+  overflow: hidden;
+  font: 650 0.63rem 'Space Grotesk', sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.owned-detail-location-chip {
   position: absolute;
+  z-index: 11;
+  left: 50%;
+  bottom: 27px;
+  max-width: 42%;
+  transform: translateX(-50%);
+}
+
+.owned-detail-location-chip span {
+  display: block;
+  overflow: hidden;
+  padding: 8px 13px;
+  border: 1px solid rgba(196, 226, 228, 0.14);
+  border-radius: 999px;
+  color: rgba(225, 242, 243, 0.58);
+  background: rgba(7, 12, 14, 0.46);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 600 0.5rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.06em;
+}
+
+.owned-detail-data {
+  position: relative;
   z-index: 6;
-  left: 32px;
-  right: 32px;
-  bottom: 28px;
-  padding-top: 14px;
-  border-top: 2px solid rgba(190, 226, 228, 0.12);
+  margin-top: -4px;
+  padding: 30px clamp(20px, 5vw, 48px) 38px;
+  border-radius: 24px 24px 0 0;
+  color: var(--owned-ink);
+  background:
+    linear-gradient(rgba(27, 40, 43, 0.035) 1px, transparent 1px) 0 0 / 28px 28px,
+    var(--owned-paper);
+  box-shadow: 0 -14px 32px rgba(0, 0, 0, 0.14);
 }
 
-.owned-detail-identity > span {
-  color: var(--owned-cyan);
+.owned-detail-record-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 24px;
 }
 
-.owned-detail-identity h1 {
-  margin: 7px 0 0;
-  font: 700 clamp(2.4rem, 5vw, 4rem) / 0.95 'Space Grotesk', sans-serif;
+.owned-detail-record-head > div:first-child > span,
+.owned-detail-facts dt,
+.owned-detail-combat-core dt,
+.owned-detail-moves header span,
+.owned-detail-history-row span,
+.owned-detail-species-link small {
+  color: var(--owned-muted);
+  font: 600 0.54rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.09em;
+}
+
+.owned-detail-record-head h1 {
+  margin: 8px 0 0;
+  font: 700 clamp(2.15rem, 9vw, 3.7rem) / 0.94 'Space Grotesk', sans-serif;
   letter-spacing: -0.045em;
 }
 
-.owned-detail-identity p {
-  margin: 6px 0 0;
-  color: #9eadaf;
+.owned-detail-record-head p {
+  margin: 9px 0 0;
+  color: #697478;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.owned-detail-record-state {
+  flex: none;
+  display: grid;
+  justify-items: end;
+  gap: 7px;
+}
+
+.owned-detail-record-state span {
+  color: #cda62c;
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.owned-detail-record-state strong {
+  color: #9e7c16;
+  font: 700 0.5rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+}
+
+.owned-detail-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  min-height: 54px;
+  border-top: 1px solid var(--owned-line);
+  border-bottom: 1px solid var(--owned-line);
+}
+
+.owned-detail-tabs button {
+  position: relative;
+  min-height: 54px;
+  border: 0;
+  color: #7a8386;
+  background: transparent;
+  cursor: pointer;
+  font: 600 0.61rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+}
+
+.owned-detail-tabs button + button {
+  border-left: 1px solid var(--owned-line);
+}
+
+.owned-detail-tabs button[aria-selected='true'] {
+  color: var(--owned-ink);
+}
+
+.owned-detail-tabs button[aria-selected='true']::after {
+  content: '';
+  position: absolute;
+  right: 20%;
+  bottom: -1px;
+  left: 20%;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--owned-red);
+}
+
+.owned-detail-tab-panel {
+  padding-top: 22px;
+}
+
+.owned-detail-facts,
+.owned-detail-combat-core {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 0;
+  border-top: 1px solid var(--owned-line);
+}
+
+.owned-detail-facts > div,
+.owned-detail-combat-core > div {
+  min-height: 74px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--owned-line);
+}
+
+.owned-detail-facts > div:nth-child(odd):not(.is-wide),
+.owned-detail-combat-core > div:nth-child(odd):not(.is-wide) {
+  padding-right: 16px;
+  border-right: 1px solid var(--owned-line);
+}
+
+.owned-detail-facts > div:nth-child(even),
+.owned-detail-combat-core > div:nth-child(even) {
+  padding-left: 16px;
+}
+
+.owned-detail-facts > .is-wide,
+.owned-detail-combat-core > .is-wide {
+  grid-column: 1 / -1;
+}
+
+.owned-detail-facts dt,
+.owned-detail-facts dd,
+.owned-detail-combat-core dt,
+.owned-detail-combat-core dd {
+  margin: 0;
+}
+
+.owned-detail-facts dd,
+.owned-detail-combat-core dd {
+  font: 650 0.9rem 'Space Grotesk', sans-serif;
+}
+
+.owned-detail-sex {
+  color: #279bd3;
+  font-size: 1rem;
 }
 
 .owned-detail-types {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
-  margin-top: 12px;
+  gap: 6px;
 }
 
-.owned-detail-data {
-  padding: 28px;
-  border-left: 1px solid rgba(220, 240, 241, 0.1);
-  background:
-    linear-gradient(rgba(27, 40, 43, 0.035) 1px, transparent 1px) 0 0 / 28px 28px,
-    #f0eee6;
-  color: #1a2225;
-}
-
-.owned-detail-tabs {
-  position: sticky;
-  z-index: 12;
-  top: 78px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 5px;
-  padding: 0 0 14px;
-  background: linear-gradient(180deg, #f0eee6 78%, rgba(240, 238, 230, 0));
-}
-
-.owned-detail-tabs a {
-  min-height: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 10px;
-  border: 1px solid rgba(30, 40, 43, 0.14);
-  border-bottom: 3px solid rgba(24, 124, 141, 0.36);
-  background: rgba(255, 255, 255, 0.28);
-  color: #546064;
-  text-decoration: none;
-}
-
-.owned-detail-tabs a:hover {
-  border-bottom-color: var(--owned-cyan-deep);
-  color: #273336;
-}
-
-.owned-detail-section {
-  padding: 24px 0;
-  border-top: 2px solid rgba(30, 40, 43, 0.13);
-  scroll-margin-top: 138px;
-}
-
-.owned-detail-section header {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 14px;
-}
-
-.owned-detail-section header span {
-  color: #5f7073;
-}
-
-.owned-detail-section header strong {
-  font: 700 0.72rem 'Space Grotesk', sans-serif;
-}
-
-.owned-detail-facts {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  margin: 0;
-  border-top: 1px solid rgba(30, 40, 43, 0.08);
-}
-
-.owned-detail-facts > div {
-  padding: 13px 0;
-  border-bottom: 1px solid rgba(30, 40, 43, 0.1);
-}
-
-.owned-detail-facts > div:nth-child(odd) {
-  padding-right: 12px;
-}
-
-.owned-detail-facts > div:nth-child(even) {
-  padding-left: 12px;
-  border-left: 1px solid rgba(30, 40, 43, 0.1);
-}
-
-.owned-detail-facts dt,
-.owned-detail-facts dd {
-  margin: 0;
-}
-
-.owned-detail-facts dd {
-  margin-top: 5px;
-  font: 650 0.82rem 'Space Grotesk', sans-serif;
+.owned-detail-types > .pokemon-type-badge {
+  color: var(--owned-ink);
 }
 
 .owned-detail-species-link {
-  min-height: 48px;
+  min-height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 16px;
-  padding: 0 13px;
-  border: 1px solid rgba(24, 124, 141, 0.24);
-  border-left: 4px solid var(--owned-cyan-deep);
-  background: rgba(101, 216, 232, 0.055);
-  color: #176f7e;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 10px 14px;
+  border: 1px solid var(--owned-line);
+  border-radius: 12px;
+  color: var(--owned-ink);
+  background: rgba(255, 255, 255, 0.24);
   text-decoration: none;
-  font: 700 0.52rem 'IBM Plex Mono', monospace;
 }
 
-.owned-detail-build-core {
+.owned-detail-species-link > span:first-child {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  border: 1px solid rgba(30, 40, 43, 0.12);
-  border-bottom-width: 3px;
+  gap: 4px;
 }
 
-.owned-detail-build-core > div {
-  padding: 12px;
+.owned-detail-species-link strong {
+  font: 650 0.75rem 'Space Grotesk', sans-serif;
 }
 
-.owned-detail-build-core > div + div {
-  border-left: 1px solid rgba(30, 40, 43, 0.11);
-}
-
-.owned-detail-build-core strong {
-  display: block;
-  margin-top: 5px;
-  font: 650 0.8rem 'Space Grotesk', sans-serif;
+.owned-detail-species-link > span:last-child {
+  font-size: 1.25rem;
 }
 
 .owned-detail-moves {
-  display: grid;
-  gap: 7px;
-  margin-top: 10px;
+  margin-top: 22px;
+}
+
+.owned-detail-moves header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.owned-detail-moves header small {
+  color: #8b9497;
+  font: 600 0.52rem 'IBM Plex Mono', monospace;
 }
 
 .owned-detail-moves article {
+  min-height: 56px;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 10px;
-  padding: 10px;
-  border: 1px solid rgba(30, 40, 43, 0.11);
-  border-left: 3px solid rgba(24, 124, 141, 0.42);
-  background: rgba(255, 255, 255, 0.25);
+  border-top: 1px solid var(--owned-line);
+}
+
+.owned-detail-moves article:last-of-type {
+  border-bottom: 1px solid var(--owned-line);
 }
 
 .owned-detail-moves article > strong {
-  font: 650 0.76rem 'Space Grotesk', sans-serif;
+  font: 650 0.8rem 'Space Grotesk', sans-serif;
 }
 
 .owned-detail-moves article > span {
-  color: #6f7a7d;
-  font: 600 0.5rem 'IBM Plex Mono', monospace;
+  color: #707b7e;
+  font: 600 0.54rem 'IBM Plex Mono', monospace;
 }
 
 .owned-detail-history-row {
-  padding: 13px;
-  border-left: 4px solid var(--owned-cyan);
+  padding: 17px 16px;
+  border-left: 4px solid var(--owned-red);
+  color: #dcebec;
   background: #202a2d;
-  color: #d9e7e8;
 }
 
 .owned-detail-history-row span {
-  color: #92a8aa;
+  color: #95aaad;
 }
 
 .owned-detail-history-row strong {
   display: block;
-  margin-top: 5px;
+  margin-top: 6px;
+  font: 650 0.86rem 'Space Grotesk', sans-serif;
 }
 
-.owned-detail-runtime-note {
-  margin: 12px 0 0;
-  color: #697477;
-  font-size: 0.68rem;
+.owned-detail-history-empty,
+.owned-detail-empty-block {
+  margin: 14px 0 0;
+  color: #737d80;
+  font-size: 0.72rem;
   line-height: 1.5;
 }
 
@@ -436,12 +568,13 @@
   margin: 80px auto;
   padding: 30px;
   border: 1px solid rgba(220, 240, 241, 0.12);
-  border-bottom: 4px solid var(--owned-cyan-deep);
+  border-bottom: 4px solid var(--owned-red);
   background: #12191b;
+  color: #eef5f4;
 }
 
 .owned-detail-not-found > span {
-  color: var(--owned-cyan);
+  color: #ef6a73;
   font: 600 0.52rem 'IBM Plex Mono', monospace;
   letter-spacing: 0.08em;
 }
@@ -451,139 +584,146 @@
 }
 
 .owned-detail-not-found a {
-  color: var(--owned-cyan);
+  color: #ef6a73;
 }
 
-.owned-detail-empty-block {
-  padding: 14px;
-  color: #7b8588;
-  font-size: 0.75rem;
+.owned-detail-stage-back:focus-visible,
+.owned-detail-view-switch button:focus-visible,
+.owned-pokemon-side-nav a:focus-visible,
+.owned-detail-tabs button:focus-visible,
+.owned-detail-species-link:focus-visible {
+  outline: 3px solid rgba(135, 225, 231, 0.82);
+  outline-offset: 3px;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 520px) {
   .owned-detail-page {
-    padding-bottom: 86px;
-  }
-
-  .owned-detail-context-bar {
-    min-height: 54px;
-    padding-inline: 14px;
-  }
-
-  .owned-detail-context-meta {
-    display: none;
+    padding: 0 0 88px;
+    background: var(--owned-screen);
   }
 
   .owned-detail-shell {
     width: 100%;
-    margin: 0;
-    grid-template-columns: 1fr;
-    border: 0;
-    border-bottom: 4px solid var(--owned-cyan-deep);
+    border-top: 0;
+    border-bottom: 0;
+    border-right-width: 5px;
+    border-left-width: 5px;
     border-radius: 0;
+    box-shadow: none;
   }
 
   .owned-detail-stage {
-    min-height: 58svh;
-    height: 58svh;
-    box-shadow: inset 4px 0 0 rgba(101, 216, 232, 0.72), inset 0 -4px 0 rgba(24, 124, 141, 0.8);
+    min-height: 68svh;
   }
 
-  .owned-detail-stage-meta {
-    top: 20px;
-    left: 20px;
-    right: 20px;
-    font-size: 0.44rem;
+  .owned-detail-ruler {
+    left: 16px;
+    top: 84px;
+    bottom: 94px;
   }
 
-  .owned-detail-stage-meta span:first-child {
-    max-width: 58%;
-  }
-
-  .owned-detail-artwork {
-    inset: 64px 48px 138px;
-  }
-
-  .owned-detail-identity {
-    left: 20px;
-    right: 20px;
-    bottom: 22px;
-  }
-
-  .owned-detail-identity h1 {
-    font-size: clamp(2.3rem, 11vw, 3.4rem);
-  }
-
-  .owned-detail-data {
-    padding: 22px 18px 38px;
-    border-left: 0;
-  }
-
-  .owned-detail-tabs {
-    top: 72px;
-  }
-
-  .owned-detail-section {
-    scroll-margin-top: 128px;
-  }
-
-  .owned-pokemon-side-nav {
+  .owned-detail-stage-back {
+    top: 16px;
     left: 14px;
-    right: 14px;
+    min-width: 48px;
+    padding-inline: 8px;
   }
 
-  .owned-pokemon-side-nav a span {
+  .owned-detail-stage-back span {
     display: none;
   }
 
-  .owned-pokemon-side-nav a {
-    min-width: 48px;
-    min-height: 48px;
-    padding: 0;
+  .owned-detail-view-switch {
+    top: 16px;
+    right: 14px;
   }
 
-  .owned-detail-build-core {
-    grid-template-columns: 1fr;
+  .owned-detail-view-switch button {
+    min-width: 44px;
+    min-height: 38px;
   }
 
-  .owned-detail-build-core > div + div {
-    border-top: 1px solid rgba(30, 40, 43, 0.11);
-    border-left: 0;
+  .owned-detail-visual {
+    inset: 64px 28px 100px;
+  }
+
+  .owned-detail-artwork img {
+    width: 92%;
+  }
+
+  .owned-pokemon-side-nav {
+    right: 10px;
+    bottom: 15px;
+    left: 10px;
+  }
+
+  .owned-pokemon-side-nav > a {
+    min-width: 50px;
+    min-height: 50px;
+    padding: 5px 7px;
+  }
+
+  .owned-pokemon-side-nav > a > img,
+  .owned-pokemon-side-nav > a > span {
+    display: none;
+  }
+
+  .owned-detail-location-chip {
+    bottom: 20px;
+    max-width: 54%;
+  }
+
+  .owned-detail-location-chip span {
+    padding: 8px 10px;
+    font-size: 0.46rem;
+  }
+
+  .owned-detail-data {
+    padding: 26px 20px 32px;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .owned-detail-record-head {
+    padding-bottom: 20px;
+  }
+
+  .owned-detail-record-head h1 {
+    font-size: clamp(2rem, 11vw, 3rem);
+  }
+
+  .owned-detail-tabs button {
+    font-size: 0.54rem;
+    letter-spacing: 0.06em;
+  }
+
+  .owned-detail-facts > div,
+  .owned-detail-combat-core > div {
+    min-height: 68px;
   }
 }
 
-@media (max-width: 430px) {
-  .owned-detail-back strong {
-    font-size: 0.62rem;
+@media (min-width: 980px) {
+  .owned-detail-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1.34fr) minmax(390px, 0.66fr);
+    min-height: calc(100svh - 24px);
   }
 
-  .owned-detail-back small {
-    font-size: 0.44rem;
+  .owned-detail-stage {
+    min-height: calc(100svh - 24px);
   }
 
-  .owned-detail-artwork {
-    inset-inline: 40px;
-  }
-
-  .owned-detail-tabs a {
-    min-width: 0;
-    padding-inline: 6px;
-    font-size: 0.44rem;
-  }
-
-  .owned-detail-facts {
-    grid-template-columns: 1fr;
-  }
-
-  .owned-detail-facts > div:nth-child(odd),
-  .owned-detail-facts > div:nth-child(even) {
-    padding: 12px 0;
-    border-left: 0;
+  .owned-detail-data {
+    margin-top: 0;
+    border-radius: 0;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .owned-pokemon-side-nav a {
+  .owned-detail-artwork,
+  .owned-detail-viewer {
     transition: none;
   }
 }
