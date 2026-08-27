@@ -28,6 +28,7 @@ const SKELETON_KEYS = [
   'dex-skeleton-09', 'dex-skeleton-10', 'dex-skeleton-11', 'dex-skeleton-12',
 ] as const;
 const DISCOVERY_FILTERS: readonly PokedexDiscoveryFilter[] = ['Todos', 'Avistados', 'Capturados', 'Desconhecidos'];
+const REGION_FILTERS: readonly PokedexRegionFilter[] = ['Todos', 'Kanto', 'Johto', 'Hoenn'];
 
 type TypeFilterStatus = 'idle' | 'loading' | 'ready' | 'failed';
 
@@ -93,7 +94,9 @@ export function PokedexIndexPage() {
   );
   const [catalogReady, setCatalogReady] = useState(Boolean(cachedCatalog));
   const [catalogFailed, setCatalogFailed] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const restoredScroll = useRef(false);
+  const filterDialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let active = true;
@@ -165,6 +168,22 @@ export function PokedexIndexPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!filtersOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const frame = requestAnimationFrame(() => filterDialogRef.current?.focus());
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setFiltersOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [filtersOpen]);
+
   const visibleSpecies = useMemo(() => {
     const needle = normalize(query.replace(/^#/, ''));
     return species.filter((item) => {
@@ -198,6 +217,7 @@ export function PokedexIndexPage() {
     ? POKEDEX_TYPE_FILTERS.find((item) => item.slug === typeSlug) ?? null
     : null;
   const typeLoading = Boolean(typeSlug && typeStatus === 'loading');
+  const activeFilterCount = (region !== 'Todos' ? 1 : 0) + (discovery !== 'Todos' ? 1 : 0) + (typeSlug ? 1 : 0);
 
   const chooseDiscovery = (nextDiscovery: PokedexDiscoveryFilter) => {
     setDiscovery(nextDiscovery);
@@ -210,6 +230,12 @@ export function PokedexIndexPage() {
     if (!selected && discovery === 'Desconhecidos') setDiscovery('Todos');
   };
 
+  const clearFilters = () => {
+    setRegion('Todos');
+    setDiscovery('Todos');
+    setTypeSlug(null);
+  };
+
   return (
     <main className="pokedex-index-page">
       <header className="pokedex-index-header">
@@ -220,8 +246,8 @@ export function PokedexIndexPage() {
             <small>ÍNDICE NACIONAL</small>
           </span>
         </a>
-        <div className="pokedex-index-counter">
-          <small>ARQUIVOS</small>
+        <div className="pokedex-index-counter" aria-label="Pokédex Nacional, registros 1 a 386">
+          <small>NACIONAL</small>
           <strong>001—386</strong>
         </div>
       </header>
@@ -231,12 +257,11 @@ export function PokedexIndexPage() {
           <div>
             <span className="pokedex-index-kicker">ARQUIVO DE ESPÉCIES</span>
             <h1>Índice Nacional</h1>
-            <p>Espécies conhecidas, avistamentos e registros de captura entre Kanto, Johto e Hoenn.</p>
           </div>
-          <div className="pokedex-index-progress-readout" aria-live="polite">
-            <div><span>{catalogReady ? visibleSpecies.length : '—'}</span><small>RESULTADOS</small></div>
-            <div><span>{catalogReady ? dexProgress.seen : '—'}</span><small>AVISTADOS</small></div>
-            <div><span>{catalogReady ? dexProgress.caught : '—'}</span><small>CAPTURADOS</small></div>
+          <div className="pokedex-index-progress-line" aria-live="polite">
+            <span><strong>{catalogReady ? dexProgress.seen : '—'}</strong> avistados</span>
+            <i aria-hidden="true" />
+            <span><strong>{catalogReady ? dexProgress.caught : '—'}</strong> capturados</span>
           </div>
         </div>
 
@@ -251,95 +276,54 @@ export function PokedexIndexPage() {
               disabled={!catalogReady}
             />
           </label>
-          <fieldset className="pokedex-index-regions" aria-label="Filtrar por região" disabled={!catalogReady}>
-            {(['Todos', 'Kanto', 'Johto', 'Hoenn'] as PokedexRegionFilter[]).map((item) => (
-              <button
-                key={item}
-                type="button"
-                className={region === item ? 'is-active' : undefined}
-                onClick={() => setRegion(item)}
-              >
-                {item.toUpperCase()}
+          <button
+            type="button"
+            className={`pokedex-index-filter-trigger${activeFilterCount ? ' has-active' : ''}`}
+            onClick={() => setFiltersOpen(true)}
+            disabled={!catalogReady}
+            aria-haspopup="dialog"
+            aria-expanded={filtersOpen}
+          >
+            <span aria-hidden="true" className="pokedex-index-filter-glyph">≡</span>
+            <span>Filtros</span>
+            {activeFilterCount ? <strong>{activeFilterCount}</strong> : null}
+          </button>
+        </div>
+
+        {activeFilterCount ? (
+          <div className="pokedex-index-active-filters" aria-label="Filtros ativos">
+            {region !== 'Todos' ? (
+              <button type="button" onClick={() => setRegion('Todos')} aria-label={`Remover filtro de região ${region}`}>
+                {region}<span aria-hidden="true">×</span>
               </button>
-            ))}
-          </fieldset>
-        </div>
-
-        <div className="pokedex-index-discovery-filter">
-          <span>PROGRESSO</span>
-          <fieldset aria-label="Filtrar a Pokédex por progresso de descoberta">
-            {DISCOVERY_FILTERS.map((item) => (
-              <button
-                key={item}
-                type="button"
-                className={discovery === item ? 'is-active' : undefined}
-                aria-pressed={discovery === item}
-                onClick={() => chooseDiscovery(item)}
-                disabled={!catalogReady}
-              >
-                {item.toUpperCase()}
+            ) : null}
+            {discovery !== 'Todos' ? (
+              <button type="button" onClick={() => setDiscovery('Todos')} aria-label={`Remover filtro ${discovery}`}>
+                {discovery}<span aria-hidden="true">×</span>
               </button>
-            ))}
-          </fieldset>
-        </div>
+            ) : null}
+            {activeType ? (
+              <button type="button" onClick={() => setTypeSlug(null)} aria-label={`Remover filtro de tipo ${activeType.label}`}>
+                {activeType.label}<span aria-hidden="true">×</span>
+              </button>
+            ) : null}
+          </div>
+        ) : null}
 
-        <div className="pokedex-index-type-filter">
-          <span className="pokedex-index-type-label">TIPO</span>
-          <fieldset className="pokedex-index-type-scroll" aria-label="Filtrar a Pokédex por tipo">
-            <button
-              type="button"
-              className={!typeSlug ? 'is-active is-all' : 'is-all'}
-              onClick={() => setTypeSlug(null)}
-              disabled={!catalogReady}
-            >
-              TODOS
-            </button>
-            {POKEDEX_TYPE_FILTERS.map((item) => {
-              const selected = typeSlug === item.slug;
-              const accent = typeAccent(item.label);
-              return (
-                <button
-                  key={item.slug}
-                  type="button"
-                  className={selected ? 'is-active' : undefined}
-                  onClick={() => chooseType(item.slug)}
-                  disabled={!catalogReady}
-                  aria-pressed={selected}
-                  style={selected ? { borderColor: `${accent}99`, background: `${accent}1f` } : undefined}
-                >
-                  <TypeIcon type={item.label} fallbackColor={accent} />
-                  <span>{item.label.toUpperCase()}</span>
-                </button>
-              );
-            })}
-          </fieldset>
-        </div>
-
-        <div className="pokedex-index-status">
-          <span
-            className={catalogReady && typeStatus !== 'failed' ? 'is-ready' : catalogFailed || typeStatus === 'failed' ? 'is-failed' : undefined}
-            aria-hidden="true"
-          />
-          {catalogFailed
-            ? 'CATÁLOGO LOCAL ATIVO · ENRIQUECIMENTO EXTERNO INDISPONÍVEL'
-            : typeStatus === 'failed'
-              ? `FILTRO ${activeType?.label.toUpperCase() ?? ''} INDISPONÍVEL`
-              : typeLoading
-                ? `LENDO REGISTROS DO TIPO ${activeType?.label.toUpperCase() ?? ''}`
-                : catalogReady
-                  ? 'ÍNDICE LOCAL ATIVO · 386 POSIÇÕES DISPONÍVEIS'
-                  : 'PREPARANDO ÍNDICE NACIONAL'}
-        </div>
-
-        {!catalogReady ? (
+        {catalogFailed && !catalogReady ? (
+          <div className="pokedex-index-empty">
+            <strong>NÃO FOI POSSÍVEL ABRIR A POKÉDEX</strong>
+            <span>Tente novamente em instantes.</span>
+          </div>
+        ) : !catalogReady ? (
           <CatalogSkeleton />
         ) : visibleSpecies.length === 0 ? (
           <div className="pokedex-index-empty">
-            <strong>NENHUM REGISTRO NESTA LEITURA</strong>
-            <span>Ajuste busca, região, progresso ou tipo.</span>
+            <strong>NENHUM REGISTRO ENCONTRADO</strong>
+            <span>Ajuste a busca ou os filtros.</span>
           </div>
         ) : (
-          <div className={`pokedex-index-grid${typeLoading ? ' is-filtering' : ''}`}>
+          <div className={`pokedex-index-grid${typeLoading ? ' is-filtering' : ''}`} aria-busy={typeLoading}>
             {visibleSpecies.map((item) => {
               const playerState = getSpeciesPlayerStatePreview(item.dex);
               const discovered = playerState.discovery !== 'unknown';
@@ -388,6 +372,106 @@ export function PokedexIndexPage() {
           </div>
         )}
       </section>
+
+      {filtersOpen ? (
+        <div className="pokedex-index-filter-layer">
+          <button
+            type="button"
+            className="pokedex-index-filter-backdrop"
+            aria-label="Fechar filtros"
+            onClick={() => setFiltersOpen(false)}
+          />
+          <div
+            ref={filterDialogRef}
+            className="pokedex-index-filter-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pokedex-filter-title"
+            tabIndex={-1}
+          >
+            <header>
+              <div>
+                <span>ÍNDICE NACIONAL</span>
+                <h2 id="pokedex-filter-title">Filtros</h2>
+              </div>
+              <button type="button" onClick={() => setFiltersOpen(false)} aria-label="Fechar filtros">×</button>
+            </header>
+
+            <div className="pokedex-index-filter-body">
+              <fieldset className="pokedex-index-filter-group">
+                <legend>Região</legend>
+                <div className="pokedex-index-filter-options is-regions">
+                  {REGION_FILTERS.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      className={region === item ? 'is-active' : undefined}
+                      aria-pressed={region === item}
+                      onClick={() => setRegion(item)}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+
+              <fieldset className="pokedex-index-filter-group">
+                <legend>Descoberta</legend>
+                <div className="pokedex-index-filter-options is-discovery">
+                  {DISCOVERY_FILTERS.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      className={discovery === item ? 'is-active' : undefined}
+                      aria-pressed={discovery === item}
+                      onClick={() => chooseDiscovery(item)}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+
+              <fieldset className="pokedex-index-filter-group">
+                <legend>Tipo</legend>
+                <div className="pokedex-index-type-grid">
+                  <button
+                    type="button"
+                    className={!typeSlug ? 'is-active is-all' : 'is-all'}
+                    onClick={() => setTypeSlug(null)}
+                    aria-pressed={!typeSlug}
+                  >
+                    Todos
+                  </button>
+                  {POKEDEX_TYPE_FILTERS.map((item) => {
+                    const selected = typeSlug === item.slug;
+                    const accent = typeAccent(item.label);
+                    return (
+                      <button
+                        key={item.slug}
+                        type="button"
+                        className={selected ? 'is-active' : undefined}
+                        onClick={() => chooseType(item.slug)}
+                        aria-pressed={selected}
+                        style={selected ? { borderColor: `${accent}99`, background: `${accent}1f` } : undefined}
+                      >
+                        <TypeIcon type={item.label} fallbackColor={accent} />
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {typeStatus === 'failed' ? <small className="pokedex-index-filter-error">Não foi possível aplicar este tipo agora.</small> : null}
+              </fieldset>
+            </div>
+
+            <footer>
+              <button type="button" className="is-clear" onClick={clearFilters} disabled={!activeFilterCount}>Limpar</button>
+              <button type="button" className="is-apply" onClick={() => setFiltersOpen(false)}>Ver registros</button>
+            </footer>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }
