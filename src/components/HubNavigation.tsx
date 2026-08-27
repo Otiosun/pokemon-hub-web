@@ -31,10 +31,6 @@ function preloadHubRoute(section: HubSection) {
   void HUB_ROUTE_PRELOADERS[section]().catch(() => undefined);
 }
 
-function preloadPrimaryHubRoutes() {
-  for (const item of NAV_ITEMS) preloadHubRoute(item.id);
-}
-
 function NavGlyph({ icon }: { icon: NavItem['icon'] }) {
   if (icon === 'dex') {
     return (
@@ -65,9 +61,15 @@ function NavGlyph({ icon }: { icon: NavItem['icon'] }) {
 
 export function HubNavigation({ active, destinations }: HubNavigationProps) {
   useEffect(() => {
-    const timeout = window.setTimeout(preloadPrimaryHubRoutes, 0);
+    const prioritySection = active ?? 'pokedex';
+    preloadHubRoute(prioritySection);
+    const timeout = window.setTimeout(() => {
+      for (const item of NAV_ITEMS) {
+        if (item.id !== prioritySection) preloadHubRoute(item.id);
+      }
+    }, 1500);
     return () => window.clearTimeout(timeout);
-  }, []);
+  }, [active]);
 
   return (
     <nav className="hub-navigation" aria-label="Navegação principal do Pokémon Hub">
