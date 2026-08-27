@@ -55,7 +55,7 @@ export function OwnedPokemonDetailPage({
   returnHref?: string;
 }) {
   const [activeTab, setActiveTab] = useState<OwnedDetailTab>('summary');
-  const [visualMode, setVisualMode] = useState<OwnedVisualMode>('2d');
+  const [visualMode, setVisualMode] = useState<OwnedVisualMode>('3d');
   const [viewerReady, setViewerReady] = useState(false);
   const pokemon = getOwnedPokemonDetailPreview(instanceId);
 
@@ -112,24 +112,28 @@ export function OwnedPokemonDetailPage({
             <button
               type="button"
               aria-pressed={visualMode === '3d'}
-              onClick={() => setVisualMode('3d')}
+              onClick={() => {
+                setViewerReady(false);
+                setVisualMode('3d');
+              }}
             >
               3D
             </button>
           </fieldset>
 
           <div className={`owned-detail-visual${visualMode === '3d' ? ' is-3d' : ''}`}>
-            <div className={`owned-detail-artwork${visualMode === '3d' && viewerReady ? ' is-hidden' : ''}`}>
-              <PokemonAssetImage
-                dex={pokemon.dex}
-                assetRole="official-artwork"
-                alt={`Ilustração de ${pokemon.species}`}
-                fallbackLabel={pokemon.species.slice(0, 1)}
-                decoding="async"
-              />
-            </div>
-            {visualMode === '3d' ? (
-              <div className={`owned-detail-viewer${viewerReady ? ' is-ready' : ''}`}>
+            {visualMode === '2d' ? (
+              <div className="owned-detail-artwork">
+                <PokemonAssetImage
+                  dex={pokemon.dex}
+                  assetRole="official-artwork"
+                  alt={`Ilustração de ${pokemon.species}`}
+                  fallbackLabel={pokemon.species.slice(0, 1)}
+                  decoding="async"
+                />
+              </div>
+            ) : (
+              <div className="owned-detail-viewer is-ready" aria-busy={!viewerReady}>
                 <GenerationsPokemonViewer
                   species={speciesSlug}
                   name={pokemon.species}
@@ -140,7 +144,7 @@ export function OwnedPokemonDetailPage({
                   }}
                 />
               </div>
-            ) : null}
+            )}
           </div>
 
           <nav className="owned-pokemon-side-nav" aria-label="Pokémon anterior e próximo no contexto atual">
