@@ -13,17 +13,35 @@ type NavItem = {
   id: HubSection;
   label: string;
   description: string;
-  icon: 'journey' | 'dex' | 'box';
+  asset: string;
 };
 
 type MenuHistoryState = Record<string, unknown> & {
   hubMenu?: boolean;
 };
 
+const POKESPRITE_ITEMS = 'https://raw.githubusercontent.com/msikma/pokesprite/master/items-outline';
+const HUB_BRAND_ASSET = `${POKESPRITE_ITEMS}/ball/poke.png`;
+
 const NAV_ITEMS: NavItem[] = [
-  { id: 'journey', label: 'JORNADA', description: 'Continue o RPG', icon: 'journey' },
-  { id: 'pokedex', label: 'POKÉDEX', description: 'Espécies, descoberta e pesquisa', icon: 'dex' },
-  { id: 'box', label: 'BOX', description: 'Time, coleção e organização', icon: 'box' },
+  {
+    id: 'journey',
+    label: 'JORNADA',
+    description: 'Continue o RPG',
+    asset: `${POKESPRITE_ITEMS}/key-item/town-map.png`,
+  },
+  {
+    id: 'pokedex',
+    label: 'POKÉDEX',
+    description: 'Espécies, descoberta e pesquisa',
+    asset: `${POKESPRITE_ITEMS}/key-item/poke-radar.png`,
+  },
+  {
+    id: 'box',
+    label: 'BOX',
+    description: 'Time, coleção e organização',
+    asset: `${POKESPRITE_ITEMS}/storage/pokemon-box.png`,
+  },
 ];
 
 const HUB_ROUTE_PRELOADERS: Record<HubSection, () => Promise<unknown>> = {
@@ -39,43 +57,6 @@ function preloadHubRoute(section: HubSection) {
 function currentHistoryState(): MenuHistoryState {
   const state = window.history.state;
   return state && typeof state === 'object' ? (state as MenuHistoryState) : {};
-}
-
-function HubMark() {
-  return (
-    <svg className="hub-menu-brand-mark" viewBox="0 0 44 44" aria-hidden="true">
-      <circle cx="22" cy="22" r="17.5" />
-      <path d="M4.5 22h35" />
-      <circle cx="22" cy="22" r="5.2" />
-    </svg>
-  );
-}
-
-function NavGlyph({ icon }: { icon: NavItem['icon'] }) {
-  if (icon === 'journey') {
-    return (
-      <svg viewBox="0 0 32 32" aria-hidden="true">
-        <circle cx="16" cy="16" r="10.5" />
-        <path d="m19.6 11.2-2.1 6.3-5.1 3.3 2.1-6.3z" />
-        <circle cx="16" cy="16" r="1.4" />
-      </svg>
-    );
-  }
-  if (icon === 'dex') {
-    return (
-      <svg viewBox="0 0 32 32" aria-hidden="true">
-        <path d="M8 7.5h16v17H8zM11.5 12h9M11.5 16h6M11.5 20h8" />
-        <circle cx="22.5" cy="10" r="1.5" />
-      </svg>
-    );
-  }
-  return (
-    <svg viewBox="0 0 32 32" aria-hidden="true">
-      <path d="M7.5 9.5h17v14h-17zM7.5 14h17" />
-      <path d="M11 18h4v3h-4zM17 18h4v3h-4z" />
-      <path d="M12 9.5V7.8h8v1.7" />
-    </svg>
-  );
 }
 
 export function HubNavigation({ active, destinations }: HubNavigationProps) {
@@ -200,7 +181,9 @@ export function HubNavigation({ active, destinations }: HubNavigationProps) {
           >
             <header className="hub-menu-header">
               <div className="hub-menu-brand">
-                <HubMark />
+                <span className="hub-menu-brand-asset" aria-hidden="true">
+                  <img src={HUB_BRAND_ASSET} alt="" decoding="async" />
+                </span>
                 <div>
                   <strong>POKÉMON HUB</strong>
                   <span>JORNADA · POKÉDEX · BOX</span>
@@ -234,8 +217,8 @@ export function HubNavigation({ active, destinations }: HubNavigationProps) {
                     onPointerDown={warmRoute}
                     onPointerEnter={warmRoute}
                   >
-                    <span className="hub-menu-tile-icon">
-                      <NavGlyph icon={item.icon} />
+                    <span className="hub-menu-tile-icon" aria-hidden="true">
+                      <img src={item.asset} alt="" loading="eager" decoding="async" />
                     </span>
                     <span className="hub-menu-tile-copy">
                       <strong>{item.label}</strong>
