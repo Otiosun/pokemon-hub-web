@@ -11,6 +11,55 @@ body { margin: 0; min-width: 320px; min-height: 100vh; background: radial-gradie
 a { color: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { font: inherit; }
+
+.hub-route-fallback {
+  min-height: 100svh;
+  display: grid;
+  grid-template-rows: 76px 1fr;
+  background: #0d1112;
+  color: #eff8f8;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+}
+.hub-route-fallback-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px clamp(16px, 4vw, 42px);
+  border-bottom: 2px solid rgba(91, 0, 8, .42);
+  background: linear-gradient(180deg, #df4550, #ca313d);
+}
+.hub-route-fallback-head > span:last-child { display: grid; gap: 2px; }
+.hub-route-fallback-head strong { font: 700 .92rem 'Space Grotesk', sans-serif; letter-spacing: .09em; }
+.hub-route-fallback-head small { color: rgba(255,255,255,.62); font: 600 .5rem 'IBM Plex Mono', monospace; letter-spacing: .09em; }
+.hub-route-fallback-lens {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border: 4px solid #eef7f6;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%,#ebffff 0 8%,#68e7ef 10% 28%,#1b91b5 56%,#0b5870 78%);
+  box-shadow: 0 0 0 2px rgba(0,0,0,.14),0 0 18px rgba(91,226,242,.2);
+}
+.hub-route-fallback-body {
+  width: min(1180px, calc(100% - 28px));
+  align-self: start;
+  justify-self: center;
+  display: grid;
+  grid-template-columns: 1.4fr .8fr .55fr;
+  gap: 8px;
+  padding-top: 22px;
+}
+.hub-route-fallback-body span {
+  min-height: 54px;
+  border: 1px solid rgba(190,226,228,.11);
+  border-bottom-width: 3px;
+  background:
+    linear-gradient(90deg,transparent,rgba(255,255,255,.035),transparent) 0 0 / 220% 100%,
+    #14191a;
+  animation: hub-route-pulse 1.4s ease-in-out infinite;
+}
+@keyframes hub-route-pulse { 50% { opacity: .55; } }
+
 .shell { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 56px 0 72px; }
 .hero { max-width: 780px; padding-top: 8vw; }
 .eyebrow, .card-kicker { margin: 0 0 12px; color: #6d7068; font-size: .74rem; font-weight: 800; letter-spacing: .14em; }
@@ -66,6 +115,9 @@ h1 { margin-bottom: 20px; font-size: clamp(2.5rem, 8vw, 5.8rem); font-weight: 76
 .lab-note { max-width: 760px; margin: 46px 0 0; color: #6b6e66; line-height: 1.6; }
 
 @media (max-width: 760px) {
+  .hub-route-fallback { grid-template-rows: 72px 1fr; }
+  .hub-route-fallback-body { grid-template-columns: 1fr .7fr; }
+  .hub-route-fallback-body span:last-child { display: none; }
   .shell { width: min(100% - 24px,1120px); padding-top: 30px; }
   .lab-header, .pipeline-panel { grid-template-columns: 1fr; }
   .lab-header { display: grid; }
