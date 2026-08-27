@@ -88,7 +88,7 @@ export function OwnedPokemonDetailPage({
           <div className="owned-detail-artwork">
             <PokemonAssetImage
               dex={pokemon.dex}
-              role="official-artwork"
+              assetRole="official-artwork"
               alt={`Ilustração de ${pokemon.species}`}
               fallbackLabel={pokemon.species.slice(0, 1)}
               decoding="async"
@@ -123,11 +123,11 @@ export function OwnedPokemonDetailPage({
         </div>
 
         <div className="owned-detail-data">
-          <div className="owned-detail-tabs" aria-label="Seções do Pokémon">
+          <nav className="owned-detail-tabs" aria-label="Seções do Pokémon">
             <a href="#resumo">RESUMO</a>
             <a href="#build">BUILD</a>
             <a href="#historico">HISTÓRICO</a>
-          </div>
+          </nav>
 
           <section id="resumo" className="owned-detail-section">
             <header><span>RESUMO</span><strong>NV. {pokemon.level}</strong></header>

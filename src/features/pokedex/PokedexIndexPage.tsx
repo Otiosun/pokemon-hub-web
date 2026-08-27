@@ -356,7 +356,7 @@ export function PokedexIndexPage() {
                   <div className="pokedex-index-card-top">
                     <span>#{paddedDex}</span>
                     <span className="pokedex-index-state-group">
-                      {playerState.shinySeen ? <i className="pokedex-index-shiny-mark" aria-label="Shiny registrado">✦</i> : null}
+                      {playerState.shinySeen ? <i className="pokedex-index-shiny-mark" role="img" aria-label="Shiny registrado">✦</i> : null}
                       <strong className="pokedex-index-discovery-state">{discoveryLabel(playerState.discovery)}</strong>
                     </span>
                   </div>
@@ -364,7 +364,7 @@ export function PokedexIndexPage() {
                     {discovered ? (
                       <PokemonAssetImage
                         dex={item.dex}
-                        role="official-artwork"
+                        assetRole="official-artwork"
                         alt=""
                         aria-hidden="true"
                         loading="lazy"

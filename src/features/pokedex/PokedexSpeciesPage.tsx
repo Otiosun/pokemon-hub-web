@@ -181,7 +181,15 @@ function SideArrow({ direction }: { direction: 'left' | 'right' }) {
 
 function ResearchMeter({ level }: { level: SpeciesPlayerState['researchLevel'] }) {
   return (
-    <div className="pokedex-species-research-meter" aria-label={`Pesquisa ${level} de 5`}>
+    <div
+      className="pokedex-species-research-meter"
+      role="progressbar"
+      aria-label="Nível de pesquisa"
+      aria-valuemin={0}
+      aria-valuemax={5}
+      aria-valuenow={level}
+      aria-valuetext={`Pesquisa ${level} de 5`}
+    >
       {RESEARCH_STEPS.map((step) => (
         <span key={step} className={step <= level ? 'is-filled' : undefined} aria-hidden="true" />
       ))}
@@ -200,7 +208,7 @@ function EvolutionTree({ stages }: { stages: EvolutionSpecies[][] }) {
               <a href={neighbourHref(species.dex)} key={species.dex}>
                 <PokemonAssetImage
                   dex={species.dex}
-                  role="icon"
+                  assetRole="icon"
                   alt=""
                   aria-hidden="true"
                   loading="lazy"
@@ -357,7 +365,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
                 <PokemonAssetImage
                   key={validDex}
                   dex={validDex}
-                  role="official-artwork"
+                  assetRole="official-artwork"
                   className="pokedex-species-artwork"
                   alt={`Ilustração de ${displayName}`}
                   decoding="async"

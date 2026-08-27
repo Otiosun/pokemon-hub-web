@@ -170,7 +170,7 @@ export function HubNavigation({ active, destinations }: HubNavigationProps) {
       </button>
 
       {open ? (
-        <div className="hub-menu-backdrop" onMouseDown={(event) => event.target === event.currentTarget && closeMenu()}>
+        <div className="hub-menu-backdrop">
           <div
             id="hub-global-menu"
             ref={panelRef}

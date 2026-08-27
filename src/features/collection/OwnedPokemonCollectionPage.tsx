@@ -66,7 +66,7 @@ function PokemonCard({ pokemon }: { pokemon: OwnedPokemonPreview }) {
       <div className="owned-pokemon-visual">
         <PokemonAssetImage
           dex={pokemon.dex}
-          role="icon"
+          assetRole="icon"
           alt=""
           aria-hidden="true"
           loading="lazy"
@@ -88,7 +88,7 @@ function PokemonCard({ pokemon }: { pokemon: OwnedPokemonPreview }) {
           ))}
         </div>
         <div className="owned-pokemon-card-foot">
-          <span>{pokemon.box.toUpperCase()} · <span aria-label={sex.label}>{sex.glyph}</span></span>
+          <span>{pokemon.box.toUpperCase()} · <span role="img" aria-label={sex.label}>{sex.glyph}</span></span>
           {pokemon.shiny && <strong>SHINY</strong>}
         </div>
       </div>

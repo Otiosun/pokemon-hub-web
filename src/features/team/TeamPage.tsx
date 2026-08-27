@@ -100,7 +100,7 @@ export function TeamPage() {
               <span>ORDEM NÃO SALVA</span>
               <strong>A formação abaixo é apenas uma prévia local.</strong>
             </div>
-            <div>
+            <div role="group" aria-label="Confirmar ou descartar ordem em prévia">
               <button type="button" onClick={discardOrder}>DESCARTAR</button>
               <button type="button" disabled title="Requer API do RPG">SALVAR COM API</button>
             </div>
@@ -121,7 +121,7 @@ export function TeamPage() {
                     <div className="team-slot-visual">
                       <PokemonAssetImage
                         dex={pokemon.dex}
-                        role="icon"
+                        assetRole="icon"
                         alt=""
                         aria-hidden="true"
                         loading="lazy"
@@ -149,8 +149,8 @@ export function TeamPage() {
                     </div>
                   </a>
 
-                  <div className="team-slot-controls" aria-label={`Controles de ${pokemon.nickname}`}>
-                    <div className="team-slot-order-controls" aria-label="Alterar ordem">
+                  <div className="team-slot-controls" role="group" aria-label={`Controles de ${pokemon.nickname}`}>
+                    <div className="team-slot-order-controls" role="group" aria-label="Alterar ordem">
                       <button
                         type="button"
                         onClick={() => moveMember(index, -1)}
@@ -221,7 +221,7 @@ export function TeamPage() {
                     className={candidateId === pokemon.instanceId ? 'is-selected' : undefined}
                     onClick={() => setCandidateId(pokemon.instanceId)}
                   >
-                    <PokemonAssetImage dex={pokemon.dex} role="icon" alt="" aria-hidden="true" loading="lazy" fallbackLabel="?" />
+                    <PokemonAssetImage dex={pokemon.dex} assetRole="icon" alt="" aria-hidden="true" loading="lazy" fallbackLabel="?" />
                     <span><strong>{pokemon.nickname}</strong><small>NV. {pokemon.level} · {pokemon.box}</small></span>
                     <span className="team-picker-types">
                       {pokemon.types.map((type) => <TypeBadge key={type} type={type} accent={typeAccent(type)} compact />)}

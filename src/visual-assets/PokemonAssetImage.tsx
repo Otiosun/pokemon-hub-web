@@ -11,9 +11,9 @@ import './pokemon-asset-image.css';
 
 export type PokemonImageRole = 'official-artwork' | 'home-artwork' | 'icon' | 'portrait';
 
-type PokemonAssetImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'onError'> & {
+type PokemonAssetImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'onError' | 'role'> & {
   dex: number;
-  role: PokemonImageRole;
+  assetRole: PokemonImageRole;
   fallbackLabel?: string;
   onResolved?: (sourceRole: PokemonImageRole | 'placeholder') => void;
 };
@@ -33,13 +33,24 @@ type PokemonAlphaTransform = {
   translateY: number;
 };
 
+type SourceSelection = {
+  key: string;
+  index: number;
+};
+
+type AlphaRenderState = {
+  src: string;
+  bounds: PokemonAlphaBounds | null;
+  transform: PokemonAlphaTransform | null;
+};
+
 const ALPHA_SCAN_EDGE = 144;
 const ALPHA_THRESHOLD = 12;
 const ALPHA_PADDING_RATIO = 0.035;
 const ALPHA_FILL_RATIO = 0.94;
 const alphaBoundsCache = new Map<string, Promise<PokemonAlphaBounds | null>>();
 
-function sourceOrder(dex: number, role: PokemonImageRole) {
+function sourceOrder(dex: number, assetRole: PokemonImageRole) {
   const visual = getPokemonSpeciesVisualAssets(dex);
   const sources: Record<PokemonImageRole, Array<{ role: PokemonImageRole; src: string }>> = {
     'official-artwork': [
@@ -64,11 +75,11 @@ function sourceOrder(dex: number, role: PokemonImageRole) {
       { role: 'icon', src: visual.icon },
     ],
   };
-  return sources[role];
+  return sources[assetRole];
 }
 
-function shouldNormalizeAlpha(role: PokemonImageRole) {
-  return role === 'official-artwork' || role === 'home-artwork';
+function shouldNormalizeAlpha(assetRole: PokemonImageRole) {
+  return assetRole === 'official-artwork' || assetRole === 'home-artwork';
 }
 
 function readTransformScale(transform: string) {
@@ -97,10 +108,7 @@ export function calculatePokemonAlphaTransform({
 
   const boundedWidth = Math.max(0.001, bounds.right - bounds.left);
   const boundedHeight = Math.max(0.001, bounds.bottom - bounds.top);
-  const sourceFitScale = Math.min(
-    boxWidth / bounds.sourceWidth,
-    boxHeight / bounds.sourceHeight,
-  );
+  const sourceFitScale = Math.min(boxWidth / bounds.sourceWidth, boxHeight / bounds.sourceHeight);
 
   const renderedSourceWidth = bounds.sourceWidth * sourceFitScale;
   const renderedSourceHeight = bounds.sourceHeight * sourceFitScale;
@@ -111,8 +119,7 @@ export function calculatePokemonAlphaTransform({
   const visibleWidth = boundedWidth * bounds.sourceWidth * sourceFitScale;
   const visibleHeight = boundedHeight * bounds.sourceHeight * sourceFitScale;
 
-  const desiredScale =
-    Math.min(boxWidth / visibleWidth, boxHeight / visibleHeight) * ALPHA_FILL_RATIO;
+  const desiredScale = Math.min(boxWidth / visibleWidth, boxHeight / visibleHeight) * ALPHA_FILL_RATIO;
   const scale = Math.max(baseScale, desiredScale);
 
   const centerDeltaX = sourceOffsetX + boundsCenterX * sourceFitScale - boxWidth / 2;
@@ -199,9 +206,22 @@ function getAlphaBounds(src: string) {
   return pending;
 }
 
+function transformsMatch(
+  left: PokemonAlphaTransform | null,
+  right: PokemonAlphaTransform | null,
+) {
+  if (left === right) return true;
+  if (!left || !right) return false;
+  return (
+    Math.abs(left.scale - right.scale) < 0.0001 &&
+    Math.abs(left.translateX - right.translateX) < 0.05 &&
+    Math.abs(left.translateY - right.translateY) < 0.05
+  );
+}
+
 export function PokemonAssetImage({
   dex,
-  role,
+  assetRole,
   fallbackLabel = '?',
   className = '',
   onResolved,
@@ -209,47 +229,42 @@ export function PokemonAssetImage({
   style,
   ...imageProps
 }: PokemonAssetImageProps) {
-  const sources = useMemo(() => sourceOrder(dex, role), [dex, role]);
-  const [sourceIndex, setSourceIndex] = useState(0);
-  const [alphaBounds, setAlphaBounds] = useState<PokemonAlphaBounds | null>(null);
-  const [alphaTransform, setAlphaTransform] = useState<PokemonAlphaTransform | null>(null);
-  const imageRef = useRef<HTMLImageElement | null>(null);
-  const baseScaleRef = useRef(1);
-
-  useEffect(() => {
-    setSourceIndex(0);
-  }, [sources]);
-
+  const sources = useMemo(() => sourceOrder(dex, assetRole), [assetRole, dex]);
+  const sourceKey = `${dex}:${assetRole}`;
+  const [selection, setSelection] = useState<SourceSelection>({ key: sourceKey, index: 0 });
+  const sourceIndex = selection.key === sourceKey ? selection.index : 0;
   const source = sources[sourceIndex];
-
-  useEffect(() => {
-    setAlphaBounds(null);
-    setAlphaTransform(null);
-    baseScaleRef.current = 1;
-  }, [source?.src]);
+  const [alphaState, setAlphaState] = useState<AlphaRenderState | null>(null);
+  const imageRef = useRef<HTMLImageElement | null>(null);
+  const baseScaleRef = useRef<{ src: string; scale: number } | null>(null);
+  const activeBounds = alphaState?.src === source?.src ? alphaState.bounds : null;
+  const alphaTransform = alphaState?.src === source?.src ? alphaState.transform : null;
 
   useEffect(() => {
     const image = imageRef.current;
-    if (!image || !alphaBounds) return;
+    const sourceSrc = source?.src;
+    if (!image || !sourceSrc || !activeBounds || typeof ResizeObserver === 'undefined') return;
 
-    const recalculate = () => {
+    const observer = new ResizeObserver(() => {
+      if (imageRef.current?.getAttribute('src') !== sourceSrc) return;
+      const baseScale = baseScaleRef.current?.src === sourceSrc ? baseScaleRef.current.scale : 1;
       const nextTransform = calculatePokemonAlphaTransform({
-        bounds: alphaBounds,
+        bounds: activeBounds,
         boxWidth: image.clientWidth,
         boxHeight: image.clientHeight,
-        baseScale: baseScaleRef.current,
+        baseScale,
       });
-      setAlphaTransform(nextTransform);
-    };
+      setAlphaState((current) => {
+        if (!current || current.src !== sourceSrc || !current.bounds) return current;
+        if (transformsMatch(current.transform, nextTransform)) return current;
+        return { ...current, transform: nextTransform };
+      });
+    });
 
-    recalculate();
-    if (typeof ResizeObserver === 'undefined') return;
-
-    const observer = new ResizeObserver(recalculate);
     observer.observe(image);
     if (image.parentElement) observer.observe(image.parentElement);
     return () => observer.disconnect();
-  }, [alphaBounds]);
+  }, [activeBounds, source?.src]);
 
   if (!source) {
     const placeholderClassName = `pokemon-asset-placeholder ${className}`.trim();
@@ -289,17 +304,27 @@ export function PokemonAssetImage({
         onResolved?.(source.role);
         if (!shouldNormalizeAlpha(source.role)) return;
 
-        baseScaleRef.current = readTransformScale(getComputedStyle(event.currentTarget).transform);
         const loadedSource = source.src;
+        const baseScale = readTransformScale(getComputedStyle(event.currentTarget).transform);
+        baseScaleRef.current = { src: loadedSource, scale: baseScale };
         void getAlphaBounds(loadedSource).then((bounds) => {
-          if (imageRef.current?.getAttribute('src') !== loadedSource) return;
-          setAlphaBounds(bounds);
+          const image = imageRef.current;
+          if (!image || image.getAttribute('src') !== loadedSource) return;
+          const transform = bounds
+            ? calculatePokemonAlphaTransform({
+                bounds,
+                boxWidth: image.clientWidth,
+                boxHeight: image.clientHeight,
+                baseScale,
+              })
+            : null;
+          setAlphaState({ src: loadedSource, bounds, transform });
         });
       }}
       onError={() => {
         const nextIndex = sourceIndex + 1;
         if (nextIndex >= sources.length) onResolved?.('placeholder');
-        setSourceIndex(nextIndex);
+        setSelection({ key: sourceKey, index: nextIndex });
       }}
     />
   );
