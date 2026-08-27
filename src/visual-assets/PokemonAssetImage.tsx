@@ -305,10 +305,13 @@ export function PokemonAssetImage({
       data-asset-role={source.role}
       data-alpha-normalized={alphaTransform ? 'true' : undefined}
       onLoad={(event) => {
-        onResolved?.(source.role);
+        const loadedSource = source.src;
+        window.setTimeout(() => {
+          if (imageRef.current?.getAttribute('src') !== loadedSource) return;
+          onResolved?.(source.role);
+        }, 0);
         if (!shouldNormalizeAlpha(source.role)) return;
 
-        const loadedSource = source.src;
         const baseScale = readTransformScale(getComputedStyle(event.currentTarget).transform);
         baseScaleRef.current = { src: loadedSource, scale: baseScale };
         void getAlphaBounds(loadedSource).then((bounds) => {
