@@ -1,5 +1,5 @@
 .dex-page .dex-nav {
-  display: none;
+  display: flex;
 }
 
 .dex-page .dex-tabs {
