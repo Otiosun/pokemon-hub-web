@@ -336,11 +336,13 @@ export function App() {
   }
   if (isOwnedPokemonInstancePath(path)) {
     const historyState = (window.history.state ?? {}) as HubHistoryState;
+    const instanceId = getPokemonRouteSlug(path);
     return (
       <HubFrame active="box" destinations={hubDestinations}>
         <Suspense fallback={<RouteFallback module="box" label="ABRINDO POKÉMON" />}>
           <OwnedPokemonDetailPage
-            instanceId={getPokemonRouteSlug(path)}
+            key={instanceId}
+            instanceId={instanceId}
             returnHref={historyState.hubParent ?? '/pokemon'}
           />
         </Suspense>
