@@ -7,8 +7,8 @@ export function JourneyPage() {
         <p className="journey-eyebrow">JORNADA</p>
         <h1>Continue de onde parou.</h1>
         <p>
-          O mundo fica no centro da experiência. Pokédex e Box entram como ferramentas quando você precisar delas,
-          sem virar três aplicativos disputando sua atenção.
+          Explore o mundo no seu ritmo. Quando quiser consultar uma espécie ou organizar seu Time, Pokédex e Box
+          ficam a um toque.
         </p>
       </section>
 
