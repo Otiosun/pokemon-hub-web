@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import type { HubDestinations, HubSection } from '../navigation/hubNavigationSession';
 import './hub-navigation.css';
 
@@ -19,6 +20,20 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'pokemon', label: 'POKÉMON', icon: 'pokemon' },
   { id: 'team', label: 'TIME', icon: 'team' },
 ];
+
+const HUB_ROUTE_PRELOADERS: Record<HubSection, () => Promise<unknown>> = {
+  pokedex: () => import('../features/pokedex/PokedexIndexPage'),
+  pokemon: () => import('../features/collection/OwnedPokemonCollectionPage'),
+  team: () => import('../features/team/TeamPage'),
+};
+
+function preloadHubRoute(section: HubSection) {
+  void HUB_ROUTE_PRELOADERS[section]().catch(() => undefined);
+}
+
+function preloadPrimaryHubRoutes() {
+  for (const item of NAV_ITEMS) preloadHubRoute(item.id);
+}
 
 function NavGlyph({ icon }: { icon: NavItem['icon'] }) {
   if (icon === 'dex') {
@@ -49,6 +64,11 @@ function NavGlyph({ icon }: { icon: NavItem['icon'] }) {
 }
 
 export function HubNavigation({ active, destinations }: HubNavigationProps) {
+  useEffect(() => {
+    const timeout = window.setTimeout(preloadPrimaryHubRoutes, 0);
+    return () => window.clearTimeout(timeout);
+  }, []);
+
   return (
     <nav className="hub-navigation" aria-label="Navegação principal do Pokémon Hub">
       <a className="hub-navigation-mark" href="/" aria-label="Pokémon Hub">
@@ -57,6 +77,7 @@ export function HubNavigation({ active, destinations }: HubNavigationProps) {
       <div className="hub-navigation-items">
         {NAV_ITEMS.map((item) => {
           const selected = active === item.id;
+          const warmRoute = () => preloadHubRoute(item.id);
           return (
             <a
               key={item.id}
@@ -64,6 +85,9 @@ export function HubNavigation({ active, destinations }: HubNavigationProps) {
               href={destinations[item.id]}
               aria-current={selected ? 'page' : undefined}
               data-hub-primary={item.id}
+              onFocus={warmRoute}
+              onPointerDown={warmRoute}
+              onPointerEnter={warmRoute}
             >
               <NavGlyph icon={item.icon} />
               <span>{item.label}</span>
