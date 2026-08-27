@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { HubModuleHeader } from '../../components/HubModuleHeader';
 import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import { TypeBadge } from '../../visual-assets/TypeBadge';
 import { typeAccent } from '../pokemon-detail/fieldDexSpecies';
@@ -74,173 +75,177 @@ export function TeamPage() {
 
   return (
     <main className="team-page">
-      <header className="team-header">
-        <div>
-          <span className="team-kicker">FORMAÇÃO ATIVA</span>
-          <h1>Meu Time</h1>
-          <p>Seis parceiros, leitura imediata. Trocas e ordem podem ser preparadas aqui; a mutação real só será confirmada pela API do RPG.</p>
-        </div>
-        <div className="team-readout">
-          <strong>{team.length}/6</strong>
-          <span>SLOTS OCUPADOS</span>
-        </div>
-      </header>
+      <HubModuleHeader module="team" metaLabel="FORMAÇÃO" metaValue={`${team.length} / 6`} />
 
-      <div className="team-runtime-note">
-        <span aria-hidden="true" /> {previewLabels ? `${previewLabels} · ` : ''}SEM MUTAÇÃO LOCAL
-      </div>
-
-      {orderIsDraft && (
-        <section className="team-order-preview" aria-label="Ordem do Time em prévia">
+      <div className="team-page-content">
+        <header className="team-header">
           <div>
-            <span>ORDEM NÃO SALVA</span>
-            <strong>A formação abaixo é apenas uma prévia local.</strong>
+            <span className="team-kicker">FORMAÇÃO ATIVA</span>
+            <h1>Meu Time</h1>
+            <p>Os seis parceiros ativos ficam no centro. Ordem e troca são ações contextuais; análise mecânica só aparece quando houver regras reais do RPG.</p>
           </div>
-          <div>
-            <button type="button" onClick={discardOrder}>DESCARTAR</button>
-            <button type="button" disabled title="Requer API do RPG">SALVAR COM API</button>
+          <div className="team-readout">
+            <strong>{team.length}/6</strong>
+            <span>SLOTS OCUPADOS</span>
           </div>
-        </section>
-      )}
+        </header>
 
-      <section className="team-workbench" aria-label="Time ativo">
-        <div className="team-grid">
-          {team.map((pokemon, index) => {
-            const displaySlot = index + 1;
-            return (
-              <article className={`team-slot${editingSlot === displaySlot ? ' is-editing' : ''}${orderIsDraft ? ' is-order-preview' : ''}`} key={pokemon.instanceId}>
-                <div className="team-slot-number">
-                  <span>{orderIsDraft ? 'PRÉVIA' : 'SLOT'}</span>
-                  <strong>{String(displaySlot).padStart(2, '0')}</strong>
-                </div>
-                <a className="team-slot-open" href={`/pokemon/${pokemon.instanceId}`} aria-label={`Abrir build de ${pokemon.nickname}`}>
-                  <div className="team-slot-visual">
-                    <PokemonAssetImage
-                      dex={pokemon.dex}
-                      role="icon"
-                      alt=""
-                      aria-hidden="true"
-                      loading="lazy"
-                      decoding="async"
-                      fallbackLabel="?"
-                    />
-                  </div>
-                  <div className="team-slot-main">
-                    <div className="team-slot-heading">
-                      <div>
-                        <strong>{pokemon.nickname}</strong>
-                        <span>{pokemon.species}</span>
-                      </div>
-                      <em>NV. {pokemon.level}</em>
-                    </div>
-                    <div className="team-slot-types">
-                      {pokemon.types.map((type) => (
-                        <TypeBadge key={type} type={type} accent={typeAccent(type)} compact />
-                      ))}
-                    </div>
-                    <div className="team-slot-status">
-                      <span><i aria-hidden="true" /> {orderIsDraft ? 'PRÉVIA' : 'NO TIME'}</span>
-                      {pokemon.shiny && <strong>SHINY</strong>}
-                    </div>
-                  </div>
-                </a>
-
-                <div className="team-slot-controls" aria-label={`Controles de ${pokemon.nickname}`}>
-                  <div className="team-slot-order-controls" aria-label="Alterar ordem">
-                    <button
-                      type="button"
-                      onClick={() => moveMember(index, -1)}
-                      disabled={index === 0}
-                      aria-label={`Mover ${pokemon.nickname} para cima`}
-                    >
-                      ↑
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => moveMember(index, 1)}
-                      disabled={index === team.length - 1}
-                      aria-label={`Mover ${pokemon.nickname} para baixo`}
-                    >
-                      ↓
-                    </button>
-                  </div>
-                  <button
-                    className="team-slot-swap"
-                    type="button"
-                    onClick={() => openPicker(displaySlot)}
-                    aria-expanded={editingSlot === displaySlot}
-                  >
-                    TROCAR
-                  </button>
-                </div>
-              </article>
-            );
-          })}
+        <div className="team-runtime-note">
+          <span aria-hidden="true" /> {previewLabels ? `${previewLabels} · ` : ''}SEM MUTAÇÃO LOCAL
         </div>
 
-        <aside className="team-analysis" aria-label="Leitura do conjunto">
-          <div className="team-analysis-head">
-            <span>LEITURA DO CONJUNTO</span>
-            <strong>Composição</strong>
-          </div>
-          <p>
-            Esta camada mostra apenas informações observáveis da formação atual. Fraquezas, resistências e cobertura ofensiva só serão calculadas pelas regras reais do RPG.
-          </p>
-          <div className="team-type-cloud">
-            {representedTypes.map((type) => (
-              <TypeBadge key={type} type={type} accent={typeAccent(type)} />
-            ))}
-          </div>
-          <dl className="team-analysis-facts">
-            <div><dt>MEMBROS</dt><dd>{team.length}</dd></div>
-            <div><dt>TIPOS PRESENTES</dt><dd>{representedTypes.length}</dd></div>
-            <div><dt>EDIÇÃO</dt><dd>{orderIsDraft ? 'PRÉVIA LOCAL' : 'API PENDENTE'}</dd></div>
-          </dl>
-        </aside>
-      </section>
-
-      {editingSlot && editingPokemon && (
-        <section className="team-picker" aria-label={`Substituir membro do slot ${editingSlot}`}>
-          <header className="team-picker-head">
+        {orderIsDraft && (
+          <section className="team-order-preview" aria-label="Ordem do Time em prévia">
             <div>
-              <span>SUBSTITUIR SLOT {String(editingSlot).padStart(2, '0')}</span>
-              <strong>{editingPokemon.nickname}</strong>
+              <span>ORDEM NÃO SALVA</span>
+              <strong>A formação abaixo é apenas uma prévia local.</strong>
             </div>
-            <button type="button" onClick={closePicker}>FECHAR</button>
-          </header>
+            <div>
+              <button type="button" onClick={discardOrder}>DESCARTAR</button>
+              <button type="button" disabled title="Requer API do RPG">SALVAR COM API</button>
+            </div>
+          </section>
+        )}
 
-          <ul className="team-picker-candidates" aria-label="Pokémon disponíveis fora do Time">
-            {storageCandidates.map((pokemon) => (
-              <li key={pokemon.instanceId}>
-                <button
-                  type="button"
-                  className={candidateId === pokemon.instanceId ? 'is-selected' : undefined}
-                  onClick={() => setCandidateId(pokemon.instanceId)}
-                >
-                  <PokemonAssetImage dex={pokemon.dex} role="icon" alt="" aria-hidden="true" loading="lazy" fallbackLabel="?" />
-                  <span><strong>{pokemon.nickname}</strong><small>NV. {pokemon.level} · {pokemon.box}</small></span>
-                  <span className="team-picker-types">
-                    {pokemon.types.map((type) => <TypeBadge key={type} type={type} accent={typeAccent(type)} compact />)}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
+        <section className="team-workbench" aria-label="Time ativo">
+          <div className="team-grid">
+            {team.map((pokemon, index) => {
+              const displaySlot = index + 1;
+              return (
+                <article className={`team-slot${editingSlot === displaySlot ? ' is-editing' : ''}${orderIsDraft ? ' is-order-preview' : ''}`} key={pokemon.instanceId}>
+                  <div className="team-slot-number">
+                    <span>{orderIsDraft ? 'PRÉVIA' : 'SLOT'}</span>
+                    <strong>{String(displaySlot).padStart(2, '0')}</strong>
+                  </div>
+                  <a className="team-slot-open" href={`/pokemon/${pokemon.instanceId}`} aria-label={`Abrir build de ${pokemon.nickname}`}>
+                    <div className="team-slot-visual">
+                      <PokemonAssetImage
+                        dex={pokemon.dex}
+                        role="icon"
+                        alt=""
+                        aria-hidden="true"
+                        loading="lazy"
+                        decoding="async"
+                        fallbackLabel="?"
+                      />
+                    </div>
+                    <div className="team-slot-main">
+                      <div className="team-slot-heading">
+                        <div>
+                          <strong>{pokemon.nickname}</strong>
+                          <span>{pokemon.species}</span>
+                        </div>
+                        <em>NV. {pokemon.level}</em>
+                      </div>
+                      <div className="team-slot-types">
+                        {pokemon.types.map((type) => (
+                          <TypeBadge key={type} type={type} accent={typeAccent(type)} compact />
+                        ))}
+                      </div>
+                      <div className="team-slot-status">
+                        <span><i aria-hidden="true" /> {orderIsDraft ? 'PRÉVIA' : 'NO TIME'}</span>
+                        {pokemon.shiny && <strong>SHINY</strong>}
+                      </div>
+                    </div>
+                  </a>
 
-          <div className={`team-swap-preview${candidate ? ' is-ready' : ''}`}>
-            {candidate ? (
-              <>
-                <div><span>SAI</span><strong>{editingPokemon.nickname}</strong></div>
-                <span aria-hidden="true">→</span>
-                <div><span>ENTRA</span><strong>{candidate.nickname}</strong></div>
-                <button type="button" disabled title="Requer API do RPG">APLICAR COM API</button>
-              </>
-            ) : (
-              <p>Escolha um Pokémon armazenado para visualizar a troca. Nenhuma mudança é aplicada localmente.</p>
-            )}
+                  <div className="team-slot-controls" aria-label={`Controles de ${pokemon.nickname}`}>
+                    <div className="team-slot-order-controls" aria-label="Alterar ordem">
+                      <button
+                        type="button"
+                        onClick={() => moveMember(index, -1)}
+                        disabled={index === 0}
+                        aria-label={`Mover ${pokemon.nickname} para cima`}
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveMember(index, 1)}
+                        disabled={index === team.length - 1}
+                        aria-label={`Mover ${pokemon.nickname} para baixo`}
+                      >
+                        ↓
+                      </button>
+                    </div>
+                    <button
+                      className="team-slot-swap"
+                      type="button"
+                      onClick={() => openPicker(displaySlot)}
+                      aria-expanded={editingSlot === displaySlot}
+                    >
+                      TROCAR
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
           </div>
+
+          <aside className="team-analysis" aria-label="Leitura do conjunto">
+            <div className="team-analysis-head">
+              <span>LEITURA DO CONJUNTO</span>
+              <strong>Composição</strong>
+            </div>
+            <p>
+              Aqui mostramos somente fatos observáveis da formação atual. Fraquezas, resistências e cobertura ofensiva entram apenas quando puderem usar as regras reais do RPG.
+            </p>
+            <div className="team-type-cloud">
+              {representedTypes.map((type) => (
+                <TypeBadge key={type} type={type} accent={typeAccent(type)} />
+              ))}
+            </div>
+            <dl className="team-analysis-facts">
+              <div><dt>MEMBROS</dt><dd>{team.length}</dd></div>
+              <div><dt>TIPOS PRESENTES</dt><dd>{representedTypes.length}</dd></div>
+              <div><dt>EDIÇÃO</dt><dd>{orderIsDraft ? 'PRÉVIA LOCAL' : 'API PENDENTE'}</dd></div>
+            </dl>
+          </aside>
         </section>
-      )}
+
+        {editingSlot && editingPokemon && (
+          <section className="team-picker" aria-label={`Substituir membro do slot ${editingSlot}`}>
+            <header className="team-picker-head">
+              <div>
+                <span>SUBSTITUIR SLOT {String(editingSlot).padStart(2, '0')}</span>
+                <strong>{editingPokemon.nickname}</strong>
+              </div>
+              <button type="button" onClick={closePicker}>FECHAR</button>
+            </header>
+
+            <ul className="team-picker-candidates" aria-label="Pokémon disponíveis fora do Time">
+              {storageCandidates.map((pokemon) => (
+                <li key={pokemon.instanceId}>
+                  <button
+                    type="button"
+                    className={candidateId === pokemon.instanceId ? 'is-selected' : undefined}
+                    onClick={() => setCandidateId(pokemon.instanceId)}
+                  >
+                    <PokemonAssetImage dex={pokemon.dex} role="icon" alt="" aria-hidden="true" loading="lazy" fallbackLabel="?" />
+                    <span><strong>{pokemon.nickname}</strong><small>NV. {pokemon.level} · {pokemon.box}</small></span>
+                    <span className="team-picker-types">
+                      {pokemon.types.map((type) => <TypeBadge key={type} type={type} accent={typeAccent(type)} compact />)}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            <div className={`team-swap-preview${candidate ? ' is-ready' : ''}`}>
+              {candidate ? (
+                <>
+                  <div><span>SAI</span><strong>{editingPokemon.nickname}</strong></div>
+                  <span aria-hidden="true">→</span>
+                  <div><span>ENTRA</span><strong>{candidate.nickname}</strong></div>
+                  <button type="button" disabled title="Requer API do RPG">APLICAR COM API</button>
+                </>
+              ) : (
+                <p>Escolha um Pokémon armazenado para visualizar a troca. Nenhuma mudança é aplicada localmente.</p>
+              )}
+            </div>
+          </section>
+        )}
+      </div>
     </main>
   );
 }
