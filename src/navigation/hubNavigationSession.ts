@@ -1,13 +1,14 @@
-export type HubSection = 'pokedex' | 'pokemon' | 'team';
+export type HubSection = 'journey' | 'pokedex' | 'box';
 
 export type HubDestinations = Record<HubSection, string>;
 
-const STORAGE_KEY = 'pokemon-hub:last-destinations:v1';
+const STORAGE_KEY = 'pokemon-hub:last-destinations:v2';
+const LEGACY_STORAGE_KEY = 'pokemon-hub:last-destinations:v1';
 
 const DEFAULT_DESTINATIONS: HubDestinations = {
+  journey: '/jornada',
   pokedex: '/pokedex',
-  pokemon: '/pokemon',
-  team: '/team',
+  box: '/pokemon',
 };
 
 function pathnameOf(location: string) {
@@ -20,14 +21,15 @@ function isLegacyFieldDexPath(path: string) {
 
 export function hubSectionForPath(location: string): HubSection | null {
   const path = pathnameOf(location);
+  if (path === '/jornada' || path === '/jornada/' || path.startsWith('/jornada/')) return 'journey';
   if (path === '/pokedex' || path === '/pokedex/' || path.startsWith('/pokedex/')) return 'pokedex';
-  if (path === '/team' || path === '/team/' || path.startsWith('/team/')) return 'team';
+  if (path === '/team' || path === '/team/' || path.startsWith('/team/')) return 'box';
   if (
     path === '/pokemon' ||
     path === '/pokemon/' ||
     (path.startsWith('/pokemon/') && !isLegacyFieldDexPath(path))
   ) {
-    return 'pokemon';
+    return 'box';
   }
   return null;
 }
@@ -36,19 +38,48 @@ function isDestinationValid(section: HubSection, value: unknown): value is strin
   return typeof value === 'string' && value.startsWith('/') && hubSectionForPath(value) === section;
 }
 
+function readStoredValue(key: string) {
+  try {
+    return window.sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function readLegacyBoxDestination() {
+  const raw = readStoredValue(LEGACY_STORAGE_KEY);
+  if (!raw) return DEFAULT_DESTINATIONS.box;
+  try {
+    const parsed = JSON.parse(raw) as { pokemon?: unknown; team?: unknown };
+    if (isDestinationValid('box', parsed.pokemon)) return parsed.pokemon;
+    if (isDestinationValid('box', parsed.team)) return parsed.team;
+  } catch {
+    // Ignore malformed v1 session data.
+  }
+  return DEFAULT_DESTINATIONS.box;
+}
+
 export function readHubDestinations(): HubDestinations {
   if (typeof window === 'undefined') return { ...DEFAULT_DESTINATIONS };
   try {
-    const raw = window.sessionStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...DEFAULT_DESTINATIONS };
+    const raw = readStoredValue(STORAGE_KEY);
+    if (!raw) {
+      return {
+        ...DEFAULT_DESTINATIONS,
+        box: readLegacyBoxDestination(),
+      };
+    }
     const parsed = JSON.parse(raw) as Partial<HubDestinations>;
     return {
+      journey: isDestinationValid('journey', parsed.journey) ? parsed.journey : DEFAULT_DESTINATIONS.journey,
       pokedex: isDestinationValid('pokedex', parsed.pokedex) ? parsed.pokedex : DEFAULT_DESTINATIONS.pokedex,
-      pokemon: isDestinationValid('pokemon', parsed.pokemon) ? parsed.pokemon : DEFAULT_DESTINATIONS.pokemon,
-      team: isDestinationValid('team', parsed.team) ? parsed.team : DEFAULT_DESTINATIONS.team,
+      box: isDestinationValid('box', parsed.box) ? parsed.box : readLegacyBoxDestination(),
     };
   } catch {
-    return { ...DEFAULT_DESTINATIONS };
+    return {
+      ...DEFAULT_DESTINATIONS,
+      box: readLegacyBoxDestination(),
+    };
   }
 }
 

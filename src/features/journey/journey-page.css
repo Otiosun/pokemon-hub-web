@@ -1,0 +1,184 @@
+.journey-page {
+  min-height: 100svh;
+  padding: clamp(34px, 7vw, 76px) clamp(18px, 5vw, 64px) 110px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 78% 18%, rgba(178, 212, 151, 0.12), transparent 28rem),
+    radial-gradient(circle at 20% 92%, rgba(104, 190, 199, 0.08), transparent 30rem),
+    #0d1112;
+  color: #eff5f2;
+}
+
+.journey-intro {
+  width: min(860px, 100%);
+  margin: 0 auto;
+  padding-top: clamp(24px, 8vh, 86px);
+}
+
+.journey-eyebrow {
+  margin: 0 0 14px;
+  color: #b9d99e;
+  font: 700 0.78rem 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: 0.14em;
+}
+
+.journey-intro h1 {
+  max-width: 760px;
+  margin: 0 0 20px;
+  font: 720 clamp(3rem, 11vw, 6.6rem) / 0.9 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: -0.07em;
+}
+
+.journey-intro > p:last-child {
+  max-width: 650px;
+  margin: 0;
+  color: #a0b0ad;
+  font-size: clamp(0.98rem, 2.2vw, 1.1rem);
+  line-height: 1.62;
+}
+
+.journey-world-stage {
+  position: relative;
+  width: min(1040px, 100%);
+  min-height: clamp(300px, 43vw, 480px);
+  margin: clamp(32px, 6vw, 64px) auto 0;
+  overflow: hidden;
+  border: 1px solid rgba(216, 236, 230, 0.12);
+  border-bottom: 4px solid rgba(185, 217, 158, 0.42);
+  border-radius: clamp(22px, 4vw, 36px);
+  background:
+    linear-gradient(rgba(201, 226, 218, 0.035) 1px, transparent 1px) 0 0 / 42px 42px,
+    linear-gradient(90deg, rgba(201, 226, 218, 0.035) 1px, transparent 1px) 0 0 / 42px 42px,
+    radial-gradient(circle at 58% 48%, rgba(185, 217, 158, 0.08), transparent 42%),
+    #121819;
+  box-shadow: 0 28px 76px rgba(0, 0, 0, 0.25);
+}
+
+.journey-route-visual {
+  position: absolute;
+  inset: 0;
+}
+
+.journey-orbit {
+  position: absolute;
+  border: 1px solid rgba(185, 217, 158, 0.13);
+  border-radius: 50%;
+}
+
+.orbit-one {
+  width: 58%;
+  aspect-ratio: 1;
+  right: -6%;
+  top: -28%;
+}
+
+.orbit-two {
+  width: 42%;
+  aspect-ratio: 1;
+  left: 12%;
+  bottom: -40%;
+}
+
+.journey-route-line {
+  position: absolute;
+  left: 14%;
+  right: 10%;
+  top: 51%;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(119, 203, 213, 0.18), rgba(185, 217, 158, 0.72), rgba(119, 203, 213, 0.16));
+  transform: rotate(-8deg);
+  transform-origin: center;
+  box-shadow: 0 0 18px rgba(185, 217, 158, 0.18);
+}
+
+.journey-node,
+.journey-player-marker {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+}
+
+.journey-node {
+  width: 10px;
+  height: 10px;
+  border: 2px solid #9ab7b1;
+  background: #121819;
+  box-shadow: 0 0 0 5px rgba(154, 183, 177, 0.05);
+}
+
+.node-one { left: 20%; top: 58%; }
+.node-two { left: 45%; top: 49%; }
+.node-three { right: 19%; top: 38%; }
+
+.journey-player-marker {
+  left: 58%;
+  top: 43%;
+  width: 24px;
+  height: 24px;
+  border: 5px solid #edf5e6;
+  background: #8fb77c;
+  box-shadow: 0 0 0 6px rgba(185, 217, 158, 0.09), 0 0 26px rgba(185, 217, 158, 0.28);
+}
+
+.journey-world-copy {
+  position: absolute;
+  z-index: 2;
+  left: clamp(20px, 5vw, 54px);
+  bottom: clamp(20px, 5vw, 46px);
+  width: min(420px, calc(100% - 40px));
+  padding: 18px 20px;
+  border-left: 3px solid rgba(185, 217, 158, 0.72);
+  background: rgba(9, 14, 15, 0.78);
+  backdrop-filter: blur(12px);
+}
+
+.journey-world-copy > span {
+  color: #b9d99e;
+  font: 700 0.68rem 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: 0.12em;
+}
+
+.journey-world-copy strong {
+  display: block;
+  margin-top: 7px;
+  font: 700 clamp(1.25rem, 4vw, 1.7rem) 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: -0.03em;
+}
+
+.journey-world-copy p {
+  margin: 8px 0 0;
+  color: #9eaeab;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .journey-page {
+    padding-inline: 14px;
+  }
+
+  .journey-intro {
+    padding-inline: 4px;
+  }
+
+  .journey-world-stage {
+    min-height: 390px;
+  }
+
+  .journey-route-line {
+    left: 2%;
+    right: -10%;
+  }
+
+  .node-one { left: 11%; top: 57%; }
+  .node-two { left: 42%; top: 49%; }
+  .node-three { right: 8%; top: 38%; }
+  .journey-player-marker { left: 58%; top: 42%; }
+
+  .journey-world-copy {
+    right: 14px;
+    left: 14px;
+    bottom: 14px;
+    width: auto;
+  }
+}

@@ -2,22 +2,23 @@ import { describe, expect, it } from 'vitest';
 import { hubSectionForPath, readHubDestinations } from './hubNavigationSession';
 
 describe('hub navigation session', () => {
-  it('classifies the three product sections without swallowing legacy Field Dex routes', () => {
+  it('classifies Journey, Pokédex and the Box domain without swallowing legacy Field Dex routes', () => {
+    expect(hubSectionForPath('/jornada')).toBe('journey');
     expect(hubSectionForPath('/pokedex')).toBe('pokedex');
     expect(hubSectionForPath('/pokedex/025')).toBe('pokedex');
-    expect(hubSectionForPath('/pokemon')).toBe('pokemon');
-    expect(hubSectionForPath('/pokemon?species=4')).toBe('pokemon');
-    expect(hubSectionForPath('/pokemon/pkm-charmander-a1')).toBe('pokemon');
+    expect(hubSectionForPath('/pokemon')).toBe('box');
+    expect(hubSectionForPath('/pokemon?species=4')).toBe('box');
+    expect(hubSectionForPath('/pokemon/pkm-charmander-a1')).toBe('box');
+    expect(hubSectionForPath('/team')).toBe('box');
+    expect(hubSectionForPath('/team/edit?slot=2')).toBe('box');
     expect(hubSectionForPath('/pokemon/demo-charmander')).toBeNull();
-    expect(hubSectionForPath('/team')).toBe('team');
-    expect(hubSectionForPath('/team/edit?slot=2')).toBe('team');
   });
 
   it('has stable roots when browser session storage is unavailable', () => {
     expect(readHubDestinations()).toEqual({
+      journey: '/jornada',
       pokedex: '/pokedex',
-      pokemon: '/pokemon',
-      team: '/team',
+      box: '/pokemon',
     });
   });
 });
