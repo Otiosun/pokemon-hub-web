@@ -200,10 +200,10 @@ export function OwnedPokemonDetailPage({
               <h1>{pokemon.nickname}</h1>
               <p>{identityLine}</p>
             </div>
-            <div className="owned-detail-record-state" role="group" aria-label="Estado do Pokémon">
+            <fieldset className="owned-detail-record-state" aria-label="Estado do Pokémon">
               {pokemon.favorite ? <span title="Favorito" role="img" aria-label="Favorito">★</span> : null}
               {pokemon.shiny ? <strong>SHINY</strong> : null}
-            </div>
+            </fieldset>
           </header>
 
           <div className="owned-detail-tabs" role="tablist" aria-label="Seções do Pokémon">
