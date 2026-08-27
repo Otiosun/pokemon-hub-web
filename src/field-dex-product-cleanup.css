@@ -2,6 +2,14 @@
   display: none;
 }
 
+.dex-page .dex-tabs {
+  grid-template-columns: 1fr;
+}
+
+.dex-page #owned-tab {
+  display: none;
+}
+
 .dex-review-rail {
   position: fixed;
   z-index: 60;
