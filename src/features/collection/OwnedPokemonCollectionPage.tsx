@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { HubModuleHeader } from '../../components/HubModuleHeader';
 import { rememberHubDestination } from '../../navigation/hubNavigationSession';
 import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import { TypeBadge } from '../../visual-assets/TypeBadge';
@@ -163,155 +164,159 @@ export function OwnedPokemonCollectionPage() {
 
   return (
     <main className="owned-pokemon-page">
-      <header className="owned-pokemon-header">
-        <div>
-          <span className="owned-pokemon-kicker">COLEÇÃO DO TREINADOR</span>
-          <h1>Meus Pokémon</h1>
-          <p>Todos os Pokémon pertencentes ao jogador continuam visíveis aqui, inclusive os seis ativos no Time.</p>
-        </div>
-        <div className="owned-pokemon-summary">
-          <div><strong>{OWNED_POKEMON_PREVIEW.length}</strong><span>POKÉMON</span></div>
-          <div><strong>{teamCount}</strong><span>NO TIME</span></div>
-          <div><strong>{favoriteCount}</strong><span>FAVORITOS</span></div>
-        </div>
-      </header>
+      <HubModuleHeader module="pokemon" metaLabel="COLEÇÃO" metaValue={`${OWNED_POKEMON_PREVIEW.length} REGISTROS`} />
 
-      {speciesContextDex && (
-        <div className="owned-pokemon-context-filter">
+      <div className="owned-pokemon-page-content">
+        <header className="owned-pokemon-header">
           <div>
-            <span>VINDO DA POKÉDEX</span>
-            <strong>{contextualSpecies} · #{String(speciesContextDex).padStart(3, '0')}</strong>
+            <span className="owned-pokemon-kicker">COLEÇÃO DO TREINADOR</span>
+            <h1>Meus Pokémon</h1>
+            <p>Todos os Pokémon pertencentes ao jogador continuam visíveis aqui, inclusive os seis ativos no Time.</p>
           </div>
-          <button type="button" onClick={clearSpeciesContext}>VER TODA A COLEÇÃO</button>
-        </div>
-      )}
-
-      <section className="owned-pokemon-toolbar" aria-label="Ferramentas da coleção">
-        <fieldset className="owned-pokemon-modes" aria-label="Modo da coleção">
-          {([
-            ['all', 'TODOS'],
-            ['boxes', 'BOXES'],
-            ['favorites', 'FAVORITOS'],
-          ] as const).map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              className={mode === id ? 'is-active' : undefined}
-              aria-pressed={mode === id}
-              onClick={() => setMode(id)}
-            >
-              {label}
-            </button>
-          ))}
-        </fieldset>
-        <label className="owned-pokemon-search">
-          <span>BUSCAR</span>
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Nickname ou espécie"
-            inputMode="search"
-          />
-        </label>
-      </section>
-
-      <section className="owned-pokemon-filter-shell" aria-label="Filtros e ordenação da coleção">
-        <header>
-          <span>FILTROS{activeFilterCount > 0 ? ` · ${activeFilterCount}` : ''}</span>
-          {activeFilterCount > 0 && (
-            <button type="button" onClick={() => setFilters({ ...DEFAULT_COLLECTION_FILTERS })}>LIMPAR</button>
-          )}
+          <div className="owned-pokemon-summary">
+            <div><strong>{OWNED_POKEMON_PREVIEW.length}</strong><span>POKÉMON</span></div>
+            <div><strong>{teamCount}</strong><span>NO TIME</span></div>
+            <div><strong>{favoriteCount}</strong><span>FAVORITOS</span></div>
+          </div>
         </header>
-        <div className="owned-pokemon-filter-strip">
-          <label>
-            <span className="owned-pokemon-filter-label">
-              {filters.type && <TypeIcon type={filters.type} fallbackColor={typeAccent(filters.type)} />}
-              TIPO
-            </span>
-            <select value={filters.type ?? ''} onChange={(event) => patchFilters({ type: event.target.value || null })}>
-              <option value="">Todos</option>
-              {POKEDEX_TYPE_FILTERS.map((item) => <option key={item.slug} value={item.label}>{item.label}</option>)}
-            </select>
-          </label>
 
-          <label>
-            <span>NÍVEL</span>
-            <select value={filters.level} onChange={(event) => patchFilters({ level: event.target.value as CollectionLevelFilter })}>
-              <option value="all">Todos</option>
-              <option value="1-10">1—10</option>
-              <option value="11-20">11—20</option>
-              <option value="21-30">21—30</option>
-              <option value="31+">31+</option>
-            </select>
-          </label>
+        {speciesContextDex && (
+          <div className="owned-pokemon-context-filter">
+            <div>
+              <span>VINDO DA POKÉDEX</span>
+              <strong>{contextualSpecies} · #{String(speciesContextDex).padStart(3, '0')}</strong>
+            </div>
+            <button type="button" onClick={clearSpeciesContext}>VER TODA A COLEÇÃO</button>
+          </div>
+        )}
 
-          <label>
-            <span>SEXO</span>
-            <select value={filters.sex} onChange={(event) => patchFilters({ sex: event.target.value as CollectionSexFilter })}>
-              <option value="all">Todos</option>
-              <option value="M">Macho ♂</option>
-              <option value="F">Fêmea ♀</option>
-              <option value="—">Sem registro</option>
-            </select>
+        <section className="owned-pokemon-toolbar" aria-label="Ferramentas da coleção">
+          <fieldset className="owned-pokemon-modes" aria-label="Modo da coleção">
+            {([
+              ['all', 'TODOS'],
+              ['boxes', 'BOXES'],
+              ['favorites', 'FAVORITOS'],
+            ] as const).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                className={mode === id ? 'is-active' : undefined}
+                aria-pressed={mode === id}
+                onClick={() => setMode(id)}
+              >
+                {label}
+              </button>
+            ))}
+          </fieldset>
+          <label className="owned-pokemon-search">
+            <span>BUSCAR</span>
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Nickname ou espécie"
+              inputMode="search"
+            />
           </label>
+        </section>
 
-          <label>
-            <span>LOCAL</span>
-            <select value={filters.presence} onChange={(event) => patchFilters({ presence: event.target.value as CollectionPresenceFilter })}>
-              <option value="all">Todos</option>
-              <option value="team">No Time</option>
-              <option value="storage">Fora do Time</option>
-            </select>
-          </label>
+        <section className="owned-pokemon-filter-shell" aria-label="Filtros e ordenação da coleção">
+          <header>
+            <span>FILTROS{activeFilterCount > 0 ? ` · ${activeFilterCount}` : ''}</span>
+            {activeFilterCount > 0 && (
+              <button type="button" onClick={() => setFilters({ ...DEFAULT_COLLECTION_FILTERS })}>LIMPAR</button>
+            )}
+          </header>
+          <div className="owned-pokemon-filter-strip">
+            <label>
+              <span className="owned-pokemon-filter-label">
+                {filters.type && <TypeIcon type={filters.type} fallbackColor={typeAccent(filters.type)} />}
+                TIPO
+              </span>
+              <select value={filters.type ?? ''} onChange={(event) => patchFilters({ type: event.target.value || null })}>
+                <option value="">Todos</option>
+                {POKEDEX_TYPE_FILTERS.map((item) => <option key={item.slug} value={item.label}>{item.label}</option>)}
+              </select>
+            </label>
 
-          <label>
-            <span>SHINY</span>
-            <select value={filters.shiny} onChange={(event) => patchFilters({ shiny: event.target.value as CollectionShinyFilter })}>
-              <option value="all">Todos</option>
-              <option value="shiny">Somente shiny</option>
-              <option value="regular">Não shiny</option>
-            </select>
-          </label>
+            <label>
+              <span>NÍVEL</span>
+              <select value={filters.level} onChange={(event) => patchFilters({ level: event.target.value as CollectionLevelFilter })}>
+                <option value="all">Todos</option>
+                <option value="1-10">1—10</option>
+                <option value="11-20">11—20</option>
+                <option value="21-30">21—30</option>
+                <option value="31+">31+</option>
+              </select>
+            </label>
 
-          <label>
-            <span>ORDENAR</span>
-            <select value={filters.sort} onChange={(event) => patchFilters({ sort: event.target.value as CollectionSort })}>
-              <option value="dex">Nº da Pokédex</option>
-              <option value="name">Nome A—Z</option>
-              <option value="level-desc">Nível ↓</option>
-              <option value="level-asc">Nível ↑</option>
-            </select>
-          </label>
+            <label>
+              <span>SEXO</span>
+              <select value={filters.sex} onChange={(event) => patchFilters({ sex: event.target.value as CollectionSexFilter })}>
+                <option value="all">Todos</option>
+                <option value="M">Macho ♂</option>
+                <option value="F">Fêmea ♀</option>
+                <option value="—">Sem registro</option>
+              </select>
+            </label>
+
+            <label>
+              <span>LOCAL</span>
+              <select value={filters.presence} onChange={(event) => patchFilters({ presence: event.target.value as CollectionPresenceFilter })}>
+                <option value="all">Todos</option>
+                <option value="team">No Time</option>
+                <option value="storage">Fora do Time</option>
+              </select>
+            </label>
+
+            <label>
+              <span>SHINY</span>
+              <select value={filters.shiny} onChange={(event) => patchFilters({ shiny: event.target.value as CollectionShinyFilter })}>
+                <option value="all">Todos</option>
+                <option value="shiny">Somente shiny</option>
+                <option value="regular">Não shiny</option>
+              </select>
+            </label>
+
+            <label>
+              <span>ORDENAR</span>
+              <select value={filters.sort} onChange={(event) => patchFilters({ sort: event.target.value as CollectionSort })}>
+                <option value="dex">Nº da Pokédex</option>
+                <option value="name">Nome A—Z</option>
+                <option value="level-desc">Nível ↓</option>
+                <option value="level-asc">Nível ↑</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <div className="owned-pokemon-runtime-note">
+          <span aria-hidden="true" /> {visible.length} RESULTADO{visible.length === 1 ? '' : 'S'} · DADOS DE ESTRUTURA · INTEGRAÇÃO COM O RPG PENDENTE
         </div>
-      </section>
 
-      <div className="owned-pokemon-runtime-note">
-        <span aria-hidden="true" /> {visible.length} RESULTADO{visible.length === 1 ? '' : 'S'} · DADOS DE ESTRUTURA · INTEGRAÇÃO COM O RPG PENDENTE
+        {mode === 'boxes' ? (
+          <div className="owned-pokemon-boxes">
+            {boxes.map(([box, pokemon]) => (
+              <section className="owned-pokemon-box" key={box}>
+                <header><strong>{box}</strong><span>{pokemon.length} REGISTROS</span></header>
+                <div className="owned-pokemon-grid">
+                  {pokemon.map((item) => <PokemonCard key={item.instanceId} pokemon={item} />)}
+                </div>
+              </section>
+            ))}
+          </div>
+        ) : (
+          <div className="owned-pokemon-grid">
+            {visible.map((pokemon) => <PokemonCard key={pokemon.instanceId} pokemon={pokemon} />)}
+          </div>
+        )}
+
+        {visible.length === 0 && (
+          <div className="owned-pokemon-empty">
+            <strong>Nenhum Pokémon encontrado.</strong>
+            <span>Ajuste a busca ou os filtros da coleção.</span>
+          </div>
+        )}
       </div>
-
-      {mode === 'boxes' ? (
-        <div className="owned-pokemon-boxes">
-          {boxes.map(([box, pokemon]) => (
-            <section className="owned-pokemon-box" key={box}>
-              <header><strong>{box}</strong><span>{pokemon.length} REGISTROS</span></header>
-              <div className="owned-pokemon-grid">
-                {pokemon.map((item) => <PokemonCard key={item.instanceId} pokemon={item} />)}
-              </div>
-            </section>
-          ))}
-        </div>
-      ) : (
-        <div className="owned-pokemon-grid">
-          {visible.map((pokemon) => <PokemonCard key={pokemon.instanceId} pokemon={pokemon} />)}
-        </div>
-      )}
-
-      {visible.length === 0 && (
-        <div className="owned-pokemon-empty">
-          <strong>Nenhum Pokémon encontrado.</strong>
-          <span>Ajuste a busca ou os filtros da coleção.</span>
-        </div>
-      )}
     </main>
   );
 }
