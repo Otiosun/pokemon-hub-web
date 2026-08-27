@@ -200,38 +200,52 @@ export function OwnedPokemonDetailPage({
               <h1>{pokemon.nickname}</h1>
               <p>{identityLine}</p>
             </div>
-            <div className="owned-detail-record-state" aria-label="Estado do Pokémon">
-              {pokemon.favorite ? <span title="Favorito" aria-label="Favorito">★</span> : null}
+            <div className="owned-detail-record-state" role="group" aria-label="Estado do Pokémon">
+              {pokemon.favorite ? <span title="Favorito" role="img" aria-label="Favorito">★</span> : null}
               {pokemon.shiny ? <strong>SHINY</strong> : null}
             </div>
           </header>
 
-          <nav className="owned-detail-tabs" aria-label="Seções do Pokémon">
+          <div className="owned-detail-tabs" role="tablist" aria-label="Seções do Pokémon">
             <button
+              id="owned-tab-summary"
               type="button"
+              role="tab"
               aria-selected={activeTab === 'summary'}
+              aria-controls="owned-panel-summary"
               onClick={() => setActiveTab('summary')}
             >
               RESUMO
             </button>
             <button
+              id="owned-tab-combat"
               type="button"
+              role="tab"
               aria-selected={activeTab === 'combat'}
+              aria-controls="owned-panel-combat"
               onClick={() => setActiveTab('combat')}
             >
               COMBATE
             </button>
             <button
+              id="owned-tab-history"
               type="button"
+              role="tab"
               aria-selected={activeTab === 'history'}
+              aria-controls="owned-panel-history"
               onClick={() => setActiveTab('history')}
             >
               HISTÓRICO
             </button>
-          </nav>
+          </div>
 
           {activeTab === 'summary' ? (
-            <section className="owned-detail-tab-panel" aria-label="Resumo do Pokémon">
+            <section
+              id="owned-panel-summary"
+              className="owned-detail-tab-panel"
+              role="tabpanel"
+              aria-labelledby="owned-tab-summary"
+            >
               <dl className="owned-detail-facts">
                 <div className="is-wide">
                   <dt>TIPO</dt>
@@ -259,7 +273,12 @@ export function OwnedPokemonDetailPage({
           ) : null}
 
           {activeTab === 'combat' ? (
-            <section className="owned-detail-tab-panel" aria-label="Dados de combate do Pokémon">
+            <section
+              id="owned-panel-combat"
+              className="owned-detail-tab-panel"
+              role="tabpanel"
+              aria-labelledby="owned-tab-combat"
+            >
               <dl className="owned-detail-combat-core">
                 <div><dt>NATUREZA</dt><dd>{pokemon.nature}</dd></div>
                 <div><dt>HABILIDADE</dt><dd>{pokemon.ability}</dd></div>
@@ -280,7 +299,12 @@ export function OwnedPokemonDetailPage({
           ) : null}
 
           {activeTab === 'history' ? (
-            <section className="owned-detail-tab-panel" aria-label="Histórico do Pokémon">
+            <section
+              id="owned-panel-history"
+              className="owned-detail-tab-panel"
+              role="tabpanel"
+              aria-labelledby="owned-tab-history"
+            >
               <div className="owned-detail-history-row">
                 <span>ORIGEM</span>
                 <strong>{pokemon.origin}</strong>
