@@ -246,7 +246,7 @@ export function PokedexIndexPage() {
             <small>ÍNDICE NACIONAL</small>
           </span>
         </a>
-        <div className="pokedex-index-counter" aria-label="Pokédex Nacional, registros 1 a 386">
+        <div className="pokedex-index-counter">
           <small>NACIONAL</small>
           <strong>001—386</strong>
         </div>
@@ -291,7 +291,7 @@ export function PokedexIndexPage() {
         </div>
 
         {activeFilterCount ? (
-          <div className="pokedex-index-active-filters" aria-label="Filtros ativos">
+          <div className="pokedex-index-active-filters">
             {region !== 'Todos' ? (
               <button type="button" onClick={() => setRegion('Todos')} aria-label={`Remover filtro de região ${region}`}>
                 {region}<span aria-hidden="true">×</span>
