@@ -42,35 +42,47 @@
 }
 
 .hub-navigation-items a {
+  --nav-accent: #d9433f;
   position: relative;
   min-height: 64px;
   display: grid;
   place-items: center;
   gap: 5px;
   padding: 8px 4px;
+  border: 1px solid transparent;
   border-radius: 12px;
   color: #738689;
   text-decoration: none;
+  transition: color 140ms ease, background 140ms ease, border-color 140ms ease;
 }
+
+.hub-navigation-items a[data-hub-primary='pokemon'] { --nav-accent: #65d8e8; }
+.hub-navigation-items a[data-hub-primary='team'] { --nav-accent: #f2c94c; }
 
 .hub-navigation-items a::before {
   content: '';
   position: absolute;
   left: -10px;
-  top: 15px;
-  bottom: 15px;
-  width: 3px;
+  top: 14px;
+  bottom: 14px;
+  width: 4px;
   border-radius: 0 3px 3px 0;
   background: transparent;
 }
 
 .hub-navigation-items a.is-active {
-  color: #eef7f6;
-  background: rgba(255, 255, 255, 0.045);
+  color: #f3fbfb;
+  border-color: color-mix(in srgb, var(--nav-accent) 18%, transparent);
+  background: color-mix(in srgb, var(--nav-accent) 8%, transparent);
 }
 
 .hub-navigation-items a.is-active::before {
-  background: #d9433f;
+  background: var(--nav-accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--nav-accent) 36%, transparent);
+}
+
+.hub-navigation-items a.is-active svg {
+  color: var(--nav-accent);
 }
 
 .hub-navigation-items svg {
@@ -112,14 +124,13 @@
     min-height: calc(64px + env(safe-area-inset-bottom));
     display: block;
     padding: 0 max(8px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(8px, env(safe-area-inset-left));
-    border-top: 1px solid rgba(194, 224, 225, 0.12);
+    border-top: 2px solid rgba(194, 224, 225, 0.11);
     border-right: 0;
-    background: #111719;
+    background: rgba(17, 23, 25, 0.98);
+    backdrop-filter: blur(14px);
   }
 
-  .hub-navigation-mark {
-    display: none;
-  }
+  .hub-navigation-mark { display: none; }
 
   .hub-navigation-items {
     height: 64px;
@@ -131,16 +142,21 @@
   .hub-navigation-items a {
     min-height: 58px;
     align-content: center;
+    border: 0;
     border-radius: 0;
   }
 
+  .hub-navigation-items a.is-active {
+    background: color-mix(in srgb, var(--nav-accent) 7%, transparent);
+  }
+
   .hub-navigation-items a::before {
-    left: 26%;
-    right: 26%;
+    left: 22%;
+    right: 22%;
     top: 0;
     bottom: auto;
     width: auto;
-    height: 3px;
+    height: 4px;
     border-radius: 0 0 3px 3px;
   }
 
@@ -156,7 +172,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hub-navigation-items a {
-    transition: none;
-  }
+  .hub-navigation-items a { transition: none; }
 }
