@@ -76,12 +76,14 @@ export function HubNavigation({ active, destinations }: HubNavigationProps) {
   useEffect(() => {
     const prioritySection = active ?? 'journey';
     preloadHubRoute(prioritySection);
-    const timeout = window.setTimeout(() => {
-      for (const item of NAV_ITEMS) {
-        if (item.id !== prioritySection) preloadHubRoute(item.id);
-      }
-    }, 1400);
-    return () => window.clearTimeout(timeout);
+    const preloadTimers = NAV_ITEMS
+      .filter((item) => item.id !== prioritySection)
+      .map((item, index) =>
+        window.setTimeout(() => preloadHubRoute(item.id), 1800 + index * 900),
+      );
+    return () => {
+      for (const timer of preloadTimers) window.clearTimeout(timer);
+    };
   }, [active]);
 
   useEffect(() => {
@@ -171,7 +173,12 @@ export function HubNavigation({ active, destinations }: HubNavigationProps) {
       </button>
 
       {open ? (
-        <div className="hub-menu-backdrop">
+        <div
+          className="hub-menu-backdrop"
+          onPointerDown={(event) => {
+            if (event.target === event.currentTarget) closeMenu();
+          }}
+        >
           <div
             id="hub-global-menu"
             ref={panelRef}

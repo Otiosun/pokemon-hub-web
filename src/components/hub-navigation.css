@@ -74,6 +74,8 @@
     max(12px, env(safe-area-inset-right))
     max(16px, env(safe-area-inset-bottom))
     max(12px, env(safe-area-inset-left));
+  overflow: hidden;
+  overscroll-behavior: none;
   background: rgba(5, 8, 9, 0.84);
   backdrop-filter: blur(18px);
   animation: hub-menu-backdrop-in 140ms ease-out both;
@@ -83,6 +85,7 @@
   width: min(760px, 100%);
   max-height: min(760px, calc(100svh - 32px));
   overflow: auto;
+  overscroll-behavior: contain;
   border: 1px solid rgba(219, 239, 240, 0.15);
   border-bottom: 4px solid rgba(151, 211, 216, 0.42);
   border-radius: 28px;
@@ -334,13 +337,17 @@
     top: 12px;
   }
 
+  .hub-menu-tile-copy {
+    padding-right: 48px;
+  }
+
   .hub-menu-tile-copy small {
     padding-right: 6px;
     font-size: 0.78rem;
   }
 }
 
-@media (max-width: 390px) {
+@media (max-width: 520px) {
   .hub-menu-grid {
     grid-template-columns: 1fr;
   }
