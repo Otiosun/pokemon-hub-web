@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import { getPokemonAssetUrl } from '../../visual-assets/assetBaseUrl';
 import { TypeBadge } from '../../visual-assets/TypeBadge';
+import { GenerationsPokemonViewer } from '../asset-lab/GenerationsPokemonViewer';
 import {
   FIELD_DEX_REVIEW_SPECIES,
   typeAccent,
@@ -23,6 +24,7 @@ import './pokedex-index.css';
 import './pokedex-species.css';
 
 type RecordStatus = 'locked' | 'loading' | 'ready' | 'failed';
+type VisualMode = 'artwork' | 'model';
 
 type RecordState = {
   dex: number;
@@ -222,13 +224,20 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
   const playerState = useMemo(() => getSpeciesPlayerStatePreview(validDex), [validDex]);
   const [record, setRecord] = useState<RecordState>(() => initialRecord(validDex, review, playerState));
   const [artworkReadyDex, setArtworkReadyDex] = useState<number | null>(null);
+  const [visualMode, setVisualMode] = useState<VisualMode>('artwork');
   const cryAudioRef = useRef<HTMLAudioElement | null>(null);
   const activeRecord = record.dex === validDex ? record : initialRecord(validDex, review, playerState);
   const artworkReady = artworkReadyDex === validDex;
   const discovered = playerState.discovery !== 'unknown';
+  const canShow3d = Boolean(review && discovered);
+  const showing3d = canShow3d && visualMode === 'model';
   const factsUnlocked = playerState.researchLevel >= 2;
   const ecologyUnlocked = playerState.researchLevel >= 3;
   const evolutionUnlocked = playerState.researchLevel >= 4;
+
+  useEffect(() => {
+    setVisualMode('artwork');
+  }, [validDex]);
 
   useEffect(() => {
     if (review && discovered) void warmReview3d(review);
@@ -306,7 +315,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
       </header>
 
       <section className="pokedex-species-shell">
-        <div className={`pokedex-species-stage${artworkReady ? ' is-artwork-ready' : ' is-artwork-loading'}`}>
+        <div className={`pokedex-species-stage${artworkReady ? ' is-artwork-ready' : ' is-artwork-loading'}${showing3d ? ' is-model-mode' : ''}`}>
           <div className="pokedex-species-stage-top">
             <span>NATIONAL {String(validDex).padStart(3, '0')} · {region.toUpperCase()}</span>
             <span className={`pokedex-species-sync is-${activeRecord.status}`}>
@@ -321,25 +330,59 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
             </span>
           </div>
 
-          <div className="pokedex-species-artwork-slot">
-            {discovered ? (
-              <PokemonAssetImage
-                key={validDex}
-                dex={validDex}
-                role="official-artwork"
-                className="pokedex-species-artwork"
-                alt={`Ilustração de ${displayName}`}
-                decoding="async"
-                fetchPriority="high"
-                fallbackLabel="?"
-                onResolved={() => setArtworkReadyDex(validDex)}
+          {canShow3d && (
+            <div className="pokedex-species-view-modes" role="group" aria-label="Modo de visualização da espécie">
+              <button
+                type="button"
+                className={visualMode === 'artwork' ? 'is-active' : undefined}
+                aria-pressed={visualMode === 'artwork'}
+                onClick={() => setVisualMode('artwork')}
+              >
+                2D
+              </button>
+              <button
+                type="button"
+                className={visualMode === 'model' ? 'is-active' : undefined}
+                aria-pressed={visualMode === 'model'}
+                onClick={() => setVisualMode('model')}
+              >
+                3D
+              </button>
+            </div>
+          )}
+
+          {!showing3d && (
+            <div className="pokedex-species-artwork-slot">
+              {discovered ? (
+                <PokemonAssetImage
+                  key={validDex}
+                  dex={validDex}
+                  role="official-artwork"
+                  className="pokedex-species-artwork"
+                  alt={`Ilustração de ${displayName}`}
+                  decoding="async"
+                  fetchPriority="high"
+                  fallbackLabel="?"
+                  onResolved={() => setArtworkReadyDex(validDex)}
+                />
+              ) : (
+                <div className="pokedex-species-unknown-mark" aria-hidden="true">
+                  <span>?</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {showing3d && review && (
+            <div className="pokedex-species-model-slot">
+              <GenerationsPokemonViewer
+                species={review.slug}
+                name={displayName}
+                onFailedSpeciesChange={() => setVisualMode('artwork')}
               />
-            ) : (
-              <div className="pokedex-species-unknown-mark" aria-hidden="true">
-                <span>?</span>
-              </div>
-            )}
-          </div>
+              <span className="pokedex-species-model-hint">ARRASTE PARA GIRAR · PINÇA PARA ZOOM</span>
+            </div>
+          )}
 
           <nav className="pokedex-species-side-nav" aria-label="Espécies anterior e próxima">
             {previousDex ? (
@@ -365,7 +408,9 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
           </nav>
 
           <div className="pokedex-species-identity">
-            <span className="pokedex-species-mode">{discovered ? 'ARQUIVO 2D · ESPÉCIE' : 'ARQUIVO BLOQUEADO'}</span>
+            <span className="pokedex-species-mode">
+              {discovered ? (showing3d ? 'VISUAL 3D · ESPÉCIE' : 'REGISTRO 2D · ESPÉCIE') : 'ARQUIVO BLOQUEADO'}
+            </span>
             <h1>{displayName}</h1>
             <div className="pokedex-species-types">
               {discovered && activeRecord.types.length > 0
@@ -407,11 +452,6 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
                 <button type="button" className="pokedex-species-cry" onClick={playCry}>
                   OUVIR CRY
                 </button>
-              )}
-              {review && discovered && (
-                <a className="pokedex-species-3d" href={`/pokemon/${review.routeSlug}`}>
-                  INSPECIONAR EM 3D
-                </a>
               )}
             </div>
           </div>
