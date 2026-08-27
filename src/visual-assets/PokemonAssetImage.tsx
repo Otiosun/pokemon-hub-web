@@ -111,10 +111,8 @@ export function calculatePokemonAlphaTransform({
   const visibleWidth = boundedWidth * bounds.sourceWidth * sourceFitScale;
   const visibleHeight = boundedHeight * bounds.sourceHeight * sourceFitScale;
 
-  const desiredScale = Math.min(
-    boxWidth / visibleWidth,
-    boxHeight / visibleHeight,
-  ) * ALPHA_FILL_RATIO;
+  const desiredScale =
+    Math.min(boxWidth / visibleWidth, boxHeight / visibleHeight) * ALPHA_FILL_RATIO;
   const scale = Math.max(baseScale, desiredScale);
 
   const centerDeltaX = sourceOffsetX + boundsCenterX * sourceFitScale - boxWidth / 2;
@@ -220,7 +218,7 @@ export function PokemonAssetImage({
 
   useEffect(() => {
     setSourceIndex(0);
-  }, [dex, role]);
+  }, [sources]);
 
   const source = sources[sourceIndex];
 
@@ -254,13 +252,16 @@ export function PokemonAssetImage({
   }, [alphaBounds]);
 
   if (!source) {
+    const placeholderClassName = `pokemon-asset-placeholder ${className}`.trim();
+    if (alt) {
+      return (
+        <span className={placeholderClassName} role="img" aria-label={alt}>
+          {fallbackLabel}
+        </span>
+      );
+    }
     return (
-      <span
-        className={`pokemon-asset-placeholder ${className}`.trim()}
-        role={alt ? 'img' : undefined}
-        aria-label={alt || undefined}
-        aria-hidden={alt ? undefined : true}
-      >
+      <span className={placeholderClassName} aria-hidden="true">
         {fallbackLabel}
       </span>
     );
