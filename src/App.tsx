@@ -60,39 +60,27 @@ function HubFrame({
   );
 }
 
-function HomePage() {
-  return (
-    <main className="shell">
-      <section className="hero">
-        <p className="eyebrow">POKÉMON HUB · FIELD DEX</p>
-        <h1>Explore o Índice Nacional.</h1>
-        <p className="hero-copy">
-          Consulte o catálogo de espécies e abra os registros que já estão disponíveis para inspeção
-          no Field Dex.
-        </p>
-        <div className="hero-actions">
-          <a className="primary-link" href="/pokedex">
-            Abrir Pokédex
-          </a>
-          <a className="secondary-link" href="/pokemon/demo-charmander">
-            Abrir Field Dex
-          </a>
-        </div>
-      </section>
-    </main>
-  );
-}
-
 function RouteFallback({ label }: { label: string }) {
   return (
-    <main className="shell" aria-busy="true">
-      <p className="eyebrow">{label}</p>
-    </main>
+    <section className="hub-route-fallback" aria-busy="true" aria-label={label}>
+      <div className="hub-route-fallback-head">
+        <span className="hub-route-fallback-lens" aria-hidden="true" />
+        <span>
+          <strong>FIELD DEX</strong>
+          <small>{label}</small>
+        </span>
+      </div>
+      <div className="hub-route-fallback-body" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+    </section>
   );
 }
 
 function getPath() {
-  return window.location.pathname;
+  return window.location.pathname === '/' ? '/pokedex' : window.location.pathname;
 }
 
 function getHubLocation() {
@@ -178,6 +166,10 @@ export function App() {
   const [hubDestinations, setHubDestinations] = useState(readHubDestinations);
 
   useEffect(() => {
+    if (window.location.pathname === '/') {
+      window.history.replaceState({ hubSection: 'pokedex' } satisfies HubHistoryState, '', '/pokedex');
+    }
+
     const initialSection = hubSectionForPath(window.location.pathname);
     const existing = (window.history.state ?? {}) as HubHistoryState;
     if (initialSection && !existing.hubSection) {
@@ -298,7 +290,7 @@ export function App() {
   if (path === '/pokemon' || path === '/pokemon/') {
     return (
       <HubFrame active="pokemon" destinations={hubDestinations}>
-        <Suspense fallback={<RouteFallback label="ABRINDO COLEÇÃO…" />}>
+        <Suspense fallback={<RouteFallback label="ABRINDO COLEÇÃO" />}>
           <OwnedPokemonCollectionPage />
         </Suspense>
       </HubFrame>
@@ -307,7 +299,7 @@ export function App() {
   if (path === '/team' || path === '/team/') {
     return (
       <HubFrame active="team" destinations={hubDestinations}>
-        <Suspense fallback={<RouteFallback label="ABRINDO TIME…" />}>
+        <Suspense fallback={<RouteFallback label="ABRINDO TIME" />}>
           <TeamPage />
         </Suspense>
       </HubFrame>
@@ -320,7 +312,7 @@ export function App() {
     const historyState = (window.history.state ?? {}) as HubHistoryState;
     return (
       <HubFrame active="pokemon" destinations={hubDestinations}>
-        <Suspense fallback={<RouteFallback label="ABRINDO POKÉMON…" />}>
+        <Suspense fallback={<RouteFallback label="ABRINDO POKÉMON" />}>
           <OwnedPokemonDetailPage
             instanceId={getPokemonRouteSlug(path)}
             returnHref={historyState.hubParent ?? '/pokemon'}
@@ -332,7 +324,7 @@ export function App() {
   if (path.startsWith('/pokedex/')) {
     return (
       <HubFrame active="pokedex" destinations={hubDestinations}>
-        <Suspense fallback={<RouteFallback label="ABRINDO REGISTRO NACIONAL…" />}>
+        <Suspense fallback={<RouteFallback label="ABRINDO REGISTRO" />}>
           <PokedexSpeciesPage dex={getPokedexDex(path)} />
         </Suspense>
       </HubFrame>
@@ -341,7 +333,7 @@ export function App() {
   if (path === '/pokedex' || path === '/pokedex/') {
     return (
       <HubFrame active="pokedex" destinations={hubDestinations}>
-        <Suspense fallback={<RouteFallback label="CARREGANDO ÍNDICE NACIONAL…" />}>
+        <Suspense fallback={<RouteFallback label="PREPARANDO ÍNDICE" />}>
           <PokedexIndexPage />
         </Suspense>
       </HubFrame>
@@ -349,21 +341,23 @@ export function App() {
   }
   if (path.startsWith('/asset-lab/generations')) {
     return (
-      <Suspense fallback={<RouteFallback label="CARREGANDO LABORATÓRIO…" />}>
+      <Suspense fallback={<RouteFallback label="CARREGANDO LABORATÓRIO" />}>
         <GenerationsLabPage />
       </Suspense>
     );
   }
   if (path.startsWith('/asset-lab')) {
     return (
-      <Suspense fallback={<RouteFallback label="CARREGANDO LABORATÓRIO…" />}>
+      <Suspense fallback={<RouteFallback label="CARREGANDO LABORATÓRIO" />}>
         <AssetLabPage />
       </Suspense>
     );
   }
   return (
-    <HubFrame active={null} destinations={hubDestinations}>
-      <HomePage />
+    <HubFrame active="pokedex" destinations={hubDestinations}>
+      <Suspense fallback={<RouteFallback label="PREPARANDO ÍNDICE" />}>
+        <PokedexIndexPage />
+      </Suspense>
     </HubFrame>
   );
 }
