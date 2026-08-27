@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import { TypeIcon } from '../../visual-assets/TypeIcon';
-import { FIELD_DEX_REVIEW_SPECIES, typeAccent } from '../pokemon-detail/fieldDexSpecies';
+import { typeAccent } from '../pokemon-detail/fieldDexSpecies';
 import {
   getCachedNationalDexCatalog,
   loadNationalDexCatalog,
@@ -22,7 +22,6 @@ import {
 } from './pokedexTypeFilter';
 import './pokedex-index.css';
 
-const REVIEW_BY_DEX = new Map(FIELD_DEX_REVIEW_SPECIES.map((species) => [species.dex, species]));
 const SKELETON_KEYS = [
   'dex-skeleton-01', 'dex-skeleton-02', 'dex-skeleton-03', 'dex-skeleton-04',
   'dex-skeleton-05', 'dex-skeleton-06', 'dex-skeleton-07', 'dex-skeleton-08',
@@ -71,6 +70,12 @@ function matchesDiscoveryFilter(filter: PokedexDiscoveryFilter, discovery: 'unkn
   return discovery === 'unknown';
 }
 
+function discoveryLabel(discovery: 'unknown' | 'seen' | 'caught') {
+  if (discovery === 'caught') return 'CAPTURADO';
+  if (discovery === 'seen') return 'AVISTADO';
+  return 'DESCONHECIDO';
+}
+
 export function PokedexIndexPage() {
   const initialSession = useMemo(readPokedexIndexSession, []);
   const cachedCatalog = getCachedNationalDexCatalog();
@@ -91,7 +96,6 @@ export function PokedexIndexPage() {
   const restoredScroll = useRef(false);
 
   useEffect(() => {
-    if (getCachedNationalDexCatalog()) return;
     let active = true;
     void loadNationalDexCatalog()
       .then((catalog) => {
@@ -124,7 +128,6 @@ export function PokedexIndexPage() {
     }
 
     let active = true;
-    setTypeMembers(null);
     setTypeStatus('loading');
     void loadTypeMembers(typeSlug)
       .then((members) => {
@@ -169,7 +172,7 @@ export function PokedexIndexPage() {
       const paddedDex = String(item.dex).padStart(3, '0');
       if (region !== 'Todos' && regionForDex(item.dex) !== region) return false;
       if (!matchesDiscoveryFilter(discovery, playerState.discovery)) return false;
-      if (typeSlug) {
+      if (typeSlug && typeStatus !== 'loading') {
         if (playerState.discovery === 'unknown') return false;
         if (!typeMembers || !typeMembers.has(item.dex)) return false;
       }
@@ -178,7 +181,7 @@ export function PokedexIndexPage() {
       if (playerState.discovery === 'unknown') return false;
       return normalize(item.name).includes(needle);
     });
-  }, [discovery, query, region, species, typeMembers, typeSlug]);
+  }, [discovery, query, region, species, typeMembers, typeSlug, typeStatus]);
 
   const dexProgress = useMemo(() => {
     let seen = 0;
@@ -210,7 +213,7 @@ export function PokedexIndexPage() {
   return (
     <main className="pokedex-index-page">
       <header className="pokedex-index-header">
-        <a className="pokedex-index-brand" href="/" aria-label="Voltar ao Pokémon Hub">
+        <a className="pokedex-index-brand" href="/pokedex" aria-label="Índice Nacional da Pokédex">
           <Lens />
           <span>
             <strong>FIELD DEX</strong>
@@ -228,10 +231,10 @@ export function PokedexIndexPage() {
           <div>
             <span className="pokedex-index-kicker">ARQUIVO DE ESPÉCIES</span>
             <h1>Índice Nacional</h1>
-            <p>Consulta rápida das espécies registradas entre Kanto, Johto e Hoenn.</p>
+            <p>Espécies conhecidas, avistamentos e registros de captura entre Kanto, Johto e Hoenn.</p>
           </div>
           <div className="pokedex-index-progress-readout" aria-live="polite">
-            <div><span>{catalogReady && !typeLoading ? visibleSpecies.length : '—'}</span><small>RESULTADOS</small></div>
+            <div><span>{catalogReady ? visibleSpecies.length : '—'}</span><small>RESULTADOS</small></div>
             <div><span>{catalogReady ? dexProgress.seen : '—'}</span><small>AVISTADOS</small></div>
             <div><span>{catalogReady ? dexProgress.caught : '—'}</span><small>CAPTURADOS</small></div>
           </div>
@@ -318,44 +321,50 @@ export function PokedexIndexPage() {
             aria-hidden="true"
           />
           {catalogFailed
-            ? 'CATÁLOGO INDISPONÍVEL · TENTE NOVAMENTE MAIS TARDE'
+            ? 'CATÁLOGO LOCAL ATIVO · ENRIQUECIMENTO EXTERNO INDISPONÍVEL'
             : typeStatus === 'failed'
               ? `FILTRO ${activeType?.label.toUpperCase() ?? ''} INDISPONÍVEL`
               : typeLoading
                 ? `LENDO REGISTROS DO TIPO ${activeType?.label.toUpperCase() ?? ''}`
                 : catalogReady
-                  ? '386 POSIÇÕES NACIONAIS DISPONÍVEIS'
-                  : 'CARREGANDO CATÁLOGO NACIONAL'}
+                  ? 'ÍNDICE LOCAL ATIVO · 386 POSIÇÕES DISPONÍVEIS'
+                  : 'PREPARANDO ÍNDICE NACIONAL'}
         </div>
 
-        {!catalogReady || typeLoading ? (
+        {!catalogReady ? (
           <CatalogSkeleton />
+        ) : visibleSpecies.length === 0 ? (
+          <div className="pokedex-index-empty">
+            <strong>NENHUM REGISTRO NESTA LEITURA</strong>
+            <span>Ajuste busca, região, progresso ou tipo.</span>
+          </div>
         ) : (
-          <div className="pokedex-index-grid">
+          <div className={`pokedex-index-grid${typeLoading ? ' is-filtering' : ''}`}>
             {visibleSpecies.map((item) => {
               const playerState = getSpeciesPlayerStatePreview(item.dex);
               const discovered = playerState.discovery !== 'unknown';
-              const review = REVIEW_BY_DEX.get(item.dex);
               const paddedDex = String(item.dex).padStart(3, '0');
-              const displayName = discovered ? item.name : '???';
+              const displayName = discovered ? item.name || `#${paddedDex}` : '???';
+              const shinyClass = playerState.shinySeen ? ' is-shiny-seen' : '';
               return (
                 <a
-                  className={`pokedex-index-card is-${playerState.discovery}${review && discovered ? ' is-available' : ''}`}
+                  className={`pokedex-index-card is-${playerState.discovery}${shinyClass}`}
                   key={item.dex}
                   href={`/pokedex/${paddedDex}`}
-                  aria-label={discovered ? `Abrir registro de ${item.name}, número ${item.dex}` : `Abrir registro desconhecido número ${item.dex}`}
+                  aria-label={discovered ? `Abrir registro de ${displayName}, número ${item.dex}` : `Abrir registro desconhecido número ${item.dex}`}
                 >
                   <div className="pokedex-index-card-top">
                     <span>#{paddedDex}</span>
-                    <strong className="pokedex-index-discovery-state">
-                      {playerState.discovery === 'caught' ? 'CAPTURADO' : playerState.discovery === 'seen' ? 'AVISTADO' : 'DESCONHECIDO'}
-                    </strong>
+                    <span className="pokedex-index-state-group">
+                      {playerState.shinySeen ? <i className="pokedex-index-shiny-mark" aria-label="Shiny registrado">✦</i> : null}
+                      <strong className="pokedex-index-discovery-state">{discoveryLabel(playerState.discovery)}</strong>
+                    </span>
                   </div>
                   <div className="pokedex-index-sprite-wrap">
                     {discovered ? (
                       <PokemonAssetImage
                         dex={item.dex}
-                        role="icon"
+                        role="official-artwork"
                         alt=""
                         aria-hidden="true"
                         loading="lazy"
@@ -368,7 +377,10 @@ export function PokedexIndexPage() {
                   </div>
                   <div className="pokedex-index-card-copy">
                     <strong>{displayName}</strong>
-                    <small>{regionForDex(item.dex).toUpperCase()}{review && discovered ? ' · 3D' : ''}</small>
+                    <small>
+                      {regionForDex(item.dex).toUpperCase()}
+                      {discovered ? ` · PESQ ${playerState.researchLevel}/5` : ' · SEM DADOS'}
+                    </small>
                   </div>
                 </a>
               );
