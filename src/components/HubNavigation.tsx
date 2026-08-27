@@ -13,7 +13,6 @@ type NavItem = {
   id: HubSection;
   label: string;
   description: string;
-  index: string;
   icon: 'journey' | 'dex' | 'box';
 };
 
@@ -22,9 +21,9 @@ type MenuHistoryState = Record<string, unknown> & {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'journey', label: 'JORNADA', description: 'Retorne ao RPG e ao contexto atual', index: '01', icon: 'journey' },
-  { id: 'pokedex', label: 'POKÉDEX', description: 'Espécies, descoberta e pesquisa', index: '02', icon: 'dex' },
-  { id: 'box', label: 'BOX', description: 'Time, coleção e organização', index: '03', icon: 'box' },
+  { id: 'journey', label: 'JORNADA', description: 'Continue o RPG', icon: 'journey' },
+  { id: 'pokedex', label: 'POKÉDEX', description: 'Espécies, descoberta e pesquisa', icon: 'dex' },
+  { id: 'box', label: 'BOX', description: 'Time, coleção e organização', icon: 'box' },
 ];
 
 const HUB_ROUTE_PRELOADERS: Record<HubSection, () => Promise<unknown>> = {
@@ -40,6 +39,16 @@ function preloadHubRoute(section: HubSection) {
 function currentHistoryState(): MenuHistoryState {
   const state = window.history.state;
   return state && typeof state === 'object' ? (state as MenuHistoryState) : {};
+}
+
+function HubMark() {
+  return (
+    <svg className="hub-menu-brand-mark" viewBox="0 0 44 44" aria-hidden="true">
+      <circle cx="22" cy="22" r="17.5" />
+      <path d="M4.5 22h35" />
+      <circle cx="22" cy="22" r="5.2" />
+    </svg>
+  );
 }
 
 function NavGlyph({ icon }: { icon: NavItem['icon'] }) {
@@ -190,9 +199,12 @@ export function HubNavigation({ active, destinations }: HubNavigationProps) {
             onKeyDown={onMenuKeyDown}
           >
             <header className="hub-menu-header">
-              <div>
-                <span className="hub-menu-kicker">POKÉMON HUB</span>
-                <p>JORNADA · POKÉDEX · BOX</p>
+              <div className="hub-menu-brand">
+                <HubMark />
+                <div>
+                  <strong>POKÉMON HUB</strong>
+                  <span>JORNADA · POKÉDEX · BOX</span>
+                </div>
               </div>
               <button type="button" className="hub-menu-close" onClick={closeMenu} aria-label="Fechar menu">
                 ×
@@ -222,7 +234,6 @@ export function HubNavigation({ active, destinations }: HubNavigationProps) {
                     onPointerDown={warmRoute}
                     onPointerEnter={warmRoute}
                   >
-                    <span className="hub-menu-tile-index" aria-hidden="true">{item.index}</span>
                     <span className="hub-menu-tile-icon">
                       <NavGlyph icon={item.icon} />
                     </span>
@@ -230,7 +241,10 @@ export function HubNavigation({ active, destinations }: HubNavigationProps) {
                       <strong>{item.label}</strong>
                       <small>{item.description}</small>
                     </span>
-                    {selected ? <span className="hub-menu-current">AGORA</span> : <span className="hub-menu-arrow">→</span>}
+                    <span className="hub-menu-tile-end">
+                      {selected ? <small>ATUAL</small> : null}
+                      <span aria-hidden="true">›</span>
+                    </span>
                   </a>
                 );
               })}
