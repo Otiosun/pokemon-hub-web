@@ -6,11 +6,9 @@ import './form-control-reset.css';
 import './field-dex-refinement.css';
 import './field-dex-product-cleanup.css';
 import './pokedex-qa-fixes.css';
-import './features/pokedex/pokedex-species-research.css';
 import './features/pokedex/pokedex-index-discovery.css';
 import './features/pokedex/pokemon-asset-integration.css';
 import './features/pokedex/pokedex-progress-readout.css';
-import './features/pokedex/pokedex-species-polish.css';
 import './features/collection/owned-pokemon-context-filter.css';
 
 const root = document.getElementById('root');
