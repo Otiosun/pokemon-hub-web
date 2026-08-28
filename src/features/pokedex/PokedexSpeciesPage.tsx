@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import { getPokemonAssetUrl } from '../../visual-assets/assetBaseUrl';
 import { TypeBadge } from '../../visual-assets/TypeBadge';
@@ -28,12 +28,12 @@ type VisualMode = 'artwork' | 'model';
 
 type RecordState = {
   dex: number;
+  slug: string;
   status: RecordStatus;
   name: string;
   height: string;
   weight: string;
   types: string[];
-  cryUrl: string | null;
   habitat: string;
   varieties: SpeciesVariety[];
   evolutionStages: EvolutionSpecies[][];
@@ -45,8 +45,7 @@ type ReviewAssetPayload = {
 };
 
 const TOTAL = 386;
-const warmedReviewSpecies = new Set<string>();
-const RESEARCH_STEPS = [1, 2, 3, 4, 5] as const;
+const warmedSpecies = new Set<string>();
 const FIELDSET_RESET = { border: 0, margin: 0, padding: 0, minInlineSize: 0 } as const;
 const TYPE_LABELS: Record<string, string> = {
   normal: 'Normal',
@@ -69,7 +68,7 @@ const TYPE_LABELS: Record<string, string> = {
   fairy: 'Fada',
 };
 const DISCOVERY_LABELS: Record<SpeciesDiscoveryState, string> = {
-  unknown: 'NÃO REGISTRADO',
+  unknown: 'DESCONHECIDO',
   seen: 'AVISTADO',
   caught: 'CAPTURADO',
 };
@@ -105,12 +104,12 @@ function initialRecord(
   if (playerState.discovery === 'unknown') {
     return {
       dex,
+      slug: '',
       status: 'locked',
-      name: 'Espécie não registrada',
+      name: 'Registro não identificado',
       height: '—',
       weight: '—',
       types: [],
-      cryUrl: null,
       habitat: '—',
       varieties: [],
       evolutionStages: [],
@@ -120,24 +119,24 @@ function initialRecord(
   const cached = getCachedPokedexSpeciesRuntime(dex);
   return {
     dex,
+    slug: cached?.slug ?? review?.slug ?? '',
     status: cached ? 'ready' : 'loading',
     name: cached?.name ?? review?.name ?? getCachedNationalDexName(dex) ?? `Nº ${String(dex).padStart(3, '0')}`,
     height: formatMetric(cached?.height ?? null, 'm'),
     weight: formatMetric(cached?.weight ?? null, 'kg'),
     types: cached?.typeSlugs.map(translateType) ?? review?.types ?? [],
-    cryUrl: cached?.cryUrl ?? null,
     habitat: cached?.habitat ?? '—',
     varieties: cached?.varieties ?? [],
     evolutionStages: cached?.evolutionStages ?? [],
   };
 }
 
-async function warmReview3d(review: FieldDexSpecies) {
-  if (warmedReviewSpecies.has(review.slug)) return;
-  warmedReviewSpecies.add(review.slug);
+async function warmSpecies3d(slug: string) {
+  if (!slug || warmedSpecies.has(slug)) return;
+  warmedSpecies.add(slug);
 
   try {
-    const assetPromise = fetch(getPokemonAssetUrl(review.slug, 'asset.json'), { cache: 'force-cache' });
+    const assetPromise = fetch(getPokemonAssetUrl(slug, 'asset.json'), { cache: 'force-cache' });
     await Promise.all([
       import('three'),
       import('three/examples/jsm/loaders/GLTFLoader.js'),
@@ -156,12 +155,12 @@ async function warmReview3d(review: FieldDexSpecies) {
     const assetNames = [payload.model, ...new Set(textureNames)];
     await Promise.all(
       assetNames.map((assetName) =>
-        fetch(getPokemonAssetUrl(review.slug, assetName), { cache: 'force-cache' }).catch(() => undefined),
+        fetch(getPokemonAssetUrl(slug, assetName), { cache: 'force-cache' }).catch(() => undefined),
       ),
     );
   } catch (error) {
-    warmedReviewSpecies.delete(review.slug);
-    console.warn(`3D warmup failed for ${review.slug}`, error);
+    warmedSpecies.delete(slug);
+    console.warn(`3D warmup failed for ${slug}`, error);
   }
 }
 
@@ -177,24 +176,6 @@ function SideArrow({ direction }: { direction: 'left' | 'right' }) {
         strokeLinejoin="round"
       />
     </svg>
-  );
-}
-
-function ResearchMeter({ level }: { level: SpeciesPlayerState['researchLevel'] }) {
-  return (
-    <div
-      className="pokedex-species-research-meter"
-      role="progressbar"
-      aria-label="Nível de pesquisa"
-      aria-valuemin={0}
-      aria-valuemax={5}
-      aria-valuenow={level}
-      aria-valuetext={`Pesquisa ${level} de 5`}
-    >
-      {RESEARCH_STEPS.map((step) => (
-        <span key={step} className={step <= level ? 'is-filled' : undefined} aria-hidden="true" />
-      ))}
-    </div>
   );
 }
 
@@ -227,6 +208,23 @@ function EvolutionTree({ stages }: { stages: EvolutionSpecies[][] }) {
   );
 }
 
+function ResearchRow({
+  label,
+  value,
+  tone = 'neutral',
+}: {
+  label: string;
+  value: string;
+  tone?: 'neutral' | 'locked' | 'ready';
+}) {
+  return (
+    <div className={`pokedex-species-research-row is-${tone}`}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
 export function PokedexSpeciesPage({ dex }: { dex: number }) {
   const validDex = Number.isInteger(dex) && dex >= 1 && dex <= TOTAL ? dex : 1;
   const review = useMemo(() => readDexReview(validDex), [validDex]);
@@ -235,23 +233,26 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
   const [artworkReadyDex, setArtworkReadyDex] = useState<number | null>(null);
   const [visualModeState, setVisualModeState] = useState<{ dex: number; mode: VisualMode }>({
     dex: validDex,
-    mode: 'artwork',
+    mode: 'model',
   });
-  const cryAudioRef = useRef<HTMLAudioElement | null>(null);
+
   const activeRecord = record.dex === validDex ? record : initialRecord(validDex, review, playerState);
   const artworkReady = artworkReadyDex === validDex;
-  const visualMode = visualModeState.dex === validDex ? visualModeState.mode : 'artwork';
+  const visualMode = visualModeState.dex === validDex ? visualModeState.mode : 'model';
   const setVisualMode = (mode: VisualMode) => setVisualModeState({ dex: validDex, mode });
   const discovered = playerState.discovery !== 'unknown';
-  const canShow3d = Boolean(review && discovered);
-  const showing3d = canShow3d && visualMode === 'model';
-  const factsUnlocked = playerState.researchLevel >= 2;
-  const ecologyUnlocked = playerState.researchLevel >= 3;
-  const evolutionUnlocked = playerState.researchLevel >= 4;
+  const wants3d = discovered && visualMode === 'model';
+  const canShow3d = discovered && Boolean(activeRecord.slug);
+  const showing3d = wants3d && canShow3d;
+  const waitingFor3d = wants3d && !canShow3d && activeRecord.status === 'loading';
+  const modelUnavailable = wants3d && !canShow3d && activeRecord.status === 'failed';
+  const factsUnlocked = discovered && playerState.researchLevel >= 2;
+  const ecologyUnlocked = discovered && playerState.researchLevel >= 3;
+  const evolutionUnlocked = discovered && playerState.researchLevel >= 4;
 
   useEffect(() => {
-    if (review && discovered) void warmReview3d(review);
-  }, [discovered, review]);
+    if (discovered && activeRecord.slug) void warmSpecies3d(activeRecord.slug);
+  }, [activeRecord.slug, discovered]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -265,12 +266,12 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
         const payload = await loadPokedexSpeciesRuntime(validDex, controller.signal);
         setRecord({
           dex: validDex,
+          slug: payload.slug,
           status: 'ready',
           name: payload.name,
           height: formatMetric(payload.height, 'm'),
           weight: formatMetric(payload.weight, 'kg'),
           types: payload.typeSlugs.map(translateType),
-          cryUrl: payload.cryUrl,
           habitat: payload.habitat,
           varieties: payload.varieties,
           evolutionStages: payload.evolutionStages,
@@ -289,19 +290,30 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
   const previousDex = validDex > 1 ? validDex - 1 : null;
   const nextDex = validDex < TOTAL ? validDex + 1 : null;
   const region = regionForDex(validDex);
+  const displayName = discovered ? activeRecord.name : 'Registro não identificado';
   const description = !discovered
-    ? 'Registro bloqueado. Avistar esta espécie libera sua identificação básica.'
-    : playerState.researchLevel >= 3
-      ? review?.description ?? 'Observações de campo ainda não foram integradas ao RPG para esta espécie.'
-      : 'Identificação confirmada. Continue pesquisando esta espécie para liberar observações de campo.';
-  const displayName = discovered ? activeRecord.name : 'Registro desconhecido';
+    ? 'Esta espécie ainda não foi descoberta. Continue explorando para revelar o registro.'
+    : playerState.researchLevel < 2
+      ? 'Dados adicionais serão liberados com mais pesquisa de campo.'
+      : playerState.researchLevel >= 3 && review?.description
+        ? review.description
+        : 'Identificação confirmada. Continue pesquisando esta espécie para ampliar o registro de campo.';
 
-  const playCry = () => {
-    const audio = cryAudioRef.current;
-    if (!audio) return;
-    audio.currentTime = 0;
-    void audio.play().catch(() => undefined);
-  };
+  const habitatValue = !discovered
+    ? 'Bloqueado'
+    : ecologyUnlocked
+      ? activeRecord.habitat
+      : 'Pesquisa 3 necessária';
+  const varietiesValue = !discovered
+    ? 'Bloqueado'
+    : ecologyUnlocked
+      ? `${Math.max(1, activeRecord.varieties.length)} registro${Math.max(1, activeRecord.varieties.length) === 1 ? '' : 's'}`
+      : 'Pesquisa 3 necessária';
+  const evolutionValue = !discovered
+    ? 'Bloqueado'
+    : evolutionUnlocked
+      ? 'Disponível'
+      : 'Pesquisa 4 necessária';
 
   return (
     <main className={`pokedex-species-page is-${playerState.discovery}`}>
@@ -325,45 +337,32 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
       </header>
 
       <section className="pokedex-species-shell">
-        <div className={`pokedex-species-stage${artworkReady ? ' is-artwork-ready' : ' is-artwork-loading'}${showing3d ? ' is-model-mode' : ''}`}>
-          <div className="pokedex-species-stage-top">
-            <span>NATIONAL {String(validDex).padStart(3, '0')} · {region.toUpperCase()}</span>
-            <span className={`pokedex-species-sync is-${activeRecord.status}`}>
-              <i aria-hidden="true" />
-              {activeRecord.status === 'ready'
-                ? 'ARQUIVO SINCRONIZADO'
-                : activeRecord.status === 'failed'
-                  ? 'MODO OFFLINE'
-                  : activeRecord.status === 'locked'
-                    ? 'DADOS BLOQUEADOS'
-                    : 'SINCRONIZANDO'}
-            </span>
-          </div>
+        <section className="pokedex-species-stage" aria-label={`Registro visual de ${displayName}`}>
+          <div className="pokedex-species-visual-area">
+            {discovered && (
+              <fieldset className="pokedex-species-view-modes" style={FIELDSET_RESET} aria-label="Modo de visualização da espécie">
+                <button
+                  type="button"
+                  className={visualMode === 'artwork' ? 'is-active' : undefined}
+                  aria-pressed={visualMode === 'artwork'}
+                  onClick={() => setVisualMode('artwork')}
+                >
+                  2D
+                </button>
+                <button
+                  type="button"
+                  className={visualMode === 'model' ? 'is-active' : undefined}
+                  aria-pressed={visualMode === 'model'}
+                  disabled={modelUnavailable}
+                  onClick={() => setVisualMode('model')}
+                >
+                  3D
+                </button>
+              </fieldset>
+            )}
 
-          {canShow3d && (
-            <fieldset className="pokedex-species-view-modes" style={FIELDSET_RESET} aria-label="Modo de visualização da espécie">
-              <button
-                type="button"
-                className={visualMode === 'artwork' ? 'is-active' : undefined}
-                aria-pressed={visualMode === 'artwork'}
-                onClick={() => setVisualMode('artwork')}
-              >
-                2D
-              </button>
-              <button
-                type="button"
-                className={visualMode === 'model' ? 'is-active' : undefined}
-                aria-pressed={visualMode === 'model'}
-                onClick={() => setVisualMode('model')}
-              >
-                3D
-              </button>
-            </fieldset>
-          )}
-
-          {!showing3d && (
-            <div className="pokedex-species-artwork-slot">
-              {discovered ? (
+            {discovered && visualMode === 'artwork' && (
+              <div className={`pokedex-species-artwork-slot${artworkReady ? ' is-ready' : ''}`}>
                 <PokemonAssetImage
                   key={validDex}
                   dex={validDex}
@@ -375,138 +374,111 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
                   fallbackLabel="?"
                   onResolved={() => setArtworkReadyDex(validDex)}
                 />
-              ) : (
-                <div className="pokedex-species-unknown-mark" aria-hidden="true">
-                  <span>?</span>
-                </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
 
-          {showing3d && review && (
-            <div className="pokedex-species-model-slot">
-              <GenerationsPokemonViewer
-                species={review.slug}
-                name={displayName}
-                onFailedSpeciesChange={() => setVisualMode('artwork')}
-              />
-              <span className="pokedex-species-model-hint">ARRASTE PARA GIRAR · PINÇA PARA ZOOM</span>
-            </div>
-          )}
+            {showing3d && (
+              <div className="pokedex-species-model-slot">
+                <GenerationsPokemonViewer
+                  key={`${validDex}-${activeRecord.slug}`}
+                  species={activeRecord.slug}
+                  name={displayName}
+                  onFailedSpeciesChange={() => setVisualMode('artwork')}
+                />
+                <span className="pokedex-species-model-hint">ARRASTE PARA GIRAR · PINÇA PARA ZOOM</span>
+              </div>
+            )}
 
-          <nav className="pokedex-species-side-nav" aria-label="Espécies anterior e próxima">
-            {previousDex ? (
-              <a
-                className="is-previous"
-                href={neighbourHref(previousDex)}
-                aria-label={`Abrir espécie anterior, número ${String(previousDex).padStart(3, '0')}`}
-              >
-                <SideArrow direction="left" />
-                <span>#{String(previousDex).padStart(3, '0')}</span>
-              </a>
-            ) : <span className="is-placeholder" aria-hidden="true" />}
-            {nextDex ? (
-              <a
-                className="is-next"
-                href={neighbourHref(nextDex)}
-                aria-label={`Abrir próxima espécie, número ${String(nextDex).padStart(3, '0')}`}
-              >
-                <span>#{String(nextDex).padStart(3, '0')}</span>
-                <SideArrow direction="right" />
-              </a>
-            ) : <span className="is-placeholder" aria-hidden="true" />}
-          </nav>
+            {(waitingFor3d || modelUnavailable) && (
+              <div className="pokedex-species-model-loading" role="status">
+                <span>{modelUnavailable ? 'MODELO 3D INDISPONÍVEL' : 'PREPARANDO MODELO 3D'}</span>
+                {modelUnavailable && (
+                  <button type="button" onClick={() => setVisualMode('artwork')}>VER 2D</button>
+                )}
+              </div>
+            )}
+
+            {!discovered && (
+              <div className="pokedex-species-unknown-mark" aria-hidden="true">
+                <span>?</span>
+              </div>
+            )}
+
+            <nav className="pokedex-species-side-nav" aria-label="Espécies anterior e próxima">
+              {previousDex ? (
+                <a
+                  className="is-previous"
+                  href={neighbourHref(previousDex)}
+                  aria-label={`Abrir espécie anterior, número ${String(previousDex).padStart(3, '0')}`}
+                >
+                  <SideArrow direction="left" />
+                </a>
+              ) : <span className="is-placeholder" aria-hidden="true" />}
+              {nextDex ? (
+                <a
+                  className="is-next"
+                  href={neighbourHref(nextDex)}
+                  aria-label={`Abrir próxima espécie, número ${String(nextDex).padStart(3, '0')}`}
+                >
+                  <SideArrow direction="right" />
+                </a>
+              ) : <span className="is-placeholder" aria-hidden="true" />}
+            </nav>
+          </div>
 
           <div className="pokedex-species-identity">
-            <span className="pokedex-species-mode">
-              {discovered ? (showing3d ? 'VISUAL 3D · ESPÉCIE' : 'REGISTRO 2D · ESPÉCIE') : 'ARQUIVO BLOQUEADO'}
-            </span>
+            <span className="pokedex-species-number">Nº {String(validDex).padStart(3, '0')}</span>
             <h1>{displayName}</h1>
-            <div className="pokedex-species-types">
-              {discovered && activeRecord.types.length > 0
-                ? activeRecord.types.map((type) => (
-                    <TypeBadge key={type} type={type} accent={typeAccent(type)} />
-                  ))
-                : <span className="pokedex-species-locked-inline">TIPO NÃO REGISTRADO</span>}
-            </div>
-          </div>
-        </div>
-
-        <div className="pokedex-species-data">
-          <section className="pokedex-species-player-state" aria-label="Estado desta espécie na Pokédex">
-            <div className={`pokedex-species-discovery is-${playerState.discovery}`}>
-              <span>DESCOBERTA</span>
-              <strong>{DISCOVERY_LABELS[playerState.discovery]}</strong>
-            </div>
-            <div className="pokedex-species-research">
-              <div>
-                <span>PESQUISA</span>
-                <strong>{playerState.researchLevel} / 5</strong>
+            {discovered && activeRecord.types.length > 0 && (
+              <div className="pokedex-species-types">
+                {activeRecord.types.map((type) => (
+                  <TypeBadge key={type} type={type} accent={typeAccent(type)} />
+                ))}
               </div>
-              <ResearchMeter level={playerState.researchLevel} />
-            </div>
-            <div className="pokedex-species-owned-readout">
-              <span>COLEÇÃO</span>
-              <strong>{playerState.ownedCount}</strong>
-              <small>{playerState.shinyOwned ? 'SHINY POSSUÍDO' : playerState.shinySeen ? 'SHINY REGISTRADO' : 'SEM SHINY'}</small>
-            </div>
-          </section>
-
-          <div className="pokedex-species-data-head">
-            <div>
-              <span>REGISTRO DA ESPÉCIE</span>
-              <strong>{discovered ? review?.category ?? `Arquivo Nacional #${String(validDex).padStart(3, '0')}` : 'Identificação pendente'}</strong>
-            </div>
-            <div className="pokedex-species-actions">
-              {activeRecord.cryUrl && discovered && (
-                <button type="button" className="pokedex-species-cry" onClick={playCry}>
-                  OUVIR CRY
-                </button>
-              )}
-            </div>
+            )}
           </div>
+        </section>
 
-          {activeRecord.cryUrl && (
-            <>
-              {/* biome-ignore lint/a11y/useMediaCaption: Pokémon cries contain no speech or dialogue to caption. */}
-              <audio ref={cryAudioRef} src={activeRecord.cryUrl} preload="none" />
-            </>
-          )}
+        <section className="pokedex-species-data" aria-label="Dados do registro">
+          <div className="pokedex-species-player-state">
+            <strong className={`is-${playerState.discovery}`}>{DISCOVERY_LABELS[playerState.discovery]}</strong>
+            <span>Pesquisa {playerState.researchLevel}/5</span>
+            <span>{playerState.ownedCount} possuído{playerState.ownedCount === 1 ? '' : 's'}</span>
+          </div>
 
           <p className="pokedex-species-description">{description}</p>
 
-          <dl className="pokedex-species-facts">
-            <div><dt>REGIÃO</dt><dd>{discovered ? region : '—'}</dd></div>
-            <div>
-              <dt>TIPO</dt>
-              <dd className="pokedex-species-fact-types">
-                {discovered && activeRecord.types.length > 0
-                  ? activeRecord.types.map((type) => (
-                      <TypeBadge key={type} type={type} accent={typeAccent(type)} compact />
-                    ))
-                  : '—'}
-              </dd>
-            </div>
-            <div><dt>ALTURA</dt><dd>{factsUnlocked ? activeRecord.height : 'PESQUISA 2'}</dd></div>
-            <div><dt>PESO</dt><dd>{factsUnlocked ? activeRecord.weight : 'PESQUISA 2'}</dd></div>
-          </dl>
+          {factsUnlocked && (
+            <dl className="pokedex-species-facts">
+              <div><dt>REGIÃO</dt><dd>{region}</dd></div>
+              <div><dt>ALTURA</dt><dd>{activeRecord.height}</dd></div>
+              <div><dt>PESO</dt><dd>{activeRecord.weight}</dd></div>
+            </dl>
+          )}
 
-          <section className="pokedex-species-field-grid" aria-label="Pesquisa ecológica da espécie">
-            <div className={ecologyUnlocked ? undefined : 'is-locked'}>
-              <span>HABITAT</span>
-              <strong>{ecologyUnlocked ? activeRecord.habitat : 'BLOQUEADO'}</strong>
-              <small>PESQUISA 3</small>
-            </div>
-            <div className={ecologyUnlocked ? undefined : 'is-locked'}>
-              <span>FORMAS / VARIEDADES</span>
-              <strong>{ecologyUnlocked ? Math.max(1, activeRecord.varieties.length) : '—'}</strong>
-              <small>{ecologyUnlocked ? 'REGISTROS CONHECIDOS' : 'PESQUISA 3'}</small>
-            </div>
-          </section>
+          <div className="pokedex-species-research-list" aria-label="Pesquisa da espécie">
+            <ResearchRow label="HABITAT" value={habitatValue} tone={ecologyUnlocked ? 'ready' : 'locked'} />
+            <ResearchRow label="FORMAS / VARIEDADES" value={varietiesValue} tone={ecologyUnlocked ? 'ready' : 'locked'} />
+            <ResearchRow label="LINHA EVOLUTIVA" value={evolutionValue} tone={evolutionUnlocked ? 'ready' : 'locked'} />
+
+            {discovered && (
+              playerState.ownedCount > 0 ? (
+                <a className="pokedex-species-owned-link" href={`/pokemon?species=${validDex}`}>
+                  <span>MEUS POKÉMON DESTA ESPÉCIE</span>
+                  <strong>{playerState.ownedCount} registro{playerState.ownedCount === 1 ? '' : 's'} →</strong>
+                </a>
+              ) : (
+                <div className="pokedex-species-owned-link is-empty" aria-disabled="true">
+                  <span>MEUS POKÉMON DESTA ESPÉCIE</span>
+                  <strong>0 registros</strong>
+                </div>
+              )
+            )}
+          </div>
 
           {ecologyUnlocked && activeRecord.varieties.length > 1 && (
             <section className="pokedex-species-varieties" aria-label="Formas e variedades registradas">
-              <header><span>FORMAS REGISTRADAS</span></header>
+              <header>FORMAS REGISTRADAS</header>
               <div>
                 {activeRecord.varieties.slice(0, 8).map((variety) => (
                   <span key={variety.name} className={variety.isDefault ? 'is-default' : undefined}>
@@ -517,33 +489,15 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
             </section>
           )}
 
-          <section className={`pokedex-species-evolution${evolutionUnlocked ? '' : ' is-locked'}`}>
-            <header>
-              <div><span>LINHA EVOLUTIVA</span><strong>{evolutionUnlocked ? 'REGISTRO CONECTADO' : 'PESQUISA 4 NECESSÁRIA'}</strong></div>
-            </header>
-            {evolutionUnlocked && activeRecord.evolutionStages.length > 0
-              ? <EvolutionTree stages={activeRecord.evolutionStages} />
-              : <div className="pokedex-species-evolution-locked">{evolutionUnlocked ? 'SEM EVOLUÇÃO CATALOGADA' : 'DADOS BLOQUEADOS'}</div>}
-          </section>
-
-          {playerState.ownedCount > 0 && (
-            <a className="pokedex-species-owned-link" href={`/pokemon?species=${validDex}`}>
-              <span>MEUS POKÉMON DESTA ESPÉCIE</span>
-              <strong>{playerState.ownedCount} REGISTRO{playerState.ownedCount === 1 ? '' : 'S'} →</strong>
-            </a>
+          {evolutionUnlocked && (
+            <section className="pokedex-species-evolution" aria-label="Linha evolutiva">
+              <header>LINHA EVOLUTIVA</header>
+              {activeRecord.evolutionStages.length > 0
+                ? <EvolutionTree stages={activeRecord.evolutionStages} />
+                : <p>Sem evolução catalogada.</p>}
+            </section>
           )}
-
-          <div className="pokedex-species-note">
-            <strong>CAMADA DE CAMPO</strong>
-            <p>
-              Descoberta, pesquisa e coleção são eixos separados. Nesta versão, o estado do jogador é um contrato de demonstração; dados biológicos vêm do provider de espécie e serão ligados ao backend sem duplicar regra mecânica no frontend.
-            </p>
-          </div>
-
-          <nav className="pokedex-species-nav is-index-only" aria-label="Voltar ao Índice Nacional">
-            <a className="is-index" href="/pokedex" data-nav-mode="up">ÍNDICE 001—386</a>
-          </nav>
-        </div>
+        </section>
       </section>
     </main>
   );
