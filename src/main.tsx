@@ -12,6 +12,7 @@ import './features/pokedex/pokemon-asset-integration.css';
 import './features/pokedex/pokedex-progress-readout.css';
 import './features/pokedex/pokedex-species-review-polish.css';
 import './features/collection/owned-pokemon-context-filter.css';
+import './features/collection/owned-pokemon-collection-dex-scale.css';
 
 const root = document.getElementById('root');
 
