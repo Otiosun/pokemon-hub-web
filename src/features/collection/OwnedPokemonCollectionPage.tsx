@@ -95,7 +95,7 @@ function PokemonCard({ pokemon }: { pokemon: OwnedPokemonPreview }) {
       <div className="owned-pokemon-visual">
         <PokemonAssetImage
           dex={pokemon.dex}
-          assetRole="home-artwork"
+          assetRole="official-artwork"
           alt=""
           aria-hidden="true"
           loading="lazy"
