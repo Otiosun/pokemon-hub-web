@@ -15,6 +15,7 @@ PLAYER_VISIBLE_DEX = (
 )
 
 OUTPUT_ROOT = Path('public/research/generations')
+REPORT_PATH = OUTPUT_ROOT / 'semantic-coverage-report.json'
 DRACO_SOURCE = Path('node_modules/three/examples/jsm/libs/draco')
 DRACO_OUTPUT = Path('public/research/draco')
 
@@ -24,9 +25,11 @@ def run_script(script: str, *args: str) -> None:
 
 
 def main() -> None:
-    # Resolve the authoritative semantic mapping first, then build only the
-    # species that the current player-facing preview can actually reveal.
-    run_script('scripts/audit-generations-semantic.py')
+    # Verify already generates this report before the production asset step.
+    # A plain npm build does not, so resolve the semantic mapping on demand.
+    if not REPORT_PATH.exists():
+        run_script('scripts/audit-generations-semantic.py')
+
     run_script(
         'scripts/build-generations-batch.py',
         '--dex',
@@ -41,19 +44,13 @@ def main() -> None:
         shutil.rmtree(DRACO_OUTPUT)
     shutil.copytree(DRACO_SOURCE, DRACO_OUTPUT)
 
-    missing = [
-        dex
-        for dex in PLAYER_VISIBLE_DEX
-        if not any(
-            (OUTPUT_ROOT / species / 'asset.json').exists()
-            for species in _species_dirs_for_dex(dex)
-        )
-    ]
+    manifest_path = OUTPUT_ROOT / 'manifest.json'
+    manifest = json.loads(manifest_path.read_text('utf-8'))
+    built_by_dex = {int(item['dex']): str(item['species']) for item in manifest.get('assets', [])}
+    missing = [dex for dex in PLAYER_VISIBLE_DEX if dex not in built_by_dex]
     if missing:
         raise RuntimeError(f'Player-preview 3D assets missing after build: {missing}')
 
-    manifest_path = OUTPUT_ROOT / 'manifest.json'
-    manifest = json.loads(manifest_path.read_text('utf-8'))
     print(
         'PLAYER_PREVIEW_3D_COVERAGE',
         json.dumps(
@@ -66,18 +63,6 @@ def main() -> None:
         ),
         flush=True,
     )
-
-
-def _species_dirs_for_dex(dex: int) -> list[str]:
-    manifest_path = OUTPUT_ROOT / 'manifest.json'
-    if not manifest_path.exists():
-        return []
-    manifest = json.loads(manifest_path.read_text('utf-8'))
-    return [
-        str(item['species'])
-        for item in manifest.get('assets', [])
-        if int(item.get('dex', -1)) == dex
-    ]
 
 
 if __name__ == '__main__':
