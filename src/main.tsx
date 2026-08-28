@@ -6,6 +6,7 @@ import './form-control-reset.css';
 import './field-dex-refinement.css';
 import './field-dex-product-cleanup.css';
 import './pokedex-qa-fixes.css';
+import './features/asset-lab/generations-viewer.css';
 import './features/pokedex/pokedex-index-discovery.css';
 import './features/pokedex/pokemon-asset-integration.css';
 import './features/pokedex/pokedex-progress-readout.css';
