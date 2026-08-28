@@ -1,0 +1,149 @@
+/* Box cards intentionally reuse the National Dex visual density on player-facing collection grids. */
+.owned-pokemon-storage-section .owned-pokemon-grid {
+  grid-template-columns: repeat(auto-fill, minmax(184px, 1fr));
+  gap: 8px;
+}
+
+.owned-pokemon-storage-section .owned-pokemon-card {
+  min-height: 220px;
+  contain-intrinsic-size: 220px;
+  padding: 10px;
+  border-bottom-width: 2px;
+  box-shadow: none;
+}
+
+.owned-pokemon-storage-section .owned-pokemon-card::before {
+  display: none;
+}
+
+.owned-pokemon-storage-section .owned-pokemon-card.is-in-team {
+  box-shadow: inset 0 2px 0 rgba(77, 158, 170, 0.28);
+}
+
+.owned-pokemon-storage-section .owned-pokemon-card.is-shiny {
+  box-shadow: inset 0 2px 0 rgba(199, 158, 35, 0.52);
+}
+
+.owned-pokemon-storage-section .owned-pokemon-card.is-in-team.is-shiny {
+  box-shadow:
+    inset 0 2px 0 rgba(199, 158, 35, 0.52),
+    inset 2px 0 0 rgba(77, 158, 170, 0.28);
+}
+
+.owned-pokemon-storage-section .owned-pokemon-card-top {
+  font-size: 0.64rem;
+}
+
+.owned-pokemon-storage-section .owned-pokemon-card-top strong {
+  font-size: 0.58rem;
+}
+
+.owned-pokemon-storage-section .owned-pokemon-visual {
+  min-height: 118px;
+}
+
+.owned-pokemon-storage-section .owned-pokemon-visual::after {
+  opacity: 0;
+}
+
+.owned-pokemon-storage-section .owned-pokemon-visual img {
+  width: 132px;
+  height: 116px;
+  max-width: 94%;
+  object-fit: contain;
+  filter: saturate(0.98) contrast(1.01) drop-shadow(0 9px 15px rgba(25, 34, 37, 0.14));
+}
+
+.owned-pokemon-storage-section .owned-pokemon-copy {
+  padding-top: 5px;
+  border-top: 0;
+}
+
+.owned-pokemon-storage-section .owned-pokemon-name-row strong {
+  font-size: 0.96rem;
+}
+
+.owned-pokemon-storage-section .owned-pokemon-name-row small {
+  margin-top: 1px;
+  font-size: 0.58rem;
+}
+
+.owned-pokemon-storage-section .owned-pokemon-name-row > span {
+  font-size: 0.55rem;
+}
+
+.owned-pokemon-storage-section .owned-pokemon-types {
+  min-height: 23px;
+  margin-top: 5px;
+  gap: 4px;
+}
+
+.owned-pokemon-storage-section .owned-pokemon-card-foot {
+  margin-top: 5px;
+  padding-top: 5px;
+  font-size: 0.48rem;
+}
+
+@media (max-width: 480px) {
+  .owned-pokemon-storage-section {
+    padding-inline: 10px;
+  }
+
+  .owned-pokemon-storage-section .owned-pokemon-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .owned-pokemon-storage-section .owned-pokemon-card {
+    min-height: 168px;
+    contain-intrinsic-size: 168px;
+    padding: 8px 8px 7px;
+  }
+
+  .owned-pokemon-storage-section .owned-pokemon-card-top {
+    font-size: 0.62rem;
+  }
+
+  .owned-pokemon-storage-section .owned-pokemon-card-top strong {
+    font-size: 0.56rem;
+  }
+
+  .owned-pokemon-storage-section .owned-pokemon-visual {
+    min-height: 90px;
+  }
+
+  .owned-pokemon-storage-section .owned-pokemon-visual img {
+    width: 104px;
+    height: 88px;
+    max-width: 96%;
+  }
+
+  .owned-pokemon-storage-section .owned-pokemon-copy {
+    padding-top: 3px;
+  }
+
+  .owned-pokemon-storage-section .owned-pokemon-name-row {
+    gap: 5px;
+  }
+
+  .owned-pokemon-storage-section .owned-pokemon-name-row strong {
+    font-size: 0.89rem;
+  }
+
+  .owned-pokemon-storage-section .owned-pokemon-name-row small {
+    font-size: 0.58rem;
+  }
+
+  .owned-pokemon-storage-section .owned-pokemon-name-row > span {
+    font-size: 0.53rem;
+  }
+
+  .owned-pokemon-storage-section .owned-pokemon-types {
+    min-height: 19px;
+    margin-top: 3px;
+  }
+
+  .owned-pokemon-storage-section .owned-pokemon-card-foot {
+    display: none;
+  }
+}
