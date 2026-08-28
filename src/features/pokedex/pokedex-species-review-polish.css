@@ -1,0 +1,189 @@
+.pokedex-species-page .pokedex-species-player-state {
+  min-height: 52px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  padding: 0 16px;
+  border-color: rgba(205, 216, 215, 0.12);
+  border-radius: 11px;
+  background: rgba(4, 9, 11, 0.16);
+}
+
+.pokedex-species-page .pokedex-species-player-state > span:last-child {
+  display: none;
+}
+
+.pokedex-species-page .pokedex-species-player-state strong {
+  font-size: 0.72rem;
+}
+
+.pokedex-species-page .pokedex-species-player-state span {
+  color: #aaa9a4;
+  font-size: 0.7rem;
+}
+
+.pokedex-species-page .pokedex-species-description {
+  margin-top: 18px;
+  margin-bottom: 18px;
+}
+
+.pokedex-species-page .pokedex-species-research-list {
+  display: grid;
+  gap: 0;
+  overflow: visible;
+  border: 0;
+  border-top: 1px solid rgba(208, 216, 214, 0.1);
+  border-bottom: 1px solid rgba(208, 216, 214, 0.1);
+  border-radius: 0;
+  background: transparent;
+}
+
+.pokedex-species-page .pokedex-species-research-row,
+.pokedex-species-page .pokedex-species-owned-link {
+  min-height: 48px;
+  padding: 0 4px;
+  border-top: 0;
+  border-bottom: 1px solid rgba(208, 216, 214, 0.075);
+}
+
+.pokedex-species-page .pokedex-species-owned-link:last-child {
+  border-bottom: 0;
+}
+
+.pokedex-species-page .pokedex-species-research-row span,
+.pokedex-species-page .pokedex-species-owned-link span {
+  color: #9fa5a2;
+  font-size: 0.66rem;
+  letter-spacing: 0.045em;
+}
+
+.pokedex-species-page .pokedex-species-research-row strong,
+.pokedex-species-page .pokedex-species-owned-link strong {
+  color: #aeb1ac;
+  font: 650 0.68rem 'IBM Plex Mono', monospace;
+}
+
+.pokedex-species-page .pokedex-species-research-row.is-locked {
+  min-height: 46px;
+}
+
+.pokedex-species-page .pokedex-species-research-row.is-locked strong {
+  font-size: 0;
+  color: #737c7b;
+}
+
+.pokedex-species-page .pokedex-species-research-row.is-locked:nth-child(1) span {
+  font-size: 0;
+}
+
+.pokedex-species-page .pokedex-species-research-row.is-locked:nth-child(1) span::after {
+  content: 'HABITAT + FORMAS';
+  font-size: 0.66rem;
+}
+
+.pokedex-species-page .pokedex-species-research-row.is-locked:nth-child(1) strong::after {
+  content: 'NÍVEL 3';
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+}
+
+.pokedex-species-page .pokedex-species-research-row.is-locked:nth-child(2) {
+  display: none;
+}
+
+.pokedex-species-page .pokedex-species-research-row.is-locked:nth-child(3) strong::after {
+  content: 'NÍVEL 4';
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+}
+
+.pokedex-species-page .pokedex-species-owned-link[href] strong {
+  color: #d5b29f;
+}
+
+.pokedex-species-page .pokedex-species-owned-link.is-empty strong {
+  color: #7d8583;
+}
+
+.pokedex-species-page.is-unknown .pokedex-species-player-state {
+  grid-template-columns: 1fr auto;
+}
+
+.pokedex-species-page.is-unknown .pokedex-species-research-list {
+  display: none;
+}
+
+.pokedex-species-page.is-unknown .pokedex-species-data {
+  padding-bottom: 24px;
+}
+
+@media (max-width: 700px) {
+  .pokedex-species-page .pokedex-species-identity {
+    padding-bottom: 18px;
+  }
+
+  .pokedex-species-page .pokedex-species-data {
+    padding-inline: 16px;
+    padding-bottom: 22px;
+  }
+
+  .pokedex-species-page .pokedex-species-player-state {
+    min-height: 48px;
+    padding: 0 11px;
+  }
+
+  .pokedex-species-page .pokedex-species-player-state strong {
+    font-size: 0.65rem;
+  }
+
+  .pokedex-species-page .pokedex-species-player-state span {
+    font-size: 0.63rem;
+  }
+
+  .pokedex-species-page .pokedex-species-description {
+    margin: 15px 4px 16px;
+    font-size: 0.84rem;
+    line-height: 1.5;
+  }
+
+  .pokedex-species-page .pokedex-species-facts {
+    margin-bottom: 14px;
+    padding-block: 12px;
+  }
+
+  .pokedex-species-page .pokedex-species-research-row,
+  .pokedex-species-page .pokedex-species-owned-link {
+    min-height: 44px;
+    padding-inline: 4px;
+  }
+
+  .pokedex-species-page .pokedex-species-research-row.is-locked {
+    min-height: 42px;
+  }
+
+  .pokedex-species-page .pokedex-species-research-row span,
+  .pokedex-species-page .pokedex-species-owned-link span,
+  .pokedex-species-page .pokedex-species-research-row.is-locked:nth-child(1) span::after {
+    font-size: 0.58rem;
+  }
+
+  .pokedex-species-page .pokedex-species-research-row strong,
+  .pokedex-species-page .pokedex-species-owned-link strong {
+    max-width: 46%;
+    font-size: 0.62rem;
+  }
+
+  .pokedex-species-page .pokedex-species-research-row.is-locked:nth-child(1) strong::after,
+  .pokedex-species-page .pokedex-species-research-row.is-locked:nth-child(3) strong::after {
+    font-size: 0.58rem;
+  }
+
+  .pokedex-species-page .pokedex-species-shell {
+    margin-bottom: 44px;
+  }
+}
+
+@media (max-width: 360px) {
+  .pokedex-species-page .pokedex-species-data {
+    padding-inline: 12px;
+  }
+}
