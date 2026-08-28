@@ -1,3 +1,24 @@
+.pokedex-species-page > .pokedex-index-header .pokedex-index-brand {
+  min-height: 44px;
+}
+
+.pokedex-species-page > .pokedex-index-header .pokedex-index-brand small {
+  font-size: 0;
+}
+
+.pokedex-species-page > .pokedex-index-header .pokedex-index-brand small::after {
+  content: '← VOLTAR À POKÉDEX';
+  color: rgba(255, 245, 238, 0.78);
+  font: 700 0.56rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.055em;
+}
+
+.pokedex-species-page > .pokedex-index-header .pokedex-index-brand:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.82);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
 .pokedex-species-page .pokedex-species-player-state {
   min-height: 52px;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -117,6 +138,10 @@
 }
 
 @media (max-width: 700px) {
+  .pokedex-species-page > .pokedex-index-header .pokedex-index-brand small::after {
+    font-size: 0.5rem;
+  }
+
   .pokedex-species-page .pokedex-species-identity {
     padding-bottom: 18px;
   }
