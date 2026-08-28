@@ -456,7 +456,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
             </dl>
           )}
 
-          <div className="pokedex-species-research-list" aria-label="Pesquisa da espécie">
+          <section className="pokedex-species-research-list" aria-label="Pesquisa da espécie">
             <ResearchRow label="HABITAT" value={habitatValue} tone={ecologyUnlocked ? 'ready' : 'locked'} />
             <ResearchRow label="FORMAS / VARIEDADES" value={varietiesValue} tone={ecologyUnlocked ? 'ready' : 'locked'} />
             <ResearchRow label="LINHA EVOLUTIVA" value={evolutionValue} tone={evolutionUnlocked ? 'ready' : 'locked'} />
@@ -474,7 +474,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
                 </div>
               )
             )}
-          </div>
+          </section>
 
           {ecologyUnlocked && activeRecord.varieties.length > 1 && (
             <section className="pokedex-species-varieties" aria-label="Formas e variedades registradas">
