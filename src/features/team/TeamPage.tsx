@@ -123,7 +123,7 @@ export function TeamPage() {
                     <div className="team-slot-visual">
                       <PokemonAssetImage
                         dex={pokemon.dex}
-                        assetRole="icon"
+                        assetRole="portrait"
                         alt=""
                         aria-hidden="true"
                         loading="lazy"
