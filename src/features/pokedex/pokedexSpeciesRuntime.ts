@@ -12,6 +12,7 @@ export type SpeciesVariety = {
 
 export type PokedexSpeciesRuntimeData = {
   dex: number;
+  slug: string;
   name: string;
   height: number | null;
   weight: number | null;
@@ -146,9 +147,11 @@ export async function loadPokedexSpeciesRuntime(dex: number, signal?: AbortSigna
     .filter((value): value is SpeciesVariety => value !== null);
 
   const habitatSlug = species.habitat?.name ?? '';
+  const slug = pokemon.name?.trim().toLowerCase() ?? '';
   const result: PokedexSpeciesRuntimeData = {
     dex,
-    name: pokemon.name ? formatNationalDexName(pokemon.name) : `Nº ${String(dex).padStart(3, '0')}`,
+    slug,
+    name: slug ? formatNationalDexName(slug) : `Nº ${String(dex).padStart(3, '0')}`,
     height: typeof pokemon.height === 'number' ? pokemon.height / 10 : null,
     weight: typeof pokemon.weight === 'number' ? pokemon.weight / 10 : null,
     typeSlugs,
