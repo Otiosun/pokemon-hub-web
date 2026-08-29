@@ -51,6 +51,18 @@ function parseContextLocation(returnHref: string) {
   return new URL(returnHref, 'https://pokemon-hub.local');
 }
 
+function isJourneyLeadContext(returnHref: string) {
+  const context = parseContextLocation(returnHref);
+  return (
+    (context.pathname === '/jornada' || context.pathname === '/jornada/') &&
+    context.searchParams.get('pokemonContext') === 'lead'
+  );
+}
+
+export function isJourneyLeadInstance(instanceId: string) {
+  return getTeamPreview()[0]?.instanceId === instanceId;
+}
+
 function orderedTeamContext() {
   const canonical = getTeamPreview();
   const draftOrder = readTeamDraftOrder();
@@ -67,10 +79,7 @@ function collectionContextSequence(returnHref: string) {
   if (context.pathname === '/team' || context.pathname === '/team/') {
     return orderedTeamContext();
   }
-  if (
-    (context.pathname === '/jornada' || context.pathname === '/jornada/') &&
-    context.searchParams.get('pokemonContext') === 'lead'
-  ) {
+  if (isJourneyLeadContext(returnHref)) {
     return getTeamPreview().slice(0, 1);
   }
 
@@ -103,9 +112,11 @@ export function getOwnedPokemonDetailPreview(instanceId: string): OwnedPokemonDe
 
 export function getOwnedPokemonNeighbours(instanceId: string, returnHref = '/pokemon') {
   const contextual = collectionContextSequence(returnHref);
-  const sequence = contextual.some((item) => item.instanceId === instanceId)
-    ? contextual
-    : [...OWNED_POKEMON_PREVIEW];
+  const containsCurrent = contextual.some((item) => item.instanceId === instanceId);
+  if (isJourneyLeadContext(returnHref) && !containsCurrent) {
+    return { previous: null, next: null };
+  }
+  const sequence = containsCurrent ? contextual : [...OWNED_POKEMON_PREVIEW];
 
   if (sequence.length <= 1) return { previous: null, next: null };
 
