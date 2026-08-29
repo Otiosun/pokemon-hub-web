@@ -1,10 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { HubModuleHeader } from '../../components/HubModuleHeader';
 import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import { getJourneyProfilePreview } from './journeyProfilePreview';
 import './journey-page.css';
 
 const MAX_PROFILE_IMAGE_BYTES = 8 * 1024 * 1024;
+type ProfileImageSlot = 'cover' | 'avatar';
+
+// Cosmetic preview only: keep one object URL per slot while this SPA document is alive.
+// Replacing a slot revokes the previous URL; a full reload naturally clears the preview.
+const profileImagePreviewUrls: Record<ProfileImageSlot, string | null> = {
+  cover: null,
+  avatar: null,
+};
 
 function EditIcon() {
   return (
@@ -39,16 +47,9 @@ function RegisterIcon() {
   );
 }
 
-function useImagePreview() {
-  const [url, setUrl] = useState<string | null>(null);
+function useImagePreview(slot: ProfileImageSlot) {
+  const [url, setUrl] = useState<string | null>(() => profileImagePreviewUrls[slot]);
   const [error, setError] = useState<string | null>(null);
-  const activeUrl = useRef<string | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (activeUrl.current) URL.revokeObjectURL(activeUrl.current);
-    };
-  }, []);
 
   const select = (file: File | undefined) => {
     if (!file) return;
@@ -61,9 +62,10 @@ function useImagePreview() {
       return;
     }
 
-    if (activeUrl.current) URL.revokeObjectURL(activeUrl.current);
+    const previousUrl = profileImagePreviewUrls[slot];
+    if (previousUrl) URL.revokeObjectURL(previousUrl);
     const nextUrl = URL.createObjectURL(file);
-    activeUrl.current = nextUrl;
+    profileImagePreviewUrls[slot] = nextUrl;
     setUrl(nextUrl);
     setError(null);
   };
@@ -78,8 +80,8 @@ function displayValue(value: string | number | null, fallback: string) {
 
 export function JourneyPage() {
   const profile = getJourneyProfilePreview();
-  const cover = useImagePreview();
-  const avatar = useImagePreview();
+  const cover = useImagePreview('cover');
+  const avatar = useImagePreview('avatar');
   const imageError = cover.error ?? avatar.error;
 
   return (
