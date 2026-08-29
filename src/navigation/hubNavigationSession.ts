@@ -34,6 +34,14 @@ export function hubSectionForPath(location: string): HubSection | null {
   return null;
 }
 
+export function shouldTraverseBackForUp(
+  parent: string | undefined,
+  parentInHistory: boolean | undefined,
+  destination: string,
+) {
+  return Boolean(parentInHistory && parent && parent === destination);
+}
+
 function isDestinationValid(section: HubSection, value: unknown): value is string {
   return typeof value === 'string' && value.startsWith('/') && hubSectionForPath(value) === section;
 }
