@@ -1,6 +1,6 @@
 import './hub-module-header.css';
 
-export type HubModule = 'pokedex' | 'pokemon' | 'team';
+export type HubModule = 'journey' | 'pokedex' | 'pokemon' | 'team';
 
 type HubModuleHeaderProps = {
   module: HubModule;
@@ -9,6 +9,7 @@ type HubModuleHeaderProps = {
 };
 
 const MODULE_META: Record<HubModule, { label: string; href: string; ariaLabel?: string }> = {
+  journey: { label: 'JORNADA', href: '/jornada' },
   pokedex: { label: 'POKÉDEX NACIONAL', href: '/pokedex' },
   pokemon: { label: 'BOX', href: '/pokemon' },
   team: { label: 'BOX · TIME ATIVO', href: '/pokemon', ariaLabel: 'Abrir BOX' },
