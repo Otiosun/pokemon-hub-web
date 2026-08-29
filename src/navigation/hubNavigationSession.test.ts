@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { hubSectionForPath, readHubDestinations } from './hubNavigationSession';
+import {
+  hubSectionForPath,
+  readHubDestinations,
+  shouldTraverseBackForUp,
+} from './hubNavigationSession';
 
 describe('hub navigation session', () => {
   it('classifies Journey, Pokédex and the Box domain without swallowing legacy Field Dex routes', () => {
@@ -20,5 +24,11 @@ describe('hub navigation session', () => {
       pokedex: '/pokedex',
       box: '/pokemon',
     });
+  });
+
+  it('uses browser Back for Up only when that exact parent really exists behind the record', () => {
+    expect(shouldTraverseBackForUp('/pokemon?species=4', true, '/pokemon?species=4')).toBe(true);
+    expect(shouldTraverseBackForUp('/pokemon', false, '/pokemon')).toBe(false);
+    expect(shouldTraverseBackForUp('/team', true, '/pokemon')).toBe(false);
   });
 });
