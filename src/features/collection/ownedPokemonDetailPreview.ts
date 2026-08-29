@@ -67,6 +67,12 @@ function collectionContextSequence(returnHref: string) {
   if (context.pathname === '/team' || context.pathname === '/team/') {
     return orderedTeamContext();
   }
+  if (
+    (context.pathname === '/jornada' || context.pathname === '/jornada/') &&
+    context.searchParams.get('pokemonContext') === 'lead'
+  ) {
+    return getTeamPreview().slice(0, 1);
+  }
 
   const session = readCollectionSession();
   const speciesRaw = context.searchParams.get('species');
