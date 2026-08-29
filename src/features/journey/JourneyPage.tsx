@@ -148,6 +148,7 @@ export function JourneyPage() {
               <a
                 className="journey-partner"
                 href={`/pokemon/${profile.leadPokemon.instanceId}`}
+                data-hub-parent="/jornada?pokemonContext=lead"
                 aria-label={`Abrir ${profile.leadPokemon.nickname}, primeiro Pokémon do Time`}
               >
                 <div className="journey-partner-copy">
