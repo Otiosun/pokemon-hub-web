@@ -42,7 +42,7 @@ function TrainerCardAvatar({ avatarUrl }: { avatarUrl: string | null }) {
 
 function TrainerCardBadges({ badges }: { badges: JourneyBadgePreview[] }) {
   return (
-    <div className="journey-card-v2-badge-row" aria-label="Insígnias de ginásio de Kanto">
+    <div className="journey-card-v2-badge-row" role="group" aria-label="Insígnias de ginásio de Kanto">
       {badges.map((badge, index) => (
         <div
           className={`journey-card-v2-badge${badge.earned ? ' is-earned' : ''}`}
