@@ -108,10 +108,13 @@ export function JourneyPage() {
 
           <div className="journey-identity">
             <div className="journey-avatar-wrap">
-              <div className={`journey-avatar${avatar.url ? ' has-image' : ''}`}>
-                {avatar.url ? (
-                  <img className="journey-avatar-image" src={avatar.url} alt="Foto de perfil personalizada" />
-                ) : (
+              <div
+                className={`journey-avatar${avatar.url ? ' has-image' : ''}`}
+                style={avatar.url ? { backgroundImage: `url(${avatar.url})` } : undefined}
+                aria-label={avatar.url ? 'Foto de perfil personalizada' : 'Perfil sem foto personalizada'}
+                role="img"
+              >
+                {avatar.url ? null : (
                   <span className="journey-avatar-ball" aria-hidden="true">
                     <i />
                   </span>
@@ -134,11 +137,11 @@ export function JourneyPage() {
             <div className="journey-identity-copy">
               <h1 id="journey-trainer-name">{profile.trainerName}</h1>
               <span className="journey-trainer-tag">TREINADOR</span>
-              <p className="journey-trainer-meta">
+              <div className="journey-trainer-meta">
                 <span>{profile.originRegion}</span>
                 <i aria-hidden="true" />
                 <strong>{profile.currentLocation}</strong>
-              </p>
+              </div>
             </div>
 
             {profile.leadPokemon ? (
