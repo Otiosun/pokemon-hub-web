@@ -39,6 +39,15 @@ describe('owned Pokemon contextual neighbours', () => {
     expect(neighbours).toEqual({ previous: null, next: null });
   });
 
+  it('does not leak Box siblings through a forged Journey lead context', () => {
+    const neighbours = getOwnedPokemonNeighbours(
+      'pkm-squirtle-a1',
+      '/jornada?pokemonContext=lead',
+    );
+
+    expect(neighbours).toEqual({ previous: null, next: null });
+  });
+
   it('does not invent sibling arrows when the species context has one owned instance', () => {
     rememberCollectionFilters('all', '', { ...DEFAULT_COLLECTION_FILTERS });
     const neighbours = getOwnedPokemonNeighbours('pkm-charmander-a1', '/pokemon?species=4');
