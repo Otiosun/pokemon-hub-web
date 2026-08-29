@@ -29,6 +29,16 @@ describe('owned Pokemon contextual neighbours', () => {
     clearTeamDraftOrder();
   });
 
+  it('keeps the Journey lead context intentionally single-item', () => {
+    clearTeamDraftOrder();
+    const neighbours = getOwnedPokemonNeighbours(
+      'pkm-charmander-a1',
+      '/jornada?pokemonContext=lead',
+    );
+
+    expect(neighbours).toEqual({ previous: null, next: null });
+  });
+
   it('does not invent sibling arrows when the species context has one owned instance', () => {
     rememberCollectionFilters('all', '', { ...DEFAULT_COLLECTION_FILTERS });
     const neighbours = getOwnedPokemonNeighbours('pkm-charmander-a1', '/pokemon?species=4');
