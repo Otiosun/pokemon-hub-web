@@ -32,7 +32,7 @@ export function countRegisteredSpeciesPreview() {
 
 export function getJourneyProfilePreview(): JourneyProfilePreview {
   return {
-    trainerName: 'Nilo',
+    trainerName: 'Whatever',
     originRegion: 'Kanto',
     currentLocation: 'Route 1',
     leadPokemon: getTeamPreview()[0] ?? null,
