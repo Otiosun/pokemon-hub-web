@@ -1,0 +1,758 @@
+/* Post-review corrections for the Kanto trainer license.
+   Keep this layer surgical: the base journey-page.css remains the canonical foundation. */
+
+.journey-page .hub-module-header {
+  min-height: 66px;
+  border-bottom-width: 2px;
+  background: linear-gradient(90deg, #c92f2d, #aa2727);
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.12);
+}
+
+.journey-page .hub-module-lens {
+  width: 36px;
+  height: 36px;
+  border-width: 3px;
+}
+
+.journey-page .hub-module-brand {
+  gap: 10px;
+}
+
+.journey-page .hub-module-brand strong {
+  font-size: 0.84rem;
+}
+
+.journey-page .hub-module-brand small,
+.journey-page .hub-module-meta small {
+  font-size: 0.46rem;
+}
+
+.journey-page .hub-module-meta strong {
+  font-size: 0.64rem;
+}
+
+.journey-license-rail {
+  width: 22px;
+  background: linear-gradient(180deg, #a8312b 0%, #8d2823 100%);
+}
+
+.journey-license {
+  padding-left: 40px;
+}
+
+.journey-cover {
+  min-height: 178px;
+  border-width: 1px;
+  clip-path: polygon(0 0, 100% 0, 100% 91%, 98% 100%, 2% 100%, 0 91%);
+}
+
+.journey-cover::before,
+.journey-cover.has-image::before {
+  background:
+    linear-gradient(180deg, rgba(14, 16, 15, 0.03), rgba(14, 16, 15, 0.2)),
+    linear-gradient(90deg, rgba(83, 43, 34, 0.11), transparent 38%);
+}
+
+.journey-cover-image {
+  filter: saturate(0.84) contrast(1.04) brightness(0.96);
+}
+
+.journey-identity {
+  min-height: 138px;
+}
+
+.journey-trainer-title {
+  margin-top: 7px;
+  font-size: 0.82rem;
+  letter-spacing: 0.045em;
+}
+
+.journey-league-seal {
+  color: rgba(92, 68, 43, 0.14);
+}
+
+.journey-location-grid {
+  border-top-color: rgba(142, 79, 63, 0.3);
+  border-bottom-color: rgba(111, 92, 70, 0.18);
+}
+
+.journey-location-grid > div {
+  padding-top: 15px;
+  padding-bottom: 14px;
+}
+
+.journey-partner {
+  min-height: 138px;
+}
+
+.journey-partner-portrait {
+  overflow: visible;
+}
+
+.journey-partner-portrait::before {
+  width: 88px;
+  border-width: 10px;
+  border-color: rgba(117, 89, 57, 0.075);
+}
+
+.journey-partner-portrait img[data-asset-role='home-artwork'],
+.journey-partner-portrait img[data-asset-role='official-artwork'] {
+  width: 124px;
+  height: 124px;
+  image-rendering: auto;
+  filter: drop-shadow(0 8px 7px rgba(74, 50, 25, 0.14));
+}
+
+.journey-badge-strip {
+  gap: 10px;
+  padding: 14px 10px 11px;
+  border-color: rgba(111, 88, 59, 0.22);
+  background:
+    linear-gradient(180deg, rgba(117, 89, 56, 0.035), transparent 36%),
+    rgba(255, 255, 255, 0.13);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.7);
+}
+
+.journey-badge-slot {
+  position: relative;
+  min-height: 60px;
+  align-content: center;
+}
+
+.journey-badge-shape {
+  width: clamp(34px, 6vw, 50px);
+  background: #e2d9c9;
+  box-shadow:
+    inset 3px 3px 7px rgba(89, 68, 43, 0.27),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.86),
+    0 1px 0 rgba(255, 255, 255, 0.74);
+  opacity: 1;
+}
+
+.journey-badge-slot:not(.is-earned) .journey-badge-shape {
+  filter: saturate(0.72);
+}
+
+.journey-badge-index {
+  color: #84796b;
+  font-weight: 700;
+}
+
+.journey-share-action {
+  min-height: 66px;
+  margin-top: 7px;
+  border: 0;
+  border-top: 1px solid rgba(157, 67, 53, 0.5);
+  border-bottom: 1px solid rgba(111, 92, 70, 0.2);
+  border-radius: 0;
+  padding-inline: 4px;
+  background: transparent;
+}
+
+.journey-share-action:hover {
+  background: rgba(167, 56, 47, 0.035);
+}
+
+.journey-share-action-icon {
+  border: 0;
+  border-right: 1px solid rgba(157, 67, 53, 0.28);
+}
+
+.journey-license-footer {
+  margin-top: 14px;
+  opacity: 0.78;
+}
+
+/* The secondary information should read like the continuation/back of a license,
+   not like a settings form. */
+.journey-profile-details {
+  margin-top: 12px;
+  border: 1px solid #d1c8b8;
+  border-right: 0;
+  border-left: 0;
+  background:
+    radial-gradient(circle at 80% 12%, rgba(130, 101, 67, 0.045) 0 1px, transparent 1px 100%) 0 0 / 9px 9px,
+    rgba(247, 242, 231, 0.64);
+}
+
+.journey-profile-details + .journey-profile-details {
+  margin-top: 8px;
+}
+
+.journey-profile-details:last-child {
+  border-bottom: 1px solid #d1c8b8;
+}
+
+.journey-profile-details summary {
+  min-height: 58px;
+  padding: 10px 5px;
+}
+
+.journey-details-copy {
+  padding-left: 10px;
+  border-left-width: 1px;
+}
+
+.journey-details-copy strong {
+  font-size: 0.92rem;
+}
+
+.journey-details-copy small {
+  font-size: 0.69rem;
+  letter-spacing: 0.015em;
+}
+
+.journey-details-body {
+  position: relative;
+  padding: 5px 16px 18px 16px;
+}
+
+.journey-about-grid,
+.journey-register-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 24px;
+}
+
+.journey-about-grid > div,
+.journey-register-list > div {
+  display: block;
+  min-width: 0;
+  padding: 11px 0 8px;
+  border: 0;
+  border-top: 1px solid rgba(114, 94, 68, 0.16);
+}
+
+.journey-about-grid > div:nth-child(-n + 2),
+.journey-register-list > div:nth-child(-n + 2) {
+  border-top: 0;
+}
+
+.journey-about-grid .journey-about-wide {
+  grid-column: 1 / -1;
+}
+
+.journey-about-grid dt,
+.journey-register-list dt {
+  margin: 0 0 6px;
+  color: #8b7560;
+  font: 700 0.62rem/1.2 'IBM Plex Mono', monospace;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.journey-about-grid dd,
+.journey-register-list dd {
+  margin: 0;
+  color: #27251f;
+  font: 650 0.9rem/1.4 'Space Grotesk', system-ui, sans-serif;
+  text-align: left;
+}
+
+.journey-register-list dd {
+  color: #8f2a27;
+  font-size: 1.02rem;
+}
+
+/* Trainer Card is a separate share artifact. It keeps one horizontal composition
+   and scales as a whole instead of reflowing into a mobile page. */
+body:has(.journey-share-backdrop) .hub-menu-trigger {
+  visibility: hidden;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.journey-share-backdrop {
+  z-index: 180;
+  place-items: center;
+  padding: 12px;
+  overflow: auto;
+  background: rgba(7, 9, 9, 0.84);
+  backdrop-filter: blur(13px);
+}
+
+.journey-share-dialog {
+  width: min(940px, 100%);
+  max-height: none;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 12px;
+  background: #151715;
+}
+
+.journey-share-toolbar {
+  min-height: 58px;
+  padding: 10px 14px;
+}
+
+.journey-share-toolbar span {
+  font-size: 0.56rem;
+}
+
+.journey-share-toolbar strong {
+  font-size: 0.96rem;
+}
+
+.journey-share-card {
+  --share-red: #a82d28;
+  container-type: inline-size;
+  width: calc(100% - 20px);
+  min-width: 0;
+  aspect-ratio: 1.72 / 1;
+  display: grid;
+  grid-template-columns: 41% 59%;
+  grid-template-rows: 12% 46% 20% 15% 7%;
+  gap: 0;
+  box-sizing: border-box;
+  margin: 0 10px 10px;
+  padding: 2.5cqw;
+  overflow: hidden;
+  border-radius: 7px;
+  background:
+    radial-gradient(circle at 76% 40%, rgba(125, 98, 63, 0.06) 0 1px, transparent 1px 100%) 0 0 / 8px 8px,
+    #f4eee2;
+  box-shadow:
+    inset 0 0 0 1px #cfc5b4,
+    inset 0.8cqw 0 0 #a82d28;
+}
+
+.journey-share-head {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  align-self: start;
+  margin: 0;
+  padding-left: 1.1cqw;
+  gap: 2cqw;
+}
+
+.journey-share-head > div {
+  gap: 0.35cqw;
+}
+
+.journey-share-head span {
+  font-size: 2.05cqw;
+  letter-spacing: 0.04em;
+}
+
+.journey-share-head small {
+  font-size: 0.82cqw;
+  letter-spacing: 0.08em;
+}
+
+.journey-share-head strong {
+  font-size: 1.35cqw;
+}
+
+.journey-share-cover {
+  grid-column: 1;
+  grid-row: 2 / 4;
+  align-self: stretch;
+  min-height: 0;
+  height: auto;
+  margin: 0 1.8cqw 1.5cqw 1.1cqw;
+  border-width: 0.22cqw;
+  clip-path: polygon(0 0, 100% 0, 100% 90%, 96% 100%, 0 100%);
+}
+
+.journey-share-cover-mark {
+  right: 1.4cqw;
+  bottom: 1.2cqw;
+  width: 4cqw;
+  border-width: 0.45cqw;
+}
+
+.journey-share-identity {
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 9.5cqw minmax(0, 1fr) 13cqw;
+  gap: 1.3cqw;
+  align-items: center;
+  padding: 0 0 0 1cqw;
+}
+
+.journey-share-card .journey-avatar.is-compact {
+  width: 8.3cqw;
+  height: 8.3cqw;
+  border-width: 0.42cqw;
+  box-shadow:
+    0 0 0 0.2cqw #30312e,
+    0 0.7cqw 1.5cqw rgba(50, 39, 25, 0.13);
+}
+
+.journey-share-card .journey-avatar-ball {
+  border-width: 0.28cqw;
+}
+
+.journey-share-card .journey-avatar-ball::before {
+  border-width: 0.34cqw;
+}
+
+.journey-share-name {
+  gap: 0.5cqw;
+}
+
+.journey-share-name > strong {
+  overflow: hidden;
+  font-size: 3.7cqw;
+  line-height: 0.95;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.journey-share-name span {
+  font-size: 1.1cqw;
+  letter-spacing: 0.055em;
+}
+
+.journey-share-name small {
+  display: none;
+}
+
+.journey-share-partner {
+  grid-template-columns: minmax(0, 1fr) 6.6cqw;
+  gap: 0.25cqw 0.6cqw;
+}
+
+.journey-share-partner span,
+.journey-share-partner small {
+  font-size: 0.78cqw;
+}
+
+.journey-share-partner strong {
+  overflow: hidden;
+  font-size: 1.2cqw;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.journey-share-partner img,
+.journey-share-partner .pokemon-asset-placeholder {
+  width: 6.6cqw;
+  height: 6.6cqw;
+  image-rendering: auto;
+  filter: drop-shadow(0 0.5cqw 0.45cqw rgba(74, 50, 25, 0.13));
+}
+
+.journey-share-meta {
+  grid-column: 2;
+  grid-row: 3;
+  align-self: center;
+  margin-left: 1cqw;
+  border-color: rgba(119, 95, 64, 0.22);
+}
+
+.journey-share-meta > div {
+  gap: 0.3cqw;
+  padding: 1cqw 0.8cqw;
+}
+
+.journey-share-meta span {
+  font-size: 0.78cqw;
+}
+
+.journey-share-meta strong {
+  font-size: 1.55cqw;
+}
+
+.journey-share-card > .journey-badge-strip {
+  grid-column: 1 / -1;
+  grid-row: 4;
+  align-self: center;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 0.9cqw;
+  margin: 0 0.8cqw;
+  padding: 0.8cqw 1.2cqw;
+  border-color: rgba(111, 88, 59, 0.2);
+}
+
+.journey-share-card .journey-badge-slot {
+  min-height: 0;
+  gap: 0;
+}
+
+.journey-share-card .journey-badge-shape {
+  width: 3.7cqw;
+  box-shadow:
+    inset 0.35cqw 0.35cqw 0.65cqw rgba(89, 68, 43, 0.24),
+    inset -0.2cqw -0.2cqw 0.45cqw rgba(255, 255, 255, 0.84);
+}
+
+.journey-share-footer {
+  grid-column: 1 / -1;
+  grid-row: 5;
+  align-self: end;
+  margin: 0;
+  padding-right: 0.8cqw;
+  font-size: 0.7cqw;
+}
+
+@media (max-width: 720px) {
+  .journey-page .hub-module-header {
+    min-height: 60px;
+    padding-inline: 12px;
+  }
+
+  .journey-page .hub-module-lens {
+    width: 33px;
+    height: 33px;
+  }
+
+  .journey-page .hub-module-brand strong {
+    font-size: 0.8rem;
+  }
+
+  .journey-profile-shell {
+    width: min(100% - 12px, 560px);
+    padding-top: 8px;
+  }
+
+  .journey-license {
+    padding: 15px 11px 12px 23px;
+  }
+
+  .journey-license-rail {
+    width: 13px;
+  }
+
+  .journey-license-rail::before,
+  .journey-license-rail::after,
+  .journey-license-rail span {
+    opacity: 0.74;
+  }
+
+  .journey-license-rail span {
+    top: 68px;
+    font-size: 0.52rem;
+  }
+
+  .journey-license-head {
+    margin-bottom: 9px;
+  }
+
+  .journey-cover {
+    min-height: 116px;
+  }
+
+  .journey-cover-code {
+    font-size: 0.5rem;
+  }
+
+  .journey-identity {
+    grid-template-columns: 74px minmax(0, 1fr);
+    gap: 11px;
+    min-height: 105px;
+    padding: 10px 0 8px;
+  }
+
+  .journey-avatar-wrap {
+    width: 67px;
+    height: 67px;
+    margin-top: -17px;
+  }
+
+  .journey-identity-copy {
+    position: relative;
+    z-index: 2;
+    padding-right: 42px;
+  }
+
+  .journey-identity-copy h1 {
+    font-size: clamp(1.65rem, 8.4vw, 2.15rem);
+  }
+
+  .journey-trainer-title {
+    margin-top: 5px;
+    font-size: 0.69rem;
+  }
+
+  .journey-league-seal {
+    position: absolute;
+    right: 1px;
+    bottom: 10px;
+    z-index: 0;
+    display: grid;
+    width: 54px;
+    color: rgba(91, 67, 42, 0.105);
+    border-color: rgba(91, 67, 42, 0.085);
+  }
+
+  .journey-league-seal span,
+  .journey-league-seal small {
+    font-size: 0.32rem;
+  }
+
+  .journey-league-seal i {
+    width: 21px;
+    height: 21px;
+    border-width: 3px;
+  }
+
+  .journey-league-seal i::before {
+    left: -3px;
+    right: -3px;
+    height: 3px;
+  }
+
+  .journey-location-grid > div {
+    padding: 11px 8px 10px;
+  }
+
+  .journey-location-grid strong {
+    font-size: 0.95rem;
+  }
+
+  .journey-partner {
+    grid-template-columns: minmax(0, 1fr) 100px;
+    min-height: 108px;
+    padding: 10px 3px;
+  }
+
+  .journey-partner-portrait {
+    width: 100px;
+    height: 90px;
+  }
+
+  .journey-partner-portrait img[data-asset-role='home-artwork'],
+  .journey-partner-portrait img[data-asset-role='official-artwork'] {
+    width: 96px;
+    height: 96px;
+  }
+
+  .journey-partner-portrait::before {
+    width: 62px;
+    border-width: 8px;
+  }
+
+  .journey-badge-strip {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px 7px;
+    padding: 12px 7px 10px;
+  }
+
+  .journey-badge-slot {
+    min-height: 54px;
+  }
+
+  .journey-badge-shape {
+    width: 43px;
+  }
+
+  .journey-share-action {
+    min-height: 58px;
+  }
+
+  .journey-share-action-icon {
+    width: 31px;
+    height: 31px;
+  }
+
+  .journey-license-footer {
+    margin-top: 10px;
+    padding-top: 9px;
+  }
+
+  .journey-about-grid,
+  .journey-register-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px 16px;
+  }
+
+  .journey-details-body {
+    padding: 3px 13px 15px;
+  }
+
+  .journey-about-grid > div,
+  .journey-register-list > div {
+    padding: 9px 0 7px;
+  }
+
+  .journey-about-grid dt,
+  .journey-register-list dt {
+    font-size: 0.57rem;
+  }
+
+  .journey-about-grid dd,
+  .journey-register-list dd {
+    font-size: 0.82rem;
+  }
+
+  .journey-register-list dd {
+    font-size: 0.92rem;
+  }
+
+  .journey-share-backdrop {
+    padding: 7px;
+  }
+
+  .journey-share-dialog {
+    width: 100%;
+    max-height: none;
+    overflow: hidden;
+  }
+
+  .journey-share-toolbar {
+    min-height: 46px;
+    padding: 7px 10px;
+  }
+
+  .journey-share-toolbar strong {
+    font-size: 0.86rem;
+  }
+
+  .journey-share-toolbar button {
+    width: 34px;
+    height: 34px;
+  }
+
+  .journey-share-card {
+    width: calc(100% - 12px);
+    min-width: 0;
+    margin: 0 6px 6px;
+    padding: 2.5cqw;
+  }
+}
+
+@media (max-width: 380px) {
+  .journey-license {
+    padding-left: 21px;
+  }
+
+  .journey-license-rail {
+    width: 11px;
+  }
+
+  .journey-cover {
+    min-height: 108px;
+  }
+
+  .journey-identity {
+    grid-template-columns: 68px minmax(0, 1fr);
+  }
+
+  .journey-avatar-wrap {
+    width: 62px;
+    height: 62px;
+  }
+
+  .journey-partner {
+    grid-template-columns: minmax(0, 1fr) 88px;
+  }
+
+  .journey-partner-portrait,
+  .journey-partner-portrait img[data-asset-role='home-artwork'],
+  .journey-partner-portrait img[data-asset-role='official-artwork'] {
+    width: 86px;
+    height: 86px;
+  }
+
+  .journey-badge-shape {
+    width: 40px;
+  }
+
+  .journey-about-grid,
+  .journey-register-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
