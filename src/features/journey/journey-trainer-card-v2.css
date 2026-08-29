@@ -260,7 +260,7 @@ body:has(.journey-card-v2-backdrop) .hub-menu-trigger {
 
 .journey-card-v2-partner-art {
   position: absolute;
-  inset: 0 0 5.4cqw;
+  inset: 0 0 10.5cqw;
   display: grid;
   place-items: center;
   filter: drop-shadow(0 2.1cqw 2.8cqw rgba(0, 0, 0, 0.28));
@@ -280,7 +280,7 @@ body:has(.journey-card-v2-backdrop) .hub-menu-trigger {
 .journey-card-v2-partner-name {
   position: absolute;
   right: 1cqw;
-  bottom: 0.4cqw;
+  bottom: 9cqw;
   min-width: 15cqw;
   display: flex;
   align-items: baseline;
@@ -416,11 +416,5 @@ body:has(.journey-card-v2-backdrop) .hub-menu-trigger {
     right: 2px;
     width: 40px;
     height: 40px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .journey-card-v2-close {
-    scroll-behavior: auto;
   }
 }
