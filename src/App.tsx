@@ -6,6 +6,7 @@ import {
   hubSectionForPath,
   readHubDestinations,
   rememberHubDestination,
+  shouldTraverseBackForUp,
   type HubDestinations,
   type HubSection,
 } from './navigation/hubNavigationSession';
@@ -45,6 +46,7 @@ const SECTION_ROOTS: Record<HubSection, string> = {
 type HubHistoryState = {
   hubSection?: HubSection;
   hubParent?: string;
+  hubParentInHistory?: boolean;
 };
 
 type FallbackModule = 'journey' | 'pokedex' | 'box' | 'lab';
@@ -137,6 +139,14 @@ function isPokedexIndexPath(path: string) {
 
 function usesSiblingHistoryReplacement(anchor: HTMLAnchorElement) {
   return Boolean(anchor.closest('.pokedex-species-side-nav, .dex-nav, .owned-pokemon-side-nav'));
+}
+
+function explicitParentForNavigation(anchor: HTMLAnchorElement) {
+  const raw = anchor.dataset.hubParent;
+  if (!raw?.startsWith('/')) return undefined;
+  const parent = new URL(raw, window.location.origin);
+  if (parent.origin !== window.location.origin) return undefined;
+  return `${parent.pathname}${parent.search}${parent.hash}`;
 }
 
 function rootForPath(path: string) {
@@ -269,6 +279,16 @@ export function App() {
       const isPrimaryNavigation = Boolean(anchor.dataset.hubPrimary);
 
       if (anchor.dataset.navMode === 'up') {
+        if (
+          shouldTraverseBackForUp(
+            historyState.hubParent,
+            historyState.hubParentInHistory,
+            nextLocation,
+          )
+        ) {
+          window.history.back();
+          return;
+        }
         const destinationSection = hubSectionForPath(destination.pathname);
         const nextState: HubHistoryState = destinationSection ? { hubSection: destinationSection } : {};
         window.history.replaceState(nextState, '', nextLocation);
@@ -278,10 +298,12 @@ export function App() {
         window.history.replaceState(historyState, '', nextLocation);
       } else {
         const destinationSection = hubSectionForPath(destination.pathname);
-        const parent = parentForNavigation(currentPath, window.location.search, destination.pathname);
+        const parent =
+          explicitParentForNavigation(anchor) ??
+          parentForNavigation(currentPath, window.location.search, destination.pathname);
         const nextState: HubHistoryState = {
           ...(destinationSection ? { hubSection: destinationSection } : {}),
-          ...(parent ? { hubParent: parent } : {}),
+          ...(parent ? { hubParent: parent, hubParentInHistory: true } : {}),
         };
         window.history.pushState(nextState, '', nextLocation);
       }
