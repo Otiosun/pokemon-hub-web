@@ -47,6 +47,13 @@ function sexGlyph(sex: string) {
   return '—';
 }
 
+function resolveOwnedReturnHref(returnHref: string) {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('origin') === 'journey-lead'
+    ? '/jornada?pokemonContext=lead'
+    : returnHref;
+}
+
 export function OwnedPokemonDetailPage({
   instanceId,
   returnHref = '/pokemon',
@@ -58,6 +65,7 @@ export function OwnedPokemonDetailPage({
   const [visualMode, setVisualMode] = useState<OwnedVisualMode>('3d');
   const [viewerReady, setViewerReady] = useState(false);
   const pokemon = getOwnedPokemonDetailPreview(instanceId);
+  const resolvedReturnHref = resolveOwnedReturnHref(returnHref);
 
   if (!pokemon) {
     return (
@@ -66,15 +74,18 @@ export function OwnedPokemonDetailPage({
         <section className="owned-detail-not-found">
           <span>REGISTRO INDISPONÍVEL</span>
           <h1>Pokémon não encontrado.</h1>
-          <a href={returnHref} data-nav-mode="up">VOLTAR AO CONTEXTO</a>
+          <a href={resolvedReturnHref} data-nav-mode="up">VOLTAR AO CONTEXTO</a>
         </section>
       </main>
     );
   }
 
-  const neighbours = getOwnedPokemonNeighbours(instanceId, returnHref);
+  const neighbours = getOwnedPokemonNeighbours(instanceId, resolvedReturnHref);
   const dex = String(pokemon.dex).padStart(3, '0');
-  const returningToTeam = returnHref === '/team' || returnHref.startsWith('/team?');
+  const returningToTeam = resolvedReturnHref === '/team' || resolvedReturnHref.startsWith('/team?');
+  const returningToJourney =
+    resolvedReturnHref === '/jornada' || resolvedReturnHref.startsWith('/jornada?');
+  const returnLabel = returningToTeam ? 'TIME' : returningToJourney ? 'JORNADA' : 'BOX';
   const teamDraftActive = returningToTeam && Boolean(readTeamDraftOrder());
   const draftSlot = teamDraftActive ? readTeamDraftSlot(instanceId) : null;
   const contextualTeamSlot = draftSlot ?? pokemon.teamSlot;
@@ -93,9 +104,9 @@ export function OwnedPokemonDetailPage({
           <div className="owned-detail-stage-grid" aria-hidden="true" />
           <div className="owned-detail-ruler" aria-hidden="true"><strong>HEIGHT</strong></div>
 
-          <a href={returnHref} data-nav-mode="up" className="owned-detail-stage-back">
+          <a href={resolvedReturnHref} data-nav-mode="up" className="owned-detail-stage-back">
             <SideArrow direction="left" />
-            <span>{returningToTeam ? 'TIME' : 'BOX'}</span>
+            <span>{returnLabel}</span>
           </a>
 
           <fieldset className="owned-detail-view-switch" aria-label="Visual do Pokémon">
