@@ -7,6 +7,7 @@ import {
   type JourneyProfilePreview,
 } from './journeyProfilePreview';
 import './journey-page.css';
+import './journey-page-review-fixes.css';
 
 const MAX_PROFILE_IMAGE_BYTES = 8 * 1024 * 1024;
 type ProfileImageSlot = 'cover' | 'avatar';
@@ -135,7 +136,7 @@ function ShareTrainerCard({
       <section className="journey-share-dialog" role="dialog" aria-modal="true" aria-labelledby="journey-share-title">
         <div className="journey-share-toolbar">
           <div>
-            <span>PRÉVIA</span>
+            <span>PRÉVIA HORIZONTAL</span>
             <strong id="journey-share-title">Trainer Card</strong>
           </div>
           <button type="button" onClick={onClose} aria-label="Fechar Trainer Card">
@@ -162,14 +163,13 @@ function ShareTrainerCard({
             <div className="journey-share-name">
               <strong>{profile.trainerName}</strong>
               <span>{profile.trainerTitle}</span>
-              <small>{profile.trainerId}</small>
             </div>
             {profile.leadPokemon ? (
               <div className="journey-share-partner">
                 <span>PARCEIRO</span>
                 <PokemonAssetImage
                   dex={profile.leadPokemon.dex}
-                  assetRole="portrait"
+                  assetRole="home-artwork"
                   alt=""
                   loading="eager"
                   decoding="async"
@@ -266,10 +266,6 @@ export function JourneyPage() {
             <div className="journey-identity-copy">
               <h1 id="journey-trainer-name">{profile.trainerName}</h1>
               <span className="journey-trainer-title">— {profile.trainerTitle}</span>
-              <div className="journey-trainer-id-block">
-                <span>TRAINER ID</span>
-                <strong>{profile.trainerId}</strong>
-              </div>
             </div>
 
             <div className="journey-league-seal" aria-hidden="true">
@@ -304,7 +300,7 @@ export function JourneyPage() {
               <div className="journey-partner-portrait" aria-hidden="true">
                 <PokemonAssetImage
                   dex={profile.leadPokemon.dex}
-                  assetRole="portrait"
+                  assetRole="home-artwork"
                   alt=""
                   loading="eager"
                   decoding="async"
@@ -326,7 +322,7 @@ export function JourneyPage() {
             <span className="journey-share-action-icon"><CardIcon /></span>
             <span className="journey-share-action-copy">
               <strong>VER TRAINER CARD</strong>
-              <small>Gerar card oficial para compartilhar</small>
+              <small>Prévia horizontal para compartilhar</small>
             </span>
             <span className="journey-share-action-chevron"><ChevronIcon /></span>
           </button>
@@ -343,7 +339,7 @@ export function JourneyPage() {
           <summary>
             <span className="journey-details-copy">
               <strong>Sobre o treinador</strong>
-              <small>Informações pessoais e aparência</small>
+              <small>Identidade pessoal</small>
             </span>
             <span className="journey-details-chevron"><ChevronIcon /></span>
           </summary>
@@ -373,7 +369,7 @@ export function JourneyPage() {
           <summary>
             <span className="journey-details-copy">
               <strong>Registro do treinador</strong>
-              <small>Dados oficiais da jornada</small>
+              <small>Registro oficial da Liga</small>
             </span>
             <span className="journey-details-chevron"><ChevronIcon /></span>
           </summary>
