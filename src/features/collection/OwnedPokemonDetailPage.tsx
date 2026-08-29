@@ -5,7 +5,11 @@ import { TypeBadge } from '../../visual-assets/TypeBadge';
 import { GenerationsPokemonViewer } from '../asset-lab/GenerationsPokemonViewer';
 import { typeAccent } from '../pokemon-detail/fieldDexSpecies';
 import { readTeamDraftOrder, readTeamDraftSlot } from '../team/teamSession';
-import { getOwnedPokemonDetailPreview, getOwnedPokemonNeighbours } from './ownedPokemonDetailPreview';
+import {
+  getOwnedPokemonDetailPreview,
+  getOwnedPokemonNeighbours,
+  isJourneyLeadInstance,
+} from './ownedPokemonDetailPreview';
 import './owned-pokemon-detail.css';
 
 type OwnedDetailTab = 'summary' | 'combat' | 'history';
@@ -47,9 +51,9 @@ function sexGlyph(sex: string) {
   return '—';
 }
 
-function resolveOwnedReturnHref(returnHref: string) {
+function resolveOwnedReturnHref(returnHref: string, instanceId: string) {
   const params = new URLSearchParams(window.location.search);
-  return params.get('origin') === 'journey-lead'
+  return params.get('origin') === 'journey-lead' && isJourneyLeadInstance(instanceId)
     ? '/jornada?pokemonContext=lead'
     : returnHref;
 }
@@ -65,7 +69,7 @@ export function OwnedPokemonDetailPage({
   const [visualMode, setVisualMode] = useState<OwnedVisualMode>('3d');
   const [viewerReady, setViewerReady] = useState(false);
   const pokemon = getOwnedPokemonDetailPreview(instanceId);
-  const resolvedReturnHref = resolveOwnedReturnHref(returnHref);
+  const resolvedReturnHref = resolveOwnedReturnHref(returnHref, instanceId);
 
   if (!pokemon) {
     return (
