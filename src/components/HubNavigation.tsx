@@ -27,8 +27,8 @@ const NAV_ITEMS: NavItem[] = [
   {
     id: 'journey',
     label: 'JORNADA',
-    description: 'Continue o RPG',
-    asset: `${POKESPRITE_ITEMS}/key-item/town-map.png`,
+    description: 'Perfil e registro do treinador',
+    asset: `${POKESPRITE_ITEMS}/key-item/adventure-guide.png`,
   },
   {
     id: 'pokedex',
