@@ -108,13 +108,10 @@ export function JourneyPage() {
 
           <div className="journey-identity">
             <div className="journey-avatar-wrap">
-              <div
-                className={`journey-avatar${avatar.url ? ' has-image' : ''}`}
-                style={avatar.url ? { backgroundImage: `url(${avatar.url})` } : undefined}
-                aria-label={avatar.url ? 'Foto de perfil personalizada' : 'Perfil sem foto personalizada'}
-                role="img"
-              >
-                {avatar.url ? null : (
+              <div className={`journey-avatar${avatar.url ? ' has-image' : ''}`}>
+                {avatar.url ? (
+                  <img className="journey-avatar-image" src={avatar.url} alt="Foto de perfil personalizada" />
+                ) : (
                   <span className="journey-avatar-ball" aria-hidden="true">
                     <i />
                   </span>
