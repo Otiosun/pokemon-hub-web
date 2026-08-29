@@ -107,6 +107,7 @@ function BadgeStrip({ badges, compact = false }: { badges: JourneyBadgePreview[]
         <div
           className={`journey-badge-slot${badge.earned ? ' is-earned' : ''}`}
           key={badge.key}
+          role="img"
           aria-label={`${badge.name}: ${badge.earned ? 'conquistada' : 'não conquistada'}`}
           title={badge.name}
         >
@@ -130,9 +131,7 @@ function ShareTrainerCard({
   onClose: () => void;
 }) {
   return (
-    <div className="journey-share-backdrop" role="presentation" onMouseDown={(event) => {
-      if (event.target === event.currentTarget) onClose();
-    }}>
+    <div className="journey-share-backdrop">
       <section className="journey-share-dialog" role="dialog" aria-modal="true" aria-labelledby="journey-share-title">
         <div className="journey-share-toolbar">
           <div>
