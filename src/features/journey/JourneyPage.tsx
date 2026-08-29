@@ -134,11 +134,11 @@ export function JourneyPage() {
             <div className="journey-identity-copy">
               <h1 id="journey-trainer-name">{profile.trainerName}</h1>
               <span className="journey-trainer-tag">TREINADOR</span>
-              <div className="journey-trainer-meta" aria-label="Região e localização atual">
+              <p className="journey-trainer-meta">
                 <span>{profile.originRegion}</span>
                 <i aria-hidden="true" />
                 <strong>{profile.currentLocation}</strong>
-              </div>
+              </p>
             </div>
 
             {profile.leadPokemon ? (
