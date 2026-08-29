@@ -18,4 +18,12 @@ describe('journey profile preview', () => {
       bio: null,
     });
   });
+
+  it('exposes trainer-license identity without fabricating badge progress', () => {
+    const profile = getJourneyProfilePreview();
+    expect(profile.trainerTitle).toBe('Treinador iniciante');
+    expect(profile.trainerId).toBe('KNT-028419');
+    expect(profile.badges).toHaveLength(8);
+    expect(profile.badges.every((badge) => badge.earned === false)).toBe(true);
+  });
 });
