@@ -13,13 +13,13 @@
     "build": "npm run prepare:field-dex-preview && vite build",
     "preview": "vite preview",
     "deploy:cf": "wrangler deploy",
-    "check": "biome lint .",
+    "check": "biome lint --max-diagnostics=500 .",
     "format": "biome format --write .",
     "format:check": "biome format .",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
-    "verify": "rm -rf /tmp/poke-importer /tmp/pokemon-hub-py /tmp/generations-smoke && git clone --depth 1 --quiet https://github.com/ChicoEevee/Pokemon-Switch-Model-Importer-Blender.git /tmp/poke-importer && python3 -m pip install --disable-pip-version-check --quiet --target /tmp/pokemon-hub-py py7zr flatbuffers pillow numpy && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/build-generations-format-samples.py && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/audit-generations-semantic.py && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/build-generations-batch.py --dex 1,7,10,123,165,245,249,292,384 --output /tmp/generations-smoke && biome lint . && tsc --noEmit && vitest run && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/build-generations-player-preview.py && vite build"
+    "verify": "rm -rf /tmp/poke-importer /tmp/pokemon-hub-py /tmp/generations-smoke && git clone --depth 1 --quiet https://github.com/ChicoEevee/Pokemon-Switch-Model-Importer-Blender.git /tmp/poke-importer && python3 -m pip install --disable-pip-version-check --quiet --target /tmp/pokemon-hub-py py7zr flatbuffers pillow numpy && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/build-generations-format-samples.py && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/audit-generations-semantic.py && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/build-generations-batch.py --dex 1,7,10,123,165,245,249,292,384 --output /tmp/generations-smoke && biome lint --max-diagnostics=500 . && tsc --noEmit && vitest run && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/build-generations-player-preview.py && vite build"
   },
   "dependencies": {
     "@google/model-viewer": "4.3.1",
