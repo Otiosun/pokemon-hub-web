@@ -1,0 +1,100 @@
+.session-gate {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 50% 10%, rgba(141, 168, 255, 0.07), transparent 34%),
+    var(--bg);
+  padding: 24px;
+}
+
+.session-card {
+  width: min(520px, 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.014));
+  box-shadow: var(--shadow);
+  padding: 28px;
+}
+
+.session-mark {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--muted);
+  font-size: 15px;
+  margin-bottom: 18px;
+}
+
+.session-card h1 {
+  margin: 6px 0 8px;
+  font-size: 24px;
+  letter-spacing: -0.035em;
+}
+
+.session-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+.session-diagnostic {
+  display: grid;
+  gap: 5px;
+  margin-top: 18px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+.session-diagnostic span {
+  color: var(--muted-2);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.session-diagnostic code {
+  color: var(--muted);
+  font-size: 9px;
+  overflow-wrap: anywhere;
+}
+
+.session-retry {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 18px;
+  border: 1px solid rgba(141, 168, 255, 0.18);
+  border-radius: 11px;
+  background: rgba(141, 168, 255, 0.07);
+  color: #dbe3ff;
+  cursor: pointer;
+  font-weight: 750;
+}
+
+.session-retry:hover {
+  border-color: rgba(141, 168, 255, 0.32);
+}
+
+.environment-card[data-environment='production'] .environment-dot {
+  background: #ff8d92;
+  box-shadow: 0 0 0 5px rgba(255, 141, 146, 0.08);
+}
+
+.environment-card[data-environment='production'] .environment-meta {
+  color: #ffb7ba;
+  border-color: rgba(255, 141, 146, 0.2);
+}
+
+.environment-card[data-environment='staging'] .environment-dot {
+  background: var(--warning);
+}
+
+.environment-card[data-environment='development'] .environment-dot {
+  background: #8da8ff;
+  box-shadow: 0 0 0 5px rgba(141, 168, 255, 0.08);
+}
