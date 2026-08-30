@@ -12,6 +12,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "deploy:cf": "wrangler deploy",
+    "postinstall": "cd control-center && pnpm install --frozen-lockfile --ignore-scripts",
     "check": "biome lint .",
     "format": "biome format --write .",
     "format:check": "biome format .",
