@@ -12,7 +12,7 @@ import { Player360Page } from './features/player360/Player360Page';
 import { displayAdminRole, useAdminSession } from './features/session/useAdminSession';
 import { AdminApiClient } from './lib/api/admin-api';
 
-const CANONICAL_PROGRESS = 14.83;
+const CANONICAL_PROGRESS = 16.17;
 
 const workQueue = [
   {
@@ -57,9 +57,10 @@ export function App() {
   const canReadSensitive = capabilities.has('player.read_sensitive');
   const canReadPlayers = capabilities.has('player.read');
   const roleLabel = displayAdminRole(session);
+  const apiState = 'CONECTADA · SESSÃO VALIDADA' as const;
 
   return (
-    <div className="control-center">
+    <div className="control-center-shell">
       <ControlCenterSidebar
         activeSection={activeSection}
         environment={session.environment}
@@ -72,230 +73,186 @@ export function App() {
 
       <main className="workspace">
         <header className="topbar">
-          <div className="search-wrap">
-            <span className="search-icon" aria-hidden="true">
-              ⌕
-            </span>
-            <input
-              aria-label="Busca global"
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Buscar jogador, Pokémon, área, operação..."
-              value={query}
-            />
-            <kbd>⌘ K</kbd>
+          <div className="topbar-context">
+            <span className="context-kicker">{active?.label ?? 'CONTROL CENTER'}</span>
+            <strong>{active?.description ?? 'Superfície administrativa autenticada'}</strong>
           </div>
+
           <div className="topbar-actions">
-            <span className="foundation-pill">READ-ONLY · ADMIN API</span>
-            <button className="icon-button large" type="button" aria-label="Ajuda">
-              ?
+            <div className="global-search">
+              <span aria-hidden="true">⌕</span>
+              <input
+                aria-label="Busca global"
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Buscar jogador, operação ou área"
+                value={query}
+              />
+              <kbd>⌘ K</kbd>
+            </div>
+            <button className="secondary-button" type="button" onClick={() => void reload()}>
+              Revalidar sessão
             </button>
           </div>
         </header>
 
-        <section className="content">
-          <div className="page-heading">
+        <div className="workspace-scroll">
+          <section className="page-heading">
             <div>
-              <span className="section-kicker">{active?.shortLabel.toUpperCase()}</span>
-              <h1>{active?.label === 'Hoje' ? 'O que precisa da sua atenção.' : active?.label}</h1>
-              <p>{active?.description}</p>
+              <span className="eyebrow">CENTRAL ADMINISTRATIVA</span>
+              <h1>{active?.label ?? 'Control Center'}</h1>
+              <p>{active?.description ?? 'Operação administrativa autenticada.'}</p>
             </div>
-            <OperationalDiagnostics
-              apiState="CONECTADA · SESSÃO VALIDADA"
-              buildLabel={config.buildLabel}
-              environment={session.environment}
-              inline
-            />
-          </div>
+            <div className="heading-actions">
+              <OperationalDiagnostics
+                buildLabel={config.buildLabel}
+                environment={session.environment}
+                apiState={apiState}
+                inline
+              />
+              <span className="status-pill">READ-ONLY · ADMIN API</span>
+            </div>
+          </section>
 
           {activeSection === 'today' ? (
-            <>
-              <section className="signal-grid" aria-label="Resumo operacional">
-                <article className="signal-card primary-signal">
-                  <div className="signal-topline">
-                    <span className="signal-label">CENTRAL</span>
-                    <span className="status-chip">EM CONSTRUÇÃO</span>
-                  </div>
-                  <strong className="signal-value">{CANONICAL_PROGRESS.toFixed(2)}%</strong>
-                  <span className="signal-caption">progresso canônico</span>
-                  <div
-                    className="progress-track"
-                    role="progressbar"
-                    aria-label="Progresso canônico da Central"
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-valuenow={CANONICAL_PROGRESS}
-                  >
-                    <span style={{ width: `${CANONICAL_PROGRESS}%` }} />
-                  </div>
-                  <p>
-                    Foundation validada e primeira boundary autenticada/read-only conectada ao
-                    backend.
-                  </p>
-                </article>
-
-                <article className="signal-card">
-                  <div className="signal-topline">
-                    <span className="signal-label">SESSÃO ADMIN</span>
-                    <span className="good-dot" aria-hidden="true" />
-                  </div>
-                  <strong className="signal-value compact">{roleLabel}</strong>
-                  <span className="signal-caption">
-                    {session.capabilities.length} capabilities efetivas
-                  </span>
-                  <p>
-                    Menus e leitura sensível derivam desta sessão; o backend revalida autorização em
-                    cada request.
-                  </p>
-                </article>
-
-                <article className="signal-card">
-                  <div className="signal-topline">
-                    <span className="signal-label">PLAYER 360</span>
-                    <span className="good-dot" aria-hidden="true" />
-                  </div>
-                  <strong className="signal-value compact">READ-ONLY</strong>
-                  <span className="signal-caption">busca + leitura individual</span>
-                  <p>
-                    Busca e overview podem consultar dados reais. Nenhuma mutation está exposta
-                    neste slice.
-                  </p>
-                </article>
-              </section>
-
-              <section className="two-column-grid">
-                <div className="panel">
-                  <div className="panel-heading">
-                    <div>
-                      <span className="panel-kicker">FILA DE TRABALHO</span>
-                      <h2>Agora</h2>
-                    </div>
-                    <button type="button" className="text-button">
-                      Ver tudo
-                    </button>
-                  </div>
-                  <div className="queue-list">
-                    {workQueue.map((item) => (
-                      <article className="queue-item" key={item.eyebrow}>
-                        <span className={`queue-indicator ${item.tone}`} />
-                        <div>
-                          <span className="queue-eyebrow">{item.eyebrow}</span>
-                          <strong>{item.title}</strong>
-                          <p>{item.copy}</p>
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="panel quick-panel">
-                  <div className="panel-heading">
-                    <div>
-                      <span className="panel-kicker">ATALHOS</span>
-                      <h2>Trabalho frequente</h2>
-                    </div>
-                  </div>
-                  <div className="quick-list">
-                    <button
-                      type="button"
-                      className="quick-action"
-                      disabled={!canReadPlayers}
-                      onClick={() => setActiveSection('players')}
-                    >
-                      <span className="quick-glyph" aria-hidden="true">
-                        ⌕
-                      </span>
-                      <span>
-                        <strong>Buscar jogador</strong>
-                        <small>Abrir o ponto de entrada real do Player 360.</small>
-                      </span>
-                      <span className="quick-lock">
-                        {canReadPlayers ? 'DISPONÍVEL' : 'SEM CAPABILITY'}
-                      </span>
-                    </button>
-                    <button type="button" className="quick-action" disabled>
-                      <span className="quick-glyph" aria-hidden="true">
-                        ◇
-                      </span>
-                      <span>
-                        <strong>Revisar conteúdo</strong>
-                        <small>Comparar drafts e releases antes de publicar.</small>
-                      </span>
-                      <span className="quick-lock">PRÓXIMA FASE</span>
-                    </button>
-                    <button type="button" className="quick-action" disabled>
-                      <span className="quick-glyph" aria-hidden="true">
-                        ↺
-                      </span>
-                      <span>
-                        <strong>Ver auditoria</strong>
-                        <small>Reconstruir ações administrativas e seus resultados.</small>
-                      </span>
-                      <span className="quick-lock">PRÓXIMA FASE</span>
-                    </button>
-                  </div>
-                </div>
-              </section>
-
-              <section className="panel principles-panel">
-                <div className="panel-heading">
-                  <div>
-                    <span className="panel-kicker">REGRA DE OURO</span>
-                    <h2>A interface pode ser rápida sem ser imprudente.</h2>
-                  </div>
-                </div>
-                <div className="principle-grid">
-                  <div>
-                    <span>01</span>
-                    <strong>Contexto primeiro</strong>
-                    <p>Alvo e ambiente nunca desaparecem durante uma alteração.</p>
-                  </div>
-                  <div>
-                    <span>02</span>
-                    <strong>Impacto antes do apply</strong>
-                    <p>Simulation mostra o que muda antes da confirmação.</p>
-                  </div>
-                  <div>
-                    <span>03</span>
-                    <strong>Backend manda</strong>
-                    <p>Capability, scope, revision e invariantes são sempre server-side.</p>
-                  </div>
-                  <div>
-                    <span>04</span>
-                    <strong>Evidência depois</strong>
-                    <p>Toda operação relevante termina com resultado verificável e auditável.</p>
-                  </div>
-                </div>
-              </section>
-            </>
+            <TodayView
+              canReadPlayers={canReadPlayers}
+              onOpenPlayers={() => setActiveSection('players')}
+              principalId={session.principalId}
+              query={query}
+              roleLabel={roleLabel}
+            />
           ) : activeSection === 'players' ? (
-            <Player360Page canReadSensitive={canReadSensitive} client={client} />
+            <Player360Page
+              canReadSensitive={canReadSensitive}
+              client={client}
+              key={session.principalId}
+            />
           ) : (
-            <section className="placeholder-panel">
-              <span className="placeholder-glyph" aria-hidden="true">
-                {active?.glyph}
-              </span>
-              <span className="panel-kicker">FOUNDATION</span>
-              <h2>{active?.label} já tem lugar na arquitetura.</h2>
-              <p>{active?.description}</p>
-              <div className="placeholder-note">
-                Esta tela não finge dados nem ações. O próximo slice conectará somente superfícies
-                sustentadas por contratos reais do backend.
-              </div>
-            </section>
+            <FoundationView sectionId={activeSection} />
           )}
-
-          {query.trim() ? (
-            <div className="search-preview" role="status">
-              <span>BUSCA GLOBAL AINDA EM FOUNDATION</span>
-              <strong>“{query.trim()}”</strong>
-              <p>
-                Player 360 já possui busca real; a busca global multi-entidade permanece para a Fase
-                3.
-              </p>
-            </div>
-          ) : null}
-        </section>
+        </div>
       </main>
     </div>
+  );
+}
+
+function TodayView({
+  canReadPlayers,
+  onOpenPlayers,
+  principalId,
+  query,
+  roleLabel,
+}: {
+  canReadPlayers: boolean;
+  onOpenPlayers: () => void;
+  principalId: string;
+  query: string;
+  roleLabel: string;
+}) {
+  return (
+    <>
+      <section className="metric-grid" aria-label="Resumo da fundação">
+        <article className="metric-card is-primary">
+          <span>PROGRESSO CANÔNICO</span>
+          <strong>{CANONICAL_PROGRESS.toFixed(2)}%</strong>
+          <small>Checklist oficial do Control Center</small>
+        </article>
+        <article className="metric-card">
+          <span>PRINCIPAL</span>
+          <strong>{roleLabel}</strong>
+          <small title={principalId}>{principalId}</small>
+        </article>
+        <article className="metric-card">
+          <span>PLAYER 360</span>
+          <strong>{canReadPlayers ? 'READ' : 'BLOQUEADO'}</strong>
+          <small>Permissão efetiva: player.read</small>
+        </article>
+      </section>
+
+      {query ? (
+        <section className="search-foundation-card">
+          <div>
+            <span className="eyebrow">BUSCA GLOBAL · FOUNDATION</span>
+            <h2>“{query}”</h2>
+            <p>
+              A busca global continua apenas como fundação. Para localizar um jogador agora, use a
+              busca tipada do Player 360.
+            </p>
+          </div>
+          <button
+            className="primary-button"
+            disabled={!canReadPlayers}
+            onClick={onOpenPlayers}
+            type="button"
+          >
+            Buscar jogador
+          </button>
+        </section>
+      ) : null}
+
+      <section className="dashboard-grid">
+        <div className="panel work-panel">
+          <div className="panel-heading">
+            <div>
+              <span className="eyebrow">AGORA</span>
+              <h2>Fila de trabalho</h2>
+            </div>
+            <span className="panel-meta">READ-ONLY</span>
+          </div>
+          <div className="work-list">
+            {workQueue.map((item) => (
+              <article className={`work-item is-${item.tone}`} key={item.title}>
+                <span className="work-eyebrow">{item.eyebrow}</span>
+                <strong>{item.title}</strong>
+                <p>{item.copy}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+
+        <aside className="panel foundation-panel">
+          <div className="panel-heading">
+            <div>
+              <span className="eyebrow">FUNDAÇÃO</span>
+              <h2>Estado operacional</h2>
+            </div>
+          </div>
+          <dl className="foundation-list">
+            <div>
+              <dt>Sessão</dt>
+              <dd>Backend-authoritative</dd>
+            </div>
+            <div>
+              <dt>Capabilities</dt>
+              <dd>Efetivas</dd>
+            </div>
+            <div>
+              <dt>Player 360</dt>
+              <dd>Read-only conectado</dd>
+            </div>
+            <div>
+              <dt>Mutations</dt>
+              <dd>Não expostas</dd>
+            </div>
+          </dl>
+        </aside>
+      </section>
+    </>
+  );
+}
+
+function FoundationView({ sectionId }: { sectionId: ControlCenterSectionId }) {
+  const section = CONTROL_CENTER_SECTIONS.find((candidate) => candidate.id === sectionId);
+
+  return (
+    <section className="foundation-placeholder">
+      <span className="eyebrow">FOUNDATION</span>
+      <h2>{section?.label ?? 'Área administrativa'}</h2>
+      <p>
+        {section?.description ?? 'Área planejada.'} Nenhuma operação real é exposta neste slice.
+      </p>
+      <div className="placeholder-rule" />
+      <small>Conectaremos esta área apenas quando contrato, authority e testes do backend existirem.</small>
+    </section>
   );
 }
