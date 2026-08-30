@@ -1,19 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
-import { loadControlCenterConfig, type ControlCenterConfig } from './app/config';
+import { loadControlCenterConfig } from './app/config';
 import {
   CONTROL_CENTER_SECTIONS,
   type ControlCenterSectionId,
   visibleSections,
 } from './app/navigation';
+import { ControlCenterSidebar } from './components/shell/ControlCenterSidebar';
+import { OperationalDiagnostics } from './components/shell/OperationalDiagnostics';
+import { SessionGate } from './components/shell/SessionGate';
 import { Player360Page } from './features/player360/Player360Page';
-import {
-  type AdminSessionState,
-  displayAdminRole,
-  useAdminSession,
-} from './features/session/useAdminSession';
+import { displayAdminRole, useAdminSession } from './features/session/useAdminSession';
 import { AdminApiClient } from './lib/api/admin-api';
 
-const CANONICAL_PROGRESS = 9.75;
+const CANONICAL_PROGRESS = 14.83;
 
 const workQueue = [
   {
@@ -35,92 +34,6 @@ const workQueue = [
     tone: 'quiet',
   },
 ] as const;
-
-function AvailabilityBadge({ availability }: { availability: string }) {
-  if (availability === 'planned') return <span className="nav-badge">EM PROJETO</span>;
-  return null;
-}
-
-function SessionGate({
-  state,
-  config,
-  onRetry,
-}: {
-  state: AdminSessionState;
-  config: ControlCenterConfig;
-  onRetry: () => Promise<void>;
-}) {
-  const apiState = state.status === 'loading' ? 'VALIDANDO SESSÃO' : 'ACESSO BLOQUEADO';
-  const diagnostics = (
-    <div className="session-runtime-summary" aria-label="Diagnóstico operacional">
-      <span>BUILD {config.buildLabel}</span>
-      <span>AMBIENTE {environmentLabel(config.environment)}</span>
-      <span>ADMIN API {apiState}</span>
-    </div>
-  );
-
-  if (state.status === 'loading') {
-    return (
-      <main className="session-gate" aria-live="polite">
-        <section className="session-card">
-          <div className="session-mark" aria-hidden="true">
-            ◉
-          </div>
-          <span className="panel-kicker">POKÉMON CONTROL CENTER</span>
-          <h1>Validando acesso administrativo.</h1>
-          <p>
-            A interface só será carregada depois que a Admin API confirmar sua identidade, principal
-            e permissões efetivas.
-          </p>
-          {diagnostics}
-        </section>
-      </main>
-    );
-  }
-
-  if (state.status === 'ready') return null;
-
-  const title =
-    state.status === 'unauthenticated'
-      ? 'Autenticação administrativa necessária.'
-      : state.status === 'forbidden'
-        ? 'Esta identidade não possui acesso à Central.'
-        : 'A Admin API está indisponível.';
-  const copy =
-    state.status === 'unauthenticated'
-      ? 'A sessão do Cloudflare Access não foi reconhecida. Autentique-se no perímetro administrativo e tente novamente.'
-      : state.status === 'forbidden'
-        ? 'A identidade externa foi reconhecida, mas não resolve para um principal administrativo ACTIVE autorizado.'
-        : 'A Central não conseguiu validar a sessão. Nenhuma ferramenta administrativa foi liberada.';
-
-  return (
-    <main className="session-gate">
-      <section className="session-card">
-        <div className="session-mark" aria-hidden="true">
-          !
-        </div>
-        <span className="panel-kicker">ACESSO BLOQUEADO</span>
-        <h1>{title}</h1>
-        <p>{copy}</p>
-        {diagnostics}
-        <div className="session-diagnostic">
-          <span>DIAGNÓSTICO</span>
-          <code>{state.error.message}</code>
-          {state.error.correlationId ? <code>Correlation {state.error.correlationId}</code> : null}
-        </div>
-        <button className="session-retry" type="button" onClick={() => void onRetry()}>
-          Tentar novamente
-        </button>
-      </section>
-    </main>
-  );
-}
-
-function environmentLabel(environment: 'development' | 'staging' | 'production'): string {
-  if (environment === 'production') return 'PRODUÇÃO';
-  if (environment === 'staging') return 'STAGING';
-  return 'DESENVOLVIMENTO';
-}
 
 export function App() {
   const config = useMemo(() => loadControlCenterConfig(), []);
@@ -144,69 +57,18 @@ export function App() {
   const canReadSensitive = capabilities.has('player.read_sensitive');
   const canReadPlayers = capabilities.has('player.read');
   const roleLabel = displayAdminRole(session);
-  const environment = environmentLabel(session.environment);
-  const principalShort = `${session.principalId.slice(0, 8)}…${session.principalId.slice(-4)}`;
 
   return (
     <div className="control-center">
-      <aside className="sidebar" aria-label="Navegação principal">
-        <div className="brand-block">
-          <div className="brand-mark" aria-hidden="true">
-            <span className="brand-mark-core" />
-          </div>
-          <div>
-            <span className="brand-kicker">POKÉMON RPG</span>
-            <strong className="brand-name">Control Center</strong>
-          </div>
-        </div>
-
-        <div className="environment-card" data-environment={session.environment}>
-          <span className="environment-dot" aria-hidden="true" />
-          <div>
-            <span className="environment-label">AMBIENTE</span>
-            <strong>{environment}</strong>
-          </div>
-          <span className="environment-meta">{session.environment.toUpperCase()}</span>
-        </div>
-
-        <nav className="primary-nav">
-          {sections.map((section) => (
-            <button
-              className={`nav-item ${activeSection === section.id ? 'is-active' : ''}`}
-              key={section.id}
-              onClick={() => setActiveSection(section.id)}
-              type="button"
-            >
-              <span className="nav-glyph" aria-hidden="true">
-                {section.glyph}
-              </span>
-              <span className="nav-copy">
-                <span className="nav-label">{section.label}</span>
-                <span className="nav-description">{section.description}</span>
-              </span>
-              <AvailabilityBadge availability={section.availability} />
-            </button>
-          ))}
-        </nav>
-
-        <div className="sidebar-footer">
-          <div className="principal-avatar" aria-hidden="true">
-            {roleLabel.slice(0, 1)}
-          </div>
-          <div className="principal-copy">
-            <strong>{roleLabel}</strong>
-            <span title={session.principalId}>{principalShort}</span>
-          </div>
-          <button
-            className="icon-button"
-            type="button"
-            aria-label="Revalidar sessão"
-            onClick={() => void reload()}
-          >
-            ↻
-          </button>
-        </div>
-      </aside>
+      <ControlCenterSidebar
+        activeSection={activeSection}
+        environment={session.environment}
+        onReload={reload}
+        onSelect={setActiveSection}
+        principalId={session.principalId}
+        roleLabel={roleLabel}
+        sections={sections}
+      />
 
       <main className="workspace">
         <header className="topbar">
@@ -237,11 +99,12 @@ export function App() {
               <h1>{active?.label === 'Hoje' ? 'O que precisa da sua atenção.' : active?.label}</h1>
               <p>{active?.description}</p>
             </div>
-            <div className="heading-meta">
-              <span>{environment}</span>
-              <span className="separator">/</span>
-              <span>BUILD {config.buildLabel}</span>
-            </div>
+            <OperationalDiagnostics
+              apiState="CONECTADA · SESSÃO VALIDADA"
+              buildLabel={config.buildLabel}
+              environment={session.environment}
+              inline
+            />
           </div>
 
           {activeSection === 'today' ? (
