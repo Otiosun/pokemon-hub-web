@@ -3,6 +3,7 @@ import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import type { JourneyBadgePreview, JourneyProfilePreview } from './journeyProfilePreview';
 import { KantoLeagueSeal, KantoTrainerPlaceholder } from './kantoLeagueVisualKit';
 import './journey-trainer-card-v2.css';
+import './journey-trainer-card-v2-reference-fixes.css';
 
 function CloseIcon() {
   return (
@@ -74,6 +75,10 @@ function FlowGeometry() {
         <path d="M152 755C375 690 579 700 759 767C927 830 1104 829 1280 772" />
         <path d="M1032 74C1188 30 1396 40 1570 112" />
         <path d="M1090 104C1240 66 1410 72 1560 132" />
+        <path
+          className="journey-card-v2-flow-boundary"
+          d="M764 205C958 115 1226 125 1680 165M1680 805C1436 775 1243 720 1079 625C933 540 798 460 680 398C596 352 625 274 764 205"
+        />
       </svg>
     </>
   );
@@ -121,7 +126,6 @@ export function ShareTrainerCardV2({
             {coverUrl ? <img src={coverUrl} alt="" /> : <span className="journey-card-v2-cover-fallback" />}
           </div>
           <div className="journey-card-v2-cover-shade" aria-hidden="true" />
-          <div className="journey-card-v2-flow-outline" aria-hidden="true" />
 
           <header className="journey-card-v2-header">
             <div className="journey-card-v2-brand">
