@@ -63,7 +63,8 @@
 .player-result:focus-visible {
   border-color: rgba(141, 168, 255, 0.28);
   background: rgba(141, 168, 255, 0.035);
-  outline: none;
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
 }
 
 .player-result.is-selected {
