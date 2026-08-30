@@ -89,6 +89,7 @@ export function canSeeSection(
   section: ControlCenterSection,
   effectiveCapabilities: ReadonlySet<string>,
 ): boolean {
+  if (section.availability === 'planned') return false;
   if (section.requiredAnyCapability.length === 0) return true;
   return section.requiredAnyCapability.some((capability) => effectiveCapabilities.has(capability));
 }
