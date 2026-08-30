@@ -1,0 +1,20 @@
+.journey-card-v2-flow-lines .journey-card-v2-flow-boundary {
+  stroke: rgba(43, 72, 60, 0.3);
+  stroke-width: 1.35;
+}
+
+.journey-card-v2-badge {
+  position: relative;
+}
+
+.journey-card-v2-close {
+  top: -12px;
+  right: -4px;
+}
+
+@media (max-width: 520px) {
+  .journey-card-v2-close {
+    top: -10px;
+    right: 2px;
+  }
+}
