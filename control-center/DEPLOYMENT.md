@@ -1,6 +1,6 @@
 # Pokémon Control Center — Deployment Boundary
 
-Status: deployment architecture defined; dedicated deployment project is still pending.
+Status: deployment architecture and dedicated-project contract defined; dedicated Vercel project/hostname is still pending.
 
 ## Non-negotiable boundary
 
@@ -32,6 +32,26 @@ npm run verify:control-center
 
 The root wrapper invokes the pinned pnpm 11.23.0 and runs `pnpm --dir control-center verify`, so Biome, TypeScript, Vitest and Vite resolve from the Control Center's own frozen dependency graph instead of the public Hub's `node_modules`.
 
+## Dedicated Vercel project contract
+
+`control-center/vercel.json` is the deployment contract for a Vercel project whose **Root Directory is exactly `control-center`**.
+
+It defines:
+
+- framework: Vite;
+- install command that materializes and verifies the canonical lock source from inside `control-center/`;
+- exact pnpm 11.23.0 install with `--frozen-lockfile --ignore-scripts`;
+- build command that runs the Control Center's own `pnpm verify`;
+- output directory `dist`.
+
+This matters because a project rooted at `control-center/` does not execute the public Hub root `postinstall`. The admin app therefore carries everything required to reproduce and verify its own dependency graph without relying on the public deployment wrapper.
+
+TDD evidence:
+
+- RED head `9db609634775af13223ae795de8d7375bbae4306`: `deployment-boundary.test.ts` failed with `ENOENT control-center/vercel.json` while the other Control Center tests stayed green;
+- GREEN implementation head `1c1d3f07ec8125af743787774908a768bf516d2e`: `control-center/vercel.json` added and the dedicated-boundary invariant passed;
+- this is configuration proof only. It does **not** count as a dedicated Vercel project existing.
+
 ## Reproducible dependency graph
 
 The Control Center dependency graph is intentionally fail-closed:
@@ -58,6 +78,21 @@ The app uses these browser-visible, non-secret build settings:
 
 Secrets, Access service credentials, private keys, PostgreSQL credentials and WhatsApp credentials must never use `VITE_*` or enter the browser bundle.
 
+## Required Vercel project settings
+
+When the dedicated project is materialized, use:
+
+- Git repository: `Otiosun/pokemon-hub-web`;
+- Root Directory: `control-center`;
+- Framework: Vite / use repository `vercel.json`;
+- Node: 24.x, constrained by `package.json` to `>=24.19.0 <25`;
+- Preview/staging API URL: the real Admin API staging endpoint only;
+- `VITE_CONTROL_CENTER_ENV=staging` for the first dedicated project proof;
+- a build label derived from the deployment/commit;
+- no production credentials during the F1.2 proof.
+
+A generated `*.vercel.app` hostname is sufficient to prove project/deployment separation for F1.2 if the deployment is materially independent from `pokemon-hub-web`. A friendly custom domain is not required for that engineering gate. However, the hostname must not become operational for administrators until Cloudflare Access/origin protection is configured according to the later security gates.
+
 ## Required deployment separation
 
 A dedicated admin deployment must provide:
@@ -74,12 +109,17 @@ A dedicated admin deployment must provide:
 
 ## Current state
 
-The app builds independently, but PR previews are currently produced by the existing `pokemon-hub-web` Vercel project. That is useful as build evidence only and is NOT the final administrative deployment architecture.
+The application is now **ready to be attached to a dedicated Vercel project with Root Directory `control-center`**, and that contract has an automated invariant.
+
+The current PR previews are still produced by the existing public `pokemon-hub-web` Vercel project. That is useful as build evidence only and is NOT the final administrative deployment architecture.
+
+The connected Vercel account currently has no project identifiable as a dedicated Pokémon Control Center. The existing `pokemon-hub-webr` project is an older unlinked project with its own production deployment and must not be repurposed without explicit evidence that it is intended for the admin plane.
 
 Checklist consequence:
 
-- documentation of the separate deployment boundary may be complete;
-- the item requiring a materially independent build/deploy boundary remains open until a dedicated deployment project/hostname exists.
+- F1.10 is complete;
+- F1.2 remains open until a materially independent Vercel project/deployment/hostname exists and is smoke-proved;
+- no score is granted merely for adding `vercel.json`.
 
 ## Production prohibition
 
