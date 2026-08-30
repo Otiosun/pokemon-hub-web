@@ -7,8 +7,8 @@ import {
 } from './app/navigation';
 import { Player360Page } from './features/player360/Player360Page';
 import {
-  displayAdminRole,
   type AdminSessionState,
+  displayAdminRole,
   useAdminSession,
 } from './features/session/useAdminSession';
 import { AdminApiClient } from './lib/api/admin-api';
@@ -41,19 +41,32 @@ function AvailabilityBadge({ availability }: { availability: string }) {
   return null;
 }
 
-function SessionGate({ state, onRetry }: { state: AdminSessionState; onRetry: () => Promise<void> }) {
+function SessionGate({
+  state,
+  onRetry,
+}: {
+  state: AdminSessionState;
+  onRetry: () => Promise<void>;
+}) {
   if (state.status === 'loading') {
     return (
       <main className="session-gate" aria-live="polite">
         <section className="session-card">
-          <div className="session-mark" aria-hidden="true">◉</div>
+          <div className="session-mark" aria-hidden="true">
+            ◉
+          </div>
           <span className="panel-kicker">POKÉMON CONTROL CENTER</span>
           <h1>Validando acesso administrativo.</h1>
-          <p>A interface só será carregada depois que a Admin API confirmar sua identidade, principal e permissões efetivas.</p>
+          <p>
+            A interface só será carregada depois que a Admin API confirmar sua identidade, principal
+            e permissões efetivas.
+          </p>
         </section>
       </main>
     );
   }
+
+  if (state.status === 'ready') return null;
 
   const title =
     state.status === 'unauthenticated'
@@ -71,7 +84,9 @@ function SessionGate({ state, onRetry }: { state: AdminSessionState; onRetry: ()
   return (
     <main className="session-gate">
       <section className="session-card">
-        <div className="session-mark" aria-hidden="true">!</div>
+        <div className="session-mark" aria-hidden="true">
+          !
+        </div>
         <span className="panel-kicker">ACESSO BLOQUEADO</span>
         <h1>{title}</h1>
         <p>{copy}</p>
@@ -101,7 +116,8 @@ export function App() {
   const [activeSection, setActiveSection] = useState<ControlCenterSectionId>('today');
   const [query, setQuery] = useState('');
   const sections = useMemo(() => visibleSections(capabilities), [capabilities]);
-  const active = CONTROL_CENTER_SECTIONS.find((section) => section.id === activeSection) ?? sections[0];
+  const active =
+    CONTROL_CENTER_SECTIONS.find((section) => section.id === activeSection) ?? sections[0];
 
   useEffect(() => {
     if (!sections.some((section) => section.id === activeSection)) setActiveSection('today');
@@ -166,7 +182,12 @@ export function App() {
             <strong>{roleLabel}</strong>
             <span title={session.principalId}>{principalShort}</span>
           </div>
-          <button className="icon-button" type="button" aria-label="Revalidar sessão" onClick={() => void reload()}>
+          <button
+            className="icon-button"
+            type="button"
+            aria-label="Revalidar sessão"
+            onClick={() => void reload()}
+          >
             ↻
           </button>
         </div>
@@ -175,7 +196,9 @@ export function App() {
       <main className="workspace">
         <header className="topbar">
           <div className="search-wrap">
-            <span className="search-icon" aria-hidden="true">⌕</span>
+            <span className="search-icon" aria-hidden="true">
+              ⌕
+            </span>
             <input
               aria-label="Busca global"
               onChange={(event) => setQuery(event.target.value)}
@@ -186,7 +209,9 @@ export function App() {
           </div>
           <div className="topbar-actions">
             <span className="foundation-pill">READ-ONLY · ADMIN API</span>
-            <button className="icon-button large" type="button" aria-label="Ajuda">?</button>
+            <button className="icon-button large" type="button" aria-label="Ajuda">
+              ?
+            </button>
           </div>
         </header>
 
@@ -224,7 +249,10 @@ export function App() {
                   >
                     <span style={{ width: `${CANONICAL_PROGRESS}%` }} />
                   </div>
-                  <p>Foundation validada e primeira boundary autenticada/read-only conectada ao backend.</p>
+                  <p>
+                    Foundation validada e primeira boundary autenticada/read-only conectada ao
+                    backend.
+                  </p>
                 </article>
 
                 <article className="signal-card">
@@ -233,8 +261,13 @@ export function App() {
                     <span className="good-dot" aria-hidden="true" />
                   </div>
                   <strong className="signal-value compact">{roleLabel}</strong>
-                  <span className="signal-caption">{session.capabilities.length} capabilities efetivas</span>
-                  <p>Menus e leitura sensível derivam desta sessão; o backend revalida autorização em cada request.</p>
+                  <span className="signal-caption">
+                    {session.capabilities.length} capabilities efetivas
+                  </span>
+                  <p>
+                    Menus e leitura sensível derivam desta sessão; o backend revalida autorização em
+                    cada request.
+                  </p>
                 </article>
 
                 <article className="signal-card">
@@ -244,7 +277,10 @@ export function App() {
                   </div>
                   <strong className="signal-value compact">READ-ONLY</strong>
                   <span className="signal-caption">busca + leitura individual</span>
-                  <p>Busca e overview podem consultar dados reais. Nenhuma mutation está exposta neste slice.</p>
+                  <p>
+                    Busca e overview podem consultar dados reais. Nenhuma mutation está exposta
+                    neste slice.
+                  </p>
                 </article>
               </section>
 
@@ -255,7 +291,9 @@ export function App() {
                       <span className="panel-kicker">FILA DE TRABALHO</span>
                       <h2>Agora</h2>
                     </div>
-                    <button type="button" className="text-button">Ver tudo</button>
+                    <button type="button" className="text-button">
+                      Ver tudo
+                    </button>
                   </div>
                   <div className="queue-list">
                     {workQueue.map((item) => (
@@ -285,15 +323,21 @@ export function App() {
                       disabled={!canReadPlayers}
                       onClick={() => setActiveSection('players')}
                     >
-                      <span className="quick-glyph" aria-hidden="true">⌕</span>
+                      <span className="quick-glyph" aria-hidden="true">
+                        ⌕
+                      </span>
                       <span>
                         <strong>Buscar jogador</strong>
                         <small>Abrir o ponto de entrada real do Player 360.</small>
                       </span>
-                      <span className="quick-lock">{canReadPlayers ? 'DISPONÍVEL' : 'SEM CAPABILITY'}</span>
+                      <span className="quick-lock">
+                        {canReadPlayers ? 'DISPONÍVEL' : 'SEM CAPABILITY'}
+                      </span>
                     </button>
                     <button type="button" className="quick-action" disabled>
-                      <span className="quick-glyph" aria-hidden="true">◇</span>
+                      <span className="quick-glyph" aria-hidden="true">
+                        ◇
+                      </span>
                       <span>
                         <strong>Revisar conteúdo</strong>
                         <small>Comparar drafts e releases antes de publicar.</small>
@@ -301,7 +345,9 @@ export function App() {
                       <span className="quick-lock">PRÓXIMA FASE</span>
                     </button>
                     <button type="button" className="quick-action" disabled>
-                      <span className="quick-glyph" aria-hidden="true">↺</span>
+                      <span className="quick-glyph" aria-hidden="true">
+                        ↺
+                      </span>
                       <span>
                         <strong>Ver auditoria</strong>
                         <small>Reconstruir ações administrativas e seus resultados.</small>
@@ -320,10 +366,26 @@ export function App() {
                   </div>
                 </div>
                 <div className="principle-grid">
-                  <div><span>01</span><strong>Contexto primeiro</strong><p>Alvo e ambiente nunca desaparecem durante uma alteração.</p></div>
-                  <div><span>02</span><strong>Impacto antes do apply</strong><p>Simulation mostra o que muda antes da confirmação.</p></div>
-                  <div><span>03</span><strong>Backend manda</strong><p>Capability, scope, revision e invariantes são sempre server-side.</p></div>
-                  <div><span>04</span><strong>Evidência depois</strong><p>Toda operação relevante termina com resultado verificável e auditável.</p></div>
+                  <div>
+                    <span>01</span>
+                    <strong>Contexto primeiro</strong>
+                    <p>Alvo e ambiente nunca desaparecem durante uma alteração.</p>
+                  </div>
+                  <div>
+                    <span>02</span>
+                    <strong>Impacto antes do apply</strong>
+                    <p>Simulation mostra o que muda antes da confirmação.</p>
+                  </div>
+                  <div>
+                    <span>03</span>
+                    <strong>Backend manda</strong>
+                    <p>Capability, scope, revision e invariantes são sempre server-side.</p>
+                  </div>
+                  <div>
+                    <span>04</span>
+                    <strong>Evidência depois</strong>
+                    <p>Toda operação relevante termina com resultado verificável e auditável.</p>
+                  </div>
                 </div>
               </section>
             </>
@@ -331,12 +393,15 @@ export function App() {
             <Player360Page canReadSensitive={canReadSensitive} client={client} />
           ) : (
             <section className="placeholder-panel">
-              <span className="placeholder-glyph" aria-hidden="true">{active?.glyph}</span>
+              <span className="placeholder-glyph" aria-hidden="true">
+                {active?.glyph}
+              </span>
               <span className="panel-kicker">FOUNDATION</span>
               <h2>{active?.label} já tem lugar na arquitetura.</h2>
               <p>{active?.description}</p>
               <div className="placeholder-note">
-                Esta tela não finge dados nem ações. O próximo slice conectará somente superfícies sustentadas por contratos reais do backend.
+                Esta tela não finge dados nem ações. O próximo slice conectará somente superfícies
+                sustentadas por contratos reais do backend.
               </div>
             </section>
           )}
@@ -345,7 +410,10 @@ export function App() {
             <div className="search-preview" role="status">
               <span>BUSCA GLOBAL AINDA EM FOUNDATION</span>
               <strong>“{query.trim()}”</strong>
-              <p>Player 360 já possui busca real; a busca global multi-entidade permanece para a Fase 3.</p>
+              <p>
+                Player 360 já possui busca real; a busca global multi-entidade permanece para a Fase
+                3.
+              </p>
             </div>
           ) : null}
         </section>
