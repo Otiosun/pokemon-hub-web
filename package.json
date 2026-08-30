@@ -18,7 +18,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
-    "check:control-center": "biome lint control-center/src control-center/vite.config.ts",
+    "check:control-center": "biome check control-center/src control-center/vite.config.ts",
     "typecheck:control-center": "tsc -p control-center/tsconfig.json --noEmit",
     "test:control-center": "vitest run control-center/src",
     "build:control-center": "vite build control-center",
