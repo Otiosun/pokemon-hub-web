@@ -252,7 +252,9 @@ function FoundationView({ sectionId }: { sectionId: ControlCenterSectionId }) {
         {section?.description ?? 'Área planejada.'} Nenhuma operação real é exposta neste slice.
       </p>
       <div className="placeholder-rule" />
-      <small>Conectaremos esta área apenas quando contrato, authority e testes do backend existirem.</small>
+      <small>
+        Conectaremos esta área apenas quando contrato, authority e testes do backend existirem.
+      </small>
     </section>
   );
 }
