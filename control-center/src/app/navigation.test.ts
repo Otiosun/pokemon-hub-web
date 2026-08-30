@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { visibleSections } from './navigation';
+import { canSeeSection, CONTROL_CENTER_SECTIONS, visibleSections } from './navigation';
 
 describe('visibleSections', () => {
   it('keeps only universally useful navigation visible without privileges', () => {
@@ -13,6 +13,17 @@ describe('visibleSections', () => {
 
     expect(ids).toEqual(['today']);
     expect(ids).not.toContain('liveops');
+  });
+
+  it('fails closed for planned sections until a real backend capability contract exists', () => {
+    const liveops = CONTROL_CENTER_SECTIONS.find((section) => section.id === 'liveops');
+
+    expect(liveops).toBeDefined();
+    if (!liveops) throw new Error('LiveOps navigation contract is missing.');
+
+    expect(liveops.availability).toBe('planned');
+    expect(canSeeSection(liveops, new Set())).toBe(false);
+    expect(canSeeSection(liveops, new Set(['made.up.capability']))).toBe(false);
   });
 
   it('reveals player and administration surfaces only with matching capabilities', () => {
