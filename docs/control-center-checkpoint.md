@@ -2,7 +2,7 @@
 
 Date: 2026-08-30
 
-**Canonical progress: 19.80%**
+**Canonical progress: 20.51%**
 
 Frontend branch: `feat/admin-control-center-foundation-v1` (PR #6 DRAFT).
 Backend branch: `feat/admin-api-read-foundation-v1` (PR #89 DRAFT).
@@ -12,10 +12,10 @@ Backend branch: `feat/admin-api-read-foundation-v1` (PR #89 DRAFT).
 - F0 = 5.00%.
 - F1 = 11/12 = 7.33%.
 - F2 = 9/16 = 6.75%.
-- F3 = 1/14 = 0.71%.
-- Total = **19.80%**.
+- F3 = 2/14 = 1.43%.
+- Total = **20.51%**.
 
-F1.10, F2.3, F2.13 and F3.1 are formally complete in Drive. F1.2 is the only remaining F1 item.
+F1.10, F2.3, F2.13, F3.1 and F3.5 are formally complete in Drive. F1.2 is the only remaining F1 item.
 
 ## Frontend proven state
 
@@ -82,6 +82,28 @@ Full repository proof on the same deployment:
 - public Vite build with 125 modules;
 - known public CSS warnings remained warnings and were not changed to obtain the admin gate.
 
-The UI progress indicator is being synchronized to the Drive-canonical **19.80%**. A fresh Vercel proof on the sync head remains required before that head becomes the final frontend checkpoint.
+The F3.1 synchronization head `701ce74ca90c4154c31320e61c906db748a499e4` also completed Vercel READY with the Control Center proof still green.
+
+## F3.5 — capability-derived navigation
+
+F3.5 is formally complete.
+
+Problem found:
+
+- `LiveOps` was marked `planned` and had no real backend capability contract, but `requiredAnyCapability: []` made it visible to every authenticated admin.
+
+TDD/evidence:
+
+- RED test commit `50e5acffcc18f007ca4b9bf86a94fd2d81e0f6e4` requires principals without privileges to see only `Hoje`, rejects invented capabilities, and requires planned LiveOps to remain hidden;
+- Vercel rejected subsequent commits due account build-rate-limit before executing code; GitHub Actions also ended before any workflow step. Those infrastructure failures were not treated as technical RED/GREEN evidence;
+- independent RED executed the exact prior GitHub blob SHA `dbfab0059609ab33312c0591ad3fad42eecacb5d`: without capabilities, `visibleSections()` returned `[today, liveops]`, violating the expected `[today]`;
+- GREEN production head `e89ee02e2556c34631549cf33805f71c553f799b` changes `canSeeSection()` to fail closed for every `availability === 'planned'` section before capability evaluation;
+- no fake LiveOps capability was introduced;
+- independent GREEN compiled the exact final `navigation.ts` blob SHA `c3a53d09d592c87b2e63bfb166f103af6937e2e0` with TypeScript strict and executed all five navigation invariants successfully;
+- verified outcomes: no capabilities → `[today]`; invented capability → `[today]`; planned LiveOps always denied; `player.read` + `audit.read` reveals `Hoje/Jogadores/Operações/Administração`; `content.validate` reveals `Hoje/Jogo`.
+
+The last full-head Vercel proof before this isolated navigation delta was `701ce74ca90c4154c31320e61c906db748a499e4`, READY with Biome 28 files, TypeScript strict, 9 test files / 19 tests and 30-module Control Center build.
+
+The UI progress indicator is synchronized to the Drive-canonical **20.51%**.
 
 No production credentials, production hostname, merge, or privileged mutation lifecycle are authorized by this checkpoint.
