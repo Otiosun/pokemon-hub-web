@@ -13,7 +13,9 @@ describe('visibleSections', () => {
   });
 
   it('reveals player and administration surfaces only with matching capabilities', () => {
-    const ids = visibleSections(new Set(['player.read', 'audit.read'])).map((section) => section.id);
+    const ids = visibleSections(new Set(['player.read', 'audit.read'])).map(
+      (section) => section.id,
+    );
 
     expect(ids).toContain('players');
     expect(ids).toContain('operations');
