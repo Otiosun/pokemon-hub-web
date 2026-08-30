@@ -10,6 +10,7 @@ function AvailabilityBadge({ availability }: { availability: string }) {
 export function ControlCenterSidebar({
   activeSection,
   environment,
+  onOpenSession,
   onReload,
   onSelect,
   principalId,
@@ -18,6 +19,7 @@ export function ControlCenterSidebar({
 }: {
   activeSection: ControlCenterSectionId;
   environment: ControlCenterEnvironment;
+  onOpenSession: () => void;
   onReload: () => Promise<void>;
   onSelect: (section: ControlCenterSectionId) => void;
   principalId: string;
@@ -68,13 +70,20 @@ export function ControlCenterSidebar({
       </nav>
 
       <div className="sidebar-footer">
-        <div className="principal-avatar" aria-hidden="true">
-          {roleLabel.slice(0, 1)}
-        </div>
-        <div className="principal-copy">
-          <strong>{roleLabel}</strong>
-          <span title={principalId}>{principalShort}</span>
-        </div>
+        <button
+          className="principal-session-button"
+          type="button"
+          aria-label="Abrir minha sessão"
+          onClick={onOpenSession}
+        >
+          <span className="principal-avatar" aria-hidden="true">
+            {roleLabel.slice(0, 1)}
+          </span>
+          <span className="principal-copy">
+            <strong>{roleLabel}</strong>
+            <span title={principalId}>{principalShort}</span>
+          </span>
+        </button>
         <button
           className="icon-button"
           type="button"
