@@ -159,8 +159,8 @@ F4.4–F4.18 remain open. The eight deeper Player 360 areas shown below the Over
 
 ## Current frontend implementation head
 
-Implementation head immediately before this documentation sync: `0c655f3936e62f00cf0d9ac7fc0bcee0b70977ea`.
+UI synchronization head: `9c7b6ea92750e188f345feb8abd9a5f4e62b129f`.
 
-The UI progress indicator is being synchronized to the Drive-canonical **29.44%**.
+The UI progress indicator is synchronized to the Drive-canonical **29.44%**.
 
 No production credentials, production hostname, merge, or privileged mutation lifecycle are authorized by this checkpoint.
