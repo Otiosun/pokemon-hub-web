@@ -14,7 +14,7 @@ Frontend draft PR: #6
 
 Frontend runtime head proven before the shell-ownership refactor: `dce02f8aa85b38614880e08050658a21c7a5e76e`.
 
-Current refactor candidate commit prepared from parent `a801681bbf0cbce892d18ae8e00104df7f4a788c`: `1a2f78ddda8e991f0031453a97e5d55a23c4eaf6`. This candidate is not counted as proven until the external verify gate executes it.
+Current shell-ownership candidate commit: `3788db4e8f60e58560e94bc384422f912236ea9a` (prepared from the current branch checkpoint; proof pending until external verify executes the final runtime head).
 
 Backend branch: `feat/admin-api-read-foundation-v1`
 
@@ -35,7 +35,7 @@ Promoted in the latest proven gate: F1.4, F1.9, F2.7, F2.8, F2.9, F2.12 and F2.1
 
 ## Frontend proof already closed
 
-Vercel deployment `dpl_CL1G6czWUhDQSRrW3Ntszp9MQrDH` proved the Control Center runtime with:
+Vercel deployment `dpl_CL1G6czWUhDQSRrW3Ntszp9MQrDH` proved the prior runtime with:
 
 - Biome check green;
 - TypeScript strict green;
@@ -50,7 +50,7 @@ A RED smoke assertion was added first requiring the session-gated UI to expose:
 - explicit environment;
 - explicit Admin API/session state.
 
-Vercel then proved the RED for commit `41dd7577126469da0f39c7d7e0a69dbb07e44a44`: the new smoke test failed specifically because `BUILD local` was not yet rendered.
+Vercel proved the RED for commit `41dd7577126469da0f39c7d7e0a69dbb07e44a44`: the smoke test failed specifically because `BUILD local` was not yet rendered.
 
 The candidate implementation now:
 
