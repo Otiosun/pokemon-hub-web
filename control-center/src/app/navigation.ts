@@ -44,7 +44,12 @@ export const CONTROL_CENTER_SECTIONS: readonly ControlCenterSection[] = [
     description: 'Conteúdo, drafts, validação, releases e balanceamento.',
     glyph: '◇',
     availability: 'backend-ready',
-    requiredAnyCapability: ['content.draft.create', 'content.draft.edit', 'content.validate', 'content.publish'],
+    requiredAnyCapability: [
+      'content.draft.create',
+      'content.draft.edit',
+      'content.validate',
+      'content.publish',
+    ],
   },
   {
     id: 'liveops',
@@ -71,7 +76,12 @@ export const CONTROL_CENTER_SECTIONS: readonly ControlCenterSection[] = [
     description: 'Equipe, permissões, aprovações, auditoria e segurança.',
     glyph: '⬡',
     availability: 'backend-ready',
-    requiredAnyCapability: ['audit.read', 'admin_operation.read', 'admin.role.manage', 'admin.role.assign'],
+    requiredAnyCapability: [
+      'audit.read',
+      'admin_operation.read',
+      'admin.role.manage',
+      'admin.role.assign',
+    ],
   },
 ] as const;
 
