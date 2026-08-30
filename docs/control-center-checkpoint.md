@@ -18,7 +18,7 @@ Backend branch: `feat/admin-api-read-foundation-v1`
 
 Backend draft PR: #89
 
-Backend proven head: `6fb41358f9a162ba84f770992dd067afaf94fc40`
+Backend proven head: `bd7946f1c1f005ea7e263613827ee1f2fb9e890b`
 
 Both PRs remain DRAFT. No merge or production administrative release is authorized.
 
@@ -45,7 +45,7 @@ The read-only administrative boundary is materialized and proven:
 
 ### Authenticated rate-limit hardening
 
-The backend/post-auth half of F2.11 is now implemented and proven:
+The backend/post-auth half of F2.11 is implemented and proven:
 
 - rate limiting is mandatory in Admin API server composition;
 - budgets are keyed by authenticated principal + allowlisted read operation (`session.read`, `player.search`, `player.read`);
@@ -58,15 +58,29 @@ The backend/post-auth half of F2.11 is now implemented and proven:
 
 F2.11 is **not complete** yet. The complementary edge/pre-auth layer must still be configured and proven: Cloudflare WAF/rate limiting against brute-force/API abuse plus a non-bypassable origin boundary. The backend budget remains a second authoritative layer rather than being replaced by edge counters.
 
+### Adversarial authorization package
+
+The backend now carries a dedicated regression suite over the real authorization stack:
+
+- a still-valid external Access identity loses RPG authority immediately after the internal principal becomes `DISABLED`, proving per-request internal kill-switch evaluation;
+- BOLA cross-player is denied when a principal scoped to PLAYER A requests PLAYER B;
+- a GLOBAL_ONLY collection search is denied to a principal that only has PLAYER scope;
+- BFLA is denied when the required registered capability is missing;
+- sensitive Player360 reads without `player.read_sensitive` are denied before repository access;
+- HTTP transport already rejects client-supplied `principalId` as invalid input and does not call the search handler.
+
+`admin_principals.DISABLED` is intentionally treated as an immediate **internal control-plane kill switch**, not as a substitute for Cloudflare Access session/token revocation. Provider-level expiration/revocation/logout must still be configured and proven before F2.2/F2.4/F2.5/F2.15 can close.
+
 ### Backend proof
 
-Head `6fb41358f9a162ba84f770992dd067afaf94fc40` closed **15/15 canonical workflows green**, including CI, Admin Proof, Security Integrity, WhatsApp, Performance, Narrative, Catalog, Onboarding, Progression, Economy, World, Encounter, Battle, Capture and Release Foundation.
+Head `bd7946f1c1f005ea7e263613827ee1f2fb9e890b` closed **15/15 canonical workflows green**, including CI, Admin Proof, Security Integrity, WhatsApp, Performance, Narrative, Catalog, Onboarding, Progression, Economy, World, Encounter, Battle, Capture and Release Foundation.
 
 The general CI proved:
 
 - canonical lint + format;
 - strict TypeScript;
-- **59 test files / 251 tests green**;
+- **60 test files / 256 tests green**;
+- adversarial authorization suite **5/5 green**;
 - the distributed PostgreSQL Admin API rate-limit integration proof;
 - runtime schema verification;
 - migrator/runtime privilege separation;
@@ -74,7 +88,7 @@ The general CI proved:
 - forward migration from `0025_mutation_abuse_admission.sql` to `0026_admin_api_rate_limit_buckets.sql`, preserving durable state and converging on rerun;
 - logical rollback to known-good state.
 
-Security Integrity is also green after the PostgreSQL integration proof was correctly placed under `tests/db/`; no skip or security gate was weakened.
+Security Integrity is also green with the admin boundary/anti-abuse invariants; no skip or security gate was weakened.
 
 ## Frontend Control Center evidence
 
@@ -115,10 +129,10 @@ The current frontend runtime head still lacks a valid final execution of `check 
 - F2: 1/16 = 0.75%
 - Total: **9.75%**
 
-Backend evidence makes F2.7, F2.8, F2.9, F2.12 and F2.14 candidates for formal promotion once the combined slice gate is closed. The backend/post-auth portion of F2.11 is now proven, but F2.11 remains open until the edge/pre-auth abuse boundary is configured/proven. F2.15 remains open because its DoD requires the complete expired/revoked-session + privilege denial + BOLA/BFLA + mass-assignment package.
+Backend evidence makes F2.7, F2.8, F2.9, F2.12 and F2.14 candidates for formal promotion once the combined slice gate is closed. The backend/post-auth portion of F2.11 is proven, but F2.11 remains open until the edge/pre-auth abuse boundary is configured/proven. F2.15 now has executed BOLA/BFLA/privilege-denial/internal-kill-switch evidence plus transport mass-assignment evidence, but remains open until real provider-level expired/revoked session behavior is configured and proven.
 
 ## Current gates
 
 - PR #6 remains DRAFT. Do not merge until a clean current-runtime-head Control Center `check + typecheck + tests + build` is observed and the dedicated admin deployment boundary is reviewed.
-- PR #89 remains DRAFT despite 15/15 green. Do not merge/deploy until the frontend boundary, threat model/environment config and release decision are jointly reviewed.
+- PR #89 remains DRAFT despite 15/15 green. Do not merge/deploy until the frontend boundary, Cloudflare session/edge configuration, threat model/environment config and release decision are jointly reviewed.
 - Do not add production admin credentials, a production hostname or mutations merely because the read-only slice exists.
