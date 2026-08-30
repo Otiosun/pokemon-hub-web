@@ -12,19 +12,19 @@ Frontend branch: `feat/admin-control-center-foundation-v1`
 
 Frontend draft PR: #6
 
-Frontend head at this checkpoint: `01fa739b0080be0126819c97eae141c3a9446af1`
+Frontend runtime head last materially changed before this docs sync: `01fa739b0080be0126819c97eae141c3a9446af1`
 
 Backend branch: `feat/admin-api-read-foundation-v1`
 
 Backend draft PR: #89
 
-Backend head at this checkpoint: `df601cd5eefa3de2c103e8b4786c4b36daf87115`
+Backend proven head: `6fb41358f9a162ba84f770992dd067afaf94fc40`
 
 Both PRs remain DRAFT. No merge or production administrative release is authorized.
 
 ## Backend Admin API evidence
 
-The read-only administrative boundary is now materialized and proven:
+The read-only administrative boundary is materialized and proven:
 
 - Fastify 5.12.1 with reproducible lockfile/supply-chain validation;
 - `ADMIN_API_ENABLED` is opt-in and disabled by default;
@@ -43,9 +43,38 @@ The read-only administrative boundary is now materialized and proven:
 - no HTTP mutation endpoint exists in this slice;
 - when the Admin API is disabled, the existing WhatsApp runtime behavior remains unchanged.
 
+### Authenticated rate-limit hardening
+
+The backend/post-auth half of F2.11 is now implemented and proven:
+
+- rate limiting is mandatory in Admin API server composition;
+- budgets are keyed by authenticated principal + allowlisted read operation (`session.read`, `player.search`, `player.read`);
+- denial happens before the handler with HTTP `429` + `Retry-After`;
+- migration `0026_admin_api_rate_limit_buckets.sql` stores shared mutable PostgreSQL buckets with atomic increment/window reset;
+- there is no per-window row growth: one bucket per `(principal_id, operation)`;
+- two independent API limiter instances/pools share the same database budget;
+- distributed concurrency proof with budget 3 and 6 simultaneous requests yields exactly 3 allow + 3 deny and persisted count 6;
+- the limiter fails closed if its persistence path fails.
+
+F2.11 is **not complete** yet. The complementary edge/pre-auth layer must still be configured and proven: Cloudflare WAF/rate limiting against brute-force/API abuse plus a non-bypassable origin boundary. The backend budget remains a second authoritative layer rather than being replaced by edge counters.
+
 ### Backend proof
 
-Head `df601cd5eefa3de2c103e8b4786c4b36daf87115` closed **15/15 canonical workflows green**, including CI, Admin Proof, Security Integrity, WhatsApp, Performance, Narrative, Catalog, Onboarding, Progression, Economy, World, Encounter, Battle, Capture and Release Foundation. The general CI also passed unit/PostgreSQL, schema, privilege-separation, migration and rollback proofs.
+Head `6fb41358f9a162ba84f770992dd067afaf94fc40` closed **15/15 canonical workflows green**, including CI, Admin Proof, Security Integrity, WhatsApp, Performance, Narrative, Catalog, Onboarding, Progression, Economy, World, Encounter, Battle, Capture and Release Foundation.
+
+The general CI proved:
+
+- canonical lint + format;
+- strict TypeScript;
+- **59 test files / 251 tests green**;
+- the distributed PostgreSQL Admin API rate-limit integration proof;
+- runtime schema verification;
+- migrator/runtime privilege separation;
+- logical backup + disposable restore;
+- forward migration from `0025_mutation_abuse_admission.sql` to `0026_admin_api_rate_limit_buckets.sql`, preserving durable state and converging on rerun;
+- logical rollback to known-good state.
+
+Security Integrity is also green after the PostgreSQL integration proof was correctly placed under `tests/db/`; no skip or security gate was weakened.
 
 ## Frontend Control Center evidence
 
@@ -70,13 +99,14 @@ Biome 2.5.10 was executed against the Control Center boundary using a Vercel pre
 
 Temporary package-script changes used only to extract the formatted artifact were removed; canonical verification scripts are restored.
 
-## Verification blocker on the current frontend head
+## Verification blocker on the current frontend runtime head
 
-The current frontend head still lacks a valid final execution of `check + typecheck + tests + build`.
+The current frontend runtime head still lacks a valid final execution of `check + typecheck + tests + build`.
 
 - GitHub Actions jobs associated with the workflow introduced/modified in this PR are being rejected before any runner step (`steps: null`). This is an executor/trust-policy failure, not a code-test result.
-- Vercel successfully executed prior intermediate heads and was used to run Biome/typecheck diagnostics, but it stopped materializing new previews after the rapid sequence of branch commits; therefore older READY previews are not proof for the current head.
-- No green result is being inferred from either condition.
+- Vercel successfully executed prior intermediate heads and was used to run Biome/typecheck diagnostics, but it stopped materializing new previews after the rapid sequence of branch commits; therefore older READY previews are not proof for the current runtime head.
+- This documentation-only commit does not count as new runtime evidence and any CI executor behavior caused by it must not be interpreted as a runtime regression or pass.
+- No green result is being inferred from older previews.
 
 ## Checklist state
 
@@ -85,10 +115,10 @@ The current frontend head still lacks a valid final execution of `check + typech
 - F2: 1/16 = 0.75%
 - Total: **9.75%**
 
-Backend evidence makes F2.7, F2.8, F2.9, F2.12 and F2.14 candidates for formal promotion once the combined slice gate is closed. F2.15 remains open because its DoD requires the complete expired/revoked-session + privilege denial + BOLA/BFLA + mass-assignment package.
+Backend evidence makes F2.7, F2.8, F2.9, F2.12 and F2.14 candidates for formal promotion once the combined slice gate is closed. The backend/post-auth portion of F2.11 is now proven, but F2.11 remains open until the edge/pre-auth abuse boundary is configured/proven. F2.15 remains open because its DoD requires the complete expired/revoked-session + privilege denial + BOLA/BFLA + mass-assignment package.
 
 ## Current gates
 
-- PR #6 remains DRAFT. Do not merge until a clean current-head Control Center `check + typecheck + tests + build` is observed and the dedicated admin deployment boundary is reviewed.
+- PR #6 remains DRAFT. Do not merge until a clean current-runtime-head Control Center `check + typecheck + tests + build` is observed and the dedicated admin deployment boundary is reviewed.
 - PR #89 remains DRAFT despite 15/15 green. Do not merge/deploy until the frontend boundary, threat model/environment config and release decision are jointly reviewed.
 - Do not add production admin credentials, a production hostname or mutations merely because the read-only slice exists.
