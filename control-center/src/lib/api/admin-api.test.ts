@@ -3,7 +3,11 @@ import { AdminApiClient, AdminApiError } from './admin-api';
 
 const API = 'https://admin-api.example.com';
 
-function jsonResponse(value: unknown, status = 200, headers: Record<string, string> = {}): Response {
+function jsonResponse(
+  value: unknown,
+  status = 200,
+  headers: Record<string, string> = {},
+): Response {
   return new Response(JSON.stringify(value), {
     status,
     headers: { 'content-type': 'application/json', ...headers },
@@ -37,7 +41,9 @@ describe('AdminApiClient', () => {
   });
 
   it('encodes only allowlisted Player 360 search query fields', async () => {
-    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ items: [], nextCursor: null }));
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(jsonResponse({ items: [], nextCursor: null }));
     const client = new AdminApiClient(API, fetchImpl);
 
     await client.searchPlayers({
@@ -81,7 +87,13 @@ describe('AdminApiClient', () => {
     const client = new AdminApiClient(API, fetchImpl);
 
     await expect(client.getSession()).rejects.toEqual(
-      new AdminApiError('network', 'Não foi possível alcançar a Admin API.', null, 'NETWORK_ERROR', null),
+      new AdminApiError(
+        'network',
+        'Não foi possível alcançar a Admin API.',
+        null,
+        'NETWORK_ERROR',
+        null,
+      ),
     );
   });
 
