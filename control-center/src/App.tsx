@@ -8,6 +8,7 @@ import {
 import { ControlCenterSidebar } from './components/shell/ControlCenterSidebar';
 import { OperationalDiagnostics } from './components/shell/OperationalDiagnostics';
 import { SessionGate } from './components/shell/SessionGate';
+import { SessionProfilePanel } from './components/shell/SessionProfilePanel';
 import { Player360Page } from './features/player360/Player360Page';
 import { displayAdminRole, useAdminSession } from './features/session/useAdminSession';
 import { AdminApiClient } from './lib/api/admin-api';
@@ -41,6 +42,7 @@ export function App() {
   const { state: sessionState, capabilities, reload } = useAdminSession(client);
   const [activeSection, setActiveSection] = useState<ControlCenterSectionId>('today');
   const [query, setQuery] = useState('');
+  const [sessionProfileOpen, setSessionProfileOpen] = useState(false);
   const sections = useMemo(() => visibleSections(capabilities), [capabilities]);
   const active =
     CONTROL_CENTER_SECTIONS.find((section) => section.id === activeSection) ?? sections[0];
@@ -64,6 +66,7 @@ export function App() {
       <ControlCenterSidebar
         activeSection={activeSection}
         environment={session.environment}
+        onOpenSession={() => setSessionProfileOpen(true)}
         onReload={reload}
         onSelect={setActiveSection}
         principalId={session.principalId}
@@ -89,6 +92,13 @@ export function App() {
               />
               <kbd>⌘ K</kbd>
             </div>
+            <button
+              className="session-profile-mobile"
+              type="button"
+              onClick={() => setSessionProfileOpen(true)}
+            >
+              Minha sessão
+            </button>
             <button className="secondary-button" type="button" onClick={() => void reload()}>
               Revalidar sessão
             </button>
@@ -96,6 +106,15 @@ export function App() {
         </header>
 
         <div className="workspace-scroll">
+          {sessionProfileOpen ? (
+            <SessionProfilePanel
+              onClose={() => setSessionProfileOpen(false)}
+              onReload={reload}
+              roleLabel={roleLabel}
+              session={session}
+            />
+          ) : null}
+
           <section className="page-heading">
             <div>
               <span className="eyebrow">CENTRAL ADMINISTRATIVA</span>
