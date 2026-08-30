@@ -23,7 +23,7 @@
     "test:control-center": "vitest run control-center/src",
     "build:control-center": "vite build control-center",
     "verify:control-center": "npm run check:control-center && npm run typecheck:control-center && npm run test:control-center && npm run build:control-center",
-    "verify": "biome check --write control-center/src control-center/vite.config.ts && rm -rf dist && mkdir -p dist/formatted && cp -R control-center/src dist/formatted/src && cp control-center/vite.config.ts dist/formatted/vite.config.ts && printf '<!doctype html><meta charset=\"utf-8\"><title>Control Center formatting artifact</title><p>ephemeral formatting artifact</p>' > dist/index.html"
+    "verify": "biome check --write control-center/src control-center/vite.config.ts && rm -rf dist && mkdir -p dist && for f in control-center/src/app/navigation.test.ts control-center/src/app/navigation.ts control-center/src/features/player360/model.ts control-center/src/features/player360/player360.css control-center/src/features/session/session.css control-center/src/features/session/useAdminSession.ts control-center/src/lib/api/admin-api.test.ts control-center/src/lib/api/admin-api.ts control-center/src/styles.css control-center/vite.config.ts; do printf '\\n===== FILE:%s =====\\n' \"$f\" >> dist/formatted-bundle.txt; cat \"$f\" >> dist/formatted-bundle.txt; done && printf '<!doctype html><meta charset=\"utf-8\"><title>Control Center formatting bundle</title><p>ephemeral formatting bundle</p>' > dist/index.html"
   },
   "dependencies": {
     "@google/model-viewer": "4.3.1",
