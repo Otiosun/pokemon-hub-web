@@ -52,7 +52,10 @@ function normalized(value: string): string | undefined {
 }
 
 export function hasIdentityLookup(filters: PlayerSearchFilters): boolean {
-  return normalized(filters.identityProvider) !== undefined || normalized(filters.externalId) !== undefined;
+  return (
+    normalized(filters.identityProvider) !== undefined ||
+    normalized(filters.externalId) !== undefined
+  );
 }
 
 export function validatePlayerSearchFilters(filters: PlayerSearchFilters): readonly string[] {
@@ -66,7 +69,10 @@ export function validatePlayerSearchFilters(filters: PlayerSearchFilters): reado
   if (externalId !== undefined && !filters.includeSensitive) {
     errors.push('Busca por identidade externa exige leitura sensível autorizada.');
   }
-  if (normalized(filters.trainerNamePrefix)?.length && filters.trainerNamePrefix.trim().length > 80) {
+  if (
+    normalized(filters.trainerNamePrefix)?.length &&
+    filters.trainerNamePrefix.trim().length > 80
+  ) {
     errors.push('Nome do treinador excede 80 caracteres.');
   }
 
@@ -79,7 +85,9 @@ export function toPlayerSearchQuery(filters: PlayerSearchFilters): PlayerSearchQ
     ...(normalized(filters.trainerNamePrefix)
       ? { trainerNamePrefix: normalized(filters.trainerNamePrefix) }
       : {}),
-    ...(normalized(filters.originRegionId) ? { originRegionId: normalized(filters.originRegionId) } : {}),
+    ...(normalized(filters.originRegionId)
+      ? { originRegionId: normalized(filters.originRegionId) }
+      : {}),
     ...(normalized(filters.identityProvider)
       ? { identityProvider: normalized(filters.identityProvider) }
       : {}),
