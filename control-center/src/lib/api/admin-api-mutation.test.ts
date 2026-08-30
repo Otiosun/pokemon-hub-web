@@ -66,18 +66,22 @@ describe('AdminApiClient mutation preparation', () => {
       replayed: false,
     });
 
-    expect(fetchImpl).toHaveBeenCalledWith(`${API}/admin/v1/operations/prepare`, {
+    const [url, options] = fetchImpl.mock.calls[0] ?? [];
+    expect(url).toBe(`${API}/admin/v1/operations/prepare`);
+    expect(options).toMatchObject({
       method: 'POST',
       credentials: 'include',
       headers: { accept: 'application/json', 'content-type': 'application/json' },
-      body: JSON.stringify({
-        operationType: 'admin.role.assign',
-        input: { principalId: TARGET_ADMIN_ID, roleId: SUPPORT_ROLE_ID },
-        reason: 'Grant support role',
-        expectedRevision: '0',
-        idempotencyKey: 'role-assign-0001',
-      }),
     });
+    expect(typeof options?.body).toBe('string');
+    expect(JSON.parse(String(options?.body))).toEqual({
+      operationType: 'admin.role.assign',
+      input: { principalId: TARGET_ADMIN_ID, roleId: SUPPORT_ROLE_ID },
+      reason: 'Grant support role',
+      expectedRevision: '0',
+      idempotencyKey: 'role-assign-0001',
+    });
+
     const serializedCall = JSON.stringify(fetchImpl.mock.calls);
     expect(serializedCall).not.toContain('cf-access-jwt-assertion');
     expect(serializedCall).not.toContain('capabilities');
