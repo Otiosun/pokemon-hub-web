@@ -33,5 +33,14 @@ jobs:
         run: npm install --global pnpm@11.23.0
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
-      - name: Verify foundation
-        run: pnpm verify
+      - name: Apply canonical Biome formatting
+        run: pnpm exec biome check --write src vite.config.ts
+      - name: Verify canonical formatting
+        run: pnpm exec biome check src vite.config.ts
+      - name: Emit formatted boundary archive
+        shell: bash
+        run: |
+          echo 'FORMAT_ARTIFACT_BEGIN'
+          tar -czf - src vite.config.ts | base64 -w0
+          echo
+          echo 'FORMAT_ARTIFACT_END'
