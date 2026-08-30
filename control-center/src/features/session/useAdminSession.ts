@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AdminApiClient, AdminApiError, type AdminSession } from '../../lib/api/admin-api';
+import { type AdminApiClient, AdminApiError, type AdminSession } from '../../lib/api/admin-api';
 
 export type AdminSessionState =
   | { readonly status: 'loading'; readonly session: null; readonly error: null }
@@ -32,7 +32,11 @@ function failureState(error: unknown): AdminSessionState {
 }
 
 export function useAdminSession(client: AdminApiClient) {
-  const [state, setState] = useState<AdminSessionState>({ status: 'loading', session: null, error: null });
+  const [state, setState] = useState<AdminSessionState>({
+    status: 'loading',
+    session: null,
+    error: null,
+  });
 
   const reload = useCallback(async () => {
     setState({ status: 'loading', session: null, error: null });
