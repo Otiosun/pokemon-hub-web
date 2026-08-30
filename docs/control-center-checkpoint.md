@@ -7,9 +7,9 @@ Date: 2026-08-30
 Frontend branch: `feat/admin-control-center-foundation-v1` (PR #6 DRAFT).
 Backend branch: `feat/admin-api-read-foundation-v1` (PR #89 DRAFT).
 
-Frontend shell implementation head proved before canonical-progress sync: `c8f85b87f1aa7fd3ce4fb7e9881546a37c502e72`.
-External proof commit: `9aa37492ef0030ac64fa6a033c068e1a838c666b`, derived exactly from that feature head with only a root `package.json` postinstall hook.
-Workers Build proof: `2ee51fc6-c46b-449e-acb7-862652b35309` — SUCCESS.
+Frontend runtime head proved: `a63273420e6277516a1b9267cea62858dbec2d29`.
+External proof commit: `7368e2876583f905f4a1d1aed6f55cce9a8a0de8`, derived exactly from that feature head with only a root `package.json` postinstall hook.
+Workers Build proof: `1dec4b2f-60f8-41ba-927b-821f687662ca` — SUCCESS.
 Backend proven head: `4aa82ade8da9557c9fe04ef6188e8af9cadf2768`.
 
 Canonical score: F0 5.00% + F1 6.67% + F2 4.50% = **16.17%**.
@@ -18,12 +18,12 @@ The shell refactor materializes explicit ownership under `components/shell`: `Se
 
 Operational diagnostics expose `BUILD`, `AMBIENTE` and `ADMIN API` state both during the fail-closed session gate and in the authenticated shell. The smoke test requires these diagnostics before administrative tools are released.
 
-The verification gate isolated one formatting-only defect in `ControlCenterSidebar.tsx`; all other new shell files passed Biome independently, formatter + check proved no semantic sidebar lint defect, and the canonical import format was applied to the real branch.
+During final validation, the refactored `App.tsx` exposed one formatting-only defect: the final diagnostic copy in `FoundationView` exceeded the canonical Biome layout. `biome format` failed before the fix; after wrapping the JSX text, both `biome format control-center/src/App.tsx` and `biome check control-center/src/App.tsx` were proved green externally. No lint rule or runtime behavior was relaxed.
 
-The full disposable proof ran `npm run verify:control-center` with no formatter/fixes. That command chains Biome check, TypeScript strict, Vitest and Vite production build with `&&`; the Workers SUCCESS therefore proves all four gates exited zero for the shell implementation tree.
+The final disposable proof ran `npm run verify:control-center` with no formatter/fixes. That command chains Biome check, TypeScript strict, Vitest and Vite production build with `&&`; Workers Build `1dec4b2f-60f8-41ba-927b-821f687662ca` completed SUCCESS, proving all four gates exited zero for runtime head `a63273420e6277516a1b9267cea62858dbec2d29`.
 
 F1.5 and F1.8 are promoted. F1.2 remains open because no dedicated administrative deployment/hostname exists. F1.10 remains open because reproducible dependency locking for the Control Center is not yet closed.
 
-The UI progress constant was synchronized to 16.17% only after the Drive checklist/checkpoint became canonical. This synchronization changes the frontend head and therefore requires one fresh final `verify:control-center` proof before this checkpoint is treated as the final runtime head.
+The UI progress constant is synchronized to the Drive-canonical 16.17%.
 
 No merge, production deployment or mutation endpoint is authorized.
