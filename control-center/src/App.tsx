@@ -60,7 +60,7 @@ export function App() {
   const apiState = 'CONECTADA · SESSÃO VALIDADA' as const;
 
   return (
-    <div className="control-center-shell">
+    <div className="control-center">
       <ControlCenterSidebar
         activeSection={activeSection}
         environment={session.environment}
