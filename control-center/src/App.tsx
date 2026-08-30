@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { loadControlCenterConfig } from './app/config';
+import { loadControlCenterConfig, type ControlCenterConfig } from './app/config';
 import {
   CONTROL_CENTER_SECTIONS,
   type ControlCenterSectionId,
@@ -43,11 +43,22 @@ function AvailabilityBadge({ availability }: { availability: string }) {
 
 function SessionGate({
   state,
+  config,
   onRetry,
 }: {
   state: AdminSessionState;
+  config: ControlCenterConfig;
   onRetry: () => Promise<void>;
 }) {
+  const apiState = state.status === 'loading' ? 'VALIDANDO SESSÃO' : 'ACESSO BLOQUEADO';
+  const diagnostics = (
+    <div className="session-runtime-summary" aria-label="Diagnóstico operacional">
+      <span>BUILD {config.buildLabel}</span>
+      <span>AMBIENTE {environmentLabel(config.environment)}</span>
+      <span>ADMIN API {apiState}</span>
+    </div>
+  );
+
   if (state.status === 'loading') {
     return (
       <main className="session-gate" aria-live="polite">
@@ -61,6 +72,7 @@ function SessionGate({
             A interface só será carregada depois que a Admin API confirmar sua identidade, principal
             e permissões efetivas.
           </p>
+          {diagnostics}
         </section>
       </main>
     );
@@ -90,6 +102,7 @@ function SessionGate({
         <span className="panel-kicker">ACESSO BLOQUEADO</span>
         <h1>{title}</h1>
         <p>{copy}</p>
+        {diagnostics}
         <div className="session-diagnostic">
           <span>DIAGNÓSTICO</span>
           <code>{state.error.message}</code>
@@ -123,7 +136,9 @@ export function App() {
     if (!sections.some((section) => section.id === activeSection)) setActiveSection('today');
   }, [activeSection, sections]);
 
-  if (sessionState.status !== 'ready') return <SessionGate state={sessionState} onRetry={reload} />;
+  if (sessionState.status !== 'ready') {
+    return <SessionGate state={sessionState} config={config} onRetry={reload} />;
+  }
 
   const session = sessionState.session;
   const canReadSensitive = capabilities.has('player.read_sensitive');
