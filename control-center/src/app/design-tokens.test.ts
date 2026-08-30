@@ -3,12 +3,12 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const tokensPath = fileURLToPath(new URL('./design-tokens.css', import.meta.url));
-const globalStylesPath = fileURLToPath(new URL('../styles.css', import.meta.url));
+const mainPath = fileURLToPath(new URL('../main.tsx', import.meta.url));
 
 describe('Control Center administrative design tokens', () => {
   it('defines and consumes semantic tokens for spacing, typography, surfaces, states, focus and motion', async () => {
     const tokens = await readFile(tokensPath, 'utf8');
-    const styles = await readFile(globalStylesPath, 'utf8');
+    const main = await readFile(mainPath, 'utf8');
 
     const requiredTokens = [
       '--font-sans:',
@@ -34,12 +34,16 @@ describe('Control Center administrative design tokens', () => {
 
     for (const token of requiredTokens) expect(tokens).toContain(token);
 
-    expect(styles).toContain('font-family: var(--font-sans)');
-    expect(styles).toContain('background: var(--surface-canvas)');
-    expect(styles).toContain('var(--space-4)');
-    expect(styles).toContain('var(--motion-fast)');
-    expect(styles).toContain('var(--ease-standard)');
-    expect(styles).toContain(':focus-visible');
-    expect(styles).toContain('var(--focus-ring-color)');
+    expect(main).toContain("import './app/design-tokens.css';");
+    expect(tokens).toContain('font-family: var(--font-sans)');
+    expect(tokens).toContain('background: var(--surface-canvas)');
+    expect(tokens).toContain('--bg: var(--surface-canvas)');
+    expect(tokens).toContain('--surface: var(--surface-panel)');
+    expect(tokens).toContain('--good: var(--state-success)');
+    expect(tokens).toContain('var(--motion-fast)');
+    expect(tokens).toContain('var(--ease-standard)');
+    expect(tokens).toContain(':focus-visible');
+    expect(tokens).toContain('var(--focus-ring-color)');
+    expect(tokens).toContain('prefers-reduced-motion');
   });
 });
