@@ -1,42 +1,14 @@
-name: Control Center Format V2 Once
+name: Control Center Format V2 Once (disabled)
 
 on:
-  push:
-    branches:
-      - feat/admin-control-center-foundation-v1
-    paths:
-      - 'control-center/**'
-      - '.github/workflows/control-center-format-v2-once.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  format:
+  disabled:
     runs-on: ubuntu-24.04
-    defaults:
-      run:
-        working-directory: control-center
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      - name: Setup Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
-        with:
-          node-version: 24.19.0
-          package-manager-cache: false
-      - name: Install exact pnpm
-        run: npm install --global pnpm@11.23.0
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
-      - name: Apply canonical Biome formatting
-        run: pnpm exec biome check --write src vite.config.ts
-      - name: Verify Control Center formatting
-        run: pnpm exec biome check src vite.config.ts
-      - name: Emit formatted boundary archive
-        shell: bash
-        run: |
-          echo 'FORMAT_ARTIFACT_BEGIN'
-          tar -czf - src vite.config.ts | base64 -w0
-          echo
-          echo 'FORMAT_ARTIFACT_END'
+      - name: Disabled
+        run: echo "One-shot formatter disabled; canonical proof remains control-center-proof.yml"
