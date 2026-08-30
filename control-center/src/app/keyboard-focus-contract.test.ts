@@ -23,7 +23,9 @@ describe('Control Center keyboard and focus contract', () => {
     ]);
 
     const playerFocusBlock =
-      playerCss.match(/\.player-result:hover,\s*\.player-result:focus-visible\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+      playerCss.match(
+        /\.player-result:hover,\s*\.player-result:focus-visible\s*\{([\s\S]*?)\}/,
+      )?.[1] ?? '';
 
     expect(tokens).toContain('--focus-ring-color:');
     expect(tokens).toContain('--focus-ring-width:');
