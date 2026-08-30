@@ -1,14 +1,18 @@
 name: Control Center Format V2 Once
 
 on:
-  pull_request:
+  push:
+    branches:
+      - feat/admin-control-center-foundation-v1
+    paths:
+      - 'control-center/**'
+      - '.github/workflows/control-center-format-v2-once.yml'
 
 permissions:
   contents: read
 
 jobs:
   format:
-    if: github.head_ref == 'feat/admin-control-center-foundation-v1'
     runs-on: ubuntu-24.04
     defaults:
       run:
