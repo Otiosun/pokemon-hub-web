@@ -4,6 +4,7 @@ import {
   type ControlCenterSectionId,
   visibleSections,
 } from './app/navigation';
+import { Player360Page } from './features/player360/Player360Page';
 
 const FOUNDATION_CAPABILITIES = new Set([
   'player.read',
@@ -251,6 +252,8 @@ export function App() {
                 </div>
               </section>
             </>
+          ) : activeSection === 'players' ? (
+            <Player360Page canReadSensitive={false} />
           ) : (
             <section className="placeholder-panel">
               <span className="placeholder-glyph" aria-hidden="true">{active?.glyph}</span>
