@@ -169,7 +169,7 @@ export function Player360Page({ canReadSensitive }: Player360PageProps) {
             <span className="muted-badge">BACKEND READY</span>
           </div>
 
-          <div className="player360-tabs" aria-label="Áreas planejadas do Player 360">
+          <section className="player360-tabs" aria-label="Áreas planejadas do Player 360">
             {PLAYER360_TABS.map((tab, index) => (
               <div className="player360-tab-preview" key={tab.id}>
                 <span className="tab-index">{String(index + 1).padStart(2, '0')}</span>
@@ -179,7 +179,7 @@ export function Player360Page({ canReadSensitive }: Player360PageProps) {
                 </div>
               </div>
             ))}
-          </div>
+          </section>
 
           <div className="unsupported-note">
             <span className="warning-glyph" aria-hidden="true">!</span>
