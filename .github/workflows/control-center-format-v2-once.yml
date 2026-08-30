@@ -29,12 +29,10 @@ jobs:
         run: pnpm exec biome check --write src vite.config.ts
       - name: Verify Control Center formatting
         run: pnpm exec biome check src vite.config.ts
-      - name: Upload formatted boundary
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: control-center-biome-formatted
-          path: |
-            control-center/src
-            control-center/vite.config.ts
-          if-no-files-found: error
-          retention-days: 1
+      - name: Emit formatted boundary archive
+        shell: bash
+        run: |
+          echo 'FORMAT_ARTIFACT_BEGIN'
+          tar -czf - src vite.config.ts | base64 -w0
+          echo
+          echo 'FORMAT_ARTIFACT_END'
