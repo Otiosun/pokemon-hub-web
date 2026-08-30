@@ -3,8 +3,7 @@
   display: grid;
   place-items: center;
   background:
-    radial-gradient(circle at 50% 10%, rgba(141, 168, 255, 0.07), transparent 34%),
-    var(--bg);
+    radial-gradient(circle at 50% 10%, rgba(141, 168, 255, 0.07), transparent 34%), var(--bg);
   padding: 24px;
 }
 
@@ -80,21 +79,21 @@
   border-color: rgba(141, 168, 255, 0.32);
 }
 
-.environment-card[data-environment='production'] .environment-dot {
+.environment-card[data-environment="production"] .environment-dot {
   background: #ff8d92;
   box-shadow: 0 0 0 5px rgba(255, 141, 146, 0.08);
 }
 
-.environment-card[data-environment='production'] .environment-meta {
+.environment-card[data-environment="production"] .environment-meta {
   color: #ffb7ba;
   border-color: rgba(255, 141, 146, 0.2);
 }
 
-.environment-card[data-environment='staging'] .environment-dot {
+.environment-card[data-environment="staging"] .environment-dot {
   background: var(--warning);
 }
 
-.environment-card[data-environment='development'] .environment-dot {
+.environment-card[data-environment="development"] .environment-dot {
   background: #8da8ff;
   box-shadow: 0 0 0 5px rgba(141, 168, 255, 0.08);
 }
