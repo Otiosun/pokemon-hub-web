@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { AdminApiClient } from './admin-api';
 
 const API = 'https://admin-api.example.com';
+const CSRF_HEADER = 'x-control-center-csrf';
+const CSRF_VALUE = '1';
 const TARGET_ADMIN_ID = '22222222-2222-4222-8222-222222222222';
 const SUPPORT_ROLE_ID = '33333333-3333-4333-8333-333333333333';
 
@@ -17,7 +19,7 @@ function jsonResponse(
 }
 
 describe('AdminApiClient mutation preparation', () => {
-  it('posts only the allowlisted operation body with browser credentials', async () => {
+  it('posts only the allowlisted operation body with browser credentials and explicit CSRF guard', async () => {
     const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
       jsonResponse(
         {
@@ -71,7 +73,11 @@ describe('AdminApiClient mutation preparation', () => {
     expect(options).toMatchObject({
       method: 'POST',
       credentials: 'include',
-      headers: { accept: 'application/json', 'content-type': 'application/json' },
+      headers: {
+        accept: 'application/json',
+        'content-type': 'application/json',
+        [CSRF_HEADER]: CSRF_VALUE,
+      },
     });
     expect(typeof options?.body).toBe('string');
     expect(JSON.parse(String(options?.body))).toEqual({
@@ -87,6 +93,7 @@ describe('AdminApiClient mutation preparation', () => {
     expect(serializedCall).not.toContain('capabilities');
     expect(serializedCall).not.toContain('scopes');
     expect(serializedCall).not.toContain('environment');
+    expect(serializedCall).not.toContain('csrfToken');
   });
 
   it('rejects malformed success payloads instead of fabricating mutation state', async () => {
