@@ -21,7 +21,7 @@ describe('Control Center reproducible production install', () => {
     expect(postinstall).not.toContain('--no-frozen-lockfile');
     expect(postinstall).not.toContain('--lockfile-only');
     expect(lockfile).toMatch(/^lockfileVersion: '9\.0'/);
-    expect(lockfile).toContain("specifier: 19.2.8");
+    expect(lockfile).toContain('specifier: 19.2.8');
     expect(lockfile).toContain('version: 19.2.8(react@19.2.8)');
   });
 });
