@@ -12,7 +12,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "deploy:cf": "wrangler deploy",
-    "postinstall": "node --version && npm --version && npm exec --yes --package=pnpm@11.23.0 -- pnpm --version && cd control-center && npm exec --yes --package=pnpm@11.23.0 -- pnpm install --lockfile-only --no-frozen-lockfile --ignore-scripts && cd .. && echo LOCKFILE_SHA256 && sha256sum control-center/pnpm-lock.yaml && echo LOCKFILE_GZIP_BEGIN && gzip -9 -c control-center/pnpm-lock.yaml | base64 | fold -w 1000 && echo LOCKFILE_GZIP_END && echo LOCKFILE_PROOF_V2",
+    "postinstall": "node --version && npm --version && npm exec --yes --package=pnpm@11.23.0 -- pnpm --version && cd control-center && npm exec --yes --package=pnpm@11.23.0 -- pnpm install --lockfile-only --no-frozen-lockfile --ignore-scripts && cd .. && echo LOCKFILE_SHA256 && sha256sum control-center/pnpm-lock.yaml && echo LOCKFILE_GZIP_BEGIN && gzip -9n -c control-center/pnpm-lock.yaml | base64 | fold -w 1000 && echo LOCKFILE_GZIP_END",
     "check": "biome lint .",
     "format": "biome format --write .",
     "format:check": "biome format .",
