@@ -1,0 +1,74 @@
+.player360-page { display: grid; gap: 14px; }
+.player-search-panel, .player360-workspace { border: 1px solid var(--border); background: linear-gradient(180deg, rgba(255,255,255,.026), rgba(255,255,255,.012)); border-radius: var(--radius-lg); box-shadow: var(--shadow); }
+.player-search-panel { padding: 22px; }
+.player-search-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.player-search-heading h2 { margin: 6px 0 7px; font-size: 21px; letter-spacing: -.03em; }
+.player-search-heading p { max-width: 720px; margin: 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.contract-chip, .muted-badge { flex: 0 0 auto; border: 1px solid var(--border); border-radius: 999px; padding: 6px 8px; color: var(--muted); font-size: 8px; font-weight: 800; letter-spacing: .08em; }
+.contract-chip { color: #cbd7ff; border-color: rgba(141,168,255,.17); background: rgba(141,168,255,.06); }
+.player-search-grid { display: grid; grid-template-columns: minmax(280px, 1.5fr) minmax(150px,.55fr) auto; gap: 10px; align-items: end; margin-top: 22px; }
+.control-field { display: grid; gap: 7px; }
+.control-field > span { color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: .04em; }
+.control-field input, .control-field select { width: 100%; min-height: 42px; border: 1px solid var(--border); border-radius: 11px; background: rgba(255,255,255,.022); color: var(--text); padding: 0 12px; outline: 0; }
+.control-field input:focus, .control-field select:focus { border-color: rgba(141,168,255,.4); box-shadow: 0 0 0 3px rgba(141,168,255,.07); }
+.control-field input:disabled { color: var(--muted-2); cursor: not-allowed; }
+.control-field select option { background: #11151d; color: var(--text); }
+.advanced-toggle { min-height: 42px; display: flex; align-items: center; justify-content: space-between; gap: 20px; border: 1px solid var(--border); border-radius: 11px; background: rgba(255,255,255,.02); padding: 0 13px; cursor: pointer; color: var(--muted); font-size: 10px; }
+.advanced-toggle:hover { color: var(--text); border-color: var(--border-strong); }
+.advanced-search-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 12px; padding-top: 14px; border-top: 1px solid var(--border); }
+.sensitive-toggle { grid-column: 1 / -1; min-height: 58px; display: flex; align-items: center; gap: 11px; border: 1px solid rgba(141,168,255,.12); border-radius: 12px; background: rgba(141,168,255,.035); padding: 10px 12px; }
+.sensitive-toggle input { accent-color: var(--accent); }
+.sensitive-toggle strong, .sensitive-toggle small { display: block; }
+.sensitive-toggle strong { font-size: 10px; }
+.sensitive-toggle small { margin-top: 3px; color: var(--muted); font-size: 9px; }
+.sensitive-toggle.is-locked { opacity: .72; border-color: var(--border); background: rgba(255,255,255,.014); }
+.filter-errors { margin-top: 12px; border: 1px solid rgba(255,141,146,.17); background: rgba(255,141,146,.045); border-radius: 11px; padding: 10px 12px; }
+.filter-errors span { display: block; color: #ffc1c4; font-size: 9px; line-height: 1.5; }
+.player-search-footer { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-top: 16px; }
+.query-summary { min-width: 0; display: grid; gap: 6px; }
+.query-summary > span { color: var(--muted-2); font-size: 8px; font-weight: 800; letter-spacing: .1em; }
+.query-summary code { color: var(--muted); font-size: 9px; overflow-wrap: anywhere; }
+.primary-action { min-width: 180px; min-height: 48px; display: grid; place-content: center; gap: 2px; border: 1px solid rgba(141,168,255,.16); border-radius: 12px; background: rgba(141,168,255,.08); color: #dbe3ff; font-weight: 750; }
+.primary-action:disabled { cursor: not-allowed; opacity: .72; }
+.primary-action small { color: var(--muted-2); font-size: 7px; letter-spacing: .08em; }
+
+.player360-workspace { min-height: 430px; display: grid; grid-template-columns: minmax(250px,.72fr) minmax(0,1.55fr); overflow: hidden; }
+.player360-empty-sidebar { padding: 28px; border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: flex-start; justify-content: center; }
+.empty-avatar { width: 50px; height: 50px; display: grid; place-items: center; border: 1px solid var(--border-strong); border-radius: 15px; background: rgba(255,255,255,.025); color: var(--muted); font-size: 18px; margin-bottom: 18px; }
+.player360-empty-sidebar h2 { max-width: 350px; margin: 7px 0 8px; font-size: 22px; line-height: 1.13; letter-spacing: -.035em; }
+.player360-empty-sidebar > p { max-width: 380px; margin: 0; color: var(--muted); font-size: 10px; line-height: 1.6; }
+.contract-note { margin-top: 22px; border-top: 1px solid var(--border); padding-top: 14px; }
+.contract-note strong, .contract-note span { display: block; }
+.contract-note strong { font-size: 9px; }
+.contract-note span { margin-top: 4px; color: var(--muted-2); font-size: 9px; line-height: 1.5; }
+.player360-contract-map { padding: 24px; }
+.contract-map-heading { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+.contract-map-heading h3 { margin: 5px 0 0; font-size: 17px; letter-spacing: -.025em; }
+.player360-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 20px; }
+.player360-tab-preview { min-height: 70px; display: grid; grid-template-columns: 32px 1fr; align-items: center; gap: 10px; border: 1px solid var(--border); border-radius: 12px; background: rgba(255,255,255,.014); padding: 10px; }
+.tab-index { color: var(--muted-2); font-size: 9px; font-weight: 800; letter-spacing: .08em; }
+.player360-tab-preview strong, .player360-tab-preview small { display: block; }
+.player360-tab-preview strong { font-size: 10px; }
+.player360-tab-preview small { color: var(--muted-2); font-size: 8px; margin-top: 4px; line-height: 1.45; }
+.unsupported-note { display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 10px; margin-top: 14px; border: 1px solid rgba(227,197,122,.13); background: rgba(227,197,122,.035); border-radius: 12px; padding: 11px 12px; }
+.warning-glyph { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 8px; background: rgba(227,197,122,.08); color: var(--warning); font-size: 11px; font-weight: 900; }
+.unsupported-note strong { display: block; font-size: 9px; }
+.unsupported-note p { margin: 3px 0 0; color: var(--muted); font-size: 8px; letter-spacing: .04em; }
+
+@media (max-width: 920px) {
+  .player-search-grid, .advanced-search-grid { grid-template-columns: 1fr 1fr; }
+  .advanced-toggle { grid-column: 1 / -1; }
+  .player360-workspace { grid-template-columns: 1fr; }
+  .player360-empty-sidebar { border-right: 0; border-bottom: 1px solid var(--border); }
+}
+
+@media (max-width: 640px) {
+  .player-search-panel { padding: 17px; }
+  .player-search-heading, .player-search-footer { display: grid; }
+  .contract-chip { justify-self: start; }
+  .player-search-grid, .advanced-search-grid, .player360-tabs { grid-template-columns: 1fr; }
+  .primary-action { width: 100%; }
+  .player360-empty-sidebar, .player360-contract-map { padding: 18px; }
+  .unsupported-note { grid-template-columns: 30px 1fr; }
+  .unsupported-note .muted-badge { grid-column: 2; justify-self: start; }
+}
