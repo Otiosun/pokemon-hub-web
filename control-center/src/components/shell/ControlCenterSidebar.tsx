@@ -1,5 +1,8 @@
 import type { ControlCenterEnvironment } from '../../app/config';
-import type { ControlCenterSection, ControlCenterSectionId } from '../../app/navigation';
+import type {
+  ControlCenterSection,
+  ControlCenterSectionId,
+} from '../../app/navigation';
 import { environmentLabel } from './OperationalDiagnostics';
 
 function AvailabilityBadge({ availability }: { availability: string }) {
