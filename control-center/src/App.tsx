@@ -76,7 +76,7 @@ export function App() {
           </div>
         </div>
 
-        <div className="environment-card" role="group" aria-label="Ambiente atual">
+        <div className="environment-card">
           <span className="environment-dot" />
           <div>
             <span className="environment-label">AMBIENTE</span>
