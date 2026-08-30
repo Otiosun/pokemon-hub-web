@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canSeeSection, CONTROL_CENTER_SECTIONS, visibleSections } from './navigation';
+import { CONTROL_CENTER_SECTIONS, canSeeSection, visibleSections } from './navigation';
 
 describe('visibleSections', () => {
   it('keeps only universally useful navigation visible without privileges', () => {
