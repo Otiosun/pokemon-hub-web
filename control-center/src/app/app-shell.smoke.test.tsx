@@ -3,14 +3,14 @@ import { describe, expect, it } from 'vitest';
 import { App } from '../App';
 
 describe('Control Center app shell smoke', () => {
-  it('renders the administrative shell without a browser runtime', () => {
+  it('fails closed behind the administrative session gate before browser authentication', () => {
     const html = renderToStaticMarkup(<App />);
 
-    expect(html).toContain('Control Center');
-    expect(html).toContain('O que precisa da sua atenção.');
-    expect(html).toContain('FOUNDATION · SEM API');
-    expect(html).toContain('Hoje');
-    expect(html).toContain('Jogadores');
-    expect(html).toContain('Administração');
+    expect(html).toContain('POKÉMON CONTROL CENTER');
+    expect(html).toContain('Validando acesso administrativo.');
+    expect(html).toContain('A interface só será carregada depois que a Admin API confirmar');
+    expect(html).not.toContain('FOUNDATION · SEM API');
+    expect(html).not.toContain('Jogadores');
+    expect(html).not.toContain('Administração');
   });
 });
