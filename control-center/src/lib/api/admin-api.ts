@@ -95,6 +95,55 @@ export interface Player360Overview {
   readonly unsupportedSections: readonly ['COOLDOWNS', 'PUNISHMENTS_FLAGS'];
 }
 
+export interface AdminPrepareOperationRequest {
+  readonly operationType: string;
+  readonly input: Readonly<Record<string, unknown>>;
+  readonly reason?: string;
+  readonly expectedRevision?: string;
+  readonly idempotencyKey: string;
+}
+
+export interface AdminPreparedOperationPolicy {
+  readonly version: number;
+  readonly requiresReason: boolean;
+  readonly requiresExpectedRevision: boolean;
+  readonly requiresSimulation: boolean;
+  readonly requiresConfirmation: boolean;
+  readonly requiredApprovals: number;
+}
+
+export interface AdminPreparedOperationSummary {
+  readonly id: string;
+  readonly operationType: string;
+  readonly target: {
+    readonly type: string;
+    readonly id: string | null;
+  };
+  readonly riskTier: 0 | 1 | 2 | 3 | 4;
+  readonly authorizationMode: 'GLOBAL_ONLY' | 'SUBJECT';
+  readonly status:
+    | 'DRAFT'
+    | 'VALIDATED'
+    | 'SIMULATED'
+    | 'PENDING_CONFIRMATION'
+    | 'PENDING_APPROVAL'
+    | 'READY'
+    | 'APPLIED'
+    | 'REJECTED'
+    | 'FAILED'
+    | 'COMPENSATED';
+  readonly reason: string | null;
+  readonly expectedRevision: string | null;
+  readonly correlationId: string;
+  readonly policy: AdminPreparedOperationPolicy;
+  readonly revision: string;
+}
+
+export interface AdminPrepareOperationResult {
+  readonly operation: AdminPreparedOperationSummary;
+  readonly replayed: boolean;
+}
+
 export type AdminApiErrorKind =
   | 'unauthenticated'
   | 'forbidden'
@@ -126,12 +175,36 @@ interface ErrorEnvelope {
   };
 }
 
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const NON_NEGATIVE_INTEGER_PATTERN = /^\d+$/;
+const ADMIN_OPERATION_STATUSES = new Set([
+  'DRAFT',
+  'VALIDATED',
+  'SIMULATED',
+  'PENDING_CONFIRMATION',
+  'PENDING_APPROVAL',
+  'READY',
+  'APPLIED',
+  'REJECTED',
+  'FAILED',
+  'COMPENSATED',
+]);
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function stringValue(value: unknown): string | null {
   return typeof value === 'string' && value.length > 0 ? value : null;
+}
+
+function isUuid(value: unknown): value is string {
+  return typeof value === 'string' && UUID_PATTERN.test(value);
+}
+
+function isNonNegativeIntegerString(value: unknown): value is string {
+  return typeof value === 'string' && NON_NEGATIVE_INTEGER_PATTERN.test(value);
 }
 
 function kindForStatus(status: number): AdminApiErrorKind {
@@ -216,6 +289,46 @@ function assertPlayer360(value: unknown): Player360Overview {
   return value as unknown as Player360Overview;
 }
 
+function assertPreparedOperation(value: unknown): AdminPrepareOperationResult {
+  if (!isRecord(value) || typeof value.replayed !== 'boolean' || !isRecord(value.operation)) {
+    throw new Error('Invalid prepared operation response.');
+  }
+  const operation = value.operation;
+  const target = operation.target;
+  const policy = operation.policy;
+  if (
+    !isUuid(operation.id) ||
+    stringValue(operation.operationType) === null ||
+    !isRecord(target) ||
+    stringValue(target.type) === null ||
+    (target.id !== null && typeof target.id !== 'string') ||
+    !Number.isInteger(operation.riskTier) ||
+    Number(operation.riskTier) < 0 ||
+    Number(operation.riskTier) > 4 ||
+    (operation.authorizationMode !== 'GLOBAL_ONLY' && operation.authorizationMode !== 'SUBJECT') ||
+    typeof operation.status !== 'string' ||
+    !ADMIN_OPERATION_STATUSES.has(operation.status) ||
+    (operation.reason !== null && typeof operation.reason !== 'string') ||
+    (operation.expectedRevision !== null &&
+      !isNonNegativeIntegerString(operation.expectedRevision)) ||
+    !isUuid(operation.correlationId) ||
+    !isRecord(policy) ||
+    !Number.isInteger(policy.version) ||
+    Number(policy.version) <= 0 ||
+    typeof policy.requiresReason !== 'boolean' ||
+    typeof policy.requiresExpectedRevision !== 'boolean' ||
+    typeof policy.requiresSimulation !== 'boolean' ||
+    typeof policy.requiresConfirmation !== 'boolean' ||
+    !Number.isInteger(policy.requiredApprovals) ||
+    Number(policy.requiredApprovals) < 0 ||
+    Number(policy.requiredApprovals) > 2 ||
+    !isNonNegativeIntegerString(operation.revision)
+  ) {
+    throw new Error('Invalid prepared operation response.');
+  }
+  return value as unknown as AdminPrepareOperationResult;
+}
+
 async function parseError(response: Response): Promise<AdminApiError> {
   let envelope: ErrorEnvelope = {};
   try {
@@ -257,6 +370,38 @@ export class AdminApiClient {
         method: 'GET',
         credentials: 'include',
         headers: { accept: 'application/json' },
+      });
+    } catch {
+      throw new AdminApiError(
+        'network',
+        'Não foi possível alcançar a Admin API.',
+        null,
+        'NETWORK_ERROR',
+        null,
+      );
+    }
+    if (!response.ok) throw await parseError(response);
+    try {
+      return await response.json();
+    } catch {
+      throw new AdminApiError(
+        'server',
+        'A Admin API retornou uma resposta inválida.',
+        response.status,
+        'INVALID_RESPONSE',
+        response.headers.get('x-correlation-id'),
+      );
+    }
+  }
+
+  private async postJson(path: string, body: Readonly<Record<string, unknown>>): Promise<unknown> {
+    let response: Response;
+    try {
+      response = await this.fetchImpl(`${this.apiBaseUrl}${path}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { accept: 'application/json', 'content-type': 'application/json' },
+        body: JSON.stringify(body),
       });
     } catch {
       throw new AdminApiError(
@@ -330,6 +475,31 @@ export class AdminApiClient {
         'A resposta do Player 360 é inválida.',
         200,
         'INVALID_PLAYER360_RESPONSE',
+        null,
+      );
+    }
+  }
+
+  public async prepareOperation(
+    request: AdminPrepareOperationRequest,
+  ): Promise<AdminPrepareOperationResult> {
+    const body: Record<string, unknown> = {
+      operationType: request.operationType,
+      input: request.input,
+      idempotencyKey: request.idempotencyKey,
+    };
+    if (request.reason !== undefined) body.reason = request.reason;
+    if (request.expectedRevision !== undefined) body.expectedRevision = request.expectedRevision;
+
+    try {
+      return assertPreparedOperation(await this.postJson('/admin/v1/operations/prepare', body));
+    } catch (error) {
+      if (error instanceof AdminApiError) throw error;
+      throw new AdminApiError(
+        'server',
+        'A resposta da preparação administrativa é inválida.',
+        200,
+        'INVALID_PREPARED_OPERATION_RESPONSE',
         null,
       );
     }
