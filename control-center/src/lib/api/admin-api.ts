@@ -95,7 +95,14 @@ export interface Player360Overview {
   readonly unsupportedSections: readonly ['COOLDOWNS', 'PUNISHMENTS_FLAGS'];
 }
 
-export type AdminApiErrorKind = 'unauthenticated' | 'forbidden' | 'invalid' | 'not-found' | 'conflict' | 'server' | 'network';
+export type AdminApiErrorKind =
+  | 'unauthenticated'
+  | 'forbidden'
+  | 'invalid'
+  | 'not-found'
+  | 'conflict'
+  | 'server'
+  | 'network';
 
 export class AdminApiError extends Error {
   override readonly name = 'AdminApiError';
@@ -155,7 +162,12 @@ function assertSession(value: unknown): AdminSession {
     if (!isRecord(capability)) throw new Error('Invalid Admin API session capability.');
     const key = stringValue(capability.key);
     const riskTier = capability.riskTier;
-    if (key === null || !Number.isInteger(riskTier) || Number(riskTier) < 0 || Number(riskTier) > 4) {
+    if (
+      key === null ||
+      !Number.isInteger(riskTier) ||
+      Number(riskTier) < 0 ||
+      Number(riskTier) > 4
+    ) {
       throw new Error('Invalid Admin API session capability.');
     }
     return { key, riskTier: riskTier as 0 | 1 | 2 | 3 | 4 };
@@ -166,7 +178,10 @@ function assertSession(value: unknown): AdminSession {
     const scopeType = scope.scopeType;
     const scopeId = scope.scopeId;
     if (
-      (scopeType !== 'GLOBAL' && scopeType !== 'PLAYER' && scopeType !== 'REGION' && scopeType !== 'AREA') ||
+      (scopeType !== 'GLOBAL' &&
+        scopeType !== 'PLAYER' &&
+        scopeType !== 'REGION' &&
+        scopeType !== 'AREA') ||
       (scopeId !== null && typeof scopeId !== 'string')
     ) {
       throw new Error('Invalid Admin API session scope.');
@@ -184,7 +199,11 @@ function assertSession(value: unknown): AdminSession {
 }
 
 function assertPlayerSearchResult(value: unknown): PlayerSearchResult {
-  if (!isRecord(value) || !Array.isArray(value.items) || (value.nextCursor !== null && typeof value.nextCursor !== 'string')) {
+  if (
+    !isRecord(value) ||
+    !Array.isArray(value.items) ||
+    (value.nextCursor !== null && typeof value.nextCursor !== 'string')
+  ) {
     throw new Error('Invalid player search response.');
   }
   return value as unknown as PlayerSearchResult;
@@ -216,7 +235,10 @@ async function parseError(response: Response): Promise<AdminApiError> {
   );
 }
 
-function appendQuery(url: URL, query: Readonly<Record<string, string | number | boolean | undefined>>): void {
+function appendQuery(
+  url: URL,
+  query: Readonly<Record<string, string | number | boolean | undefined>>,
+): void {
   for (const [key, value] of Object.entries(query)) {
     if (value !== undefined) url.searchParams.set(key, String(value));
   }
@@ -237,13 +259,25 @@ export class AdminApiClient {
         headers: { accept: 'application/json' },
       });
     } catch {
-      throw new AdminApiError('network', 'Não foi possível alcançar a Admin API.', null, 'NETWORK_ERROR', null);
+      throw new AdminApiError(
+        'network',
+        'Não foi possível alcançar a Admin API.',
+        null,
+        'NETWORK_ERROR',
+        null,
+      );
     }
     if (!response.ok) throw await parseError(response);
     try {
       return await response.json();
     } catch {
-      throw new AdminApiError('server', 'A Admin API retornou uma resposta inválida.', response.status, 'INVALID_RESPONSE', response.headers.get('x-correlation-id'));
+      throw new AdminApiError(
+        'server',
+        'A Admin API retornou uma resposta inválida.',
+        response.status,
+        'INVALID_RESPONSE',
+        response.headers.get('x-correlation-id'),
+      );
     }
   }
 
@@ -252,11 +286,20 @@ export class AdminApiClient {
       return assertSession(await this.getJson('/admin/v1/session'));
     } catch (error) {
       if (error instanceof AdminApiError) throw error;
-      throw new AdminApiError('server', 'A resposta de sessão administrativa é inválida.', 200, 'INVALID_SESSION_RESPONSE', null);
+      throw new AdminApiError(
+        'server',
+        'A resposta de sessão administrativa é inválida.',
+        200,
+        'INVALID_SESSION_RESPONSE',
+        null,
+      );
     }
   }
 
-  public async searchPlayers(query: PlayerSearchQuery, cursor?: string): Promise<PlayerSearchResult> {
+  public async searchPlayers(
+    query: PlayerSearchQuery,
+    cursor?: string,
+  ): Promise<PlayerSearchResult> {
     const url = new URL(`${this.apiBaseUrl}/admin/v1/players`);
     appendQuery(url, { ...query, cursor });
     const path = `${url.pathname}${url.search}`;
@@ -264,7 +307,13 @@ export class AdminApiClient {
       return assertPlayerSearchResult(await this.getJson(path));
     } catch (error) {
       if (error instanceof AdminApiError) throw error;
-      throw new AdminApiError('server', 'A resposta da busca de jogadores é inválida.', 200, 'INVALID_PLAYER_SEARCH_RESPONSE', null);
+      throw new AdminApiError(
+        'server',
+        'A resposta da busca de jogadores é inválida.',
+        200,
+        'INVALID_PLAYER_SEARCH_RESPONSE',
+        null,
+      );
     }
   }
 
@@ -276,7 +325,13 @@ export class AdminApiClient {
       return assertPlayer360(await this.getJson(path));
     } catch (error) {
       if (error instanceof AdminApiError) throw error;
-      throw new AdminApiError('server', 'A resposta do Player 360 é inválida.', 200, 'INVALID_PLAYER360_RESPONSE', null);
+      throw new AdminApiError(
+        'server',
+        'A resposta do Player 360 é inválida.',
+        200,
+        'INVALID_PLAYER360_RESPONSE',
+        null,
+      );
     }
   }
 }
