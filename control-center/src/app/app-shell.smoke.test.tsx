@@ -13,4 +13,12 @@ describe('Control Center app shell smoke', () => {
     expect(html).not.toContain('Jogadores');
     expect(html).not.toContain('Administração');
   });
+
+  it('keeps build, environment and Admin API state visible while the session is gated', () => {
+    const html = renderToStaticMarkup(<App />);
+
+    expect(html).toContain('BUILD local');
+    expect(html).toContain('AMBIENTE DESENVOLVIMENTO');
+    expect(html).toContain('ADMIN API VALIDANDO SESSÃO');
+  });
 });
