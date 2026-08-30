@@ -2,7 +2,7 @@
 
 Date: 2026-08-30
 
-**Canonical progress: 9.75%**
+**Canonical progress: 14.83%**
 
 The canonical decision log and definitive checklist live in Google Drive under `RPG Pokémon — Engine Narrativa e Mecânica/05_ADMIN_CONTROL_CENTER`.
 
@@ -14,125 +14,109 @@ Frontend draft PR: #6
 
 Frontend runtime head last materially changed before this docs sync: `01fa739b0080be0126819c97eae141c3a9446af1`
 
+Frontend verification head: `dce02f8aa85b38614880e08050658a21c7a5e76e`
+
 Backend branch: `feat/admin-api-read-foundation-v1`
 
 Backend draft PR: #89
 
-Backend proven head: `bd7946f1c1f005ea7e263613827ee1f2fb9e890b`
+Backend proven head: `4aa82ade8da9557c9fe04ef6188e8af9cadf2768`
 
 Both PRs remain DRAFT. No merge or production administrative release is authorized.
 
-## Backend Admin API evidence
+## Frontend verification gate — PROVEN
 
-The read-only administrative boundary is materialized and proven:
+Vercel deployment `dpl_CL1G6czWUhDQSRrW3Ntszp9MQrDH` finished READY after cloning the exact PR head `dce02f8aa85b38614880e08050658a21c7a5e76e`.
 
-- Fastify 5.12.1 with reproducible lockfile/supply-chain validation;
-- `ADMIN_API_ENABLED` is opt-in and disabled by default;
-- Cloudflare Access JWT verification with RS256/JWKS, `iss`, `aud`, `kid`, signature, `exp`, `nbf` and `iat`;
-- empty `sub` service tokens cannot become human administrators;
-- provider-qualified identity maps to `admin_principals.identity_ref` and requires an ACTIVE internal principal;
-- email and Cloudflare groups are not RPG authority;
-- `GET /admin/v1/session`;
-- `GET /admin/v1/players`;
-- `GET /admin/v1/players/:id`;
-- exact-origin CORS, `no-store`, defensive response headers and server-generated correlation IDs;
-- strict input allowlists; client input cannot choose principal, environment, roles, capabilities or scopes;
-- individual Player 360 target comes from the validated route UUID;
-- unexpected errors are sanitized;
-- composition reuses the canonical Admin Registry, AdminService and Player360/domain repositories;
-- no HTTP mutation endpoint exists in this slice;
-- when the Admin API is disabled, the existing WhatsApp runtime behavior remains unchanged.
+The root canonical `verify` script executed `verify:control-center` first and proved the current administrative boundary with:
 
-### Authenticated rate-limit hardening
+- Biome check over 19 Control Center files, no fixes applied;
+- TypeScript strict check green;
+- 5 test files / 13 tests green;
+- Vite 8.2.2 production build green;
+- 25 modules transformed;
+- generated admin bundle without privileged credentials being introduced by this slice.
 
-The backend/post-auth half of F2.11 is implemented and proven:
+The public Hub verification continued afterward. Existing public CSS warnings are separate debt and were not used to relax or mask the isolated administrative proof.
 
-- rate limiting is mandatory in Admin API server composition;
-- budgets are keyed by authenticated principal + allowlisted read operation (`session.read`, `player.search`, `player.read`);
-- denial happens before the handler with HTTP `429` + `Retry-After`;
-- migration `0026_admin_api_rate_limit_buckets.sql` stores shared mutable PostgreSQL buckets with atomic increment/window reset;
-- there is no per-window row growth: one bucket per `(principal_id, operation)`;
-- two independent API limiter instances/pools share the same database budget;
-- distributed concurrency proof with budget 3 and 6 simultaneous requests yields exactly 3 allow + 3 deny and persisted count 6;
-- the limiter fails closed if its persistence path fails.
+GitHub Actions for the PR-owned workflow still fails before runner steps, but the checklist explicitly accepts CI/check **or equivalent proof before merge**. The Vercel execution above is the valid equivalent proof for this head.
 
-F2.11 is **not complete** yet. The complementary edge/pre-auth layer must still be configured and proven: Cloudflare WAF/rate limiting against brute-force/API abuse plus a non-bypassable origin boundary. The backend budget remains a second authoritative layer rather than being replaced by edge counters.
+### F1 promoted
 
-### Adversarial authorization package
+- F1.4 — TypeScript strict + lint/format without relaxed gates: **DONE**.
+- F1.9 — test runner + app-shell smoke: **DONE**.
 
-The backend now carries a dedicated regression suite over the real authorization stack:
+F1 is now **8/12 = 5.33%**.
 
-- a still-valid external Access identity loses RPG authority immediately after the internal principal becomes `DISABLED`, proving per-request internal kill-switch evaluation;
-- BOLA cross-player is denied when a principal scoped to PLAYER A requests PLAYER B;
-- a GLOBAL_ONLY collection search is denied to a principal that only has PLAYER scope;
-- BFLA is denied when the required registered capability is missing;
-- sensitive Player360 reads without `player.read_sensitive` are denied before repository access;
-- HTTP transport already rejects client-supplied `principalId` as invalid input and does not call the search handler.
+Still open:
 
-`admin_principals.DISABLED` is intentionally treated as an immediate **internal control-plane kill switch**, not as a substitute for Cloudflare Access session/token revocation. Provider-level expiration/revocation/logout must still be configured and proven before F2.2/F2.4/F2.5/F2.15 can close.
+- F1.2 — no dedicated admin deployment/hostname yet; Hub preview is not the final admin deployment boundary;
+- F1.5 — `App.tsx` still carries too much composition (~16.8 KB) and there is no sufficiently explicit `components` ownership boundary yet;
+- F1.8 — build label is visible, but explicit operational health diagnostics are not yet materialized;
+- F1.10 — no dedicated `control-center` lockfile and no root lockfile currently prove dependency reproducibility.
 
-### Backend proof
+## Backend Admin API read-only — PROVEN
 
-Head `bd7946f1c1f005ea7e263613827ee1f2fb9e890b` closed **15/15 canonical workflows green**, including CI, Admin Proof, Security Integrity, WhatsApp, Performance, Narrative, Catalog, Onboarding, Progression, Economy, World, Encounter, Battle, Capture and Release Foundation.
+PR `Otiosun/sla#89` at `4aa82ade8da9557c9fe04ef6188e8af9cadf2768` closed **15/15 canonical workflows green**.
 
-The general CI proved:
+General CI proved:
 
 - canonical lint + format;
-- strict TypeScript;
-- **60 test files / 256 tests green**;
-- adversarial authorization suite **5/5 green**;
-- the distributed PostgreSQL Admin API rate-limit integration proof;
+- TypeScript strict;
+- **60 test files / 260 tests green**;
+- Fastify boundary 12/12 green;
+- adversarial authorization package 5/5 green;
+- PostgreSQL distributed rate-limit integration green;
 - runtime schema verification;
 - migrator/runtime privilege separation;
-- logical backup + disposable restore;
-- forward migration from `0025_mutation_abuse_admission.sql` to `0026_admin_api_rate_limit_buckets.sql`, preserving durable state and converging on rerun;
+- backup + disposable restore;
+- forward migration `0025_mutation_abuse_admission.sql` → `0026_admin_api_rate_limit_buckets.sql`;
 - logical rollback to known-good state.
 
-Security Integrity is also green with the admin boundary/anti-abuse invariants; no skip or security gate was weakened.
+### Server authority and transport guarantees
 
-## Frontend Control Center evidence
+- Cloudflare Access JWT is cryptographically verified before internal authority resolution;
+- external identity resolves to an ACTIVE `admin_principals` principal;
+- `/admin/v1/session` returns backend-derived principal, roles, capabilities, scopes and environment;
+- `/admin/v1/players` and `/admin/v1/players/:id` reuse canonical Player360/domain authority;
+- transport schemas are strict and allowlisted;
+- client input cannot choose principal, environment, roles, capabilities or scopes;
+- exact-origin CORS is enforced;
+- unexpected errors become sanitized `ADMIN_INTERNAL_ERROR` responses;
+- no mutation HTTP endpoint exists.
 
-The frontend is no longer a fake-authority shell:
+The mass-assignment matrix explicitly attacks `principalId`, `environment`, `roles`, `capabilities` and `scopes`; each attempt is rejected with 400 and the domain handler is not called.
 
-- API client uses `credentials: include`; React does not receive/inject the Cloudflare Access assertion;
-- session states are fail-closed: loading, ready, unauthenticated, forbidden and unavailable;
-- administrative menus are derived from effective capabilities returned by `/admin/v1/session`;
-- `MASTER` is only a visual label for backend `OWNER_SECURITY_ADMIN`;
-- current environment and principal come from the real administrative session;
-- `player.read_sensitive` is derived from the real capability set;
-- Player 360 search uses the backend contract, cursor pagination and server-returned UUIDs;
-- search results include enough operational context to reduce wrong-player selection without indiscriminate sensitive disclosure;
-- individual Player 360 overview is read from the real API;
-- loading/empty/error states preserve correlation IDs for investigation;
-- unsupported `COOLDOWNS` and `PUNISHMENTS_FLAGS` remain explicit instead of being invented in the UI;
-- no mutation UI/API is exposed.
+### F2 promoted
 
-### Frontend hardening performed
+- F2.7 — strict Admin API/BFF boundary + validated input/output: **DONE**.
+- F2.8 — effective whoami/session endpoint: **DONE**.
+- F2.9 — server-side authorization; frontend never authority: **DONE**.
+- F2.12 — minimal explicit CORS/origin policy: **DONE**.
+- F2.14 — typed/sanitized errors, no stack/SQL/secret exposure: **DONE**.
 
-Biome 2.5.10 was executed against the Control Center boundary using a Vercel preview as an external executor when GitHub Actions could not start the modified PR workflow. The canonical formatter output was applied back to source. During that process the executor found two real TypeScript issues: nullable session-error narrowing and an impossible loading-state comparison. Both were fixed without weakening type or format gates. The shell smoke test was updated to prove the fail-closed session gate rather than the former mock shell.
+Together with F2.1, F2 is now **6/16 = 4.50%**.
 
-Temporary package-script changes used only to extract the formatted artifact were removed; canonical verification scripts are restored.
+Still open:
 
-## Verification blocker on the current frontend runtime head
-
-The current frontend runtime head still lacks a valid final execution of `check + typecheck + tests + build`.
-
-- GitHub Actions jobs associated with the workflow introduced/modified in this PR are being rejected before any runner step (`steps: null`). This is an executor/trust-policy failure, not a code-test result.
-- Vercel successfully executed prior intermediate heads and was used to run Biome/typecheck diagnostics, but it stopped materializing new previews after the rapid sequence of branch commits; therefore older READY previews are not proof for the current runtime head.
-- This documentation-only commit does not count as new runtime evidence and any CI executor behavior caused by it must not be interpreted as a runtime regression or pass.
-- No green result is being inferred from older previews.
+- provider-level session lifecycle/revocation/logout/expiration;
+- CSRF decision against the final session model;
+- MFA/step-up for privileged operations;
+- formal sensitive-data redaction DoD;
+- F2.11 edge/pre-auth WAF rate limiting + non-bypassable origin (backend/post-auth limiter is already proven);
+- end-to-end correlation into future AdminOperation/audit mutations;
+- real staging/production credential/session separation;
+- F2.15 provider-level expired/revoked session proof (BOLA/BFLA/privilege denial/mass assignment/internal kill switch are already green).
 
 ## Checklist state
 
 - F0: 10/10 = 5.00%
-- F1: 6/12 = 4.00%
-- F2: 1/16 = 0.75%
-- Total: **9.75%**
-
-Backend evidence makes F2.7, F2.8, F2.9, F2.12 and F2.14 candidates for formal promotion once the combined slice gate is closed. The backend/post-auth portion of F2.11 is proven, but F2.11 remains open until the edge/pre-auth abuse boundary is configured/proven. F2.15 now has executed BOLA/BFLA/privilege-denial/internal-kill-switch evidence plus transport mass-assignment evidence, but remains open until real provider-level expired/revoked session behavior is configured and proven.
+- F1: 8/12 = 5.33%
+- F2: 6/16 = 4.50%
+- Total: **14.83%**
 
 ## Current gates
 
-- PR #6 remains DRAFT. Do not merge until a clean current-runtime-head Control Center `check + typecheck + tests + build` is observed and the dedicated admin deployment boundary is reviewed.
-- PR #89 remains DRAFT despite 15/15 green. Do not merge/deploy until the frontend boundary, Cloudflare session/edge configuration, threat model/environment config and release decision are jointly reviewed.
+- PR #6 remains DRAFT. The previous generic verification blocker is closed, but the PR still must not merge until the remaining F1 deployment/reproducibility/ownership diagnostics gates are reviewed.
+- PR #89 remains DRAFT despite 15/15 green. Do not merge/deploy until real Cloudflare session/edge configuration, frontend boundary, threat model/environment config and an explicit release decision are complete.
 - Do not add production admin credentials, a production hostname or mutations merely because the read-only slice exists.
