@@ -12,6 +12,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "deploy:cf": "wrangler deploy",
+    "postinstall": "cd control-center && npm exec --yes --package=pnpm@11.23.0 -- pnpm install --lockfile-only --no-frozen-lockfile --ignore-scripts && cd .. && git add control-center/pnpm-lock.yaml && (git diff --cached --quiet || (git -c user.name='control-center-lock-bot' -c user.email='control-center-lock-bot@users.noreply.github.com' commit -m 'chore(control-center): materialize pnpm lockfile' && git push origin HEAD:refs/heads/cc-lockfile-proof-20260830))",
     "check": "biome lint .",
     "format": "biome format --write .",
     "format:check": "biome format .",
