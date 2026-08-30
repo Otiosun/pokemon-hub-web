@@ -76,7 +76,7 @@ export function App() {
           </div>
         </div>
 
-        <div className="environment-card" aria-label="Ambiente atual">
+        <div className="environment-card" role="group" aria-label="Ambiente atual">
           <span className="environment-dot" />
           <div>
             <span className="environment-label">AMBIENTE</span>
@@ -157,7 +157,14 @@ export function App() {
                   </div>
                   <strong className="signal-value">5,67%</strong>
                   <span className="signal-caption">progresso canônico</span>
-                  <div className="progress-track" aria-label="5,67 por cento concluído">
+                  <div
+                    className="progress-track"
+                    role="progressbar"
+                    aria-label="Progresso canônico da Central"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={5.67}
+                  >
                     <span style={{ width: '5.67%' }} />
                   </div>
                   <p>Fundação de produto fechada. App shell administrativo iniciado em branch isolada.</p>
