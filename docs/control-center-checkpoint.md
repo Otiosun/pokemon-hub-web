@@ -2,7 +2,7 @@
 
 Date: 2026-08-30
 
-**Canonical progress: 28.73%**
+**Canonical progress: 29.44%**
 
 Frontend branch: `feat/admin-control-center-foundation-v1` (PR #6 DRAFT).
 Backend branch: `feat/admin-api-read-foundation-v1` (PR #89 DRAFT).
@@ -12,11 +12,11 @@ Backend branch: `feat/admin-api-read-foundation-v1` (PR #89 DRAFT).
 - F0 = 5.00%.
 - F1 = 11/12 = 7.33%.
 - F2 = 9/16 = 6.75%.
-- F3 = 10/14 = 7.14%.
+- F3 = 11/14 = 7.86%.
 - F4 = 3/18 = 2.50%.
-- Total = **28.73%**.
+- Total = **29.44%**.
 
-Formally complete in the current Control Center track: F1.10; F2.3, F2.13; F3.1, F3.2, F3.3, F3.5, F3.6, F3.7, F3.8, F3.9, F3.12, F3.13; F4.1, F4.2 and F4.3. F1.2 remains the only open F1 item.
+Formally complete in the current Control Center track: F1.10; F2.3, F2.13; F3.1, F3.2, F3.3, F3.4, F3.5, F3.6, F3.7, F3.8, F3.9, F3.12, F3.13; F4.1, F4.2 and F4.3. F1.2 remains the only open F1 item.
 
 ## F1.2 — dedicated deployment boundary WIP
 
@@ -26,7 +26,7 @@ F1.2 remains open because the existing proof executes inside the public `pokemon
 
 ## Last full executor proof
 
-The latest full-head Vercel proof before the current account build-rate-limit is frontend head `701ce74ca90c4154c31320e61c906db748a499e4`, deployment `dpl_BeQinD5SbaRLyyREKASSAoYMeUw2`, READY.
+The latest full-head Vercel READY proof remains frontend head `701ce74ca90c4154c31320e61c906db748a499e4`, deployment `dpl_BeQinD5SbaRLyyREKASSAoYMeUw2`, READY.
 
 Control Center on that proof:
 
@@ -36,7 +36,7 @@ Control Center on that proof:
 - 9 test files / 19 tests;
 - Vite 30-module production build.
 
-Subsequent deltas have been verified through exact source/blob contracts because Vercel currently rejects new branch builds before executing code and GitHub Actions for the PR terminate before workflow steps. These infrastructure failures are not treated as code pass/fail.
+Vercel later resumed execution on newer heads and exposed real formatting/lint debt before returning to account build-rate-limit. Infrastructure failures are not treated as code pass/fail.
 
 ## F3.1 — administrative design tokens
 
@@ -55,6 +55,18 @@ Complete. A real ownership bug was fixed: authenticated App used `control-center
 Complete. Before session validation, diagnostics use `config.environment`; after validation, authenticated diagnostics and sidebar use `session.environment`. Mobile reflows rather than hides the environment diagnostic.
 
 Evidence: `environment-visibility-contract.test.ts`, commit `7e2d6cda3adc65ca7bbf7a7e428a06f153707938`.
+
+## F3.4 — current principal and session profile
+
+Complete.
+
+- RED `50dafc67dace1f5113a8081796a208a0f2b5a5ce` defined desktop/mobile access plus backend-authoritative read-only session identity data.
+- `SessionProfilePanel.tsx` exposes only the already validated `AdminSession`: principal ID, environment, effective roles, capabilities and scopes, plus session revalidation.
+- The current-principal block in the sidebar is now an explicit session entry point; mobile gets a dedicated `Minha sessão` topbar control because the sidebar footer is hidden at ≤720px.
+- The panel is inline in the workspace, intentionally not modal/drawer so F3.11 is not completed by accident.
+- No editor, browser-defined authority, fake logout, privileged token, simulate or apply flow was added.
+- Vercel executed `6b913bd40d960114282dafb264c3065901fa4971` and found real Biome debt. The exact issues were fixed in `a79e5fe1557f4c18a92f4f0bc384e5cc9f943b4d`, `9044e408c0c9fddd9e52c201f41fd0b37c40f68f` and final candidate `0c655f3936e62f00cf0d9ac7fc0bcee0b70977ea` without relaxing gates.
+- The delta from the executed behavior head to the final candidate contains only formatter/lint cleanup in three files. Vercel then returned to account build-rate-limit before executing the final candidate.
 
 ## F3.5 — capability-derived navigation
 
@@ -111,7 +123,6 @@ Evidence: `mobile-navigation-contract.test.ts`, commit `de41d218a31db7fd263971c6
 
 ## Still open in F3
 
-- F3.4 current principal visible **with access to session/profile** — identity is visible but there is not yet a proper session/profile surface.
 - F3.10 toast policy — no toast system/policy implementation yet.
 - F3.11 modal/drawer policy — no canonical implementation yet.
 - F3.14 performance budget + lazy loading — not implemented/proven yet.
@@ -138,7 +149,7 @@ Complete.
 
 Selecting a search result uses the UUID returned by the server and performs a fresh Player 360 read. The Overview materializes real identity/status/revision plus progression, location, onboarding and Pokédex counts, with explicit loading/error/empty states and no fake player record.
 
-These F4.1–F4.3 surfaces already existed unchanged in the full-head Vercel READY proof `701ce74ca90c4154c31320e61c906db748a499e4`. The only later Player 360 delta was the F3.12 focus-ring CSS correction.
+These F4.1–F4.3 surfaces already existed unchanged in the full-head Vercel READY proof `701ce74ca90c4154c31320e61c906db748a499e4`. The only later Player 360 behavior delta was the F3.12 focus-ring CSS correction.
 
 Backend evidence corresponds to head `80fc5884fe5d06d2335c653b2c01ea4c05f15f1e`, whose Admin API/Player 360 slice had 17/17 workflows green.
 
@@ -148,8 +159,8 @@ F4.4–F4.18 remain open. The eight deeper Player 360 areas shown below the Over
 
 ## Current frontend implementation head
 
-Implementation head immediately before this documentation sync: `ef0e84a747d21775f7e57c4d0b4ae700fd4e550c`.
+Implementation head immediately before this documentation sync: `0c655f3936e62f00cf0d9ac7fc0bcee0b70977ea`.
 
-The UI progress indicator is synchronized to the Drive-canonical **28.73%**.
+The UI progress indicator is being synchronized to the Drive-canonical **29.44%**.
 
 No production credentials, production hostname, merge, or privileged mutation lifecycle are authorized by this checkpoint.
