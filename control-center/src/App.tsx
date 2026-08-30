@@ -12,14 +12,14 @@ import { Player360Page } from './features/player360/Player360Page';
 import { displayAdminRole, useAdminSession } from './features/session/useAdminSession';
 import { AdminApiClient } from './lib/api/admin-api';
 
-const CANONICAL_PROGRESS = 16.17;
+const CANONICAL_PROGRESS = 17.67;
 
 const workQueue = [
   {
-    eyebrow: 'APROVAÇÕES',
-    title: 'Nenhuma operação de mutation exposta',
-    copy: 'Este slice é somente leitura. Aprovações entram quando o wizard de operações for conectado.',
-    tone: 'quiet',
+    eyebrow: 'OPERAÇÕES',
+    title: 'Preparação auditável disponível',
+    copy: 'A Central já pode preparar AdminOperations. Simular, confirmar, aprovar e aplicar continuam bloqueados no HTTP até o wizard seguro.',
+    tone: 'planned',
   },
   {
     eyebrow: 'LIVEOPS',
@@ -29,8 +29,8 @@ const workQueue = [
   },
   {
     eyebrow: 'RUNTIME',
-    title: 'Admin API com boundary autenticada',
-    copy: 'Sessão e Player 360 usam o backend real; saúde operacional ampla continua em fase posterior.',
+    title: 'Admin API autenticada + prepare-only',
+    copy: 'Sessão, Player 360 e preparação de operação usam o backend real; o lifecycle de mutation permanece fechado.',
     tone: 'quiet',
   },
 ] as const;
@@ -109,7 +109,7 @@ export function App() {
                 apiState={apiState}
                 inline
               />
-              <span className="status-pill">READ-ONLY · ADMIN API</span>
+              <span className="status-pill">READ + PREPARE · ADMIN API</span>
             </div>
           </section>
 
@@ -197,7 +197,7 @@ function TodayView({
               <span className="eyebrow">AGORA</span>
               <h2>Fila de trabalho</h2>
             </div>
-            <span className="panel-meta">READ-ONLY</span>
+            <span className="panel-meta">PREPARE-ONLY</span>
           </div>
           <div className="work-list">
             {workQueue.map((item) => (
@@ -232,7 +232,7 @@ function TodayView({
             </div>
             <div>
               <dt>Mutations</dt>
-              <dd>Não expostas</dd>
+              <dd>Prepare-only</dd>
             </div>
           </dl>
         </aside>
@@ -249,7 +249,8 @@ function FoundationView({ sectionId }: { sectionId: ControlCenterSectionId }) {
       <span className="eyebrow">FOUNDATION</span>
       <h2>{section?.label ?? 'Área administrativa'}</h2>
       <p>
-        {section?.description ?? 'Área planejada.'} Nenhuma operação real é exposta neste slice.
+        {section?.description ?? 'Área planejada.'} Nenhuma operação adicional desta área é exposta
+        neste slice.
       </p>
       <div className="placeholder-rule" />
       <small>
