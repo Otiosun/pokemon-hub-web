@@ -242,5 +242,6 @@ button:focus-visible, input:focus-visible { outline: 2px solid rgba(141,168,255,
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+  html { scroll-behavior: auto; }
+  .nav-item { transition: none; }
 }
