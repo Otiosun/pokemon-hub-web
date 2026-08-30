@@ -1,10 +1,15 @@
 import { useMemo, useState } from 'react';
-import { AdminApiError, type AdminApiClient, type Player360Overview, type PlayerSearchItem } from '../../lib/api/admin-api';
+import {
+  type AdminApiClient,
+  AdminApiError,
+  type Player360Overview,
+  type PlayerSearchItem,
+} from '../../lib/api/admin-api';
 import {
   EMPTY_PLAYER_SEARCH_FILTERS,
+  PLAYER_STATUSES,
   PLAYER360_TABS,
   PLAYER360_UNSUPPORTED_SECTIONS,
-  PLAYER_STATUSES,
   type PlayerSearchFilters,
   toPlayerSearchQuery,
   validatePlayerSearchFilters,
@@ -34,8 +39,10 @@ function shortId(value: string | null): string {
 }
 
 function ResultIdentity({ item }: { item: PlayerSearchItem }) {
-  const active = item.identities.find((identity) => identity.status === 'ACTIVE') ?? item.identities[0];
-  if (active === undefined) return <span className="result-secondary">Sem identidade vinculada</span>;
+  const active =
+    item.identities.find((identity) => identity.status === 'ACTIVE') ?? item.identities[0];
+  if (active === undefined)
+    return <span className="result-secondary">Sem identidade vinculada</span>;
   return (
     <span className="result-secondary">
       {active.provider}
@@ -52,7 +59,9 @@ export function Player360Page({ canReadSensitive, client }: Player360PageProps) 
   const [searchStatus, setSearchStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [searchError, setSearchError] = useState<RequestErrorView | null>(null);
   const [selected, setSelected] = useState<Player360Overview | null>(null);
-  const [selectedStatus, setSelectedStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [selectedStatus, setSelectedStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>(
+    'idle',
+  );
   const [selectedError, setSelectedError] = useState<RequestErrorView | null>(null);
 
   const errors = useMemo(() => validatePlayerSearchFilters(filters), [filters]);
@@ -69,7 +78,9 @@ export function Player360Page({ canReadSensitive, client }: Player360PageProps) 
     setSearchError(null);
     try {
       const response = await client.searchPlayers(normalizedQuery, cursor);
-      setResults((current) => (cursor === undefined ? response.items : [...current, ...response.items]));
+      setResults((current) =>
+        cursor === undefined ? response.items : [...current, ...response.items],
+      );
       setNextCursor(response.nextCursor);
       setSearchStatus('ready');
       if (cursor === undefined) {
@@ -87,7 +98,10 @@ export function Player360Page({ canReadSensitive, client }: Player360PageProps) 
     setSelectedStatus('loading');
     setSelectedError(null);
     try {
-      const player = await client.getPlayer(item.playerId, filters.includeSensitive && canReadSensitive);
+      const player = await client.getPlayer(
+        item.playerId,
+        filters.includeSensitive && canReadSensitive,
+      );
       setSelected(player);
       setSelectedStatus('ready');
     } catch (error) {
@@ -105,8 +119,8 @@ export function Player360Page({ canReadSensitive, client }: Player360PageProps) 
             <span className="panel-kicker">PLAYER 360</span>
             <h2 id="player-search-title">Encontre a pessoa certa antes de agir.</h2>
             <p>
-              Busca autorizada pelo backend. O Control Center envia somente filtros; principal, capabilities e
-              scopes permanecem server-side.
+              Busca autorizada pelo backend. O Control Center envia somente filtros; principal,
+              capabilities e scopes permanecem server-side.
             </p>
           </div>
           <span className="contract-chip">READ-ONLY · API REAL</span>
@@ -214,7 +228,12 @@ export function Player360Page({ canReadSensitive, client }: Player360PageProps) 
             <span>FILTROS ATIVOS</span>
             <code>{JSON.stringify(normalizedQuery)}</code>
           </div>
-          <button className="primary-action" type="button" disabled={!canSearch} onClick={() => void runSearch()}>
+          <button
+            className="primary-action"
+            type="button"
+            disabled={!canSearch}
+            onClick={() => void runSearch()}
+          >
             {searchStatus === 'loading' ? 'Buscando…' : 'Buscar jogadores'}
             <small>{canReadSensitive ? 'SESSÃO AUTORIZADA' : 'LEITURA PADRÃO'}</small>
           </button>
@@ -224,7 +243,9 @@ export function Player360Page({ canReadSensitive, client }: Player360PageProps) 
           <div className="request-error" role="alert">
             <strong>Não foi possível concluir a busca.</strong>
             <span>{searchError.message}</span>
-            {searchError.correlationId ? <code>Correlation {searchError.correlationId}</code> : null}
+            {searchError.correlationId ? (
+              <code>Correlation {searchError.correlationId}</code>
+            ) : null}
           </div>
         ) : null}
 
@@ -280,7 +301,6 @@ export function Player360Page({ canReadSensitive, client }: Player360PageProps) 
               <button
                 className="secondary-action load-more"
                 type="button"
-                disabled={searchStatus === 'loading'}
                 onClick={() => void runSearch(nextCursor)}
               >
                 Carregar próxima página
@@ -293,18 +313,24 @@ export function Player360Page({ canReadSensitive, client }: Player360PageProps) 
       <section className="player360-workspace" aria-labelledby="player360-workspace-title">
         {selectedStatus === 'loading' ? (
           <div className="player360-empty-sidebar" role="status">
-            <span className="empty-avatar" aria-hidden="true">…</span>
+            <span className="empty-avatar" aria-hidden="true">
+              …
+            </span>
             <span className="panel-kicker">CARREGANDO PLAYER 360</span>
             <h2 id="player360-workspace-title">Confirmando o estado atual do jogador.</h2>
             <p>A ficha é relida do backend antes de ser exibida.</p>
           </div>
         ) : selectedError ? (
           <div className="player360-empty-sidebar request-error" role="alert">
-            <span className="empty-avatar" aria-hidden="true">!</span>
+            <span className="empty-avatar" aria-hidden="true">
+              !
+            </span>
             <span className="panel-kicker">PLAYER 360 INDISPONÍVEL</span>
             <h2 id="player360-workspace-title">A ficha não foi aberta.</h2>
             <p>{selectedError.message}</p>
-            {selectedError.correlationId ? <code>Correlation {selectedError.correlationId}</code> : null}
+            {selectedError.correlationId ? (
+              <code>Correlation {selectedError.correlationId}</code>
+            ) : null}
           </div>
         ) : selected ? (
           <div className="player360-selected">
@@ -314,7 +340,9 @@ export function Player360Page({ canReadSensitive, client }: Player360PageProps) 
               </div>
               <div>
                 <span className="panel-kicker">JOGADOR SELECIONADO</span>
-                <h2 id="player360-workspace-title">{selected.profile.trainerName ?? 'Treinador sem nome'}</h2>
+                <h2 id="player360-workspace-title">
+                  {selected.profile.trainerName ?? 'Treinador sem nome'}
+                </h2>
                 <code>{selected.playerId}</code>
               </div>
               <div className="selected-statuses">
@@ -332,7 +360,11 @@ export function Player360Page({ canReadSensitive, client }: Player360PageProps) 
               <article>
                 <span>LOCALIZAÇÃO</span>
                 <strong>{shortId(selected.location.areaId)}</strong>
-                <small>{selected.location.enteredAt ? `Desde ${selected.location.enteredAt}` : 'Sem entrada registrada'}</small>
+                <small>
+                  {selected.location.enteredAt
+                    ? `Desde ${selected.location.enteredAt}`
+                    : 'Sem entrada registrada'}
+                </small>
               </article>
               <article>
                 <span>ONBOARDING</span>
@@ -353,10 +385,15 @@ export function Player360Page({ canReadSensitive, client }: Player360PageProps) 
           </div>
         ) : (
           <div className="player360-empty-sidebar">
-            <span className="empty-avatar" aria-hidden="true">?</span>
+            <span className="empty-avatar" aria-hidden="true">
+              ?
+            </span>
             <span className="panel-kicker">NENHUM JOGADOR SELECIONADO</span>
             <h2 id="player360-workspace-title">A ficha começa pelo contexto, não pela ação.</h2>
-            <p>Busque e selecione um resultado. A ficha só é preenchida por uma resposta autorizada do servidor.</p>
+            <p>
+              Busque e selecione um resultado. A ficha só é preenchida por uma resposta autorizada
+              do servidor.
+            </p>
             <div className="contract-note">
               <strong>Sem dados fictícios.</strong>
               <span>Principal, target e leitura sensível são revalidados no backend.</span>
@@ -386,7 +423,9 @@ export function Player360Page({ canReadSensitive, client }: Player360PageProps) 
           </section>
 
           <div className="unsupported-note">
-            <span className="warning-glyph" aria-hidden="true">!</span>
+            <span className="warning-glyph" aria-hidden="true">
+              !
+            </span>
             <div>
               <strong>Duas áreas ainda não existem no domínio.</strong>
               <p>{PLAYER360_UNSUPPORTED_SECTIONS.join(' · ')}</p>
