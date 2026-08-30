@@ -175,6 +175,8 @@ interface ErrorEnvelope {
   };
 }
 
+const CONTROL_CENTER_CSRF_HEADER = 'x-control-center-csrf';
+const CONTROL_CENTER_CSRF_VALUE = '1';
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const NON_NEGATIVE_INTEGER_PATTERN = /^\d+$/;
 const ADMIN_OPERATION_STATUSES = new Set([
@@ -399,7 +401,11 @@ export class AdminApiClient {
       response = await this.fetchImpl(`${this.apiBaseUrl}${path}`, {
         method: 'POST',
         credentials: 'include',
-        headers: { accept: 'application/json', 'content-type': 'application/json' },
+        headers: {
+          accept: 'application/json',
+          'content-type': 'application/json',
+          [CONTROL_CENTER_CSRF_HEADER]: CONTROL_CENTER_CSRF_VALUE,
+        },
         body: JSON.stringify(body),
       });
     } catch {
