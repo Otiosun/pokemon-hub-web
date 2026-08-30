@@ -87,8 +87,8 @@ export function SessionProfilePanel({
           </span>
           <div className="session-profile-list">
             {session.scopes.length > 0 ? (
-              session.scopes.map((scope, index) => (
-                <code key={`${scope.scopeType}:${scope.scopeId ?? 'global'}:${index}`}>
+              session.scopes.map((scope) => (
+                <code key={`${scope.scopeType}:${scope.scopeId ?? 'global'}`}>
                   {scope.scopeType}
                   {scope.scopeId ? ` · ${scope.scopeId}` : ' · GLOBAL'}
                 </code>
