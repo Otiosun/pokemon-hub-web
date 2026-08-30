@@ -2,7 +2,7 @@
 
 Date: 2026-08-30
 
-**Canonical progress: 26.23%**
+**Canonical progress: 28.73%**
 
 Frontend branch: `feat/admin-control-center-foundation-v1` (PR #6 DRAFT).
 Backend branch: `feat/admin-api-read-foundation-v1` (PR #89 DRAFT).
@@ -13,9 +13,10 @@ Backend branch: `feat/admin-api-read-foundation-v1` (PR #89 DRAFT).
 - F1 = 11/12 = 7.33%.
 - F2 = 9/16 = 6.75%.
 - F3 = 10/14 = 7.14%.
-- Total = **26.23%**.
+- F4 = 3/18 = 2.50%.
+- Total = **28.73%**.
 
-Formally complete in the current Control Center track: F1.10; F2.3, F2.13; F3.1, F3.2, F3.3, F3.5, F3.6, F3.7, F3.8, F3.9, F3.12 and F3.13. F1.2 remains the only open F1 item.
+Formally complete in the current Control Center track: F1.10; F2.3, F2.13; F3.1, F3.2, F3.3, F3.5, F3.6, F3.7, F3.8, F3.9, F3.12, F3.13; F4.1, F4.2 and F4.3. F1.2 remains the only open F1 item.
 
 ## F1.2 — dedicated deployment boundary WIP
 
@@ -115,10 +116,40 @@ Evidence: `mobile-navigation-contract.test.ts`, commit `de41d218a31db7fd263971c6
 - F3.11 modal/drawer policy — no canonical implementation yet.
 - F3.14 performance budget + lazy loading — not implemented/proven yet.
 
-## Current frontend head
+## F4.1 — player search and stable pagination
 
-Latest head at this checkpoint: `b6b20c20fb8de9e1ff524ef44e9cb70cab36133e`.
+Complete.
 
-The UI progress indicator is synchronized to the Drive-canonical **26.23%**.
+The UI sends only contract-derived filters: `status`, `trainerNamePrefix`, `originRegionId`, and the sensitive pair `identityProvider + externalId`; `limit` is fixed at 25. Pagination consumes the server-provided `nextCursor` and appends the next page.
+
+The backend `Player360SearchRequestSchema` is strict, validates the external identity pair and sensitive flag, and models cursor state as `{createdAt, playerId}`. `Player360Service` decodes/validates that cursor and emits the next cursor from the last item when more rows exist.
+
+## F4.2 — safe player identification
+
+Complete.
+
+Each result exposes enough operational context to avoid acting on the wrong player: trainer name, canonical player UUID, level, status, area and active encounter/battle status. External identity is shown as protected when redacted.
+
+Sensitive redaction is enforced server-side by `Player360Service`: ordinary reads null `identities[].externalId` and `profile.metadata`, while sensitive reads/searches require dedicated backend authorization.
+
+## F4.3 — Player 360 Overview
+
+Complete.
+
+Selecting a search result uses the UUID returned by the server and performs a fresh Player 360 read. The Overview materializes real identity/status/revision plus progression, location, onboarding and Pokédex counts, with explicit loading/error/empty states and no fake player record.
+
+These F4.1–F4.3 surfaces already existed unchanged in the full-head Vercel READY proof `701ce74ca90c4154c31320e61c906db748a499e4`. The only later Player 360 delta was the F3.12 focus-ring CSS correction.
+
+Backend evidence corresponds to head `80fc5884fe5d06d2335c653b2c01ea4c05f15f1e`, whose Admin API/Player 360 slice had 17/17 workflows green.
+
+## Still open in F4
+
+F4.4–F4.18 remain open. The eight deeper Player 360 areas shown below the Overview are still anatomy/preview or require domain data, mutations, wizard, conflict handling, audit and E2E support. They are not promoted by association with the Overview.
+
+## Current frontend implementation head
+
+Implementation head immediately before this documentation sync: `ef0e84a747d21775f7e57c4d0b4ae700fd4e550c`.
+
+The UI progress indicator is synchronized to the Drive-canonical **28.73%**.
 
 No production credentials, production hostname, merge, or privileged mutation lifecycle are authorized by this checkpoint.
