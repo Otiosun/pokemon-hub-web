@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "node scripts/materialize-lockfile.mjs && npm exec --yes --package=pnpm@11.23.0 -- pnpm install --frozen-lockfile --ignore-scripts",
+  "buildCommand": "npm exec --yes --package=pnpm@11.23.0 -- pnpm verify",
+  "outputDirectory": "dist"
+}
