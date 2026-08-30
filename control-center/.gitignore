@@ -5,3 +5,6 @@ dist/
 !.env.example
 coverage/
 .vite/
+
+# Derived byte-for-byte from the committed pnpm-lock.yaml.gz.b64 source.
+pnpm-lock.yaml
