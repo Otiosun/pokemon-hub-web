@@ -1,0 +1,75 @@
+:root {
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --text-xs: 0.625rem;
+  --text-sm: 0.75rem;
+  --text-md: 0.875rem;
+  --text-lg: 1rem;
+  --text-xl: 1.25rem;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  --surface-canvas: #090b10;
+  --surface-panel: #0f1219;
+  --surface-raised: #141821;
+  --surface-overlay: #191f2a;
+
+  --state-success: #83d6aa;
+  --state-warning: #e3c57a;
+  --state-danger: #ff8d92;
+  --state-info: #8da8ff;
+
+  --focus-ring-color: rgba(141, 168, 255, 0.72);
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+
+  --motion-fast: 120ms;
+  --motion-standard: 180ms;
+  --motion-slow: 260ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1.2);
+
+  /* Compatibility bridge while legacy component CSS migrates to semantic names. */
+  --bg: var(--surface-canvas);
+  --surface: var(--surface-panel);
+  --surface-2: var(--surface-raised);
+  --surface-3: var(--surface-overlay);
+  --good: var(--state-success);
+  --warning: var(--state-warning);
+  --danger: var(--state-danger);
+}
+
+html,
+body {
+  background: var(--surface-canvas);
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+:where(button, input, select, textarea, a) {
+  transition-duration: var(--motion-fast);
+  transition-timing-function: var(--ease-standard);
+}
+
+:where(button, input, select, textarea, a, [tabindex]):focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 1ms;
+    --motion-standard: 1ms;
+    --motion-slow: 1ms;
+  }
+}
