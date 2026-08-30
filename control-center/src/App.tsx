@@ -1,36 +1,25 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { loadControlCenterConfig } from './app/config';
 import {
   CONTROL_CENTER_SECTIONS,
   type ControlCenterSectionId,
   visibleSections,
 } from './app/navigation';
 import { Player360Page } from './features/player360/Player360Page';
+import {
+  displayAdminRole,
+  type AdminSessionState,
+  useAdminSession,
+} from './features/session/useAdminSession';
+import { AdminApiClient } from './lib/api/admin-api';
 
-const FOUNDATION_CAPABILITIES = new Set([
-  'player.read',
-  'pokemon.read',
-  'inventory.read',
-  'economy.read',
-  'progression.read',
-  'pokedex.read',
-  'world.read',
-  'battle.read',
-  'effects.read',
-  'audit.read',
-  'admin_operation.read',
-  'content.draft.create',
-  'content.draft.edit',
-  'content.validate',
-  'content.publish',
-  'admin.role.manage',
-  'admin.role.assign',
-]);
+const CANONICAL_PROGRESS = 9.75;
 
 const workQueue = [
   {
     eyebrow: 'APROVAÇÕES',
-    title: 'Nenhuma operação aguardando review',
-    copy: 'A caixa de aprovações será conectada ao Admin Registry na fase de API.',
+    title: 'Nenhuma operação de mutation exposta',
+    copy: 'Este slice é somente leitura. Aprovações entram quando o wizard de operações for conectado.',
     tone: 'quiet',
   },
   {
@@ -41,16 +30,10 @@ const workQueue = [
   },
   {
     eyebrow: 'RUNTIME',
-    title: 'Sem telemetria administrativa conectada',
-    copy: 'O shell não inventa saúde do bot. Este card só ganhará status após integração real.',
+    title: 'Admin API com boundary autenticada',
+    copy: 'Sessão e Player 360 usam o backend real; saúde operacional ampla continua em fase posterior.',
     tone: 'quiet',
   },
-] as const;
-
-const quickActions = [
-  ['Buscar jogador', 'Abrir o ponto de entrada do Player 360.', '⌕'],
-  ['Revisar conteúdo', 'Comparar drafts e releases antes de publicar.', '◇'],
-  ['Ver auditoria', 'Reconstruir ações administrativas e seus resultados.', '↺'],
 ] as const;
 
 function AvailabilityBadge({ availability }: { availability: string }) {
@@ -58,11 +41,80 @@ function AvailabilityBadge({ availability }: { availability: string }) {
   return null;
 }
 
+function SessionGate({ state, onRetry }: { state: AdminSessionState; onRetry: () => Promise<void> }) {
+  if (state.status === 'loading') {
+    return (
+      <main className="session-gate" aria-live="polite">
+        <section className="session-card">
+          <div className="session-mark" aria-hidden="true">◉</div>
+          <span className="panel-kicker">POKÉMON CONTROL CENTER</span>
+          <h1>Validando acesso administrativo.</h1>
+          <p>A interface só será carregada depois que a Admin API confirmar sua identidade, principal e permissões efetivas.</p>
+        </section>
+      </main>
+    );
+  }
+
+  const title =
+    state.status === 'unauthenticated'
+      ? 'Autenticação administrativa necessária.'
+      : state.status === 'forbidden'
+        ? 'Esta identidade não possui acesso à Central.'
+        : 'A Admin API está indisponível.';
+  const copy =
+    state.status === 'unauthenticated'
+      ? 'A sessão do Cloudflare Access não foi reconhecida. Autentique-se no perímetro administrativo e tente novamente.'
+      : state.status === 'forbidden'
+        ? 'A identidade externa foi reconhecida, mas não resolve para um principal administrativo ACTIVE autorizado.'
+        : 'A Central não conseguiu validar a sessão. Nenhuma ferramenta administrativa foi liberada.';
+
+  return (
+    <main className="session-gate">
+      <section className="session-card">
+        <div className="session-mark" aria-hidden="true">!</div>
+        <span className="panel-kicker">ACESSO BLOQUEADO</span>
+        <h1>{title}</h1>
+        <p>{copy}</p>
+        <div className="session-diagnostic">
+          <span>DIAGNÓSTICO</span>
+          <code>{state.error.message}</code>
+          {state.error.correlationId ? <code>Correlation {state.error.correlationId}</code> : null}
+        </div>
+        <button className="session-retry" type="button" onClick={() => void onRetry()}>
+          Tentar novamente
+        </button>
+      </section>
+    </main>
+  );
+}
+
+function environmentLabel(environment: 'development' | 'staging' | 'production'): string {
+  if (environment === 'production') return 'PRODUÇÃO';
+  if (environment === 'staging') return 'STAGING';
+  return 'DESENVOLVIMENTO';
+}
+
 export function App() {
+  const config = useMemo(() => loadControlCenterConfig(), []);
+  const client = useMemo(() => new AdminApiClient(config.apiBaseUrl), [config.apiBaseUrl]);
+  const { state: sessionState, capabilities, reload } = useAdminSession(client);
   const [activeSection, setActiveSection] = useState<ControlCenterSectionId>('today');
   const [query, setQuery] = useState('');
-  const sections = useMemo(() => visibleSections(FOUNDATION_CAPABILITIES), []);
+  const sections = useMemo(() => visibleSections(capabilities), [capabilities]);
   const active = CONTROL_CENTER_SECTIONS.find((section) => section.id === activeSection) ?? sections[0];
+
+  useEffect(() => {
+    if (!sections.some((section) => section.id === activeSection)) setActiveSection('today');
+  }, [activeSection, sections]);
+
+  if (sessionState.status !== 'ready') return <SessionGate state={sessionState} onRetry={reload} />;
+
+  const session = sessionState.session;
+  const canReadSensitive = capabilities.has('player.read_sensitive');
+  const canReadPlayers = capabilities.has('player.read');
+  const roleLabel = displayAdminRole(session);
+  const environment = environmentLabel(session.environment);
+  const principalShort = `${session.principalId.slice(0, 8)}…${session.principalId.slice(-4)}`;
 
   return (
     <div className="control-center">
@@ -77,13 +129,13 @@ export function App() {
           </div>
         </div>
 
-        <div className="environment-card">
-          <span className="environment-dot" />
+        <div className="environment-card" data-environment={session.environment}>
+          <span className="environment-dot" aria-hidden="true" />
           <div>
             <span className="environment-label">AMBIENTE</span>
-            <strong>Foundation</strong>
+            <strong>{environment}</strong>
           </div>
-          <span className="environment-meta">LOCAL</span>
+          <span className="environment-meta">{session.environment.toUpperCase()}</span>
         </div>
 
         <nav className="primary-nav">
@@ -107,12 +159,16 @@ export function App() {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="principal-avatar" aria-hidden="true">M</div>
-          <div className="principal-copy">
-            <strong>MASTER</strong>
-            <span>Visual mock · sem sessão real</span>
+          <div className="principal-avatar" aria-hidden="true">
+            {roleLabel.slice(0, 1)}
           </div>
-          <button className="icon-button" type="button" aria-label="Opções da conta">•••</button>
+          <div className="principal-copy">
+            <strong>{roleLabel}</strong>
+            <span title={session.principalId}>{principalShort}</span>
+          </div>
+          <button className="icon-button" type="button" aria-label="Revalidar sessão" onClick={() => void reload()}>
+            ↻
+          </button>
         </div>
       </aside>
 
@@ -129,7 +185,7 @@ export function App() {
             <kbd>⌘ K</kbd>
           </div>
           <div className="topbar-actions">
-            <span className="foundation-pill">FOUNDATION · SEM API</span>
+            <span className="foundation-pill">READ-ONLY · ADMIN API</span>
             <button className="icon-button large" type="button" aria-label="Ajuda">?</button>
           </div>
         </header>
@@ -142,9 +198,9 @@ export function App() {
               <p>{active?.description}</p>
             </div>
             <div className="heading-meta">
-              <span>29 AGO 2026</span>
+              <span>{environment}</span>
               <span className="separator">/</span>
-              <span>CONTROL CENTER v0.1</span>
+              <span>BUILD {config.buildLabel}</span>
             </div>
           </div>
 
@@ -156,7 +212,7 @@ export function App() {
                     <span className="signal-label">CENTRAL</span>
                     <span className="status-chip">EM CONSTRUÇÃO</span>
                   </div>
-                  <strong className="signal-value">5,67%</strong>
+                  <strong className="signal-value">{CANONICAL_PROGRESS.toFixed(2)}%</strong>
                   <span className="signal-caption">progresso canônico</span>
                   <div
                     className="progress-track"
@@ -164,31 +220,31 @@ export function App() {
                     aria-label="Progresso canônico da Central"
                     aria-valuemin={0}
                     aria-valuemax={100}
-                    aria-valuenow={5.67}
+                    aria-valuenow={CANONICAL_PROGRESS}
                   >
-                    <span style={{ width: '5.67%' }} />
+                    <span style={{ width: `${CANONICAL_PROGRESS}%` }} />
                   </div>
-                  <p>Fundação de produto fechada. App shell administrativo iniciado em branch isolada.</p>
+                  <p>Foundation validada e primeira boundary autenticada/read-only conectada ao backend.</p>
                 </article>
 
                 <article className="signal-card">
                   <div className="signal-topline">
-                    <span className="signal-label">BACKEND ADMIN</span>
+                    <span className="signal-label">SESSÃO ADMIN</span>
                     <span className="good-dot" aria-hidden="true" />
                   </div>
-                  <strong className="signal-value compact">Registry + 360</strong>
-                  <span className="signal-caption">authority spine existente</span>
-                  <p>A Central consumirá operações reais; nenhuma regra mecânica será duplicada aqui.</p>
+                  <strong className="signal-value compact">{roleLabel}</strong>
+                  <span className="signal-caption">{session.capabilities.length} capabilities efetivas</span>
+                  <p>Menus e leitura sensível derivam desta sessão; o backend revalida autorização em cada request.</p>
                 </article>
 
                 <article className="signal-card">
                   <div className="signal-topline">
-                    <span className="signal-label">PRÓXIMO GATE</span>
-                    <span className="muted-dot" aria-hidden="true" />
+                    <span className="signal-label">PLAYER 360</span>
+                    <span className="good-dot" aria-hidden="true" />
                   </div>
-                  <strong className="signal-value compact">Foundation</strong>
-                  <span className="signal-caption">build · typecheck · test</span>
-                  <p>Primeiro gate técnico antes de autenticação ou qualquer mutation administrativa.</p>
+                  <strong className="signal-value compact">READ-ONLY</strong>
+                  <span className="signal-caption">busca + leitura individual</span>
+                  <p>Busca e overview podem consultar dados reais. Nenhuma mutation está exposta neste slice.</p>
                 </article>
               </section>
 
@@ -223,16 +279,35 @@ export function App() {
                     </div>
                   </div>
                   <div className="quick-list">
-                    {quickActions.map(([title, copy, glyph]) => (
-                      <button type="button" className="quick-action" key={title} disabled>
-                        <span className="quick-glyph" aria-hidden="true">{glyph}</span>
-                        <span>
-                          <strong>{title}</strong>
-                          <small>{copy}</small>
-                        </span>
-                        <span className="quick-lock">API PENDENTE</span>
-                      </button>
-                    ))}
+                    <button
+                      type="button"
+                      className="quick-action"
+                      disabled={!canReadPlayers}
+                      onClick={() => setActiveSection('players')}
+                    >
+                      <span className="quick-glyph" aria-hidden="true">⌕</span>
+                      <span>
+                        <strong>Buscar jogador</strong>
+                        <small>Abrir o ponto de entrada real do Player 360.</small>
+                      </span>
+                      <span className="quick-lock">{canReadPlayers ? 'DISPONÍVEL' : 'SEM CAPABILITY'}</span>
+                    </button>
+                    <button type="button" className="quick-action" disabled>
+                      <span className="quick-glyph" aria-hidden="true">◇</span>
+                      <span>
+                        <strong>Revisar conteúdo</strong>
+                        <small>Comparar drafts e releases antes de publicar.</small>
+                      </span>
+                      <span className="quick-lock">PRÓXIMA FASE</span>
+                    </button>
+                    <button type="button" className="quick-action" disabled>
+                      <span className="quick-glyph" aria-hidden="true">↺</span>
+                      <span>
+                        <strong>Ver auditoria</strong>
+                        <small>Reconstruir ações administrativas e seus resultados.</small>
+                      </span>
+                      <span className="quick-lock">PRÓXIMA FASE</span>
+                    </button>
                   </div>
                 </div>
               </section>
@@ -253,7 +328,7 @@ export function App() {
               </section>
             </>
           ) : activeSection === 'players' ? (
-            <Player360Page canReadSensitive={false} />
+            <Player360Page canReadSensitive={canReadSensitive} client={client} />
           ) : (
             <section className="placeholder-panel">
               <span className="placeholder-glyph" aria-hidden="true">{active?.glyph}</span>
@@ -261,16 +336,16 @@ export function App() {
               <h2>{active?.label} já tem lugar na arquitetura.</h2>
               <p>{active?.description}</p>
               <div className="placeholder-note">
-                Esta tela ainda não finge dados nem ações. O próximo slice conectará somente superfícies sustentadas por contratos reais do backend.
+                Esta tela não finge dados nem ações. O próximo slice conectará somente superfícies sustentadas por contratos reais do backend.
               </div>
             </section>
           )}
 
           {query.trim() ? (
             <div className="search-preview" role="status">
-              <span>BUSCA FOUNDATION</span>
+              <span>BUSCA GLOBAL AINDA EM FOUNDATION</span>
               <strong>“{query.trim()}”</strong>
-              <p>A busca visual está pronta; resultados reais entram após Admin API e autorização.</p>
+              <p>Player 360 já possui busca real; a busca global multi-entidade permanece para a Fase 3.</p>
             </div>
           ) : null}
         </section>
