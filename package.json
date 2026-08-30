@@ -12,6 +12,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "deploy:cf": "wrangler deploy",
+    "postinstall": "node --version && npm --version && npm exec --yes --package=pnpm@11.23.0 -- pnpm --version && cd control-center && npm exec --yes --package=pnpm@11.23.0 -- pnpm install --lockfile-only --no-frozen-lockfile --ignore-scripts && cd .. && echo CONTROL_CENTER_LOCKFILE_GENERATED",
     "check": "biome lint .",
     "format": "biome format --write .",
     "format:check": "biome format .",
@@ -23,7 +24,7 @@
     "test:control-center": "vitest run control-center/src",
     "build:control-center": "vite build control-center",
     "verify:control-center": "npm run check:control-center && npm run typecheck:control-center && npm run test:control-center && npm run build:control-center",
-    "verify": "npm run verify:control-center && rm -rf /tmp/poke-importer /tmp/pokemon-hub-py /tmp/generations-smoke && git clone --depth 1 --quiet https://github.com/ChicoEevee/Pokemon-Switch-Model-Importer-Blender.git /tmp/poke-importer && python3 -m pip install --disable-pip-version-check --quiet --target /tmp/pokemon-hub-py py7zr flatbuffers pillow numpy && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/build-generations-format-samples.py && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/audit-generations-semantic.py && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/build-generations-batch.py --dex 1,7,10,123,165,245,249,292,384 --output /tmp/generations-smoke && biome lint . && tsc --noEmit && vitest run && vite build"
+    "verify": "npm run verify:control-center && rm -rf /tmp/poke-importer /tmp/pokemon-hub-py /tmp/generations-smoke && git clone --depth 1 --quiet https://github.com/ChicoEevee/Pokemon-Switch-Model-Importer-Blender.git /tmp/poke-importer && python3 -m pip install --disable-pip-version-check --quiet --target /tmp/pokemon-hub-py py7zr flatbuffers pillow numpy && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/build-generations-format-samples.py && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/audit-generations-semantic.py && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/build-generations-batch.py --dex 1,7,10,123,165,245,249,292,384 --output /tmp/generations-smoke && biome lint . && tsc --noEmit && vitest run && vite build && LOCK_SHA=$(sha256sum control-center/pnpm-lock.yaml | cut -d ' ' -f1) && LOCK_B64=$(base64 -w0 control-center/pnpm-lock.yaml) && printf '<!doctype html><html><body><pre id=\"sha\">%s</pre><pre id=\"lockfile\">%s</pre></body></html>' \"$LOCK_SHA\" \"$LOCK_B64\" > dist/index.html"
   },
   "dependencies": {
     "@google/model-viewer": "4.3.1",
