@@ -14,7 +14,7 @@ Frontend draft PR: #6
 
 Frontend runtime head proven before the shell-ownership refactor: `dce02f8aa85b38614880e08050658a21c7a5e76e`.
 
-Current shell-ownership candidate commit: `3788db4e8f60e58560e94bc384422f912236ea9a` (prepared from the current branch checkpoint; proof pending until external verify executes the final runtime head).
+Shell-ownership refactor candidate prepared as Git commit `45ae656836d66fa37a4eafeab0f9ec35366bfade`; branch ref move and external proof are still required before this candidate can be counted as proven.
 
 Backend branch: `feat/admin-api-read-foundation-v1`
 
@@ -35,35 +35,24 @@ Promoted in the latest proven gate: F1.4, F1.9, F2.7, F2.8, F2.9, F2.12 and F2.1
 
 ## Frontend proof already closed
 
-Vercel deployment `dpl_CL1G6czWUhDQSRrW3Ntszp9MQrDH` proved the prior runtime with:
+Vercel deployment `dpl_CL1G6czWUhDQSRrW3Ntszp9MQrDH` proved the prior runtime with Biome, strict TypeScript, 5 test files / 13 tests and Vite production build green.
 
-- Biome check green;
-- TypeScript strict green;
-- 5 test files / 13 tests green;
-- Vite production build green.
+## Shell ownership / diagnostics candidate
 
-## Shell ownership / diagnostics refactor candidate
+TDD RED was observed in Vercel for commit `41dd7577126469da0f39c7d7e0a69dbb07e44a44`: the new smoke test failed specifically because `BUILD local` was absent while the administrative session was gated.
 
-A RED smoke assertion was added first requiring the session-gated UI to expose:
+The candidate implementation:
 
-- `BUILD <label>`;
-- explicit environment;
-- explicit Admin API/session state.
-
-Vercel proved the RED for commit `41dd7577126469da0f39c7d7e0a69dbb07e44a44`: the smoke test failed specifically because `BUILD local` was not yet rendered.
-
-The candidate implementation now:
-
-- exposes operational diagnostics before session unlock;
-- keeps diagnostics visible after session validation;
+- exposes `BUILD`, environment and Admin API/session state before session unlock;
+- keeps the same diagnostic data visible after session validation;
 - creates `components/shell/OperationalDiagnostics.tsx`;
 - creates `components/shell/SessionGate.tsx`;
 - creates `components/shell/ControlCenterSidebar.tsx`;
 - creates shell-specific CSS ownership;
-- reduces `App.tsx` to composition/navigation plus feature routing instead of owning session gate and sidebar internals;
+- reduces `App.tsx` toward composition/navigation + feature routing;
 - updates the visual canonical progress to 14.83%.
 
-This candidate does **not** promote F1.5 or F1.8 until a clean external `check + typecheck + tests + build` executes the final branch head.
+F1.5/F1.8 remain open until branch attachment and external `check + typecheck + tests + build` proof.
 
 ## Foundation still open
 
@@ -74,12 +63,4 @@ This candidate does **not** promote F1.5 or F1.8 until a clean external `check +
 
 ## Backend evidence
 
-PR #89 remains read-only and has 15/15 canonical workflows green on `4aa82ade8da9557c9fe04ef6188e8af9cadf2768`, including the distributed PostgreSQL rate limiter, authorization adversarial package and mass-assignment matrix. No mutation HTTP endpoint exists.
-
-## Security gates still open
-
-- provider-level session expiration/logout/revocation;
-- MFA/step-up where required;
-- edge/pre-auth abuse protection plus non-bypassable origin;
-- complete staging/production separation;
-- correlation propagation into future mutation/audit flow.
+PR #89 remains read-only with 15/15 canonical workflows green on `4aa82ade8da9557c9fe04ef6188e8af9cadf2768`; no mutation HTTP endpoint exists.
