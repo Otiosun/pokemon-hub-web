@@ -17,6 +17,7 @@ import {
 } from './model';
 import { Player360DetailTabs } from './Player360DetailTabs';
 import { PlayerActionRail } from './PlayerActionRail';
+import { TrainerProgressionPrepareDrawer } from './TrainerProgressionPrepareDrawer';
 import './player360.css';
 
 interface Player360PageProps {
@@ -104,7 +105,9 @@ export function Player360Page({ canReadSensitive, capabilities, client }: Player
     'idle',
   );
   const [selectedError, setSelectedError] = useState<RequestErrorView | null>(null);
-  const [prepareActionOpen, setPrepareActionOpen] = useState(false);
+  const [prepareActionOpen, setPrepareActionOpen] = useState<
+    'battle.force_cancel' | 'progression.trainer.adjust' | null
+  >(null);
 
   const errors = useMemo(() => validatePlayerSearchFilters(filters), [filters]);
   const normalizedQuery = useMemo(() => toPlayerSearchQuery(filters), [filters]);
@@ -115,8 +118,13 @@ export function Player360Page({ canReadSensitive, capabilities, client }: Player
   }
 
   function openPrepareAction(action: { readonly operationType: string }) {
-    if (action.operationType !== 'battle.force_cancel') return;
-    setPrepareActionOpen(true);
+    if (action.operationType === 'battle.force_cancel') {
+      setPrepareActionOpen('battle.force_cancel');
+      return;
+    }
+    if (action.operationType === 'progression.trainer.adjust') {
+      setPrepareActionOpen('progression.trainer.adjust');
+    }
   }
 
   async function runSearch(cursor?: string) {
@@ -134,7 +142,7 @@ export function Player360Page({ canReadSensitive, capabilities, client }: Player
         setSelected(null);
         setSelectedStatus('idle');
         setSelectedError(null);
-        setPrepareActionOpen(false);
+        setPrepareActionOpen(null);
       }
     } catch (error) {
       setSearchStatus('error');
@@ -143,7 +151,7 @@ export function Player360Page({ canReadSensitive, capabilities, client }: Player
   }
 
   async function selectPlayer(item: PlayerSearchItem) {
-    setPrepareActionOpen(false);
+    setPrepareActionOpen(null);
     setSelected(null);
     setSelectedStatus('loading');
     setSelectedError(null);
@@ -454,10 +462,17 @@ export function Player360Page({ canReadSensitive, capabilities, client }: Player
 
         {selected ? (
           <>
-            {prepareActionOpen ? (
+            {prepareActionOpen === 'battle.force_cancel' ? (
               <BattleForceCancelPrepareDrawer
                 client={client}
-                onClose={() => setPrepareActionOpen(false)}
+                onClose={() => setPrepareActionOpen(null)}
+                player={selected}
+              />
+            ) : null}
+            {prepareActionOpen === 'progression.trainer.adjust' ? (
+              <TrainerProgressionPrepareDrawer
+                client={client}
+                onClose={() => setPrepareActionOpen(null)}
                 player={selected}
               />
             ) : null}
