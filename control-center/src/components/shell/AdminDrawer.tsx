@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useId } from 'react';
+import { type ReactNode, useEffect, useId, useRef } from 'react';
 
 export function AdminDrawer({
   title,
@@ -17,8 +17,11 @@ export function AdminDrawer({
 }) {
   const titleId = useId();
   const descriptionId = useId();
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
+    closeButtonRef.current?.focus();
+
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') onClose();
     }
@@ -43,7 +46,12 @@ export function AdminDrawer({
           </div>
           <div className="admin-drawer-actions">
             {actions}
-            <button autoFocus className="text-button" onClick={onClose} type="button">
+            <button
+              className="text-button"
+              onClick={onClose}
+              ref={closeButtonRef}
+              type="button"
+            >
               Fechar painel
             </button>
           </div>
