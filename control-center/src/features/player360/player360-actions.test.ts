@@ -5,6 +5,25 @@ import { contextualPlayerActions } from './player360-actions';
 const BASE_PLAYER = {
   activeBattle: null,
   activeEncounter: null,
+  wallets: [
+    {
+      currencyId: '11111111-1111-4111-8111-111111111111',
+      slug: 'poke-dollar',
+      displayName: 'Poké Dollar',
+      amount: '1200',
+      revision: '3',
+      updatedAt: '2026-08-31T12:00:00.000Z',
+    },
+  ],
+  inventory: [
+    {
+      itemId: '22222222-2222-4222-8222-222222222222',
+      slug: 'potion',
+      quantity: '5',
+      revision: '4',
+      updatedAt: '2026-08-31T12:00:00.000Z',
+    },
+  ],
 } as unknown as Player360Overview;
 
 describe('Player 360 contextual action rail', () => {
@@ -12,7 +31,7 @@ describe('Player 360 contextual action rail', () => {
     expect(contextualPlayerActions(new Set(), BASE_PLAYER)).toEqual([]);
   });
 
-  it('derives player-level actions from exact Registry capabilities without privilege expansion', () => {
+  it('derives player-level actions from exact Registry capabilities and validated targets without privilege expansion', () => {
     const actions = contextualPlayerActions(
       new Set(['inventory.adjust', 'wallet.adjust', 'progression.adjust', 'pokemon.create']),
       BASE_PLAYER,
@@ -26,6 +45,21 @@ describe('Player 360 contextual action rail', () => {
     ]);
     expect(actions.map((action) => action.riskTier)).toEqual([2, 2, 2, 3]);
     expect(actions.every((action) => action.targetKind === 'PLAYER')).toBe(true);
+  });
+
+  it('hides economy actions when capability exists but no validated economy target exists', () => {
+    const playerWithoutEconomyTargets = {
+      ...BASE_PLAYER,
+      wallets: [],
+      inventory: [],
+    } as Player360Overview;
+
+    const actions = contextualPlayerActions(
+      new Set(['inventory.adjust', 'wallet.adjust']),
+      playerWithoutEconomyTargets,
+    );
+
+    expect(actions).toEqual([]);
   });
 
   it('only exposes battle and encounter actions when capability and live context both exist', () => {
