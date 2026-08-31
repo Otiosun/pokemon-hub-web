@@ -7,8 +7,8 @@ import type {
 } from '../../lib/api/admin-api';
 import { AdminApiError } from '../../lib/api/admin-api';
 import {
-  buildTrainerProgressionPrepareRequest,
   type TrainerProgressionPrepareContext,
+  buildTrainerProgressionPrepareRequest,
 } from './trainer-progression-prepare';
 
 interface PrepareErrorView {
