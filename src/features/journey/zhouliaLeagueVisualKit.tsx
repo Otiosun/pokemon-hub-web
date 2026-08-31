@@ -6,7 +6,7 @@ export function ZhouliaEPrimeMark({ className = '' }: MarkProps) {
   return (
     <img
       className={className}
-      src="/assets/journey/zhoulia-e-original.svg"
+      src="/assets/journey/zhoulia-e-approved.svg"
       alt=""
       aria-hidden="true"
       draggable={false}
