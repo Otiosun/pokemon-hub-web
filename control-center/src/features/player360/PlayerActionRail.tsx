@@ -45,7 +45,9 @@ export function PlayerActionRail({
         <div className="player-action-list">
           {actions.map((action) => {
             const canPrepare =
-              action.operationType === 'battle.force_cancel' && onPrepareAction !== undefined;
+              (action.operationType === 'battle.force_cancel' ||
+                action.operationType === 'progression.trainer.adjust') &&
+              onPrepareAction !== undefined;
 
             return (
               <article className="player-action-card" key={action.operationType}>
@@ -73,7 +75,9 @@ export function PlayerActionRail({
                     onClick={() => onPrepareAction(action)}
                     type="button"
                   >
-                    Preparar cancelamento
+                    {action.operationType === 'battle.force_cancel'
+                      ? 'Preparar cancelamento'
+                      : 'Preparar ajuste'}
                   </button>
                 ) : (
                   <button className="player-action-locked" disabled type="button">
