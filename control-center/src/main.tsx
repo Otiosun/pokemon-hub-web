@@ -8,6 +8,7 @@ import './features/player360/player360-detail-tabs.css';
 import './features/player360/player360-runtime.css';
 import './features/player360/pokedex-panel.css';
 import './features/player360/pokemon-roster.css';
+import './features/player360/world-location.css';
 import './features/session/session.css';
 
 const rootElement = document.getElementById('root');
