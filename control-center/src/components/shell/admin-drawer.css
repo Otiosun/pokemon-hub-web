@@ -11,7 +11,7 @@
   width: min(640px, 100%);
   height: 100%;
   overflow: auto;
-  border-left: 1px solid var(--border-subtle);
+  border-left: 1px solid var(--border);
   background: var(--surface);
   box-shadow: -16px 0 48px color-mix(in srgb, var(--bg) 58%, transparent);
 }
@@ -25,7 +25,7 @@
   justify-content: space-between;
   gap: var(--space-4);
   padding: var(--space-5);
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border);
   background: var(--surface);
 }
 
@@ -37,7 +37,7 @@
 .admin-drawer-header p {
   max-width: 58ch;
   margin-top: var(--space-2);
-  color: var(--text-muted);
+  color: var(--muted);
 }
 
 .admin-drawer-actions {
@@ -61,7 +61,7 @@
   .admin-drawer {
     width: 100%;
     height: min(88vh, 760px);
-    border-top: 1px solid var(--border-subtle);
+    border-top: 1px solid var(--border);
     border-left: 0;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   }
