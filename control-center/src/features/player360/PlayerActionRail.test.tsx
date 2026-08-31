@@ -76,7 +76,7 @@ describe('Player 360 action rail surface', () => {
     expect(html).not.toContain('Aplicar ajuste');
   });
 
-  it('exposes wallet adjustment only when capability and a wallet target both exist', () => {
+  it('exposes wallet adjustment only when capability and a validated wallet target both exist', () => {
     const actionable = renderToStaticMarkup(
       <PlayerActionRail
         capabilities={new Set(['wallet.adjust'])}
@@ -91,11 +91,19 @@ describe('Player 360 action rail surface', () => {
         player={{ ...PLAYER, wallets: [] }}
       />,
     );
+    const invalidWallet = renderToStaticMarkup(
+      <PlayerActionRail
+        capabilities={new Set(['wallet.adjust'])}
+        onPrepareAction={() => undefined}
+        player={{ ...PLAYER, wallets: [{ currencyId: 'manual-id' }] }}
+      />,
+    );
 
     expect(actionable).toContain('Corrigir saldo');
     expect(actionable).toContain('wallet.adjust');
     expect(actionable).toContain('Preparar ajuste');
     expect(withoutWallet).not.toContain('Corrigir saldo');
+    expect(invalidWallet).not.toContain('Corrigir saldo');
   });
 
   it('shows a stable no-action state instead of leaking unavailable privileges', () => {
