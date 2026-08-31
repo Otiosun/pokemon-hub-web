@@ -20,10 +20,6 @@ function normalizedRevision(revision: string): string {
   if (!/^(0|[1-9]\d*)$/.test(revision)) {
     throw new Error('Encounter close revision is invalid.');
   }
-  const numeric = BigInt(revision);
-  if (numeric > BigInt(Number.MAX_SAFE_INTEGER)) {
-    throw new Error('Encounter close revision is outside the supported safe range.');
-  }
   return revision;
 }
 
