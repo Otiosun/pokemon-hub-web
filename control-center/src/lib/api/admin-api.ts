@@ -59,6 +59,75 @@ export interface Player360UnlockView {
   readonly revision: string;
 }
 
+export interface Player360PokemonMoveView {
+  readonly slotNo: number;
+  readonly moveId: string;
+  readonly slug: string;
+  readonly ppCurrent: number | null;
+  readonly learnedAt: string;
+}
+
+export interface Player360PokemonPlacementView {
+  readonly kind: 'TEAM' | 'BOX';
+  readonly boxNo: number | null;
+  readonly slotNo: number;
+}
+
+export interface Player360PokemonIvView {
+  readonly hp: number | null;
+  readonly attack: number | null;
+  readonly defense: number | null;
+  readonly spAttack: number | null;
+  readonly spDefense: number | null;
+  readonly speed: number | null;
+}
+
+export interface Player360PokemonPersistentConditionView {
+  readonly key: string;
+  readonly sourceType: string;
+  readonly sourceId: string;
+  readonly appliedAt: string;
+  readonly expiresAt: string | null;
+}
+
+export interface Player360PokemonEvolutionFlagView {
+  readonly key: string;
+  readonly status: 'ACTIVE' | 'REVOKED';
+  readonly sourceType: string;
+  readonly sourceId: string;
+  readonly grantedAt: string;
+  readonly revokedAt: string | null;
+  readonly revision: string;
+}
+
+export interface Player360PokemonView {
+  readonly id: string;
+  readonly formId: string;
+  readonly formSlug: string;
+  readonly speciesId: string;
+  readonly speciesSlug: string;
+  readonly nationalDex: number;
+  readonly nickname: string | null;
+  readonly level: number;
+  readonly xp: string;
+  readonly currentHp: number;
+  readonly gender: string | null;
+  readonly shiny: boolean;
+  readonly status: 'ACTIVE' | 'ARCHIVED';
+  readonly abilityId: string | null;
+  readonly abilitySlug: string | null;
+  readonly natureId: string | null;
+  readonly natureSlug: string | null;
+  readonly revision: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+  readonly placement: Player360PokemonPlacementView | null;
+  readonly ivs: Player360PokemonIvView;
+  readonly moves: readonly Player360PokemonMoveView[];
+  readonly persistentConditions: readonly Player360PokemonPersistentConditionView[];
+  readonly evolutionConditionFlags: readonly Player360PokemonEvolutionFlagView[];
+}
+
 export interface Player360Overview {
   readonly playerId: string;
   readonly status: 'ACTIVE' | 'SUSPENDED' | 'ARCHIVED';
@@ -92,7 +161,7 @@ export interface Player360Overview {
   readonly identities: readonly PlayerSearchIdentity[];
   readonly wallets: readonly unknown[];
   readonly inventory: readonly unknown[];
-  readonly pokemon: readonly unknown[];
+  readonly pokemon: readonly Player360PokemonView[];
   readonly pokedex: {
     readonly speciesSeen: number;
     readonly speciesCaught: number;
@@ -214,12 +283,28 @@ function nullableString(value: unknown): value is string | null {
   return value === null || typeof value === 'string';
 }
 
+function nullableUuid(value: unknown): value is string | null {
+  return value === null || isUuid(value);
+}
+
 function isUuid(value: unknown): value is string {
   return typeof value === 'string' && UUID_PATTERN.test(value);
 }
 
 function isNonNegativeIntegerString(value: unknown): value is string {
   return typeof value === 'string' && NON_NEGATIVE_INTEGER_PATTERN.test(value);
+}
+
+function isNonNegativeInteger(value: unknown): value is number {
+  return Number.isInteger(value) && Number(value) >= 0;
+}
+
+function isPositiveInteger(value: unknown): value is number {
+  return Number.isInteger(value) && Number(value) > 0;
+}
+
+function isNullableNonNegativeInteger(value: unknown): value is number | null {
+  return value === null || isNonNegativeInteger(value);
 }
 
 function isPlayerStatus(value: unknown): value is Player360Overview['status'] {
@@ -325,6 +410,167 @@ function assertPlayer360Unlock(value: unknown): Player360UnlockView {
   };
 }
 
+function assertPlayer360PokemonMove(value: unknown): Player360PokemonMoveView {
+  if (
+    !isRecord(value) ||
+    !isPositiveInteger(value.slotNo) ||
+    !isUuid(value.moveId) ||
+    stringValue(value.slug) === null ||
+    !isNullableNonNegativeInteger(value.ppCurrent) ||
+    stringValue(value.learnedAt) === null
+  ) {
+    throw new Error('Invalid Player 360 Pokemon move.');
+  }
+  return {
+    slotNo: value.slotNo,
+    moveId: value.moveId,
+    slug: value.slug as string,
+    ppCurrent: value.ppCurrent,
+    learnedAt: value.learnedAt as string,
+  };
+}
+
+function assertPlayer360PokemonPlacement(value: unknown): Player360PokemonPlacementView | null {
+  if (value === null) return null;
+  if (!isRecord(value) || !isPositiveInteger(value.slotNo)) {
+    throw new Error('Invalid Player 360 Pokemon placement.');
+  }
+  if (value.kind === 'TEAM' && value.boxNo === null) {
+    return { kind: 'TEAM', boxNo: null, slotNo: value.slotNo };
+  }
+  if (value.kind === 'BOX' && isPositiveInteger(value.boxNo)) {
+    return { kind: 'BOX', boxNo: value.boxNo, slotNo: value.slotNo };
+  }
+  throw new Error('Invalid Player 360 Pokemon placement.');
+}
+
+function assertPlayer360PokemonIvs(value: unknown): Player360PokemonIvView {
+  if (
+    !isRecord(value) ||
+    !isNullableNonNegativeInteger(value.hp) ||
+    !isNullableNonNegativeInteger(value.attack) ||
+    !isNullableNonNegativeInteger(value.defense) ||
+    !isNullableNonNegativeInteger(value.spAttack) ||
+    !isNullableNonNegativeInteger(value.spDefense) ||
+    !isNullableNonNegativeInteger(value.speed)
+  ) {
+    throw new Error('Invalid Player 360 Pokemon IVs.');
+  }
+  return {
+    hp: value.hp,
+    attack: value.attack,
+    defense: value.defense,
+    spAttack: value.spAttack,
+    spDefense: value.spDefense,
+    speed: value.speed,
+  };
+}
+
+function assertPlayer360PersistentCondition(
+  value: unknown,
+): Player360PokemonPersistentConditionView {
+  if (
+    !isRecord(value) ||
+    stringValue(value.key) === null ||
+    stringValue(value.sourceType) === null ||
+    stringValue(value.sourceId) === null ||
+    stringValue(value.appliedAt) === null ||
+    !nullableString(value.expiresAt)
+  ) {
+    throw new Error('Invalid Player 360 Pokemon persistent condition.');
+  }
+  return {
+    key: value.key as string,
+    sourceType: value.sourceType as string,
+    sourceId: value.sourceId as string,
+    appliedAt: value.appliedAt as string,
+    expiresAt: value.expiresAt as string | null,
+  };
+}
+
+function assertPlayer360EvolutionFlag(value: unknown): Player360PokemonEvolutionFlagView {
+  if (
+    !isRecord(value) ||
+    stringValue(value.key) === null ||
+    (value.status !== 'ACTIVE' && value.status !== 'REVOKED') ||
+    stringValue(value.sourceType) === null ||
+    stringValue(value.sourceId) === null ||
+    stringValue(value.grantedAt) === null ||
+    !nullableString(value.revokedAt) ||
+    !isNonNegativeIntegerString(value.revision)
+  ) {
+    throw new Error('Invalid Player 360 Pokemon evolution flag.');
+  }
+  return {
+    key: value.key as string,
+    status: value.status,
+    sourceType: value.sourceType as string,
+    sourceId: value.sourceId as string,
+    grantedAt: value.grantedAt as string,
+    revokedAt: value.revokedAt as string | null,
+    revision: value.revision,
+  };
+}
+
+function assertPlayer360Pokemon(value: unknown): Player360PokemonView {
+  if (
+    !isRecord(value) ||
+    !isUuid(value.id) ||
+    !isUuid(value.formId) ||
+    stringValue(value.formSlug) === null ||
+    !isUuid(value.speciesId) ||
+    stringValue(value.speciesSlug) === null ||
+    !isPositiveInteger(value.nationalDex) ||
+    !nullableString(value.nickname) ||
+    !isNonNegativeInteger(value.level) ||
+    !isNonNegativeIntegerString(value.xp) ||
+    !isNonNegativeInteger(value.currentHp) ||
+    !nullableString(value.gender) ||
+    typeof value.shiny !== 'boolean' ||
+    (value.status !== 'ACTIVE' && value.status !== 'ARCHIVED') ||
+    !nullableUuid(value.abilityId) ||
+    !nullableString(value.abilitySlug) ||
+    !nullableUuid(value.natureId) ||
+    !nullableString(value.natureSlug) ||
+    !isNonNegativeIntegerString(value.revision) ||
+    stringValue(value.createdAt) === null ||
+    stringValue(value.updatedAt) === null ||
+    !Array.isArray(value.moves) ||
+    !Array.isArray(value.persistentConditions) ||
+    !Array.isArray(value.evolutionConditionFlags)
+  ) {
+    throw new Error('Invalid Player 360 Pokemon.');
+  }
+
+  return {
+    id: value.id,
+    formId: value.formId,
+    formSlug: value.formSlug as string,
+    speciesId: value.speciesId,
+    speciesSlug: value.speciesSlug as string,
+    nationalDex: value.nationalDex,
+    nickname: value.nickname,
+    level: value.level,
+    xp: value.xp,
+    currentHp: value.currentHp,
+    gender: value.gender,
+    shiny: value.shiny,
+    status: value.status,
+    abilityId: value.abilityId,
+    abilitySlug: value.abilitySlug,
+    natureId: value.natureId,
+    natureSlug: value.natureSlug,
+    revision: value.revision,
+    createdAt: value.createdAt as string,
+    updatedAt: value.updatedAt as string,
+    placement: assertPlayer360PokemonPlacement(value.placement),
+    ivs: assertPlayer360PokemonIvs(value.ivs),
+    moves: value.moves.map(assertPlayer360PokemonMove),
+    persistentConditions: value.persistentConditions.map(assertPlayer360PersistentCondition),
+    evolutionConditionFlags: value.evolutionConditionFlags.map(assertPlayer360EvolutionFlag),
+  };
+}
+
 function assertPlayer360(value: unknown): Player360Overview {
   if (!isRecord(value)) throw new Error('Invalid Player 360 response.');
   const player = value.player;
@@ -397,6 +643,7 @@ function assertPlayer360(value: unknown): Player360Overview {
   }
 
   const unlocks = progression.unlocks.map(assertPlayer360Unlock);
+  const pokemon = value.pokemon.map(assertPlayer360Pokemon);
 
   return {
     playerId: player.id,
@@ -427,7 +674,7 @@ function assertPlayer360(value: unknown): Player360Overview {
     identities: value.identities as readonly PlayerSearchIdentity[],
     wallets: value.wallets,
     inventory: value.inventory,
-    pokemon: value.pokemon,
+    pokemon,
     pokedex: {
       speciesSeen: pokedex.speciesSeen as number,
       speciesCaught: pokedex.speciesCaught as number,
