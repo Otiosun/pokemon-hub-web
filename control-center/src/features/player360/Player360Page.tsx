@@ -6,6 +6,7 @@ import {
   type PlayerSearchItem,
 } from '../../lib/api/admin-api';
 import { BattleForceCancelPrepareDrawer } from './BattleForceCancelPrepareDrawer';
+import { EncounterClosePrepareDrawer } from './EncounterClosePrepareDrawer';
 import { InventoryAdjustPrepareDrawer } from './InventoryAdjustPrepareDrawer';
 import {
   EMPTY_PLAYER_SEARCH_FILTERS,
@@ -109,6 +110,7 @@ export function Player360Page({ canReadSensitive, capabilities, client }: Player
   const [selectedError, setSelectedError] = useState<RequestErrorView | null>(null);
   const [prepareActionOpen, setPrepareActionOpen] = useState<
     | 'battle.force_cancel'
+    | 'encounter.close'
     | 'progression.trainer.adjust'
     | 'wallet.adjust'
     | 'inventory.adjust'
@@ -126,6 +128,10 @@ export function Player360Page({ canReadSensitive, capabilities, client }: Player
   function openPrepareAction(action: { readonly operationType: string }) {
     if (action.operationType === 'battle.force_cancel') {
       setPrepareActionOpen('battle.force_cancel');
+      return;
+    }
+    if (action.operationType === 'encounter.close') {
+      setPrepareActionOpen('encounter.close');
       return;
     }
     if (action.operationType === 'progression.trainer.adjust') {
@@ -478,6 +484,13 @@ export function Player360Page({ canReadSensitive, capabilities, client }: Player
           <>
             {prepareActionOpen === 'battle.force_cancel' ? (
               <BattleForceCancelPrepareDrawer
+                client={client}
+                onClose={() => setPrepareActionOpen(null)}
+                player={selected}
+              />
+            ) : null}
+            {prepareActionOpen === 'encounter.close' ? (
+              <EncounterClosePrepareDrawer
                 client={client}
                 onClose={() => setPrepareActionOpen(null)}
                 player={selected}
