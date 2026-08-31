@@ -19,4 +19,11 @@ describe('Control Center Today page contract', () => {
     expect(app).toContain('Estado operacional');
     expect(app).toContain('workQueue.map');
   });
+
+  it('keeps the visible progress counter synchronized with the canonical Drive score', async () => {
+    const app = await readFile(appPath, 'utf8');
+
+    expect(app).toContain('const CANONICAL_PROGRESS = 38.25;');
+    expect(app).not.toContain('const CANONICAL_PROGRESS = 31.11;');
+  });
 });
