@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Player360Overview } from '../../lib/api/admin-api';
+import { ActivityHistoryPanel } from './ActivityHistoryPanel';
 import { BattleEncounterEffectsPanel } from './BattleEncounterEffectsPanel';
 import { InventoryEconomyPanel } from './InventoryEconomyPanel';
 import { PLAYER360_TABS, type Player360TabId } from './model';
@@ -16,6 +17,7 @@ const MATERIALIZED_TABS = new Set<Player360TabId>([
   'world',
   'pokedex',
   'battle',
+  'history',
 ]);
 
 function valueOrDash(value: string | null): string {
@@ -82,7 +84,7 @@ export function Player360DetailTabs({ player }: { readonly player: Player360Over
           <span className="panel-kicker">PLAYER 360</span>
           <h3>Uma ficha, contexto progressivo.</h3>
         </div>
-        <span className="muted-badge">7/8 MATERIALIZADAS</span>
+        <span className="muted-badge">8/8 MATERIALIZADAS</span>
       </div>
 
       <div className="player360-tab-strip" role="tablist" aria-label="Áreas do Player 360">
@@ -120,6 +122,8 @@ export function Player360DetailTabs({ player }: { readonly player: Player360Over
           <PokedexPanel player={player} />
         ) : activeTab === 'battle' ? (
           <BattleEncounterEffectsPanel player={player} />
+        ) : activeTab === 'history' ? (
+          <ActivityHistoryPanel player={player} />
         ) : (
           <OverviewDetails player={player} />
         )}
