@@ -14,8 +14,8 @@
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   background: var(--surface);
   box-shadow: var(--shadow);
 }
@@ -25,15 +25,15 @@
 }
 
 .control-toast.is-success {
-  border-color: color-mix(in srgb, var(--success) 35%, var(--border-subtle));
+  border-color: color-mix(in srgb, var(--good) 35%, var(--border));
 }
 
 .control-toast.is-warning {
-  border-color: color-mix(in srgb, var(--warning) 45%, var(--border-subtle));
+  border-color: color-mix(in srgb, var(--warning) 45%, var(--border));
 }
 
 .control-toast.is-error {
-  border-color: color-mix(in srgb, var(--danger) 45%, var(--border-subtle));
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--border));
 }
 
 .toast-dismiss {
@@ -42,7 +42,7 @@
   border: 0;
   border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--text-muted);
+  color: var(--muted);
   cursor: pointer;
 }
 
