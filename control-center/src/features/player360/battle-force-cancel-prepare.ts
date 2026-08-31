@@ -20,10 +20,6 @@ function normalizedRevision(version: string): string {
   if (!/^(0|[1-9]\d*)$/.test(version)) {
     throw new Error('Battle force-cancel revision is invalid.');
   }
-  const numeric = BigInt(version);
-  if (numeric > BigInt(Number.MAX_SAFE_INTEGER)) {
-    throw new Error('Battle force-cancel revision is outside the supported safe range.');
-  }
   return version;
 }
 
