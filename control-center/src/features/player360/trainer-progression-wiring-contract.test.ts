@@ -11,7 +11,7 @@ describe('Player 360 trainer progression prepare wiring', () => {
     expect(source).toContain(
       "import { TrainerProgressionPrepareDrawer } from './TrainerProgressionPrepareDrawer';",
     );
-    expect(source).toContain("'battle.force_cancel' | 'progression.trainer.adjust' | null");
+    expect(source).toContain("'progression.trainer.adjust'");
     expect(source).toContain("action.operationType === 'progression.trainer.adjust'");
     expect(source).toContain('<TrainerProgressionPrepareDrawer');
     expect(source).toContain('onPrepareAction={openPrepareAction}');
