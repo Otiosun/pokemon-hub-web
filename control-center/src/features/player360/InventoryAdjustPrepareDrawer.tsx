@@ -7,14 +7,11 @@ import type {
 } from '../../lib/api/admin-api';
 import { AdminApiError } from '../../lib/api/admin-api';
 import {
-  type InventoryAdjustPrepareContext,
   buildInventoryAdjustPrepareRequest,
+  type InventoryAdjustPrepareContext,
 } from './inventory-adjust-prepare';
-import { parsePlayer360Economy, type Player360InventoryView } from './player360-economy';
-import {
-  type PrepareIdempotencyState,
-  resolvePrepareIdempotency,
-} from './prepare-idempotency';
+import { type Player360InventoryView, parsePlayer360Economy } from './player360-economy';
+import { type PrepareIdempotencyState, resolvePrepareIdempotency } from './prepare-idempotency';
 
 interface PrepareErrorView {
   readonly message: string;
@@ -201,7 +198,9 @@ export function InventoryAdjustPrepareDrawer({
       {!inventoryContractValid ? (
         <div className="request-error" role="alert">
           <strong>Inventário incompatível com o contrato atual.</strong>
-          <span>Atualize o Player 360. Nenhuma operação pode ser preparada com dados não validados.</span>
+          <span>
+            Atualize o Player 360. Nenhuma operação pode ser preparada com dados não validados.
+          </span>
         </div>
       ) : inventory.length === 0 ? (
         <div className="request-error" role="alert">
@@ -240,7 +239,8 @@ export function InventoryAdjustPrepareDrawer({
           value={delta}
         />
         <small>
-          Informe a diferença, não a quantidade final. O owner revalida disponibilidade na aplicação.
+          Informe a diferença, não a quantidade final. O owner revalida disponibilidade na
+          aplicação.
         </small>
       </label>
 
@@ -260,8 +260,8 @@ export function InventoryAdjustPrepareDrawer({
       <div className="selected-contract-note">
         <strong>Esta ação ainda não altera o inventário.</strong>
         <span>
-          Prepare registra a intenção auditável. Saldo insuficiente, concorrência e demais invariantes
-          continuam sendo decididos pelo domínio durante o lifecycle autoritativo.
+          Prepare registra a intenção auditável. Saldo insuficiente, concorrência e demais
+          invariantes continuam sendo decididos pelo domínio durante o lifecycle autoritativo.
         </span>
       </div>
 
