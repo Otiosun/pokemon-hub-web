@@ -48,6 +48,24 @@ describe('Player 360 action rail surface', () => {
     expect(html).not.toContain('Executar cancelamento');
   });
 
+  it('exposes progression adjustment as prepare-only when the exact capability exists', () => {
+    const html = renderToStaticMarkup(
+      <PlayerActionRail
+        capabilities={new Set(['progression.adjust'])}
+        onPrepareAction={() => undefined}
+        player={PLAYER}
+      />,
+    );
+
+    expect(html).toContain('Corrigir progressão');
+    expect(html).toContain('progression.trainer.adjust');
+    expect(html).toContain('Preparar ajuste');
+    expect(html).toContain('R2');
+    expect(html).not.toContain('REVISÃO OBRIGATÓRIA');
+    expect(html).not.toContain('CONFIRMAÇÃO OBRIGATÓRIA');
+    expect(html).not.toContain('Aplicar ajuste');
+  });
+
   it('shows a stable no-action state instead of leaking unavailable privileges', () => {
     const html = renderToStaticMarkup(
       <PlayerActionRail capabilities={new Set()} player={PLAYER} />,
