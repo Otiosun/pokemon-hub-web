@@ -18,7 +18,7 @@ const Player360Page = lazy(() =>
   })),
 );
 
-const CANONICAL_PROGRESS = 31.11;
+const CANONICAL_PROGRESS = 38.25;
 
 const workQueue = [
   {
