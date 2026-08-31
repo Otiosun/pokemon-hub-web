@@ -58,6 +58,12 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.effect-row > div {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+}
+
 .battle-context-card dl div,
 .effect-row dl div {
   display: grid;
@@ -96,12 +102,6 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   background: var(--surface);
-}
-
-.effect-row > div {
-  display: grid;
-  align-content: start;
-  gap: var(--space-1);
 }
 
 .effect-row dl {
