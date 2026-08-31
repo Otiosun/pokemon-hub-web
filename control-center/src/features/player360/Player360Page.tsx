@@ -5,7 +5,6 @@ import {
   type Player360Overview,
   type PlayerSearchItem,
 } from '../../lib/api/admin-api';
-import { Player360DetailTabs } from './Player360DetailTabs';
 import {
   EMPTY_PLAYER_SEARCH_FILTERS,
   PLAYER_STATUSES,
@@ -15,6 +14,7 @@ import {
   toPlayerSearchQuery,
   validatePlayerSearchFilters,
 } from './model';
+import { Player360DetailTabs } from './Player360DetailTabs';
 import './player360.css';
 
 interface Player360PageProps {
