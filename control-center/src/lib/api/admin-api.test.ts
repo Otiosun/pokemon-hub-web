@@ -94,6 +94,39 @@ describe('AdminApiClient', () => {
     expect(JSON.stringify(fetchImpl.mock.calls)).not.toContain('cf-access-jwt-assertion');
   });
 
+  it('logs out only through the current-session endpoint with CSRF and a fixed Access path', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(jsonResponse({ logoutPath: '/cdn-cgi/access/logout' }));
+    const client = new AdminApiClient(API, fetchImpl);
+
+    await expect(client.logoutCurrentSession()).resolves.toEqual({
+      logoutPath: '/cdn-cgi/access/logout',
+    });
+    expect(fetchImpl).toHaveBeenCalledWith(`${API}/admin/v1/session/logout`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        accept: 'application/json',
+        'content-type': 'application/json',
+        'x-control-center-csrf': '1',
+      },
+      body: '{}',
+    });
+  });
+
+  it('rejects any server-supplied logout redirect outside the fixed Access path', async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(jsonResponse({ logoutPath: 'https://attacker.example.com/' }));
+    const client = new AdminApiClient(API, fetchImpl);
+
+    await expect(client.logoutCurrentSession()).rejects.toMatchObject({
+      kind: 'server',
+      code: 'INVALID_LOGOUT_RESPONSE',
+    });
+  });
+
   it('encodes only allowlisted Player 360 search query fields', async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()
