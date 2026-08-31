@@ -1,5 +1,8 @@
 import type { Player360Overview } from '../../lib/api/admin-api';
-import { parsePlayer360Economy } from './player360-economy';
+import {
+  parsePlayer360Economy,
+  type Player360EconomyView,
+} from './player360-economy';
 
 function humanizeSlug(value: string): string {
   return value
@@ -17,7 +20,7 @@ function formatInteger(value: string): string {
 }
 
 export function InventoryEconomyPanel({ player }: { readonly player: Player360Overview }) {
-  let economy;
+  let economy: Player360EconomyView;
   try {
     economy = parsePlayer360Economy(player);
   } catch {
