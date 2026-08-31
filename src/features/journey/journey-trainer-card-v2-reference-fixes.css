@@ -7,6 +7,17 @@
   position: relative;
 }
 
+.journey-card-v2-brand-mark-e-prime {
+  width: 7.8cqw;
+  height: 8.9cqw;
+  margin-top: -0.28cqw;
+  color: #244f3f;
+}
+
+.journey-card-v2-brand-mark-e-prime svg {
+  overflow: visible;
+}
+
 .journey-card-v2-close {
   top: -12px;
   right: -4px;
