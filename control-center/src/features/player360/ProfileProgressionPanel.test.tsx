@@ -69,7 +69,7 @@ describe('Player 360 profile/progression tab', () => {
     expect(html).toContain('pt-BR');
     expect(html).toContain('COMPLETED');
     expect(html).toContain('Nível 12');
-    expect(html).toContain('420 Insígnias');
+    expect(html).toContain('420 pontos de Insígnia');
     expect(html).toContain('travel:kanto-route-2');
     expect(html).toContain('TRAINER_LEVEL');
     expect(html).toContain('event:legacy-pass');
