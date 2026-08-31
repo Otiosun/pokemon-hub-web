@@ -79,12 +79,24 @@ function PokemonCard({ pokemon }: { readonly pokemon: Player360PokemonView }) {
             <small>Valores autoritativos, sem cálculo derivado.</small>
           </div>
           <div className="pokemon-iv-grid">
-            <span>HP <strong>{ivLabel(pokemon.ivs.hp)}</strong></span>
-            <span>ATK <strong>{ivLabel(pokemon.ivs.attack)}</strong></span>
-            <span>DEF <strong>{ivLabel(pokemon.ivs.defense)}</strong></span>
-            <span>SPA <strong>{ivLabel(pokemon.ivs.spAttack)}</strong></span>
-            <span>SPD <strong>{ivLabel(pokemon.ivs.spDefense)}</strong></span>
-            <span>SPE <strong>{ivLabel(pokemon.ivs.speed)}</strong></span>
+            <span>
+              HP <strong>{ivLabel(pokemon.ivs.hp)}</strong>
+            </span>
+            <span>
+              ATK <strong>{ivLabel(pokemon.ivs.attack)}</strong>
+            </span>
+            <span>
+              DEF <strong>{ivLabel(pokemon.ivs.defense)}</strong>
+            </span>
+            <span>
+              SPA <strong>{ivLabel(pokemon.ivs.spAttack)}</strong>
+            </span>
+            <span>
+              SPD <strong>{ivLabel(pokemon.ivs.spDefense)}</strong>
+            </span>
+            <span>
+              SPE <strong>{ivLabel(pokemon.ivs.speed)}</strong>
+            </span>
           </div>
         </section>
 
@@ -123,7 +135,9 @@ function PokemonCard({ pokemon }: { readonly pokemon: Player360PokemonView }) {
                 {pokemon.persistentConditions.map((condition) => (
                   <li key={`${condition.key}:${condition.appliedAt}`}>
                     <strong>{condition.key}</strong>
-                    <small>{condition.sourceType} · {condition.sourceId}</small>
+                    <small>
+                      {condition.sourceType} · {condition.sourceId}
+                    </small>
                   </li>
                 ))}
               </ul>
@@ -142,7 +156,9 @@ function PokemonCard({ pokemon }: { readonly pokemon: Player360PokemonView }) {
                 {pokemon.evolutionConditionFlags.map((flag) => (
                   <li key={`${flag.key}:${flag.revision}`}>
                     <strong>{flag.key}</strong>
-                    <small>{flag.status} · {flag.sourceType}</small>
+                    <small>
+                      {flag.status} · {flag.sourceType}
+                    </small>
                   </li>
                 ))}
               </ul>
@@ -179,7 +195,9 @@ function RosterSection({
         <span className="muted-badge">{pokemon.length}</span>
       </div>
       <div className="pokemon-roster-list">
-        {pokemon.map((entry) => <PokemonCard key={entry.id} pokemon={entry} />)}
+        {pokemon.map((entry) => (
+          <PokemonCard key={entry.id} pokemon={entry} />
+        ))}
       </div>
     </section>
   );
@@ -203,7 +221,10 @@ export function PokemonRosterPanel({ player }: { readonly player: Player360Overv
 
   if (player.pokemon.length === 0) {
     return (
-      <section className="pokemon-roster-panel pokemon-roster-empty" aria-labelledby="pokemon-roster-title">
+      <section
+        className="pokemon-roster-panel pokemon-roster-empty"
+        aria-labelledby="pokemon-roster-title"
+      >
         <span className="panel-kicker">TIME &amp; BOX</span>
         <h3 id="pokemon-roster-title">Nenhum Pokémon registrado para este jogador.</h3>
         <p>Esse é um estado válido do read model. A Central não cria placeholders de roster.</p>
@@ -218,8 +239,8 @@ export function PokemonRosterPanel({ player }: { readonly player: Player360Overv
           <span className="panel-kicker">TIME &amp; BOX</span>
           <h3 id="pokemon-roster-title">Roster primeiro. Diagnóstico quando necessário.</h3>
           <p>
-            Posição, nível e estado ficam visíveis de imediato. Abra um Pokémon para ver moves,
-            IVs, condições e flags sem alterar o domínio.
+            Posição, nível e estado ficam visíveis de imediato. Abra um Pokémon para ver moves, IVs,
+            condições e flags sem alterar o domínio.
           </p>
         </div>
         <span className="muted-badge">{player.pokemon.length} POKÉMON</span>
@@ -238,9 +259,7 @@ export function PokemonRosterPanel({ player }: { readonly player: Player360Overv
           note="Ordenado pelo slot canônico da Box."
           pokemon={boxEntries
             .filter((pokemon) => pokemon.placement?.boxNo === boxNo)
-            .sort((left, right) =>
-              (left.placement?.slotNo ?? 0) - (right.placement?.slotNo ?? 0)
-            )}
+            .sort((left, right) => (left.placement?.slotNo ?? 0) - (right.placement?.slotNo ?? 0))}
         />
       ))}
 
