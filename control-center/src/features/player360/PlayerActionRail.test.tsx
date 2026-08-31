@@ -6,6 +6,16 @@ import { PlayerActionRail } from './PlayerActionRail';
 const PLAYER = {
   activeBattle: { id: 'battle-live' },
   activeEncounter: null,
+  wallets: [
+    {
+      currencyId: '22222222-2222-4222-8222-222222222222',
+      slug: 'poke-dollar',
+      displayName: 'Poké Dollar',
+      amount: '12500',
+      revision: '4',
+      updatedAt: '2026-08-31T12:00:00.000Z',
+    },
+  ],
 } as unknown as Player360Overview;
 
 describe('Player 360 action rail surface', () => {
@@ -64,6 +74,28 @@ describe('Player 360 action rail surface', () => {
     expect(html).not.toContain('REVISÃO OBRIGATÓRIA');
     expect(html).not.toContain('CONFIRMAÇÃO OBRIGATÓRIA');
     expect(html).not.toContain('Aplicar ajuste');
+  });
+
+  it('exposes wallet adjustment only when capability and a wallet target both exist', () => {
+    const actionable = renderToStaticMarkup(
+      <PlayerActionRail
+        capabilities={new Set(['wallet.adjust'])}
+        onPrepareAction={() => undefined}
+        player={PLAYER}
+      />,
+    );
+    const withoutWallet = renderToStaticMarkup(
+      <PlayerActionRail
+        capabilities={new Set(['wallet.adjust'])}
+        onPrepareAction={() => undefined}
+        player={{ ...PLAYER, wallets: [] }}
+      />,
+    );
+
+    expect(actionable).toContain('Corrigir saldo');
+    expect(actionable).toContain('wallet.adjust');
+    expect(actionable).toContain('Preparar ajuste');
+    expect(withoutWallet).not.toContain('Corrigir saldo');
   });
 
   it('shows a stable no-action state instead of leaking unavailable privileges', () => {
