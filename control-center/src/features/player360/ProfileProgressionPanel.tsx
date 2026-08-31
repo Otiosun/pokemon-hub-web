@@ -1,32 +1,5 @@
 import type { Player360Overview } from '../../lib/api/admin-api';
 
-interface Player360UnlockView {
-  readonly key: string;
-  readonly status: 'ACTIVE' | 'REVOKED';
-  readonly sourceType: string;
-  readonly sourceId: string;
-  readonly unlockedAt: string;
-  readonly revokedAt: string | null;
-  readonly revision: string;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function isUnlock(value: unknown): value is Player360UnlockView {
-  if (!isRecord(value)) return false;
-  return (
-    typeof value.key === 'string' &&
-    (value.status === 'ACTIVE' || value.status === 'REVOKED') &&
-    typeof value.sourceType === 'string' &&
-    typeof value.sourceId === 'string' &&
-    typeof value.unlockedAt === 'string' &&
-    (value.revokedAt === null || typeof value.revokedAt === 'string') &&
-    typeof value.revision === 'string'
-  );
-}
-
 function textValue(value: string | null): string {
   return value === null || value.length === 0 ? 'Não registrado' : value;
 }
@@ -52,8 +25,7 @@ function Detail({ label, value, code = false }: { label: string; value: string; 
 }
 
 export function ProfileProgressionPanel({ player }: { readonly player: Player360Overview }) {
-  const unlocks = player.progression.unlocks.filter(isUnlock);
-  const invalidUnlockCount = player.progression.unlocks.length - unlocks.length;
+  const unlocks = player.progression.unlocks;
   const activeUnlocks = unlocks.filter((unlock) => unlock.status === 'ACTIVE').length;
 
   return (
@@ -115,7 +87,7 @@ export function ProfileProgressionPanel({ player }: { readonly player: Player360
           </div>
           <div className="progression-primary">
             <strong>Nível {player.progression.level}</strong>
-            <span>{player.progression.insigniaPoints} Insígnias</span>
+            <span>{player.progression.insigniaPoints} pontos de Insígnia</span>
           </div>
           <div className="progression-secondary">
             <span>{activeUnlocks} unlock(s) ativo(s)</span>
@@ -132,12 +104,6 @@ export function ProfileProgressionPanel({ player }: { readonly player: Player360
           </div>
           <span className="muted-badge">{unlocks.length} REGISTRADO(S)</span>
         </div>
-
-        {invalidUnlockCount > 0 ? (
-          <div className="unlock-contract-warning" role="alert">
-            {invalidUnlockCount} registro(s) de unlock foram ocultados por incompatibilidade de contrato.
-          </div>
-        ) : null}
 
         {unlocks.length === 0 ? (
           <div className="player-unlocks-empty">
@@ -166,7 +132,9 @@ export function ProfileProgressionPanel({ player }: { readonly player: Player360
                   <small>LIBERADO</small>
                   <time dateTime={unlock.unlockedAt}>{utcTimestamp(unlock.unlockedAt)}</time>
                   {unlock.revokedAt ? (
-                    <time dateTime={unlock.revokedAt}>Revogado {utcTimestamp(unlock.revokedAt)}</time>
+                    <time dateTime={unlock.revokedAt}>
+                      Revogado {utcTimestamp(unlock.revokedAt)}
+                    </time>
                   ) : null}
                 </div>
               </div>
