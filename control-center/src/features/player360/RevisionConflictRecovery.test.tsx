@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { AdminApiError } from '../../lib/api/admin-api';
-import { RevisionConflictRecovery, isAdminRevisionConflict } from './RevisionConflictRecovery';
+import { isAdminRevisionConflict, RevisionConflictRecovery } from './RevisionConflictRecovery';
 
 describe('expectedRevision conflict recovery', () => {
   it('classifies only the authoritative revision-conflict error code', () => {
