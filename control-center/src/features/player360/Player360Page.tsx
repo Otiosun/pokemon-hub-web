@@ -18,6 +18,7 @@ import {
 import { Player360DetailTabs } from './Player360DetailTabs';
 import { PlayerActionRail } from './PlayerActionRail';
 import { TrainerProgressionPrepareDrawer } from './TrainerProgressionPrepareDrawer';
+import { WalletAdjustPrepareDrawer } from './WalletAdjustPrepareDrawer';
 import './player360.css';
 
 interface Player360PageProps {
@@ -106,7 +107,7 @@ export function Player360Page({ canReadSensitive, capabilities, client }: Player
   );
   const [selectedError, setSelectedError] = useState<RequestErrorView | null>(null);
   const [prepareActionOpen, setPrepareActionOpen] = useState<
-    'battle.force_cancel' | 'progression.trainer.adjust' | null
+    'battle.force_cancel' | 'progression.trainer.adjust' | 'wallet.adjust' | null
   >(null);
 
   const errors = useMemo(() => validatePlayerSearchFilters(filters), [filters]);
@@ -124,6 +125,10 @@ export function Player360Page({ canReadSensitive, capabilities, client }: Player
     }
     if (action.operationType === 'progression.trainer.adjust') {
       setPrepareActionOpen('progression.trainer.adjust');
+      return;
+    }
+    if (action.operationType === 'wallet.adjust') {
+      setPrepareActionOpen('wallet.adjust');
     }
   }
 
@@ -471,6 +476,13 @@ export function Player360Page({ canReadSensitive, capabilities, client }: Player
             ) : null}
             {prepareActionOpen === 'progression.trainer.adjust' ? (
               <TrainerProgressionPrepareDrawer
+                client={client}
+                onClose={() => setPrepareActionOpen(null)}
+                player={selected}
+              />
+            ) : null}
+            {prepareActionOpen === 'wallet.adjust' ? (
+              <WalletAdjustPrepareDrawer
                 client={client}
                 onClose={() => setPrepareActionOpen(null)}
                 player={selected}
