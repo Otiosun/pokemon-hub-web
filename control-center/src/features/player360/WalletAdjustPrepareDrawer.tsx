@@ -6,7 +6,7 @@ import type {
   Player360Overview,
 } from '../../lib/api/admin-api';
 import { AdminApiError } from '../../lib/api/admin-api';
-import { parsePlayer360Economy, type Player360WalletView } from './player360-economy';
+import { type Player360WalletView, parsePlayer360Economy } from './player360-economy';
 import {
   type PrepareIdempotencyState,
   resolvePrepareIdempotency,
@@ -193,7 +193,9 @@ export function WalletAdjustPrepareDrawer({
       {!walletContractValid ? (
         <div className="request-error" role="alert">
           <strong>Wallets incompatíveis com o contrato atual.</strong>
-          <span>Atualize o Player 360. Nenhuma operação pode ser preparada com dados não validados.</span>
+          <span>
+            Atualize o Player 360. Nenhuma operação pode ser preparada com dados não validados.
+          </span>
         </div>
       ) : wallets.length === 0 ? (
         <div className="request-error" role="alert">
@@ -231,7 +233,9 @@ export function WalletAdjustPrepareDrawer({
           placeholder="Ex.: 500 ou -500"
           value={delta}
         />
-        <small>Informe a diferença, não o saldo final. O owner econômico aplica as invariantes.</small>
+        <small>
+          Informe a diferença, não o saldo final. O owner econômico aplica as invariantes.
+        </small>
       </label>
 
       <label className="control-field">
