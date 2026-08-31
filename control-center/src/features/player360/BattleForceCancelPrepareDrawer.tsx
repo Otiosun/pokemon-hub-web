@@ -75,6 +75,7 @@ export function BattleForceCancelPrepareDrawer({
     );
   }
 
+  const activeBattle = battle;
   const canPrepare =
     reason.trim().length > 0 && reason.trim().length <= 2000 && status !== 'preparing';
 
@@ -86,8 +87,8 @@ export function BattleForceCancelPrepareDrawer({
     try {
       const result = await prepareBattleForceCancel(client, {
         playerId: player.playerId,
-        battleId: battle.id,
-        battleVersion: battle.version,
+        battleId: activeBattle.id,
+        battleVersion: activeBattle.version,
         reason,
         idempotencyKey: idempotencyKey.current,
       });
