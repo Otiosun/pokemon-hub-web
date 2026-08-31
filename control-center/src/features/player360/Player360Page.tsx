@@ -6,6 +6,7 @@ import {
   type PlayerSearchItem,
 } from '../../lib/api/admin-api';
 import { BattleForceCancelPrepareDrawer } from './BattleForceCancelPrepareDrawer';
+import { InventoryAdjustPrepareDrawer } from './InventoryAdjustPrepareDrawer';
 import {
   EMPTY_PLAYER_SEARCH_FILTERS,
   PLAYER_STATUSES,
@@ -107,7 +108,11 @@ export function Player360Page({ canReadSensitive, capabilities, client }: Player
   );
   const [selectedError, setSelectedError] = useState<RequestErrorView | null>(null);
   const [prepareActionOpen, setPrepareActionOpen] = useState<
-    'battle.force_cancel' | 'progression.trainer.adjust' | 'wallet.adjust' | null
+    | 'battle.force_cancel'
+    | 'progression.trainer.adjust'
+    | 'wallet.adjust'
+    | 'inventory.adjust'
+    | null
   >(null);
 
   const errors = useMemo(() => validatePlayerSearchFilters(filters), [filters]);
@@ -129,6 +134,10 @@ export function Player360Page({ canReadSensitive, capabilities, client }: Player
     }
     if (action.operationType === 'wallet.adjust') {
       setPrepareActionOpen('wallet.adjust');
+      return;
+    }
+    if (action.operationType === 'inventory.adjust') {
+      setPrepareActionOpen('inventory.adjust');
     }
   }
 
@@ -483,6 +492,13 @@ export function Player360Page({ canReadSensitive, capabilities, client }: Player
             ) : null}
             {prepareActionOpen === 'wallet.adjust' ? (
               <WalletAdjustPrepareDrawer
+                client={client}
+                onClose={() => setPrepareActionOpen(null)}
+                player={selected}
+              />
+            ) : null}
+            {prepareActionOpen === 'inventory.adjust' ? (
+              <InventoryAdjustPrepareDrawer
                 client={client}
                 onClose={() => setPrepareActionOpen(null)}
                 player={selected}
