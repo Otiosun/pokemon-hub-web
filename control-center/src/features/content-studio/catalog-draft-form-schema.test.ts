@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   CATALOG_DRAFT_BACKEND_CONTRACT,
   CATALOG_DRAFT_FORM_SCHEMAS,
-  EFFECT_PRIMITIVE_FORM_SCHEMAS,
   catalogDraftFormSchema,
+  EFFECT_PRIMITIVE_FORM_SCHEMAS,
 } from './catalog-draft-form-schema';
 
 const resourceKinds = [
@@ -61,9 +61,9 @@ describe('Content Studio human catalog draft schemas', () => {
       'baseExp',
       'data',
     ]);
-    expect(catalogDraftFormSchema('AREA', 'replace').fields.map((field) => field.key)).not.toContain(
-      'regionId',
-    );
+    expect(
+      catalogDraftFormSchema('AREA', 'replace').fields.map((field) => field.key),
+    ).not.toContain('regionId');
     expect(
       catalogDraftFormSchema('ENCOUNTER_TABLE', 'replace').fields.map((field) => field.key),
     ).not.toContain('areaId');
@@ -135,7 +135,12 @@ describe('Content Studio human catalog draft schemas', () => {
     expect(reward.field('program').variants).toEqual(['ITEM', 'CURRENCY', 'TRAINER_POINTS']);
 
     const effect = catalogDraftFormSchema('EFFECT', 'create');
-    expect(effect.field('scope').options).toEqual(['PLAYER', 'POKEMON', 'BATTLE_PARTICIPANT', 'AREA']);
+    expect(effect.field('scope').options).toEqual([
+      'PLAYER',
+      'POKEMON',
+      'BATTLE_PARTICIPANT',
+      'AREA',
+    ]);
     expect(effect.field('rules')).toMatchObject({
       control: 'effect-program',
       fixedVersion: 1,
