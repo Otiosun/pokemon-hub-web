@@ -16,6 +16,17 @@ function compareNewest(left: Player360ActivityView, right: Player360ActivityView
   return right.occurredAt.localeCompare(left.occurredAt);
 }
 
+function activityKey(entry: Player360ActivityView): string {
+  return [
+    entry.kind,
+    entry.occurredAt,
+    entry.sourceType,
+    entry.sourceId,
+    entry.subjectId ?? '',
+    entry.correlationId ?? '',
+  ].join(':');
+}
+
 export function ActivityHistoryPanel({ player }: { readonly player: Player360Overview }) {
   let activity: readonly Player360ActivityView[];
   try {
@@ -52,11 +63,8 @@ export function ActivityHistoryPanel({ player }: { readonly player: Player360Ove
         <p className="activity-history-empty">Nenhuma atividade recente registrada.</p>
       ) : (
         <ol className="activity-history-list">
-          {ordered.map((entry, index) => (
-            <li
-              className="activity-history-entry"
-              key={`${entry.kind}:${entry.occurredAt}:${entry.sourceType}:${entry.sourceId}:${index}`}
-            >
+          {ordered.map((entry) => (
+            <li className="activity-history-entry" key={activityKey(entry)}>
               <div className="activity-history-marker" aria-hidden="true" />
               <article>
                 <div className="activity-history-entry-heading">
