@@ -53,7 +53,8 @@ export function PlayerActionRail({
             const canPrepare =
               (action.operationType === 'battle.force_cancel' ||
                 action.operationType === 'progression.trainer.adjust' ||
-                action.operationType === 'wallet.adjust') &&
+                action.operationType === 'wallet.adjust' ||
+                action.operationType === 'inventory.adjust') &&
               onPrepareAction !== undefined;
 
             return (
