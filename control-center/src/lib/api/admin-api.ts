@@ -49,6 +49,16 @@ export interface PlayerSearchResult {
   readonly nextCursor: string | null;
 }
 
+export interface Player360UnlockView {
+  readonly key: string;
+  readonly status: 'ACTIVE' | 'REVOKED';
+  readonly sourceType: string;
+  readonly sourceId: string;
+  readonly unlockedAt: string;
+  readonly revokedAt: string | null;
+  readonly revision: string;
+}
+
 export interface Player360Overview {
   readonly playerId: string;
   readonly status: 'ACTIVE' | 'SUSPENDED' | 'ARCHIVED';
@@ -72,7 +82,7 @@ export interface Player360Overview {
     readonly level: number;
     readonly insigniaPoints: string;
     readonly revision: string;
-    readonly unlocks: readonly unknown[];
+    readonly unlocks: readonly Player360UnlockView[];
   };
   readonly location: {
     readonly areaId: string | null;
@@ -200,12 +210,20 @@ function stringValue(value: unknown): string | null {
   return typeof value === 'string' && value.length > 0 ? value : null;
 }
 
+function nullableString(value: unknown): value is string | null {
+  return value === null || typeof value === 'string';
+}
+
 function isUuid(value: unknown): value is string {
   return typeof value === 'string' && UUID_PATTERN.test(value);
 }
 
 function isNonNegativeIntegerString(value: unknown): value is string {
   return typeof value === 'string' && NON_NEGATIVE_INTEGER_PATTERN.test(value);
+}
+
+function isPlayerStatus(value: unknown): value is Player360Overview['status'] {
+  return value === 'ACTIVE' || value === 'SUSPENDED' || value === 'ARCHIVED';
 }
 
 function kindForStatus(status: number): AdminApiErrorKind {
@@ -283,11 +301,144 @@ function assertPlayerSearchResult(value: unknown): PlayerSearchResult {
   return value as unknown as PlayerSearchResult;
 }
 
+function assertPlayer360Unlock(value: unknown): Player360UnlockView {
+  if (
+    !isRecord(value) ||
+    stringValue(value.key) === null ||
+    (value.status !== 'ACTIVE' && value.status !== 'REVOKED') ||
+    stringValue(value.sourceType) === null ||
+    stringValue(value.sourceId) === null ||
+    stringValue(value.unlockedAt) === null ||
+    !nullableString(value.revokedAt) ||
+    !isNonNegativeIntegerString(value.revision)
+  ) {
+    throw new Error('Invalid Player 360 progression unlock.');
+  }
+  return {
+    key: value.key,
+    status: value.status,
+    sourceType: value.sourceType,
+    sourceId: value.sourceId,
+    unlockedAt: value.unlockedAt,
+    revokedAt: value.revokedAt,
+    revision: value.revision,
+  };
+}
+
 function assertPlayer360(value: unknown): Player360Overview {
-  if (!isRecord(value) || typeof value.playerId !== 'string' || typeof value.status !== 'string') {
+  if (!isRecord(value)) throw new Error('Invalid Player 360 response.');
+  const player = value.player;
+  const profile = value.profile;
+  const onboarding = value.onboarding;
+  const progression = value.progression;
+  const pokedex = value.pokedex;
+  const location = value.location;
+
+  if (
+    !isRecord(player) ||
+    !isUuid(player.id) ||
+    !isPlayerStatus(player.status) ||
+    stringValue(player.createdAt) === null ||
+    stringValue(player.updatedAt) === null ||
+    !isNonNegativeIntegerString(player.revision) ||
+    !isRecord(profile) ||
+    !nullableString(profile.trainerName) ||
+    !nullableString(profile.originRegionId) ||
+    !nullableString(profile.locale) ||
+    !nullableString(profile.revision) ||
+    !isRecord(onboarding) ||
+    !nullableString(onboarding.state) ||
+    !nullableString(onboarding.completedAt) ||
+    !nullableString(onboarding.revision) ||
+    !nullableString(onboarding.contentReleaseId) ||
+    !nullableString(onboarding.rulesetId) ||
+    !isRecord(progression) ||
+    !Number.isInteger(progression.level) ||
+    Number(progression.level) < 0 ||
+    !isNonNegativeIntegerString(progression.insigniaPoints) ||
+    !isNonNegativeIntegerString(progression.revision) ||
+    !Array.isArray(progression.unlocks) ||
+    !Array.isArray(value.identities) ||
+    !Array.isArray(value.wallets) ||
+    !Array.isArray(value.inventory) ||
+    !Array.isArray(value.pokemon) ||
+    !isRecord(pokedex) ||
+    !Number.isInteger(pokedex.speciesSeen) ||
+    Number(pokedex.speciesSeen) < 0 ||
+    !Number.isInteger(pokedex.speciesCaught) ||
+    Number(pokedex.speciesCaught) < 0 ||
+    !Array.isArray(pokedex.entries) ||
+    !Array.isArray(value.effects) ||
+    !Array.isArray(value.recentActivity) ||
+    !Array.isArray(value.unsupportedSections) ||
+    value.unsupportedSections.length !== 2 ||
+    value.unsupportedSections[0] !== 'COOLDOWNS' ||
+    value.unsupportedSections[1] !== 'PUNISHMENTS_FLAGS'
+  ) {
     throw new Error('Invalid Player 360 response.');
   }
-  return value as unknown as Player360Overview;
+
+  let normalizedLocation: Player360Overview['location'];
+  if (location === null) {
+    normalizedLocation = { areaId: null, enteredAt: null, revision: null };
+  } else if (
+    isRecord(location) &&
+    stringValue(location.areaId) !== null &&
+    stringValue(location.enteredAt) !== null &&
+    isNonNegativeIntegerString(location.revision)
+  ) {
+    normalizedLocation = {
+      areaId: location.areaId,
+      enteredAt: location.enteredAt,
+      revision: location.revision,
+    };
+  } else {
+    throw new Error('Invalid Player 360 location.');
+  }
+
+  const unlocks = progression.unlocks.map(assertPlayer360Unlock);
+
+  return {
+    playerId: player.id,
+    status: player.status,
+    createdAt: player.createdAt,
+    updatedAt: player.updatedAt,
+    playerRevision: player.revision,
+    profile: {
+      trainerName: profile.trainerName,
+      originRegionId: profile.originRegionId,
+      locale: profile.locale,
+      revision: profile.revision,
+    },
+    onboarding: {
+      state: onboarding.state,
+      completedAt: onboarding.completedAt,
+      revision: onboarding.revision,
+      contentReleaseId: onboarding.contentReleaseId,
+      rulesetId: onboarding.rulesetId,
+    },
+    progression: {
+      level: progression.level,
+      insigniaPoints: progression.insigniaPoints,
+      revision: progression.revision,
+      unlocks,
+    },
+    location: normalizedLocation,
+    identities: value.identities as readonly PlayerSearchIdentity[],
+    wallets: value.wallets,
+    inventory: value.inventory,
+    pokemon: value.pokemon,
+    pokedex: {
+      speciesSeen: pokedex.speciesSeen,
+      speciesCaught: pokedex.speciesCaught,
+      entries: pokedex.entries,
+    },
+    activeEncounter: value.activeEncounter ?? null,
+    activeBattle: value.activeBattle ?? null,
+    effects: value.effects,
+    recentActivity: value.recentActivity,
+    unsupportedSections: ['COOLDOWNS', 'PUNISHMENTS_FLAGS'],
+  };
 }
 
 function assertPreparedOperation(value: unknown): AdminPrepareOperationResult {
