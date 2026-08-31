@@ -315,12 +315,12 @@ function assertPlayer360Unlock(value: unknown): Player360UnlockView {
     throw new Error('Invalid Player 360 progression unlock.');
   }
   return {
-    key: value.key,
+    key: value.key as string,
     status: value.status,
-    sourceType: value.sourceType,
-    sourceId: value.sourceId,
-    unlockedAt: value.unlockedAt,
-    revokedAt: value.revokedAt,
+    sourceType: value.sourceType as string,
+    sourceId: value.sourceId as string,
+    unlockedAt: value.unlockedAt as string,
+    revokedAt: value.revokedAt as string | null,
     revision: value.revision,
   };
 }
@@ -388,8 +388,8 @@ function assertPlayer360(value: unknown): Player360Overview {
     isNonNegativeIntegerString(location.revision)
   ) {
     normalizedLocation = {
-      areaId: location.areaId,
-      enteredAt: location.enteredAt,
+      areaId: location.areaId as string,
+      enteredAt: location.enteredAt as string,
       revision: location.revision,
     };
   } else {
@@ -401,8 +401,8 @@ function assertPlayer360(value: unknown): Player360Overview {
   return {
     playerId: player.id,
     status: player.status,
-    createdAt: player.createdAt,
-    updatedAt: player.updatedAt,
+    createdAt: player.createdAt as string,
+    updatedAt: player.updatedAt as string,
     playerRevision: player.revision,
     profile: {
       trainerName: profile.trainerName,
@@ -418,7 +418,7 @@ function assertPlayer360(value: unknown): Player360Overview {
       rulesetId: onboarding.rulesetId,
     },
     progression: {
-      level: progression.level,
+      level: progression.level as number,
       insigniaPoints: progression.insigniaPoints,
       revision: progression.revision,
       unlocks,
@@ -429,8 +429,8 @@ function assertPlayer360(value: unknown): Player360Overview {
     inventory: value.inventory,
     pokemon: value.pokemon,
     pokedex: {
-      speciesSeen: pokedex.speciesSeen,
-      speciesCaught: pokedex.speciesCaught,
+      speciesSeen: pokedex.speciesSeen as number,
+      speciesCaught: pokedex.speciesCaught as number,
       entries: pokedex.entries,
     },
     activeEncounter: value.activeEncounter ?? null,
