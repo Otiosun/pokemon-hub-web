@@ -13,7 +13,9 @@ import { displayAdminRole, useAdminSession } from './features/session/useAdminSe
 import { AdminApiClient } from './lib/api/admin-api';
 
 const Player360Page = lazy(() =>
-  import('./features/player360/Player360Page').then((module) => ({ default: module.Player360Page })),
+  import('./features/player360/Player360Page').then((module) => ({
+    default: module.Player360Page,
+  })),
 );
 
 const CANONICAL_PROGRESS = 31.11;
@@ -149,7 +151,9 @@ export function App() {
                 <section className="foundation-placeholder" role="status">
                   <span className="eyebrow">PLAYER 360</span>
                   <h2>Carregando workspace de jogadores…</h2>
-                  <p>O shell administrativo continua disponível enquanto este módulo é carregado.</p>
+                  <p>
+                    O shell administrativo continua disponível enquanto este módulo é carregado.
+                  </p>
                 </section>
               }
             >

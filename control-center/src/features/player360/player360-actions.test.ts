@@ -43,11 +43,9 @@ describe('Player 360 contextual action rail', () => {
       activeEncounter: { id: 'encounter-1' },
     } as unknown as Player360Overview;
 
-    expect(contextualPlayerActions(capabilities, livePlayer).map((action) => action.operationType)).toEqual([
-      'battle.force_cancel',
-      'battle.correct_state',
-      'encounter.close',
-    ]);
+    expect(
+      contextualPlayerActions(capabilities, livePlayer).map((action) => action.operationType),
+    ).toEqual(['battle.force_cancel', 'battle.correct_state', 'encounter.close']);
   });
 
   it('does not surface instance-level Pokemon mechanics without a selected Pokemon target', () => {

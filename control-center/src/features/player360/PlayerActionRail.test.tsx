@@ -32,10 +32,7 @@ describe('Player 360 action rail surface', () => {
 
   it('exposes a prepare-only entry for battle force-cancel without claiming execution', () => {
     const html = renderToStaticMarkup(
-      <PlayerActionRail
-        capabilities={new Set(['battle.force_cancel'])}
-        player={PLAYER}
-      />,
+      <PlayerActionRail capabilities={new Set(['battle.force_cancel'])} player={PLAYER} />,
     );
 
     expect(html).toContain('PREPARAR OPERAÇÃO');

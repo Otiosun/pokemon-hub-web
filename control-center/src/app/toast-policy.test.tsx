@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { TOAST_POLICY } from './toast-policy';
 import { ToastViewport } from '../components/shell/ToastViewport';
+import { TOAST_POLICY } from './toast-policy';
 
 describe('Control Center toast policy', () => {
   it('keeps critical feedback persistent outside the toast channel', () => {

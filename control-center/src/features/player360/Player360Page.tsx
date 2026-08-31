@@ -421,7 +421,9 @@ export function Player360Page({ canReadSensitive, capabilities, client }: Player
 
             <div className="selected-contract-note">
               <strong>Authority permanece no backend.</strong>
-              <span>O rail contextual abaixo apenas reflete capabilities efetivas e estado atual.</span>
+              <span>
+                O rail contextual abaixo apenas reflete capabilities efetivas e estado atual.
+              </span>
             </div>
           </div>
         ) : (

@@ -46,12 +46,7 @@ export function AdminDrawer({
           </div>
           <div className="admin-drawer-actions">
             {actions}
-            <button
-              className="text-button"
-              onClick={onClose}
-              ref={closeButtonRef}
-              type="button"
-            >
+            <button className="text-button" onClick={onClose} ref={closeButtonRef} type="button">
               Fechar painel
             </button>
           </div>

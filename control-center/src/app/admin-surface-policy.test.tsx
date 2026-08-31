@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { ADMIN_SURFACE_POLICY } from './admin-surface-policy';
 import { AdminDrawer } from '../components/shell/AdminDrawer';
+import { ADMIN_SURFACE_POLICY } from './admin-surface-policy';
 
 describe('administrative modal and drawer policy', () => {
   it('uses drawers for context/configuration and reserves modal for final critical confirmation', () => {
