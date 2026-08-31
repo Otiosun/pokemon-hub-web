@@ -143,6 +143,7 @@ export function App() {
           ) : activeSection === 'players' ? (
             <Player360Page
               canReadSensitive={canReadSensitive}
+              capabilities={capabilities}
               client={client}
               key={session.principalId}
             />
