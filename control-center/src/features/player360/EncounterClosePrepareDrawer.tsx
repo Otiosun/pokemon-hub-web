@@ -7,8 +7,8 @@ import type {
 } from '../../lib/api/admin-api';
 import { AdminApiError } from '../../lib/api/admin-api';
 import {
-  type EncounterClosePrepareContext,
   buildEncounterClosePrepareRequest,
+  type EncounterClosePrepareContext,
 } from './encounter-close-prepare';
 import { type PrepareIdempotencyState, resolvePrepareIdempotency } from './prepare-idempotency';
 
@@ -68,8 +68,8 @@ export function EncounterClosePrepareDrawer({
         <div className="request-error" role="alert">
           <strong>Atualize o Player 360 antes de tentar novamente.</strong>
           <span>
-            Uma nova preparação revalidará target e authority. A revisão capturada só é comparada
-            ao estado autoritativo pelo owner na etapa de aplicação.
+            Uma nova preparação revalidará target e authority. A revisão capturada só é comparada ao
+            estado autoritativo pelo owner na etapa de aplicação.
           </span>
         </div>
       </AdminDrawer>
@@ -178,8 +178,8 @@ export function EncounterClosePrepareDrawer({
       <div className="selected-contract-note">
         <strong>Esta ação ainda não fecha o encounter.</strong>
         <span>
-          Prepare persiste a revisão observada como expectedRevision. O owner só compara essa revisão
-          com o estado atual na aplicação, que permanece fora do HTTP desta Central.
+          Prepare persiste a revisão observada como expectedRevision. O owner só compara essa
+          revisão com o estado atual na aplicação, que permanece fora do HTTP desta Central.
         </span>
       </div>
 
