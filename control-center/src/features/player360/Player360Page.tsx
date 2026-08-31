@@ -5,6 +5,7 @@ import {
   type Player360Overview,
   type PlayerSearchItem,
 } from '../../lib/api/admin-api';
+import { Player360DetailTabs } from './Player360DetailTabs';
 import {
   EMPTY_PLAYER_SEARCH_FILTERS,
   PLAYER_STATUSES,
@@ -48,6 +49,43 @@ function ResultIdentity({ item }: { item: PlayerSearchItem }) {
       {active.provider}
       {active.externalId === null ? ' · ID protegido' : ` · ${active.externalId}`}
     </span>
+  );
+}
+
+function Player360AnatomyPreview() {
+  return (
+    <div className="player360-contract-map">
+      <div className="contract-map-heading">
+        <div>
+          <span className="panel-kicker">ANATOMIA DA FICHA</span>
+          <h3>Oito áreas, uma pessoa.</h3>
+        </div>
+        <span className="muted-badge">READ MODEL REAL</span>
+      </div>
+
+      <section className="player360-tabs" aria-label="Áreas do Player 360">
+        {PLAYER360_TABS.map((tab, index) => (
+          <div className="player360-tab-preview" key={tab.id}>
+            <span className="tab-index">{String(index + 1).padStart(2, '0')}</span>
+            <div>
+              <strong>{tab.label}</strong>
+              <small>{tab.sections.join(' · ')}</small>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      <div className="unsupported-note">
+        <span className="warning-glyph" aria-hidden="true">
+          !
+        </span>
+        <div>
+          <strong>Duas áreas ainda não existem no domínio.</strong>
+          <p>{PLAYER360_UNSUPPORTED_SECTIONS.join(' · ')}</p>
+        </div>
+        <span className="muted-badge">NÃO INVENTAR NA UI</span>
+      </div>
+    </div>
   );
 }
 
@@ -95,6 +133,7 @@ export function Player360Page({ canReadSensitive, client }: Player360PageProps) 
   }
 
   async function selectPlayer(item: PlayerSearchItem) {
+    setSelected(null);
     setSelectedStatus('loading');
     setSelectedError(null);
     try {
@@ -318,7 +357,7 @@ export function Player360Page({ canReadSensitive, client }: Player360PageProps) 
             </span>
             <span className="panel-kicker">CARREGANDO PLAYER 360</span>
             <h2 id="player360-workspace-title">Confirmando o estado atual do jogador.</h2>
-            <p>A ficha é relida do backend antes de ser exibida.</p>
+            <p>A ficha anterior foi limpa enquanto o backend confirma o novo alvo.</p>
           </div>
         ) : selectedError ? (
           <div className="player360-empty-sidebar request-error" role="alert">
@@ -401,38 +440,7 @@ export function Player360Page({ canReadSensitive, client }: Player360PageProps) 
           </div>
         )}
 
-        <div className="player360-contract-map">
-          <div className="contract-map-heading">
-            <div>
-              <span className="panel-kicker">ANATOMIA DA FICHA</span>
-              <h3>Oito áreas, uma pessoa.</h3>
-            </div>
-            <span className="muted-badge">READ MODEL REAL</span>
-          </div>
-
-          <section className="player360-tabs" aria-label="Áreas do Player 360">
-            {PLAYER360_TABS.map((tab, index) => (
-              <div className="player360-tab-preview" key={tab.id}>
-                <span className="tab-index">{String(index + 1).padStart(2, '0')}</span>
-                <div>
-                  <strong>{tab.label}</strong>
-                  <small>{tab.sections.join(' · ')}</small>
-                </div>
-              </div>
-            ))}
-          </section>
-
-          <div className="unsupported-note">
-            <span className="warning-glyph" aria-hidden="true">
-              !
-            </span>
-            <div>
-              <strong>Duas áreas ainda não existem no domínio.</strong>
-              <p>{PLAYER360_UNSUPPORTED_SECTIONS.join(' · ')}</p>
-            </div>
-            <span className="muted-badge">NÃO INVENTAR NA UI</span>
-          </div>
-        </div>
+        {selected ? <Player360DetailTabs player={selected} /> : <Player360AnatomyPreview />}
       </section>
     </div>
   );
