@@ -45,12 +45,14 @@ export function PokedexPanel({ player }: { readonly player: Player360Overview })
         <div>
           <span className="panel-kicker">POKÉDEX</span>
           <h3 id="pokedex-title">Registro de descoberta e captura.</h3>
-          <p>Resumo operacional do read model. Sem catálogo público, sprites ou edição nesta etapa.</p>
+          <p>
+            Resumo operacional do read model. Sem catálogo público, sprites ou edição nesta etapa.
+          </p>
         </div>
         <span className="muted-badge">READ-ONLY</span>
       </div>
 
-      <div className="pokedex-metrics" aria-label="Resumo da Pokédex">
+      <div className="pokedex-metrics">
         <article>
           <strong>{pokedex.speciesSeen}</strong>
           <span>{pokedex.speciesSeen === 1 ? 'ESPÉCIE VISTA' : 'ESPÉCIES VISTAS'}</span>
@@ -76,7 +78,8 @@ export function PokedexPanel({ player }: { readonly player: Player360Overview })
                     {caught ? 'CAPTURADO' : 'VISTO'}
                   </span>
                   <span className="pokedex-counts">
-                    {formatInteger(entry.seenCount)} vistos · {formatInteger(entry.caughtCount)} capturados
+                    {formatInteger(entry.seenCount)} vistos · {formatInteger(entry.caughtCount)}{' '}
+                    capturados
                   </span>
                 </summary>
 
