@@ -1,0 +1,140 @@
+.inventory-economy-panel {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.inventory-economy-heading,
+.economy-section-heading,
+.wallet-card,
+.inventory-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.inventory-economy-heading {
+  align-items: flex-start;
+}
+
+.inventory-economy-heading h3,
+.economy-section-heading h4 {
+  margin: 0;
+}
+
+.inventory-economy-heading p {
+  max-width: 68ch;
+  margin: var(--space-2) 0 0;
+  color: var(--text-muted);
+}
+
+.economy-section {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+}
+
+.economy-section-heading {
+  align-items: flex-end;
+}
+
+.economy-section-heading > div {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.wallet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+
+.wallet-card,
+.inventory-row {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.wallet-card {
+  align-items: flex-end;
+  flex-wrap: wrap;
+  padding: var(--space-4);
+}
+
+.wallet-card > div,
+.inventory-row > div:first-child,
+.inventory-quantity {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.wallet-card span,
+.wallet-card small,
+.inventory-row small,
+.inventory-quantity span {
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.wallet-amount {
+  font-size: var(--font-size-xl);
+  font-variant-numeric: tabular-nums;
+}
+
+.inventory-list {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.inventory-row {
+  padding: var(--space-3) var(--space-4);
+}
+
+.inventory-row > div:first-child {
+  flex: 1;
+}
+
+.inventory-quantity {
+  min-width: 5rem;
+  text-align: right;
+}
+
+.inventory-quantity strong {
+  font-size: var(--font-size-lg);
+  font-variant-numeric: tabular-nums;
+}
+
+.economy-empty {
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  background: var(--surface);
+}
+
+@media (max-width: 720px) {
+  .inventory-economy-heading,
+  .economy-section-heading,
+  .inventory-row {
+    align-items: flex-start;
+  }
+
+  .inventory-economy-heading,
+  .inventory-row {
+    flex-direction: column;
+  }
+
+  .wallet-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .inventory-quantity {
+    min-width: 0;
+    text-align: left;
+  }
+}
