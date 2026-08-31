@@ -6,13 +6,10 @@ import type {
   Player360Overview,
 } from '../../lib/api/admin-api';
 import { AdminApiError } from '../../lib/api/admin-api';
+import { type PrepareIdempotencyState, resolvePrepareIdempotency } from './prepare-idempotency';
 import {
-  type PrepareIdempotencyState,
-  resolvePrepareIdempotency,
-} from './prepare-idempotency';
-import {
-  type TrainerProgressionPrepareContext,
   buildTrainerProgressionPrepareRequest,
+  type TrainerProgressionPrepareContext,
 } from './trainer-progression-prepare';
 
 interface PrepareErrorView {
@@ -199,8 +196,8 @@ export function TrainerProgressionPrepareDrawer({
       <div className="selected-contract-note">
         <strong>Esta ação ainda não altera a progressão.</strong>
         <span>
-          Prepare registra intenção auditável. Nenhuma simulação, confirmação, aprovação ou aplicação
-          é executada por este drawer.
+          Prepare registra intenção auditável. Nenhuma simulação, confirmação, aprovação ou
+          aplicação é executada por este drawer.
         </span>
       </div>
 
