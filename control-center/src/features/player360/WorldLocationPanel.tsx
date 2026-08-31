@@ -11,10 +11,7 @@ export function WorldLocationPanel({ player }: { readonly player: Player360Overv
         <div>
           <span className="panel-kicker">MUNDO &amp; LOCALIZAÇÃO</span>
           <h3 id="world-location-title">Onde o jogador está agora.</h3>
-          <p>
-            Esta aba mostra apenas o estado de localização. Encounter, batalha e efeitos pertencem à
-            próxima superfície operacional.
-          </p>
+          <p>Esta aba mostra somente o estado de localização atual registrado pelo read model.</p>
         </div>
         <span className="muted-badge">READ-ONLY</span>
       </div>
