@@ -1,0 +1,62 @@
+.toast-viewport {
+  position: fixed;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  z-index: 60;
+  display: grid;
+  width: min(380px, calc(100vw - 32px));
+  gap: var(--space-2);
+}
+
+.control-toast {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.control-toast span {
+  line-height: 1.45;
+}
+
+.control-toast.is-success {
+  border-color: color-mix(in srgb, var(--success) 35%, var(--border-subtle));
+}
+
+.control-toast.is-warning {
+  border-color: color-mix(in srgb, var(--warning) 45%, var(--border-subtle));
+}
+
+.control-toast.is-error {
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--border-subtle));
+}
+
+.toast-dismiss {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.toast-dismiss:hover,
+.toast-dismiss:focus-visible {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+@media (max-width: 720px) {
+  .toast-viewport {
+    right: var(--space-3);
+    bottom: var(--space-3);
+    left: var(--space-3);
+    width: auto;
+  }
+}
