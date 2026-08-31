@@ -2,7 +2,7 @@
   display: grid;
   gap: var(--space-4);
   padding: var(--space-4);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface-2);
 }
@@ -23,7 +23,7 @@
 .player-action-rail-heading p,
 .player-action-card p,
 .player-action-rail-empty span {
-  color: var(--text-muted);
+  color: var(--muted);
 }
 
 .player-action-rail-heading p {
@@ -41,8 +41,8 @@
   display: grid;
   gap: var(--space-3);
   padding: var(--space-4);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   background: var(--surface);
 }
 
@@ -63,9 +63,9 @@
   min-width: 34px;
   justify-content: center;
   padding: 4px 8px;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border);
   border-radius: 999px;
-  font-size: var(--font-size-xs);
+  font-size: 10px;
   font-weight: 800;
 }
 
@@ -74,7 +74,7 @@
 }
 
 .risk-badge.is-r3 {
-  border-color: color-mix(in srgb, var(--warning) 45%, var(--border-subtle));
+  border-color: color-mix(in srgb, var(--warning) 45%, var(--border));
   background: color-mix(in srgb, var(--warning) 10%, var(--surface));
 }
 
@@ -88,18 +88,18 @@
   padding: 4px 7px;
   border-radius: var(--radius-sm);
   background: var(--surface-3);
-  color: var(--text-muted);
-  font-size: var(--font-size-xs);
+  color: var(--muted);
+  font-size: 10px;
   font-weight: 700;
 }
 
 .player-action-locked {
   justify-self: start;
   padding: 8px 12px;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   background: transparent;
-  color: var(--text-muted);
+  color: var(--muted);
 }
 
 .player-action-locked:disabled {
@@ -111,8 +111,8 @@
   display: grid;
   gap: var(--space-1);
   padding: var(--space-4);
-  border: 1px dashed var(--border-subtle);
-  border-radius: var(--radius-md);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
   background: var(--surface);
 }
 
