@@ -108,10 +108,7 @@ const PLAYER_ACTIONS: readonly PlayerContextualAction[] = [
   },
 ] as const;
 
-function hasValidEconomyTarget(
-  player: Player360Overview,
-  kind: 'inventory' | 'wallets',
-): boolean {
+function hasValidEconomyTarget(player: Player360Overview, kind: 'inventory' | 'wallets'): boolean {
   try {
     return parsePlayer360Economy(player)[kind].length > 0;
   } catch {
@@ -120,7 +117,8 @@ function hasValidEconomyTarget(
 }
 
 function contextAvailable(action: PlayerContextualAction, player: Player360Overview): boolean {
-  if (action.operationType === 'inventory.adjust') return hasValidEconomyTarget(player, 'inventory');
+  if (action.operationType === 'inventory.adjust')
+    return hasValidEconomyTarget(player, 'inventory');
   if (action.operationType === 'wallet.adjust') return hasValidEconomyTarget(player, 'wallets');
   if (action.context === 'ACTIVE_BATTLE') return player.activeBattle !== null;
   if (action.context === 'ACTIVE_ENCOUNTER') return player.activeEncounter !== null;
