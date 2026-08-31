@@ -12,9 +12,9 @@ function policyLabel(
 }
 
 function prepareButtonLabel(action: PlayerContextualAction): string {
-  return action.operationType === 'battle.force_cancel'
-    ? 'Preparar cancelamento'
-    : 'Preparar ajuste';
+  if (action.operationType === 'battle.force_cancel') return 'Preparar cancelamento';
+  if (action.operationType === 'encounter.close') return 'Preparar fechamento';
+  return 'Preparar ajuste';
 }
 
 export function PlayerActionRail({
@@ -52,6 +52,7 @@ export function PlayerActionRail({
           {actions.map((action) => {
             const canPrepare =
               (action.operationType === 'battle.force_cancel' ||
+                action.operationType === 'encounter.close' ||
                 action.operationType === 'progression.trainer.adjust' ||
                 action.operationType === 'wallet.adjust' ||
                 action.operationType === 'inventory.adjust') &&
