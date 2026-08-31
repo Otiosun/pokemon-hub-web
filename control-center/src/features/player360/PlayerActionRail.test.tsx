@@ -30,14 +30,20 @@ describe('Player 360 action rail surface', () => {
     expect(html).not.toContain('JSON');
   });
 
-  it('exposes a prepare-only entry for battle force-cancel without claiming execution', () => {
+  it('exposes an actionable prepare-only entry for battle force-cancel without claiming execution', () => {
     const html = renderToStaticMarkup(
-      <PlayerActionRail capabilities={new Set(['battle.force_cancel'])} player={PLAYER} />,
+      <PlayerActionRail
+        capabilities={new Set(['battle.force_cancel'])}
+        onPrepareAction={() => undefined}
+        player={PLAYER}
+      />,
     );
 
     expect(html).toContain('PREPARAR OPERAÇÃO');
     expect(html).toContain('Preparar cancelamento');
     expect(html).toContain('battle.force_cancel');
+    expect(html).toContain('player-action-prepare');
+    expect(html).not.toContain('disabled=""');
     expect(html).not.toContain('Aplicar cancelamento');
     expect(html).not.toContain('Executar cancelamento');
   });
