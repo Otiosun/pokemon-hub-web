@@ -1,14 +1,14 @@
 import { useRef, useState } from 'react';
+import { AdminDrawer } from '../../components/shell/AdminDrawer';
 import type {
   AdminApiClient,
   AdminPrepareOperationResult,
   Player360Overview,
 } from '../../lib/api/admin-api';
 import { AdminApiError } from '../../lib/api/admin-api';
-import { AdminDrawer } from '../../components/shell/AdminDrawer';
 import {
-  buildBattleForceCancelPrepareRequest,
   type BattleForceCancelPrepareContext,
+  buildBattleForceCancelPrepareRequest,
 } from './battle-force-cancel-prepare';
 import { parsePlayer360BattleContext } from './player360-battle';
 
@@ -67,13 +67,16 @@ export function BattleForceCancelPrepareDrawer({
       >
         <div className="request-error" role="alert">
           <strong>Atualize o Player 360 antes de tentar novamente.</strong>
-          <span>O backend continuará revalidando target e authority em qualquer nova tentativa.</span>
+          <span>
+            O backend continuará revalidando target e authority em qualquer nova tentativa.
+          </span>
         </div>
       </AdminDrawer>
     );
   }
 
-  const canPrepare = reason.trim().length > 0 && reason.trim().length <= 2000 && status !== 'preparing';
+  const canPrepare =
+    reason.trim().length > 0 && reason.trim().length <= 2000 && status !== 'preparing';
 
   async function submitPrepare() {
     if (!canPrepare) return;
@@ -116,7 +119,9 @@ export function BattleForceCancelPrepareDrawer({
         <dl className="foundation-list">
           <div>
             <dt>Batalha</dt>
-            <dd><code>{battle.id}</code></dd>
+            <dd>
+              <code>{battle.id}</code>
+            </dd>
           </div>
           <div>
             <dt>Estado</dt>
@@ -128,7 +133,9 @@ export function BattleForceCancelPrepareDrawer({
           </div>
           <div>
             <dt>Operação</dt>
-            <dd><code>battle.force_cancel</code></dd>
+            <dd>
+              <code>battle.force_cancel</code>
+            </dd>
           </div>
         </dl>
       </section>
@@ -147,7 +154,10 @@ export function BattleForceCancelPrepareDrawer({
 
       <div className="selected-contract-note">
         <strong>Esta ação ainda não altera a batalha.</strong>
-        <span>Prepare cria evidência auditável; o lifecycle privilegiado posterior permanece fechado no HTTP.</span>
+        <span>
+          Prepare cria evidência auditável; o lifecycle privilegiado posterior permanece fechado no
+          HTTP.
+        </span>
       </div>
 
       {error ? (
@@ -165,11 +175,15 @@ export function BattleForceCancelPrepareDrawer({
           <dl className="foundation-list">
             <div>
               <dt>AdminOperation</dt>
-              <dd><code>{prepared.operation.id}</code></dd>
+              <dd>
+                <code>{prepared.operation.id}</code>
+              </dd>
             </div>
             <div>
               <dt>Correlation</dt>
-              <dd><code>{prepared.operation.correlationId}</code></dd>
+              <dd>
+                <code>{prepared.operation.correlationId}</code>
+              </dd>
             </div>
             <div>
               <dt>Expected revision</dt>

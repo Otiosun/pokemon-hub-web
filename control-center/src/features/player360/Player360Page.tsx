@@ -5,6 +5,7 @@ import {
   type Player360Overview,
   type PlayerSearchItem,
 } from '../../lib/api/admin-api';
+import { BattleForceCancelPrepareDrawer } from './BattleForceCancelPrepareDrawer';
 import {
   EMPTY_PLAYER_SEARCH_FILTERS,
   PLAYER_STATUSES,
@@ -14,7 +15,6 @@ import {
   toPlayerSearchQuery,
   validatePlayerSearchFilters,
 } from './model';
-import { BattleForceCancelPrepareDrawer } from './BattleForceCancelPrepareDrawer';
 import { Player360DetailTabs } from './Player360DetailTabs';
 import { PlayerActionRail } from './PlayerActionRail';
 import './player360.css';
