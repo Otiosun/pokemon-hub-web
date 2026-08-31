@@ -1,4 +1,5 @@
 import type { Player360Overview } from '../../lib/api/admin-api';
+import { parsePlayer360Economy } from './player360-economy';
 
 export interface PlayerContextualAction {
   readonly operationType:
@@ -107,8 +108,16 @@ const PLAYER_ACTIONS: readonly PlayerContextualAction[] = [
   },
 ] as const;
 
+function hasValidWalletTarget(player: Player360Overview): boolean {
+  try {
+    return parsePlayer360Economy(player).wallets.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 function contextAvailable(action: PlayerContextualAction, player: Player360Overview): boolean {
-  if (action.operationType === 'wallet.adjust') return player.wallets.length > 0;
+  if (action.operationType === 'wallet.adjust') return hasValidWalletTarget(player);
   if (action.context === 'ACTIVE_BATTLE') return player.activeBattle !== null;
   if (action.context === 'ACTIVE_ENCOUNTER') return player.activeEncounter !== null;
   return true;
