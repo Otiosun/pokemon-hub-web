@@ -18,6 +18,12 @@ const Player360Page = lazy(() =>
   })),
 );
 
+const ContentLibraryPage = lazy(() =>
+  import('./features/content-studio/ContentLibraryPage').then((module) => ({
+    default: module.ContentLibraryPage,
+  })),
+);
+
 const CANONICAL_PROGRESS = 42.03;
 
 const workQueue = [
@@ -163,6 +169,18 @@ export function App() {
                 client={client}
                 key={session.principalId}
               />
+            </Suspense>
+          ) : activeSection === 'game' ? (
+            <Suspense
+              fallback={
+                <section className="foundation-placeholder" role="status">
+                  <span className="eyebrow">CONTENT STUDIO</span>
+                  <h2>Carregando biblioteca de conteúdo…</h2>
+                  <p>O shell continua disponível enquanto o catálogo autorizado é carregado.</p>
+                </section>
+              }
+            >
+              <ContentLibraryPage client={client} key={session.principalId} />
             </Suspense>
           ) : (
             <FoundationView sectionId={activeSection} />
