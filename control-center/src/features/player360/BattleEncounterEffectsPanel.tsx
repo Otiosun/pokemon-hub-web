@@ -1,8 +1,5 @@
 import type { Player360Overview } from '../../lib/api/admin-api';
-import {
-  type Player360BattleContextView,
-  parsePlayer360BattleContext,
-} from './player360-battle';
+import { type Player360BattleContextView, parsePlayer360BattleContext } from './player360-battle';
 
 function humanizeSlug(value: string): string {
   return value
@@ -47,7 +44,8 @@ export function BattleEncounterEffectsPanel({ player }: { readonly player: Playe
         <span className="panel-kicker">COMBATE &amp; ENCOUNTER</span>
         <h3>Dados operacionais incompatíveis com o contrato atual.</h3>
         <p className="battle-context-empty">
-          A Central bloqueou esta leitura para não apresentar batalha, encounter ou efeitos sem validação.
+          A Central bloqueou esta leitura para não apresentar batalha, encounter ou efeitos sem
+          validação.
         </p>
       </section>
     );
