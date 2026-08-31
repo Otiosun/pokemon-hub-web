@@ -88,4 +88,15 @@ describe('Player 360 inventory + economy tab', () => {
     expect(html).toContain('Nenhuma wallet registrada.');
     expect(html).toContain('Nenhum item registrado.');
   });
+
+  it('blocks malformed economy data instead of rendering unvalidated values', () => {
+    const html = renderToStaticMarkup(
+      <InventoryEconomyPanel
+        player={{ ...PLAYER, inventory: [{ slug: 'ultra-ball', quantity: '-10' }] }}
+      />,
+    );
+
+    expect(html).toContain('Dados econômicos incompatíveis com o contrato atual.');
+    expect(html).not.toContain('-10');
+  });
 });
