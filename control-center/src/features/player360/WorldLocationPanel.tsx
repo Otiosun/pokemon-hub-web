@@ -2,7 +2,8 @@ import type { Player360Overview } from '../../lib/api/admin-api';
 
 export function WorldLocationPanel({ player }: { readonly player: Player360Overview }) {
   const location = player.location;
-  const active = location.areaId !== null && location.enteredAt !== null && location.revision !== null;
+  const active =
+    location.areaId !== null && location.enteredAt !== null && location.revision !== null;
 
   return (
     <section className="world-location-panel" aria-labelledby="world-location-title">
