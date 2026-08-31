@@ -68,7 +68,8 @@ export function EncounterClosePrepareDrawer({
         <div className="request-error" role="alert">
           <strong>Atualize o Player 360 antes de tentar novamente.</strong>
           <span>
-            O backend continuará revalidando target, revisão e authority em qualquer nova tentativa.
+            Uma nova preparação revalidará target e authority. A revisão capturada só é comparada
+            ao estado autoritativo pelo owner na etapa de aplicação.
           </span>
         </div>
       </AdminDrawer>
@@ -177,7 +178,8 @@ export function EncounterClosePrepareDrawer({
       <div className="selected-contract-note">
         <strong>Esta ação ainda não fecha o encounter.</strong>
         <span>
-          Prepare cria evidência auditável. Confirmação e aplicação permanecem fora do HTTP atual.
+          Prepare persiste a revisão observada como expectedRevision. O owner só compara essa revisão
+          com o estado atual na aplicação, que permanece fora do HTTP desta Central.
         </span>
       </div>
 
