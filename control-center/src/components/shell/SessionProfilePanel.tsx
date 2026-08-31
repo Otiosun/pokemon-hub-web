@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { loadControlCenterConfig } from '../../app/config';
-import { AdminApiError, type AdminSession } from '../../lib/api/admin-api';
 import { logoutCurrentSession } from '../../features/session/logout';
+import { AdminApiError, type AdminSession } from '../../lib/api/admin-api';
 import { AdminDrawer } from './AdminDrawer';
 import { environmentLabel } from './OperationalDiagnostics';
 

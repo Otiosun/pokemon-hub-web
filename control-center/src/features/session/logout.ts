@@ -39,7 +39,13 @@ async function failedLogout(response: Response): Promise<AdminApiError> {
     // The safe fallback above intentionally hides transport/body internals.
   }
 
-  return new AdminApiError(kindForStatus(response.status), message, response.status, code, correlationId);
+  return new AdminApiError(
+    kindForStatus(response.status),
+    message,
+    response.status,
+    code,
+    correlationId,
+  );
 }
 
 export async function logoutCurrentSession(
