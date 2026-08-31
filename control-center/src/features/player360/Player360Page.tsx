@@ -15,10 +15,12 @@ import {
   validatePlayerSearchFilters,
 } from './model';
 import { Player360DetailTabs } from './Player360DetailTabs';
+import { PlayerActionRail } from './PlayerActionRail';
 import './player360.css';
 
 interface Player360PageProps {
   readonly canReadSensitive: boolean;
+  readonly capabilities: ReadonlySet<string>;
   readonly client: Pick<AdminApiClient, 'searchPlayers' | 'getPlayer'>;
 }
 
@@ -89,7 +91,7 @@ function Player360AnatomyPreview() {
   );
 }
 
-export function Player360Page({ canReadSensitive, client }: Player360PageProps) {
+export function Player360Page({ canReadSensitive, capabilities, client }: Player360PageProps) {
   const [filters, setFilters] = useState<PlayerSearchFilters>(EMPTY_PLAYER_SEARCH_FILTERS);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [results, setResults] = useState<readonly PlayerSearchItem[]>([]);
@@ -418,8 +420,8 @@ export function Player360Page({ canReadSensitive, client }: Player360PageProps) 
             </div>
 
             <div className="selected-contract-note">
-              <strong>Somente leitura nesta fase.</strong>
-              <span>Nenhuma ação de suporte ou correção está exposta por este slice.</span>
+              <strong>Authority permanece no backend.</strong>
+              <span>O rail contextual abaixo apenas reflete capabilities efetivas e estado atual.</span>
             </div>
           </div>
         ) : (
@@ -440,7 +442,14 @@ export function Player360Page({ canReadSensitive, client }: Player360PageProps) 
           </div>
         )}
 
-        {selected ? <Player360DetailTabs player={selected} /> : <Player360AnatomyPreview />}
+        {selected ? (
+          <>
+            <PlayerActionRail capabilities={capabilities} player={selected} />
+            <Player360DetailTabs player={selected} />
+          </>
+        ) : (
+          <Player360AnatomyPreview />
+        )}
       </section>
     </div>
   );
