@@ -3,6 +3,7 @@ import { buildEncounterClosePrepareRequest } from './encounter-close-prepare';
 
 const PLAYER_ID = '11111111-1111-4111-8111-111111111111';
 const ENCOUNTER_ID = '22222222-2222-4222-8222-222222222222';
+const POSTGRES_BIGINT_MAX = '9223372036854775807';
 
 describe('encounter.close prepare-only request', () => {
   it('derives the strict backend input and expected revision from Player 360', () => {
@@ -22,6 +23,18 @@ describe('encounter.close prepare-only request', () => {
       idempotencyKey: 'encounter-close:33333333-3333-4333-8333-333333333333',
     });
     expect(Object.keys(request.input)).toEqual(['playerId', 'encounterId']);
+  });
+
+  it('preserves a non-negative bigint revision without narrowing it through number', () => {
+    const request = buildEncounterClosePrepareRequest({
+      playerId: PLAYER_ID,
+      encounterId: ENCOUNTER_ID,
+      encounterRevision: POSTGRES_BIGINT_MAX,
+      reason: 'Encounter preso após resolução operacional incompleta.',
+      idempotencyKey: 'encounter-close:77777777-7777-4777-8777-777777777777',
+    });
+
+    expect(request.expectedRevision).toBe(POSTGRES_BIGINT_MAX);
   });
 
   it('fails closed before HTTP when reason or encounter revision is invalid', () => {
