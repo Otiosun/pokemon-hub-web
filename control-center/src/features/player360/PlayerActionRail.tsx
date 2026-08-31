@@ -51,7 +51,7 @@ export function PlayerActionRail({
                 <span className={`risk-badge is-r${action.riskTier}`}>R{action.riskTier}</span>
               </div>
 
-              <div className="player-action-policy" aria-label={`Política de ${action.label}`}>
+              <div className="player-action-policy">
                 {policyLabel(action.requiresExpectedRevision, action.requiresConfirmation).map(
                   (label) => (
                     <span key={label}>{label}</span>
