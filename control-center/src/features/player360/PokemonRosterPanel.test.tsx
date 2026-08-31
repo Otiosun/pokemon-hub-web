@@ -172,7 +172,9 @@ describe('Player 360 Team + Box + Pokemon tab', () => {
   });
 
   it('keeps an explicit empty roster state', () => {
-    const html = renderToStaticMarkup(<PokemonRosterPanel player={{ ...BASE_PLAYER, pokemon: [] }} />);
+    const html = renderToStaticMarkup(
+      <PokemonRosterPanel player={{ ...BASE_PLAYER, pokemon: [] }} />,
+    );
     expect(html).toContain('Nenhum Pokémon registrado para este jogador.');
   });
 });
