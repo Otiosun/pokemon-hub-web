@@ -40,7 +40,9 @@ function OverviewDetails({ player }: { readonly player: Player360Overview }) {
         <article>
           <span>LOCALIZAÇÃO</span>
           <strong>{valueOrDash(player.location.areaId)}</strong>
-          <small>{player.location.enteredAt ? 'Entrada registrada' : 'Sem localização ativa'}</small>
+          <small>
+            {player.location.enteredAt ? 'Entrada registrada' : 'Sem localização ativa'}
+          </small>
         </article>
         <article>
           <span>POKÉDEX</span>
