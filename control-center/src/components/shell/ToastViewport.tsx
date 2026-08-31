@@ -16,7 +16,7 @@ export function ToastViewport({
   if (toasts.length === 0) return null;
 
   return (
-    <div className="toast-viewport" aria-label="Avisos recentes">
+    <div aria-label="Avisos recentes" className="toast-viewport" role="region">
       {toasts.map((toast) => {
         const urgent = toast.tone === 'warning' || toast.tone === 'error';
         return (
