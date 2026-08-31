@@ -1,5 +1,5 @@
 import type { Player360Overview } from '../../lib/api/admin-api';
-import { contextualPlayerActions } from './player360-actions';
+import { contextualPlayerActions, type PlayerContextualAction } from './player360-actions';
 
 function policyLabel(
   requiresExpectedRevision: boolean,
@@ -13,9 +13,11 @@ function policyLabel(
 
 export function PlayerActionRail({
   capabilities,
+  onPrepareAction,
   player,
 }: {
   readonly capabilities: ReadonlySet<string>;
+  readonly onPrepareAction?: (action: PlayerContextualAction) => void;
   readonly player: Player360Overview;
 }) {
   const actions = contextualPlayerActions(capabilities, player);
@@ -41,29 +43,46 @@ export function PlayerActionRail({
         </div>
       ) : (
         <div className="player-action-list">
-          {actions.map((action) => (
-            <article className="player-action-card" key={action.operationType}>
-              <div className="player-action-card-heading">
-                <div>
-                  <strong>{action.label}</strong>
-                  <p>{action.description}</p>
+          {actions.map((action) => {
+            const canPrepare =
+              action.operationType === 'battle.force_cancel' && onPrepareAction !== undefined;
+
+            return (
+              <article className="player-action-card" key={action.operationType}>
+                <div className="player-action-card-heading">
+                  <div>
+                    {canPrepare ? <span className="panel-kicker">PREPARAR OPERAÇÃO</span> : null}
+                    <strong>{action.label}</strong>
+                    <p>{action.description}</p>
+                    {canPrepare ? <code>{action.operationType}</code> : null}
+                  </div>
+                  <span className={`risk-badge is-r${action.riskTier}`}>R{action.riskTier}</span>
                 </div>
-                <span className={`risk-badge is-r${action.riskTier}`}>R{action.riskTier}</span>
-              </div>
 
-              <div className="player-action-policy">
-                {policyLabel(action.requiresExpectedRevision, action.requiresConfirmation).map(
-                  (label) => (
-                    <span key={label}>{label}</span>
-                  ),
+                <div className="player-action-policy">
+                  {policyLabel(action.requiresExpectedRevision, action.requiresConfirmation).map(
+                    (label) => (
+                      <span key={label}>{label}</span>
+                    ),
+                  )}
+                </div>
+
+                {canPrepare ? (
+                  <button
+                    className="player-action-prepare secondary-button"
+                    onClick={() => onPrepareAction(action)}
+                    type="button"
+                  >
+                    Preparar cancelamento
+                  </button>
+                ) : (
+                  <button className="player-action-locked" disabled type="button">
+                    Abrir fluxo seguro
+                  </button>
                 )}
-              </div>
-
-              <button className="player-action-locked" disabled type="button">
-                Abrir fluxo seguro
-              </button>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
       )}
     </aside>
