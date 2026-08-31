@@ -39,8 +39,8 @@ describe('Player 360 Pokedex tab', () => {
     const html = renderToStaticMarkup(<PokedexPanel player={PLAYER} />);
 
     expect(html).toContain('POKÉDEX');
-    expect(html).toContain('2 ESPÉCIES VISTAS');
-    expect(html).toContain('1 ESPÉCIE CAPTURADA');
+    expect(html).toContain('<strong>2</strong><span>ESPÉCIES VISTAS</span>');
+    expect(html).toContain('<strong>1</strong><span>ESPÉCIE CAPTURADA</span>');
     expect(html).toContain('#001');
     expect(html).toContain('Bulbasaur');
     expect(html).toContain('VISTO');
