@@ -1,4 +1,5 @@
 import type { AdminSession } from '../../lib/api/admin-api';
+import { AdminDrawer } from './AdminDrawer';
 import { environmentLabel } from './OperationalDiagnostics';
 
 export function SessionProfilePanel({
@@ -13,26 +14,17 @@ export function SessionProfilePanel({
   onReload: () => Promise<void>;
 }) {
   return (
-    <section className="session-profile-panel" aria-labelledby="session-profile-title">
-      <div className="session-profile-heading">
-        <div>
-          <span className="eyebrow">MINHA SESSÃO</span>
-          <h2 id="session-profile-title">Identidade administrativa atual</h2>
-          <p>
-            Somente leitura. Estes dados vêm da sessão validada pela Admin API e não concedem
-            autoridade ao navegador.
-          </p>
-        </div>
-        <div className="session-profile-actions">
-          <button className="secondary-button" type="button" onClick={() => void onReload()}>
-            Revalidar sessão
-          </button>
-          <button className="text-button" type="button" onClick={onClose}>
-            Fechar painel
-          </button>
-        </div>
-      </div>
-
+    <AdminDrawer
+      actions={
+        <button className="secondary-button" type="button" onClick={() => void onReload()}>
+          Revalidar sessão
+        </button>
+      }
+      description="Somente leitura. Estes dados vêm da sessão validada pela Admin API e não concedem autoridade ao navegador."
+      eyebrow="MINHA SESSÃO"
+      onClose={onClose}
+      title="Identidade administrativa atual"
+    >
       <dl className="session-profile-summary">
         <div>
           <dt>Perfil visual</dt>
@@ -99,6 +91,6 @@ export function SessionProfilePanel({
           </div>
         </section>
       </div>
-    </section>
+    </AdminDrawer>
   );
 }
