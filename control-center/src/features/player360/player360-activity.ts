@@ -1,10 +1,6 @@
 import type { Player360Overview } from '../../lib/api/admin-api';
 
-export type Player360ActivityKind =
-  | 'TRAINER_PROGRESS'
-  | 'INVENTORY'
-  | 'WALLET'
-  | 'POKEMON_HISTORY';
+export type Player360ActivityKind = 'TRAINER_PROGRESS' | 'INVENTORY' | 'WALLET' | 'POKEMON_HISTORY';
 
 export interface Player360ActivityView {
   readonly kind: Player360ActivityKind;
@@ -61,6 +57,8 @@ function parseActivity(value: unknown): Player360ActivityView {
   };
 }
 
-export function parsePlayer360Activity(player: Player360Overview): readonly Player360ActivityView[] {
+export function parsePlayer360Activity(
+  player: Player360Overview,
+): readonly Player360ActivityView[] {
   return player.recentActivity.map(parseActivity);
 }
