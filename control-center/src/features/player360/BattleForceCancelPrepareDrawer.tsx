@@ -11,10 +11,7 @@ import {
   buildBattleForceCancelPrepareRequest,
 } from './battle-force-cancel-prepare';
 import { parsePlayer360BattleContext } from './player360-battle';
-import {
-  type PrepareIdempotencyState,
-  resolvePrepareIdempotency,
-} from './prepare-idempotency';
+import { type PrepareIdempotencyState, resolvePrepareIdempotency } from './prepare-idempotency';
 
 interface PrepareErrorView {
   readonly message: string;
