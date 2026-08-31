@@ -11,6 +11,12 @@ function policyLabel(
   return labels;
 }
 
+function prepareButtonLabel(action: PlayerContextualAction): string {
+  return action.operationType === 'battle.force_cancel'
+    ? 'Preparar cancelamento'
+    : 'Preparar ajuste';
+}
+
 export function PlayerActionRail({
   capabilities,
   onPrepareAction,
@@ -46,7 +52,8 @@ export function PlayerActionRail({
           {actions.map((action) => {
             const canPrepare =
               (action.operationType === 'battle.force_cancel' ||
-                action.operationType === 'progression.trainer.adjust') &&
+                action.operationType === 'progression.trainer.adjust' ||
+                action.operationType === 'wallet.adjust') &&
               onPrepareAction !== undefined;
 
             return (
@@ -75,9 +82,7 @@ export function PlayerActionRail({
                     onClick={() => onPrepareAction(action)}
                     type="button"
                   >
-                    {action.operationType === 'battle.force_cancel'
-                      ? 'Preparar cancelamento'
-                      : 'Preparar ajuste'}
+                    {prepareButtonLabel(action)}
                   </button>
                 ) : (
                   <button className="player-action-locked" disabled type="button">
