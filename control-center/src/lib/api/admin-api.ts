@@ -128,6 +128,17 @@ export interface Player360PokemonView {
   readonly evolutionConditionFlags: readonly Player360PokemonEvolutionFlagView[];
 }
 
+export interface Player360EncounterView {
+  readonly id: string;
+  readonly status: string;
+  readonly areaId: string;
+  readonly contentReleaseId: string;
+  readonly rulesetId: string;
+  readonly revision: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
 export interface Player360Overview {
   readonly playerId: string;
   readonly status: 'ACTIVE' | 'SUSPENDED' | 'ARCHIVED';
@@ -167,7 +178,7 @@ export interface Player360Overview {
     readonly speciesCaught: number;
     readonly entries: readonly unknown[];
   };
-  readonly activeEncounter: unknown | null;
+  readonly activeEncounter: Player360EncounterView | null;
   readonly activeBattle: unknown | null;
   readonly effects: readonly unknown[];
   readonly recentActivity: readonly unknown[];
@@ -571,6 +582,33 @@ function assertPlayer360Pokemon(value: unknown): Player360PokemonView {
   };
 }
 
+function assertPlayer360Encounter(value: unknown): Player360EncounterView | null {
+  if (value === null) return null;
+  if (
+    !isRecord(value) ||
+    stringValue(value.id) === null ||
+    stringValue(value.status) === null ||
+    stringValue(value.areaId) === null ||
+    stringValue(value.contentReleaseId) === null ||
+    stringValue(value.rulesetId) === null ||
+    !isNonNegativeIntegerString(value.revision) ||
+    stringValue(value.createdAt) === null ||
+    stringValue(value.updatedAt) === null
+  ) {
+    throw new Error('Invalid Player 360 active encounter.');
+  }
+  return {
+    id: value.id as string,
+    status: value.status as string,
+    areaId: value.areaId as string,
+    contentReleaseId: value.contentReleaseId as string,
+    rulesetId: value.rulesetId as string,
+    revision: value.revision,
+    createdAt: value.createdAt as string,
+    updatedAt: value.updatedAt as string,
+  };
+}
+
 function assertPlayer360(value: unknown): Player360Overview {
   if (!isRecord(value)) throw new Error('Invalid Player 360 response.');
   const player = value.player;
@@ -680,7 +718,7 @@ function assertPlayer360(value: unknown): Player360Overview {
       speciesCaught: pokedex.speciesCaught as number,
       entries: pokedex.entries,
     },
-    activeEncounter: value.activeEncounter ?? null,
+    activeEncounter: assertPlayer360Encounter(value.activeEncounter ?? null),
     activeBattle: value.activeBattle ?? null,
     effects: value.effects,
     recentActivity: value.recentActivity,
