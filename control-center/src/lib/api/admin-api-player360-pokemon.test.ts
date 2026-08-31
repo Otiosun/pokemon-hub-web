@@ -111,9 +111,7 @@ describe('AdminApiClient Player 360 Pokemon contract', () => {
 
   it('rejects a malformed Pokemon instead of leaking unknown roster data into the UI', async () => {
     const malformed = { ...PIKACHU, placement: { kind: 'TEAM', boxNo: 4, slotNo: 1 } };
-    const fetchImpl = vi
-      .fn<typeof fetch>()
-      .mockResolvedValue(responseWithPokemon([malformed]));
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(responseWithPokemon([malformed]));
     const client = new AdminApiClient(API, fetchImpl);
 
     await expect(client.getPlayer(PLAYER_ID, false)).rejects.toMatchObject({
