@@ -38,18 +38,18 @@ describe('Control Center current principal/session profile contract', () => {
     expect(panel).toContain('session.scopes');
     expect(panel).toContain('Revalidar sessão');
     expect(panel).toContain('Sair');
-    expect(panel).toContain('onLogout');
+    expect(panel).toContain('logoutCurrentSession');
     expect(panel).not.toContain('simulate');
     expect(panel).not.toContain('apply');
   });
 
   it('redirects to Access logout only after the local revocation request resolves', async () => {
-    const app = await readFile(appPath, 'utf8');
+    const panel = await readFile(panelPath, 'utf8');
 
-    expect(app).toContain('await client.logoutCurrentSession()');
-    expect(app).toContain('window.location.assign(logoutPath)');
-    expect(app.indexOf('await client.logoutCurrentSession()')).toBeLessThan(
-      app.indexOf('window.location.assign(logoutPath)'),
+    expect(panel).toContain('await logoutCurrentSession(apiBaseUrl)');
+    expect(panel).toContain('window.location.assign(logoutPath)');
+    expect(panel.indexOf('await logoutCurrentSession(apiBaseUrl)')).toBeLessThan(
+      panel.indexOf('window.location.assign(logoutPath)'),
     );
   });
 });
