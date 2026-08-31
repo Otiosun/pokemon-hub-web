@@ -180,7 +180,8 @@ const effectConfigField: HumanFieldDescriptor = {
   required: true,
   rawJson: false,
   defaultValue: {},
-  helper: 'Campos variam pelo efeito escolhido e são definidos por primitives allowlisted do backend.',
+  helper:
+    'Campos variam pelo efeito escolhido e são definidos por primitives allowlisted do backend.',
 };
 
 const encounterConditionsDescriptor = {
