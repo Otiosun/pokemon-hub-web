@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { AdminApiClient, AdminApiError } from './admin-api';
 
 const API = 'https://admin-api.example.com';
+const PLAYER_ID = '00000000-0000-4000-8000-000000000444';
 
 function jsonResponse(
   value: unknown,
@@ -12,6 +13,59 @@ function jsonResponse(
     status,
     headers: { 'content-type': 'application/json', ...headers },
   });
+}
+
+function canonicalPlayer360() {
+  return {
+    player: {
+      id: PLAYER_ID,
+      status: 'ACTIVE',
+      createdAt: '2026-08-20T12:00:00.000Z',
+      updatedAt: '2026-08-30T18:30:00.000Z',
+      revision: '14',
+    },
+    profile: {
+      trainerName: 'Lia',
+      originRegionId: '00000000-0000-4000-8000-000000000150',
+      locale: 'pt-BR',
+      metadata: null,
+      revision: '3',
+    },
+    identities: [],
+    onboarding: {
+      state: 'COMPLETED',
+      completedAt: '2026-08-20T12:15:00.000Z',
+      revision: '5',
+      contentReleaseId: '00000000-0000-4000-8000-000000000501',
+      rulesetId: '00000000-0000-4000-8000-000000000601',
+    },
+    progression: {
+      level: 12,
+      insigniaPoints: '420',
+      revision: '9',
+      unlocks: [
+        {
+          key: 'travel:kanto-route-2',
+          status: 'ACTIVE',
+          sourceType: 'TRAINER_LEVEL',
+          sourceId: 'level:10',
+          unlockedAt: '2026-08-25T09:00:00.000Z',
+          revokedAt: null,
+          revision: '2',
+        },
+      ],
+    },
+    location: null,
+    wallets: [],
+    inventory: [],
+    pokemon: [],
+    pokedex: { speciesSeen: 0, speciesCaught: 0, entries: [] },
+    activeEncounter: null,
+    activeBattle: null,
+    effects: [],
+    recentActivity: [],
+    unsupportedSections: ['COOLDOWNS', 'PUNISHMENTS_FLAGS'],
+  };
 }
 
 describe('AdminApiClient', () => {
@@ -57,6 +111,51 @@ describe('AdminApiClient', () => {
     expect(url).toBe(
       `${API}/admin/v1/players?status=ACTIVE&trainerNamePrefix=Ash+Ketchum&includeSensitive=false&limit=25`,
     );
+  });
+
+  it('normalizes the canonical nested backend Player 360 response for the UI', async () => {
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse(canonicalPlayer360()));
+    const client = new AdminApiClient(API, fetchImpl);
+
+    await expect(client.getPlayer(PLAYER_ID, false)).resolves.toMatchObject({
+      playerId: PLAYER_ID,
+      status: 'ACTIVE',
+      playerRevision: '14',
+      profile: { trainerName: 'Lia', locale: 'pt-BR', revision: '3' },
+      onboarding: { state: 'COMPLETED', revision: '5' },
+      progression: {
+        level: 12,
+        insigniaPoints: '420',
+        revision: '9',
+        unlocks: [
+          {
+            key: 'travel:kanto-route-2',
+            status: 'ACTIVE',
+            sourceType: 'TRAINER_LEVEL',
+            sourceId: 'level:10',
+            revision: '2',
+          },
+        ],
+      },
+      location: { areaId: null, enteredAt: null, revision: null },
+    });
+  });
+
+  it('rejects malformed progression unlocks instead of silently trusting backend data', async () => {
+    const malformed = canonicalPlayer360();
+    malformed.progression.unlocks = [
+      {
+        ...malformed.progression.unlocks[0],
+        status: 'GOD_MODE',
+      },
+    ];
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse(malformed));
+    const client = new AdminApiClient(API, fetchImpl);
+
+    await expect(client.getPlayer(PLAYER_ID, false)).rejects.toMatchObject({
+      kind: 'server',
+      code: 'INVALID_PLAYER360_RESPONSE',
+    });
   });
 
   it('surfaces safe server error and correlation id', async () => {
