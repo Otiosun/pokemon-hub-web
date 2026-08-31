@@ -1,8 +1,9 @@
 import { readFileSync, readdirSync } from 'node:fs';
-import { gzipSync } from 'node:zlib';
 import { extname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { gzipSync } from 'node:zlib';
 
-const assetsDir = new URL('../dist/assets/', import.meta.url);
+const assetsDir = fileURLToPath(new URL('../dist/assets/', import.meta.url));
 const budgets = {
   jsTotalRaw: 340 * 1024,
   jsTotalGzip: 100 * 1024,
@@ -14,8 +15,7 @@ const budgets = {
 const files = readdirSync(assetsDir, { withFileTypes: true })
   .filter((entry) => entry.isFile())
   .map((entry) => {
-    const path = join(assetsDir.pathname, entry.name);
-    const bytes = readFileSync(path);
+    const bytes = readFileSync(join(assetsDir, entry.name));
     return {
       name: entry.name,
       extension: extname(entry.name),
