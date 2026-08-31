@@ -16,6 +16,15 @@ const PLAYER = {
       updatedAt: '2026-08-31T12:00:00.000Z',
     },
   ],
+  inventory: [
+    {
+      itemId: '33333333-3333-4333-8333-333333333333',
+      slug: 'rare-candy',
+      quantity: '12',
+      revision: '7',
+      updatedAt: '2026-08-31T12:00:00.000Z',
+    },
+  ],
 } as unknown as Player360Overview;
 
 describe('Player 360 action rail surface', () => {
@@ -104,6 +113,36 @@ describe('Player 360 action rail surface', () => {
     expect(actionable).toContain('Preparar ajuste');
     expect(withoutWallet).not.toContain('Corrigir saldo');
     expect(invalidWallet).not.toContain('Corrigir saldo');
+  });
+
+  it('exposes inventory adjustment only when capability and a validated item target both exist', () => {
+    const actionable = renderToStaticMarkup(
+      <PlayerActionRail
+        capabilities={new Set(['inventory.adjust'])}
+        onPrepareAction={() => undefined}
+        player={PLAYER}
+      />,
+    );
+    const withoutInventory = renderToStaticMarkup(
+      <PlayerActionRail
+        capabilities={new Set(['inventory.adjust'])}
+        onPrepareAction={() => undefined}
+        player={{ ...PLAYER, inventory: [] }}
+      />,
+    );
+    const invalidInventory = renderToStaticMarkup(
+      <PlayerActionRail
+        capabilities={new Set(['inventory.adjust'])}
+        onPrepareAction={() => undefined}
+        player={{ ...PLAYER, inventory: [{ itemId: 'manual-id' }] }}
+      />,
+    );
+
+    expect(actionable).toContain('Corrigir inventário');
+    expect(actionable).toContain('inventory.adjust');
+    expect(actionable).toContain('Preparar ajuste');
+    expect(withoutInventory).not.toContain('Corrigir inventário');
+    expect(invalidInventory).not.toContain('Corrigir inventário');
   });
 
   it('shows a stable no-action state instead of leaking unavailable privileges', () => {
