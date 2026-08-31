@@ -1,8 +1,5 @@
 import type { Player360Overview } from '../../lib/api/admin-api';
-import {
-  parsePlayer360Economy,
-  type Player360EconomyView,
-} from './player360-economy';
+import { parsePlayer360Economy, type Player360EconomyView } from './player360-economy';
 
 function humanizeSlug(value: string): string {
   return value
