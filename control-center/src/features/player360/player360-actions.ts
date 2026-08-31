@@ -108,6 +108,7 @@ const PLAYER_ACTIONS: readonly PlayerContextualAction[] = [
 ] as const;
 
 function contextAvailable(action: PlayerContextualAction, player: Player360Overview): boolean {
+  if (action.operationType === 'wallet.adjust') return player.wallets.length > 0;
   if (action.context === 'ACTIVE_BATTLE') return player.activeBattle !== null;
   if (action.context === 'ACTIVE_ENCOUNTER') return player.activeEncounter !== null;
   return true;
