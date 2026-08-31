@@ -10,9 +10,9 @@ export const PLAYER360_TABS = [
   { id: 'pokemon', label: 'Time & Box', sections: ['pokemon'] },
   { id: 'inventory', label: 'Inventário', sections: ['wallets', 'inventory'] },
   { id: 'progression', label: 'Progressão', sections: ['progression', 'unlocks'] },
-  { id: 'world', label: 'Mundo', sections: ['location', 'effects', 'activeEncounter'] },
+  { id: 'world', label: 'Mundo', sections: ['location'] },
   { id: 'pokedex', label: 'Pokédex', sections: ['pokedex'] },
-  { id: 'battle', label: 'Combate', sections: ['activeBattle', 'activeEncounter'] },
+  { id: 'battle', label: 'Combate', sections: ['activeBattle', 'activeEncounter', 'effects'] },
   { id: 'history', label: 'Histórico', sections: ['recentActivity'] },
 ] as const;
 
