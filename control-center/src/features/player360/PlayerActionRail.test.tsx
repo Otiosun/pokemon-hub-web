@@ -27,6 +27,20 @@ const PLAYER = {
   ],
 } as unknown as Player360Overview;
 
+const PLAYER_WITH_ENCOUNTER = {
+  ...PLAYER,
+  activeEncounter: {
+    id: '44444444-4444-4444-8444-444444444444',
+    status: 'ENGAGED',
+    areaId: '55555555-5555-4555-8555-555555555555',
+    contentReleaseId: '66666666-6666-4666-8666-666666666666',
+    rulesetId: '77777777-7777-4777-8777-777777777777',
+    revision: '9',
+    createdAt: '2026-08-31T12:00:00.000Z',
+    updatedAt: '2026-08-31T12:05:00.000Z',
+  },
+} as Player360Overview;
+
 describe('Player 360 action rail surface', () => {
   it('renders only contextual Registry actions while execution remains closed', () => {
     const html = renderToStaticMarkup(
@@ -65,6 +79,31 @@ describe('Player 360 action rail surface', () => {
     expect(html).not.toContain('disabled=""');
     expect(html).not.toContain('Aplicar cancelamento');
     expect(html).not.toContain('Executar cancelamento');
+  });
+
+  it('exposes encounter close only with capability and validated active encounter context', () => {
+    const actionable = renderToStaticMarkup(
+      <PlayerActionRail
+        capabilities={new Set(['encounter.force_close'])}
+        onPrepareAction={() => undefined}
+        player={PLAYER_WITH_ENCOUNTER}
+      />,
+    );
+    const withoutEncounter = renderToStaticMarkup(
+      <PlayerActionRail
+        capabilities={new Set(['encounter.force_close'])}
+        onPrepareAction={() => undefined}
+        player={PLAYER}
+      />,
+    );
+
+    expect(actionable).toContain('Fechar encounter');
+    expect(actionable).toContain('encounter.close');
+    expect(actionable).toContain('Preparar fechamento');
+    expect(actionable).toContain('REVISÃO OBRIGATÓRIA');
+    expect(actionable).toContain('CONFIRMAÇÃO OBRIGATÓRIA');
+    expect(actionable).not.toContain('Aplicar fechamento');
+    expect(withoutEncounter).not.toContain('Fechar encounter');
   });
 
   it('exposes progression adjustment as prepare-only when the exact capability exists', () => {
