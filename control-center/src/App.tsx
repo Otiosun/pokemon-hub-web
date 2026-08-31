@@ -13,7 +13,7 @@ import { Player360Page } from './features/player360/Player360Page';
 import { displayAdminRole, useAdminSession } from './features/session/useAdminSession';
 import { AdminApiClient } from './lib/api/admin-api';
 
-const CANONICAL_PROGRESS = 30.27;
+const CANONICAL_PROGRESS = 31.11;
 
 const workQueue = [
   {
