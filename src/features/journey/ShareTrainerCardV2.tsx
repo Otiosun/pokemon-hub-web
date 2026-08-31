@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import type { JourneyBadgePreview, JourneyProfilePreview } from './journeyProfilePreview';
-import { KantoLeagueSeal, KantoTrainerPlaceholder } from './kantoLeagueVisualKit';
+import { KantoTrainerPlaceholder } from './kantoLeagueVisualKit';
+import { ZhouliaEPrimeMark } from './zhouliaLeagueVisualKit';
 import './journey-trainer-card-v2.css';
 import './journey-trainer-card-v2-reference-fixes.css';
 
@@ -129,7 +130,9 @@ export function ShareTrainerCardV2({
 
           <header className="journey-card-v2-header">
             <div className="journey-card-v2-brand">
-              <span className="journey-card-v2-brand-mark" aria-hidden="true"><KantoLeagueSeal /></span>
+              <span className="journey-card-v2-brand-mark journey-card-v2-brand-mark-e-prime" aria-hidden="true">
+                <ZhouliaEPrimeMark />
+              </span>
               <span className="journey-card-v2-brand-copy">
                 <small>LIGA POKÉMON DE</small>
                 <strong>{region}</strong>
