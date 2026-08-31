@@ -17,7 +17,21 @@ function formatInteger(value: string): string {
 }
 
 export function InventoryEconomyPanel({ player }: { readonly player: Player360Overview }) {
-  const economy = parsePlayer360Economy(player);
+  let economy;
+  try {
+    economy = parsePlayer360Economy(player);
+  } catch {
+    return (
+      <section className="inventory-economy-panel" role="alert">
+        <span className="panel-kicker">ECONOMIA &amp; INVENTÁRIO</span>
+        <h3>Dados econômicos incompatíveis com o contrato atual.</h3>
+        <p className="economy-empty">
+          A Central bloqueou esta leitura para não apresentar saldo ou quantidade sem validação.
+        </p>
+      </section>
+    );
+  }
+
   const wallets = [...economy.wallets].sort((left, right) =>
     left.displayName.localeCompare(right.displayName, 'pt-BR'),
   );
