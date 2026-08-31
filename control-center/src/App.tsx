@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { loadControlCenterConfig } from './app/config';
 import {
   CONTROL_CENTER_SECTIONS,
@@ -9,9 +9,12 @@ import { ControlCenterSidebar } from './components/shell/ControlCenterSidebar';
 import { OperationalDiagnostics } from './components/shell/OperationalDiagnostics';
 import { SessionGate } from './components/shell/SessionGate';
 import { SessionProfilePanel } from './components/shell/SessionProfilePanel';
-import { Player360Page } from './features/player360/Player360Page';
 import { displayAdminRole, useAdminSession } from './features/session/useAdminSession';
 import { AdminApiClient } from './lib/api/admin-api';
+
+const Player360Page = lazy(() =>
+  import('./features/player360/Player360Page').then((module) => ({ default: module.Player360Page })),
+);
 
 const CANONICAL_PROGRESS = 31.11;
 
@@ -141,12 +144,22 @@ export function App() {
               roleLabel={roleLabel}
             />
           ) : activeSection === 'players' ? (
-            <Player360Page
-              canReadSensitive={canReadSensitive}
-              capabilities={capabilities}
-              client={client}
-              key={session.principalId}
-            />
+            <Suspense
+              fallback={
+                <section className="foundation-placeholder" role="status">
+                  <span className="eyebrow">PLAYER 360</span>
+                  <h2>Carregando workspace de jogadores…</h2>
+                  <p>O shell administrativo continua disponível enquanto este módulo é carregado.</p>
+                </section>
+              }
+            >
+              <Player360Page
+                canReadSensitive={canReadSensitive}
+                capabilities={capabilities}
+                client={client}
+                key={session.principalId}
+              />
+            </Suspense>
           ) : (
             <FoundationView sectionId={activeSection} />
           )}
