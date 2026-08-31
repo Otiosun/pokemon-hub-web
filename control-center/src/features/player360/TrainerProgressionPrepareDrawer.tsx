@@ -7,6 +7,10 @@ import type {
 } from '../../lib/api/admin-api';
 import { AdminApiError } from '../../lib/api/admin-api';
 import {
+  type PrepareIdempotencyState,
+  resolvePrepareIdempotency,
+} from './prepare-idempotency';
+import {
   type TrainerProgressionPrepareContext,
   buildTrainerProgressionPrepareRequest,
 } from './trainer-progression-prepare';
@@ -14,6 +18,11 @@ import {
 interface PrepareErrorView {
   readonly message: string;
   readonly correlationId: string | null;
+}
+
+interface PreparedProgressionView {
+  readonly result: AdminPrepareOperationResult;
+  readonly delta: string;
 }
 
 function prepareError(error: unknown): PrepareErrorView {
@@ -61,11 +70,11 @@ export function TrainerProgressionPrepareDrawer({
   readonly onClose: () => void;
   readonly player: Player360Overview;
 }) {
-  const idempotencyKey = useRef<string | null>(null);
+  const idempotency = useRef<PrepareIdempotencyState | null>(null);
   const [delta, setDelta] = useState('');
   const [reason, setReason] = useState('');
   const [status, setStatus] = useState<'idle' | 'preparing' | 'prepared' | 'error'>('idle');
-  const [prepared, setPrepared] = useState<AdminPrepareOperationResult | null>(null);
+  const [prepared, setPrepared] = useState<PreparedProgressionView | null>(null);
   const [error, setError] = useState<PrepareErrorView | null>(null);
 
   const canPrepare =
@@ -74,19 +83,46 @@ export function TrainerProgressionPrepareDrawer({
     reason.trim().length <= 2000 &&
     status !== 'preparing';
 
+  function changeDelta(value: string) {
+    setDelta(value);
+    setPrepared(null);
+    setError(null);
+    setStatus('idle');
+  }
+
+  function changeReason(value: string) {
+    setReason(value);
+    setPrepared(null);
+    setError(null);
+    setStatus('idle');
+  }
+
   async function submitPrepare() {
     if (!canPrepare) return;
-    idempotencyKey.current ??= newIdempotencyKey();
+    const normalizedDelta = delta.trim();
+    const normalizedReason = reason.trim();
+    const fingerprint = JSON.stringify({
+      playerId: player.playerId,
+      delta: normalizedDelta,
+      reason: normalizedReason,
+    });
+    const resolvedIdempotency = resolvePrepareIdempotency(
+      idempotency.current,
+      fingerprint,
+      newIdempotencyKey,
+    );
+    idempotency.current = resolvedIdempotency.state;
+
     setStatus('preparing');
     setError(null);
     try {
       const result = await prepareTrainerProgression(client, {
         playerId: player.playerId,
-        delta,
-        reason,
-        idempotencyKey: idempotencyKey.current,
+        delta: normalizedDelta,
+        reason: normalizedReason,
+        idempotencyKey: resolvedIdempotency.key,
       });
-      setPrepared(result);
+      setPrepared({ result, delta: normalizedDelta });
       setStatus('prepared');
     } catch (caught) {
       setPrepared(null);
@@ -136,8 +172,9 @@ export function TrainerProgressionPrepareDrawer({
       <label className="control-field">
         <span>Delta de pontos</span>
         <input
+          disabled={status === 'preparing'}
           inputMode="numeric"
-          onChange={(event) => setDelta(event.target.value)}
+          onChange={(event) => changeDelta(event.target.value)}
           placeholder="Ex.: 250 ou -200"
           value={delta}
         />
@@ -149,8 +186,9 @@ export function TrainerProgressionPrepareDrawer({
       <label className="control-field">
         <span>Motivo da intervenção</span>
         <textarea
+          disabled={status === 'preparing'}
           maxLength={2000}
-          onChange={(event) => setReason(event.target.value)}
+          onChange={(event) => changeReason(event.target.value)}
           placeholder="Explique a origem da correção e a evidência usada pelo suporte."
           rows={5}
           value={reason}
@@ -177,27 +215,27 @@ export function TrainerProgressionPrepareDrawer({
       {prepared ? (
         <section className="player-action-card" aria-label="Operação preparada">
           <span className="panel-kicker">PREPARADA · NÃO APLICADA</span>
-          <strong>{prepared.operation.status}</strong>
+          <strong>{prepared.result.operation.status}</strong>
           <dl className="foundation-list">
             <div>
               <dt>AdminOperation</dt>
               <dd>
-                <code>{prepared.operation.id}</code>
+                <code>{prepared.result.operation.id}</code>
               </dd>
             </div>
             <div>
               <dt>Correlation</dt>
               <dd>
-                <code>{prepared.operation.correlationId}</code>
+                <code>{prepared.result.operation.correlationId}</code>
               </dd>
             </div>
             <div>
               <dt>Delta preparado</dt>
-              <dd>{delta.trim()} pontos</dd>
+              <dd>{prepared.delta} pontos</dd>
             </div>
             <div>
               <dt>Replay idempotente</dt>
-              <dd>{prepared.replayed ? 'SIM' : 'NÃO'}</dd>
+              <dd>{prepared.result.replayed ? 'SIM' : 'NÃO'}</dd>
             </div>
           </dl>
           <span>Nenhuma alteração de nível, pontos ou unlocks foi aplicada.</span>
