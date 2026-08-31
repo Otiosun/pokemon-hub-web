@@ -3,6 +3,7 @@ import { buildBattleForceCancelPrepareRequest } from './battle-force-cancel-prep
 
 const PLAYER_ID = '11111111-1111-4111-8111-111111111111';
 const BATTLE_ID = '22222222-2222-4222-8222-222222222222';
+const POSTGRES_BIGINT_MAX = '9223372036854775807';
 
 describe('battle.force_cancel prepare-only request', () => {
   it('derives target and expected revision from the selected Player 360 context', () => {
@@ -22,6 +23,18 @@ describe('battle.force_cancel prepare-only request', () => {
       idempotencyKey: 'battle-cancel:33333333-3333-4333-8333-333333333333',
     });
     expect(Object.keys(request.input)).toEqual(['playerId', 'battleId']);
+  });
+
+  it('preserves a non-negative bigint revision without narrowing it through number', () => {
+    const request = buildBattleForceCancelPrepareRequest({
+      playerId: PLAYER_ID,
+      battleId: BATTLE_ID,
+      battleVersion: POSTGRES_BIGINT_MAX,
+      reason: 'Batalha travada após falha operacional.',
+      idempotencyKey: 'battle-cancel:66666666-6666-4666-8666-666666666666',
+    });
+
+    expect(request.expectedRevision).toBe(POSTGRES_BIGINT_MAX);
   });
 
   it('fails closed before HTTP when reason or battle revision is invalid', () => {
