@@ -23,7 +23,7 @@ describe('Control Center current principal/session profile contract', () => {
     expect(sidebar).toContain('aria-label="Abrir minha sessão"');
   });
 
-  it('renders only backend-authoritative session identity data in a read-only inline surface', async () => {
+  it('renders backend-authoritative identity and exposes only current-session logout as a write action', async () => {
     let panel = '';
     try {
       panel = await readFile(panelPath, 'utf8');
@@ -37,9 +37,19 @@ describe('Control Center current principal/session profile contract', () => {
     expect(panel).toContain('session.capabilities');
     expect(panel).toContain('session.scopes');
     expect(panel).toContain('Revalidar sessão');
-    expect(panel).toContain('Somente leitura');
-    expect(panel).not.toContain('logout');
+    expect(panel).toContain('Sair');
+    expect(panel).toContain('onLogout');
     expect(panel).not.toContain('simulate');
     expect(panel).not.toContain('apply');
+  });
+
+  it('redirects to Access logout only after the local revocation request resolves', async () => {
+    const app = await readFile(appPath, 'utf8');
+
+    expect(app).toContain('await client.logoutCurrentSession()');
+    expect(app).toContain('window.location.assign(logoutPath)');
+    expect(app.indexOf('await client.logoutCurrentSession()')).toBeLessThan(
+      app.indexOf('window.location.assign(logoutPath)'),
+    );
   });
 });
