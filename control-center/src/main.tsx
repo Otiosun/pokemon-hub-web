@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import './styles.css';
 import './app/design-tokens.css';
+import './components/shell/admin-drawer.css';
 import './features/player360/activity-history.css';
 import './features/player360/battle-context.css';
 import './features/player360/inventory-economy.css';
