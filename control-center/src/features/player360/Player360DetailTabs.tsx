@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import type { Player360Overview } from '../../lib/api/admin-api';
 import { PLAYER360_TABS, type Player360TabId } from './model';
+import { PokemonRosterPanel } from './PokemonRosterPanel';
 import { ProfileProgressionPanel } from './ProfileProgressionPanel';
 
-const MATERIALIZED_TABS = new Set<Player360TabId>(['overview', 'progression']);
+const MATERIALIZED_TABS = new Set<Player360TabId>(['overview', 'pokemon', 'progression']);
 
 function valueOrDash(value: string | null): string {
   return value === null || value.length === 0 ? '—' : value;
@@ -69,7 +70,7 @@ export function Player360DetailTabs({ player }: { readonly player: Player360Over
           <span className="panel-kicker">PLAYER 360</span>
           <h3>Uma ficha, contexto progressivo.</h3>
         </div>
-        <span className="muted-badge">2/8 MATERIALIZADAS</span>
+        <span className="muted-badge">3/8 MATERIALIZADAS</span>
       </div>
 
       <div className="player360-tab-strip" role="tablist" aria-label="Áreas do Player 360">
@@ -95,7 +96,9 @@ export function Player360DetailTabs({ player }: { readonly player: Player360Over
       </div>
 
       <div className="player360-tab-panel" role="tabpanel">
-        {activeTab === 'progression' ? (
+        {activeTab === 'pokemon' ? (
+          <PokemonRosterPanel player={player} />
+        ) : activeTab === 'progression' ? (
           <ProfileProgressionPanel player={player} />
         ) : (
           <OverviewDetails player={player} />
