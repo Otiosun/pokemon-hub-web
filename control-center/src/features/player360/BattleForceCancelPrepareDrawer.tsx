@@ -11,6 +11,10 @@ import {
   buildBattleForceCancelPrepareRequest,
 } from './battle-force-cancel-prepare';
 import { parsePlayer360BattleContext } from './player360-battle';
+import {
+  type PrepareIdempotencyState,
+  resolvePrepareIdempotency,
+} from './prepare-idempotency';
 
 interface PrepareErrorView {
   readonly message: string;
@@ -51,7 +55,7 @@ export function BattleForceCancelPrepareDrawer({
   readonly player: Player360Overview;
 }) {
   const battle = parsePlayer360BattleContext(player).activeBattle;
-  const idempotencyKey = useRef<string | null>(null);
+  const idempotency = useRef<PrepareIdempotencyState | null>(null);
   const [reason, setReason] = useState('');
   const [status, setStatus] = useState<'idle' | 'preparing' | 'prepared' | 'error'>('idle');
   const [prepared, setPrepared] = useState<AdminPrepareOperationResult | null>(null);
@@ -79,9 +83,29 @@ export function BattleForceCancelPrepareDrawer({
   const canPrepare =
     reason.trim().length > 0 && reason.trim().length <= 2000 && status !== 'preparing';
 
+  function changeReason(value: string) {
+    setReason(value);
+    setPrepared(null);
+    setError(null);
+    setStatus('idle');
+  }
+
   async function submitPrepare() {
     if (!canPrepare) return;
-    idempotencyKey.current ??= newIdempotencyKey();
+    const normalizedReason = reason.trim();
+    const fingerprint = JSON.stringify({
+      playerId: player.playerId,
+      battleId: activeBattle.id,
+      battleVersion: activeBattle.version,
+      reason: normalizedReason,
+    });
+    const resolvedIdempotency = resolvePrepareIdempotency(
+      idempotency.current,
+      fingerprint,
+      newIdempotencyKey,
+    );
+    idempotency.current = resolvedIdempotency.state;
+
     setStatus('preparing');
     setError(null);
     try {
@@ -89,8 +113,8 @@ export function BattleForceCancelPrepareDrawer({
         playerId: player.playerId,
         battleId: activeBattle.id,
         battleVersion: activeBattle.version,
-        reason,
-        idempotencyKey: idempotencyKey.current,
+        reason: normalizedReason,
+        idempotencyKey: resolvedIdempotency.key,
       });
       setPrepared(result);
       setStatus('prepared');
@@ -144,8 +168,9 @@ export function BattleForceCancelPrepareDrawer({
       <label className="control-field">
         <span>Motivo da intervenção</span>
         <textarea
+          disabled={status === 'preparing'}
           maxLength={2000}
-          onChange={(event) => setReason(event.target.value)}
+          onChange={(event) => changeReason(event.target.value)}
           placeholder="Explique o incidente e por que o cancelamento precisa ser preparado."
           rows={5}
           value={reason}
