@@ -14,6 +14,7 @@ import {
   toPlayerSearchQuery,
   validatePlayerSearchFilters,
 } from './model';
+import { BattleForceCancelPrepareDrawer } from './BattleForceCancelPrepareDrawer';
 import { Player360DetailTabs } from './Player360DetailTabs';
 import { PlayerActionRail } from './PlayerActionRail';
 import './player360.css';
@@ -21,7 +22,7 @@ import './player360.css';
 interface Player360PageProps {
   readonly canReadSensitive: boolean;
   readonly capabilities: ReadonlySet<string>;
-  readonly client: Pick<AdminApiClient, 'searchPlayers' | 'getPlayer'>;
+  readonly client: Pick<AdminApiClient, 'searchPlayers' | 'getPlayer' | 'prepareOperation'>;
 }
 
 interface RequestErrorView {
@@ -103,6 +104,7 @@ export function Player360Page({ canReadSensitive, capabilities, client }: Player
     'idle',
   );
   const [selectedError, setSelectedError] = useState<RequestErrorView | null>(null);
+  const [prepareActionOpen, setPrepareActionOpen] = useState(false);
 
   const errors = useMemo(() => validatePlayerSearchFilters(filters), [filters]);
   const normalizedQuery = useMemo(() => toPlayerSearchQuery(filters), [filters]);
@@ -110,6 +112,11 @@ export function Player360Page({ canReadSensitive, capabilities, client }: Player
 
   function patchFilters(patch: Partial<PlayerSearchFilters>) {
     setFilters((current) => ({ ...current, ...patch }));
+  }
+
+  function openPrepareAction(action: { readonly operationType: string }) {
+    if (action.operationType !== 'battle.force_cancel') return;
+    setPrepareActionOpen(true);
   }
 
   async function runSearch(cursor?: string) {
@@ -127,6 +134,7 @@ export function Player360Page({ canReadSensitive, capabilities, client }: Player
         setSelected(null);
         setSelectedStatus('idle');
         setSelectedError(null);
+        setPrepareActionOpen(false);
       }
     } catch (error) {
       setSearchStatus('error');
@@ -135,6 +143,7 @@ export function Player360Page({ canReadSensitive, capabilities, client }: Player
   }
 
   async function selectPlayer(item: PlayerSearchItem) {
+    setPrepareActionOpen(false);
     setSelected(null);
     setSelectedStatus('loading');
     setSelectedError(null);
@@ -177,7 +186,6 @@ export function Player360Page({ canReadSensitive, capabilities, client }: Player
               value={filters.trainerNamePrefix}
             />
           </label>
-
           <label className="control-field">
             <span>Status</span>
             <select
@@ -446,7 +454,18 @@ export function Player360Page({ canReadSensitive, capabilities, client }: Player
 
         {selected ? (
           <>
-            <PlayerActionRail capabilities={capabilities} player={selected} />
+            {prepareActionOpen ? (
+              <BattleForceCancelPrepareDrawer
+                client={client}
+                onClose={() => setPrepareActionOpen(false)}
+                player={selected}
+              />
+            ) : null}
+            <PlayerActionRail
+              capabilities={capabilities}
+              onPrepareAction={openPrepareAction}
+              player={selected}
+            />
             <Player360DetailTabs player={selected} />
           </>
         ) : (
