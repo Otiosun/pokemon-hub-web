@@ -9,7 +9,7 @@ const PLAYER = {
 } as unknown as Player360Overview;
 
 describe('Player 360 action rail surface', () => {
-  it('renders only contextual Registry actions and keeps execution closed until F4.12', () => {
+  it('renders only contextual Registry actions while execution remains closed', () => {
     const html = renderToStaticMarkup(
       <PlayerActionRail
         capabilities={new Set(['wallet.adjust', 'battle.force_cancel', 'encounter.force_close'])}
@@ -23,8 +23,9 @@ describe('Player 360 action rail surface', () => {
     expect(html).not.toContain('Fechar encounter');
     expect(html).toContain('R2');
     expect(html).toContain('R3');
-    expect(html).toContain('FLUXO SEGURO EM F4.12');
+    expect(html).toContain('EXECUÇÃO AINDA BLOQUEADA');
     expect(html).not.toContain('Aplicar agora');
+    expect(html).not.toContain('F4.12');
     expect(html).not.toContain('SQL');
     expect(html).not.toContain('JSON');
   });
