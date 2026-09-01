@@ -8,8 +8,8 @@ import {
   CONTENT_RELEASE_STATUSES,
   CONTENT_RESOURCE_KINDS,
   CONTENT_RESOURCE_LABELS,
-  EMPTY_CONTENT_LIBRARY_FILTERS,
   type ContentLibraryFilters,
+  EMPTY_CONTENT_LIBRARY_FILTERS,
   toContentLibraryQuery,
 } from './content-library-model';
 import './content-library.css';
@@ -167,7 +167,9 @@ export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
           <div>
             <span className="panel-kicker">CATÁLOGO</span>
             <h3>
-              {status === 'ready' ? `${items.length} recurso(s) carregado(s)` : 'Conteúdo autorizado'}
+              {status === 'ready'
+                ? `${items.length} recurso(s) carregado(s)`
+                : 'Conteúdo autorizado'}
             </h3>
           </div>
           <span className="content-library-safety-note">SEM MUTATIONS NESTA TELA</span>
