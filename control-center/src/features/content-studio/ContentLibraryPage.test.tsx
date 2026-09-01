@@ -14,6 +14,11 @@ describe('Content Library page', () => {
             toReleaseId,
             sections: [],
           }),
+          previewContentReleaseValidation: async (releaseId) => ({
+            releaseId,
+            valid: true,
+            issues: [],
+          }),
         }}
       />,
     );
