@@ -153,8 +153,8 @@ function ValidationPreviewDetails({
         {preview.issues.length} problema(s) precisam ser corrigidos antes do lifecycle de validação.
       </span>
       <dl className="content-unpublished-metadata">
-        {preview.issues.map((issue, index) => (
-          <div key={`${issue.code}:${issue.path}:${index}`}>
+        {preview.issues.map((issue) => (
+          <div key={`${issue.code}:${issue.path}:${issue.message}`}>
             <dt>{issue.message}</dt>
             <dd>
               {issue.path} · {issue.code}
@@ -396,7 +396,8 @@ export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
             </h3>
             <p>
               Estado autoritativo de releases DRAFT e VALIDATED. A contagem representa registros do
-              ledger; comparação e bloqueios só são carregados quando o operador pede explicitamente.
+              ledger; comparação e bloqueios só são carregados quando o operador pede
+              explicitamente.
             </p>
           </div>
           <div className="content-unpublished-actions">
