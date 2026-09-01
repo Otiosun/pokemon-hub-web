@@ -12,6 +12,8 @@ export type ContentResourceKind =
   | 'EFFECT';
 
 export type ContentReleaseStatus = 'DRAFT' | 'VALIDATED' | 'PUBLISHED' | 'ARCHIVED';
+export type ContentUnpublishedStatus = 'DRAFT' | 'VALIDATED';
+export type ContentUnpublishedWorkflowState = 'EDITING' | 'READY_TO_PUBLISH';
 
 export interface ContentLibraryQuery {
   readonly query?: string;
@@ -39,6 +41,20 @@ export interface ContentLibraryResult {
   readonly nextCursor: string | null;
 }
 
+export interface ContentUnpublishedRelease {
+  readonly releaseId: string;
+  readonly releaseNo: string;
+  readonly releaseName: string;
+  readonly status: ContentUnpublishedStatus;
+  readonly workflowState: ContentUnpublishedWorkflowState;
+  readonly revision: string;
+  readonly parentReleaseId: string | null;
+  readonly createdAt: string;
+  readonly validatedAt: string | null;
+  readonly recordedChangeCount: string;
+  readonly lastChangedAt: string | null;
+}
+
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const INTEGER_STRING_PATTERN = /^\d+$/;
 const RESOURCE_KINDS = new Set<ContentResourceKind>([
@@ -55,6 +71,11 @@ const RELEASE_STATUSES = new Set<ContentReleaseStatus>([
   'VALIDATED',
   'PUBLISHED',
   'ARCHIVED',
+]);
+const UNPUBLISHED_STATUSES = new Set<ContentUnpublishedStatus>(['DRAFT', 'VALIDATED']);
+const UNPUBLISHED_WORKFLOW_STATES = new Set<ContentUnpublishedWorkflowState>([
+  'EDITING',
+  'READY_TO_PUBLISH',
 ]);
 
 type UnknownRecord = Record<string, unknown>;
@@ -81,6 +102,17 @@ function isResourceKind(value: unknown): value is ContentResourceKind {
 
 function isReleaseStatus(value: unknown): value is ContentReleaseStatus {
   return typeof value === 'string' && RELEASE_STATUSES.has(value as ContentReleaseStatus);
+}
+
+function isUnpublishedStatus(value: unknown): value is ContentUnpublishedStatus {
+  return typeof value === 'string' && UNPUBLISHED_STATUSES.has(value as ContentUnpublishedStatus);
+}
+
+function isUnpublishedWorkflowState(value: unknown): value is ContentUnpublishedWorkflowState {
+  return (
+    typeof value === 'string' &&
+    UNPUBLISHED_WORKFLOW_STATES.has(value as ContentUnpublishedWorkflowState)
+  );
 }
 
 function assertContentLibraryItem(value: unknown): ContentLibraryItem {
@@ -126,6 +158,44 @@ function assertContentLibraryResult(value: unknown): ContentLibraryResult {
     items: value.items.map(assertContentLibraryItem),
     nextCursor: value.nextCursor,
   };
+}
+
+function assertUnpublishedRelease(value: unknown): ContentUnpublishedRelease {
+  if (
+    !isRecord(value) ||
+    !isUuid(value.releaseId) ||
+    !isIntegerString(value.releaseNo) ||
+    !isNonEmptyString(value.releaseName) ||
+    !isUnpublishedStatus(value.status) ||
+    !isUnpublishedWorkflowState(value.workflowState) ||
+    !isIntegerString(value.revision) ||
+    (value.parentReleaseId !== null && !isUuid(value.parentReleaseId)) ||
+    !isNonEmptyString(value.createdAt) ||
+    (value.validatedAt !== null && !isNonEmptyString(value.validatedAt)) ||
+    !isIntegerString(value.recordedChangeCount) ||
+    (value.lastChangedAt !== null && !isNonEmptyString(value.lastChangedAt))
+  ) {
+    throw new Error('Invalid unpublished content release.');
+  }
+
+  return {
+    releaseId: value.releaseId,
+    releaseNo: value.releaseNo,
+    releaseName: value.releaseName,
+    status: value.status,
+    workflowState: value.workflowState,
+    revision: value.revision,
+    parentReleaseId: value.parentReleaseId,
+    createdAt: value.createdAt,
+    validatedAt: value.validatedAt,
+    recordedChangeCount: value.recordedChangeCount,
+    lastChangedAt: value.lastChangedAt,
+  };
+}
+
+function assertUnpublishedContentResult(value: unknown): readonly ContentUnpublishedRelease[] {
+  if (!Array.isArray(value)) throw new Error('Invalid unpublished content response.');
+  return value.map(assertUnpublishedRelease);
 }
 
 async function parseContentError(response: Response): Promise<AdminApiError> {
@@ -231,6 +301,41 @@ export class AdminApiClient {
         'A resposta da biblioteca de conteúdo é inválida.',
         200,
         'INVALID_CONTENT_LIBRARY_RESPONSE',
+        response.headers.get('x-correlation-id'),
+      );
+    }
+  }
+
+  public async listUnpublishedContent(): Promise<readonly ContentUnpublishedRelease[]> {
+    const url = new URL(`${this.apiBaseUrl}/admin/v1/content/unpublished`);
+
+    let response: Response;
+    try {
+      response = await this.fetchImpl(url.toString(), {
+        method: 'GET',
+        credentials: 'include',
+        headers: { accept: 'application/json' },
+      });
+    } catch {
+      throw new AdminApiError(
+        'network',
+        'Não foi possível alcançar a Admin API.',
+        null,
+        'NETWORK_ERROR',
+        null,
+      );
+    }
+
+    if (!response.ok) throw await parseContentError(response);
+    try {
+      return assertUnpublishedContentResult(await response.json());
+    } catch (error) {
+      if (error instanceof AdminApiError) throw error;
+      throw new AdminApiError(
+        'server',
+        'A resposta do estado não publicado é inválida.',
+        200,
+        'INVALID_UNPUBLISHED_CONTENT_RESPONSE',
         response.headers.get('x-correlation-id'),
       );
     }
