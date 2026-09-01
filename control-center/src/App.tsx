@@ -9,11 +9,12 @@ import { ControlCenterSidebar } from './components/shell/ControlCenterSidebar';
 import { OperationalDiagnostics } from './components/shell/OperationalDiagnostics';
 import { SessionGate } from './components/shell/SessionGate';
 import { SessionProfilePanel } from './components/shell/SessionProfilePanel';
+import { AdminOperationAuditCard } from './features/audit/AdminOperationAuditCard';
 import { IncidentCenterCard } from './features/incidents/IncidentCenterCard';
 import { MessagingOperationsCard } from './features/runtime/MessagingOperationsCard';
 import { RuntimeWhatsappHealthCard } from './features/runtime/RuntimeWhatsappHealthCard';
 import { displayAdminRole, useAdminSession } from './features/session/useAdminSession';
-import { AdminApiClient } from './lib/api/admin-api';
+import { AdminOperationAuditApiClient } from './lib/api/admin-api-operation-audit';
 
 const Player360Page = lazy(() =>
   import('./features/player360/Player360Page').then((module) => ({
@@ -52,7 +53,10 @@ const workQueue = [
 
 export function App() {
   const config = useMemo(() => loadControlCenterConfig(), []);
-  const client = useMemo(() => new AdminApiClient(config.apiBaseUrl), [config.apiBaseUrl]);
+  const client = useMemo(
+    () => new AdminOperationAuditApiClient(config.apiBaseUrl),
+    [config.apiBaseUrl],
+  );
   const { state: sessionState, capabilities, reload } = useAdminSession(client);
   const [activeSection, setActiveSection] = useState<ControlCenterSectionId>('today');
   const [query, setQuery] = useState('');
@@ -72,6 +76,7 @@ export function App() {
   const session = sessionState.session;
   const canReadSensitive = capabilities.has('player.read_sensitive');
   const canReadPlayers = capabilities.has('player.read');
+  const canReadAudit = capabilities.has('audit.read');
   const roleLabel = displayAdminRole(session);
   const apiState = 'CONECTADA · SESSÃO VALIDADA' as const;
 
@@ -148,6 +153,7 @@ export function App() {
 
           {activeSection === 'today' ? (
             <TodayView
+              canReadAudit={canReadAudit}
               canReadPlayers={canReadPlayers}
               client={client}
               onOpenPlayers={() => setActiveSection('players')}
@@ -197,6 +203,7 @@ export function App() {
 }
 
 function TodayView({
+  canReadAudit,
   canReadPlayers,
   client,
   onOpenPlayers,
@@ -205,8 +212,9 @@ function TodayView({
   roleLabel,
   session,
 }: {
+  canReadAudit: boolean;
   canReadPlayers: boolean;
-  client: AdminApiClient;
+  client: AdminOperationAuditApiClient;
   onOpenPlayers: () => void;
   principalId: string;
   query: string;
@@ -304,6 +312,7 @@ function TodayView({
           <RuntimeWhatsappHealthCard client={client} expectedEnvironment={session.environment} />
           <MessagingOperationsCard client={client} />
           <IncidentCenterCard client={client} />
+          {canReadAudit ? <AdminOperationAuditCard client={client} /> : null}
         </aside>
       </section>
     </>
