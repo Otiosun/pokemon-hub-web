@@ -449,7 +449,10 @@ export class AdminApiClient {
 
   public async diffContentRelease(query: ContentReleaseDiffQuery): Promise<ContentReleaseDiff> {
     const url = new URL(`${this.apiBaseUrl}/admin/v1/content/releases/diff`);
-    appendQuery(url, query);
+    appendQuery(url, {
+      fromReleaseId: query.fromReleaseId,
+      toReleaseId: query.toReleaseId,
+    });
 
     let response: Response;
     try {
