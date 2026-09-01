@@ -815,7 +815,7 @@ export class AdminApiClient {
   }
   public diffContentRelease(query: ContentReleaseDiffQuery): Promise<ContentReleaseDiff> {
     const url = new URL(`${this.apiBaseUrl}/admin/v1/content/releases/diff`);
-    appendQuery(url, query);
+    appendQuery(url, { ...query });
     return this.read(
       url,
       (value) => diffResult(value, query),
