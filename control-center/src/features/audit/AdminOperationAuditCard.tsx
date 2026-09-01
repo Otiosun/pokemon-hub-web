@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { AdminApiError } from '../../lib/api/admin-api';
-import type {
-  AdminOperationAuditApiClient,
-  AdminOperationAuditTimelineView,
-  AdminOperationAuditView,
-} from '../../lib/api/admin-api-operation-audit';
+import {
+  AdminApiError,
+  type AdminApiClient,
+  type AdminOperationAuditTimelineView,
+  type AdminOperationAuditView,
+} from '../../lib/api/admin-api';
 import '../runtime/runtime-whatsapp-health.css';
 
-type AdminOperationAuditClient = Pick<AdminOperationAuditApiClient, 'getAdminOperationAudit'>;
+type AdminOperationAuditClient = Pick<AdminApiClient, 'getAdminOperationAudit'>;
 
 type AuditState =
   | { readonly status: 'idle' }
