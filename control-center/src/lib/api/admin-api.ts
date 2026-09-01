@@ -178,8 +178,7 @@ function isUnpublishedWorkflowState(value: unknown): value is ContentUnpublished
 
 function isReleaseDiffCategory(value: unknown): value is ContentReleaseDiffCategory {
   return (
-    typeof value === 'string' &&
-    RELEASE_DIFF_CATEGORIES.has(value as ContentReleaseDiffCategory)
+    typeof value === 'string' && RELEASE_DIFF_CATEGORIES.has(value as ContentReleaseDiffCategory)
   );
 }
 
