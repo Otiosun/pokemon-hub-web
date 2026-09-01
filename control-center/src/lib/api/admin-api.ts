@@ -376,7 +376,9 @@ function record(value: unknown): value is UnknownRecord {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 function exact(value: unknown, keys: readonly string[]): value is UnknownRecord {
-  return record(value) && Object.keys(value).length === keys.length && keys.every((key) => key in value);
+  return (
+    record(value) && Object.keys(value).length === keys.length && keys.every((key) => key in value)
+  );
 }
 function uuid(value: unknown): value is string {
   return typeof value === 'string' && UUID.test(value);
@@ -542,7 +544,10 @@ function validationResult(value: unknown, releaseId: string): ContentReleaseVali
   return { releaseId, valid: value.valid, issues };
 }
 function runtimeResult(value: unknown): RuntimeWhatsappHealthView {
-  if (!exact(value, RUNTIME_KEYS) || !oneOf(value.environment, ['development', 'staging', 'production'])) {
+  if (
+    !exact(value, RUNTIME_KEYS) ||
+    !oneOf(value.environment, ['development', 'staging', 'production'])
+  ) {
     fail();
   }
   if (value.runtime === null) return value as unknown as RuntimeWhatsappHealthView;
@@ -620,7 +625,8 @@ function messagingResult(value: unknown): MessagingOperationsView {
   return value as unknown as MessagingOperationsView;
 }
 function incidentResult(value: unknown): IncidentCenterView {
-  if (!exact(value, ['signals']) || !Array.isArray(value.signals) || value.signals.length > 25) fail();
+  if (!exact(value, ['signals']) || !Array.isArray(value.signals) || value.signals.length > 25)
+    fail();
   for (const signal of value.signals) {
     if (!exact(signal, SIGNAL_KEYS)) fail();
     if (
@@ -638,7 +644,8 @@ function incidentResult(value: unknown): IncidentCenterView {
       fail();
     }
     if (signal.source === 'ADMIN_OPERATION' && signal.state !== 'FAILED') fail();
-    if (signal.source === 'INBOX' && (signal.state !== 'FAILED' || signal.kind !== 'INBOX_MESSAGE')) fail();
+    if (signal.source === 'INBOX' && (signal.state !== 'FAILED' || signal.kind !== 'INBOX_MESSAGE'))
+      fail();
     if (signal.source === 'OUTBOX' && signal.kind !== 'OUTBOX_MESSAGE') fail();
     validateRunbook(signal.runbook, signal.source, signal.state);
   }
@@ -647,7 +654,8 @@ function incidentResult(value: unknown): IncidentCenterView {
 function auditResult(value: unknown, operationId: string): AdminOperationAuditView {
   if (!exact(value, ['operation', 'timeline']) || !Array.isArray(value.timeline)) fail();
   const operation = value.operation;
-  if (!exact(operation, AUDIT_OPERATION_KEYS) || !exact(operation.policy, AUDIT_POLICY_KEYS)) fail();
+  if (!exact(operation, AUDIT_OPERATION_KEYS) || !exact(operation.policy, AUDIT_POLICY_KEYS))
+    fail();
   const policy = operation.policy;
   if (
     operation.id !== operationId ||
@@ -670,9 +678,12 @@ function auditResult(value: unknown, operationId: string): AdminOperationAuditVi
     typeof policy.version !== 'number' ||
     !Number.isInteger(policy.version) ||
     policy.version <= 0 ||
-    ['requiresReason', 'requiresExpectedRevision', 'requiresSimulation', 'requiresConfirmation'].some(
-      (key) => typeof policy[key] !== 'boolean',
-    ) ||
+    [
+      'requiresReason',
+      'requiresExpectedRevision',
+      'requiresSimulation',
+      'requiresConfirmation',
+    ].some((key) => typeof policy[key] !== 'boolean') ||
     !nonnegative(policy.requiredApprovals) ||
     (policy.requiredApprovals as number) > 2
   ) {
@@ -805,9 +816,15 @@ export class AdminApiClient {
   public diffContentRelease(query: ContentReleaseDiffQuery): Promise<ContentReleaseDiff> {
     const url = new URL(`${this.apiBaseUrl}/admin/v1/content/releases/diff`);
     appendQuery(url, query);
-    return this.read(url, (value) => diffResult(value, query), 'INVALID_CONTENT_RELEASE_DIFF_RESPONSE');
+    return this.read(
+      url,
+      (value) => diffResult(value, query),
+      'INVALID_CONTENT_RELEASE_DIFF_RESPONSE',
+    );
   }
-  public previewContentReleaseValidation(releaseId: string): Promise<ContentReleaseValidationPreview> {
+  public previewContentReleaseValidation(
+    releaseId: string,
+  ): Promise<ContentReleaseValidationPreview> {
     return this.read(
       `${this.apiBaseUrl}/admin/v1/content/releases/${releaseId}/validation`,
       (value) => validationResult(value, releaseId),
