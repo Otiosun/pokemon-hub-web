@@ -14,7 +14,7 @@ import { IncidentCenterCard } from './features/incidents/IncidentCenterCard';
 import { MessagingOperationsCard } from './features/runtime/MessagingOperationsCard';
 import { RuntimeWhatsappHealthCard } from './features/runtime/RuntimeWhatsappHealthCard';
 import { displayAdminRole, useAdminSession } from './features/session/useAdminSession';
-import { AdminOperationAuditApiClient } from './lib/api/admin-api-operation-audit';
+import { AdminApiClient } from './lib/api/admin-api';
 
 const Player360Page = lazy(() =>
   import('./features/player360/Player360Page').then((module) => ({
@@ -53,10 +53,7 @@ const workQueue = [
 
 export function App() {
   const config = useMemo(() => loadControlCenterConfig(), []);
-  const client = useMemo(
-    () => new AdminOperationAuditApiClient(config.apiBaseUrl),
-    [config.apiBaseUrl],
-  );
+  const client = useMemo(() => new AdminApiClient(config.apiBaseUrl), [config.apiBaseUrl]);
   const { state: sessionState, capabilities, reload } = useAdminSession(client);
   const [activeSection, setActiveSection] = useState<ControlCenterSectionId>('today');
   const [query, setQuery] = useState('');
@@ -214,7 +211,7 @@ function TodayView({
 }: {
   canReadAudit: boolean;
   canReadPlayers: boolean;
-  client: AdminOperationAuditApiClient;
+  client: AdminApiClient;
   onOpenPlayers: () => void;
   principalId: string;
   query: string;
