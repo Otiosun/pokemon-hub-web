@@ -3,6 +3,7 @@ import {
   type AdminApiClient,
   AdminApiError,
   type ContentLibraryItem,
+  type ContentUnpublishedRelease,
 } from '../../lib/api/admin-api';
 import {
   CONTENT_RELEASE_STATUSES,
@@ -15,7 +16,7 @@ import {
 import './content-library.css';
 
 interface ContentLibraryPageProps {
-  readonly client: Pick<AdminApiClient, 'searchContent'>;
+  readonly client: Pick<AdminApiClient, 'searchContent' | 'listUnpublishedContent'>;
 }
 
 interface RequestErrorView {
@@ -23,23 +24,53 @@ interface RequestErrorView {
   readonly correlationId: string | null;
 }
 
-function requestError(error: unknown): RequestErrorView {
+type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
+
+const UTC_DATE_TIME_FORMATTER = new Intl.DateTimeFormat('pt-BR', {
+  dateStyle: 'short',
+  timeStyle: 'short',
+  timeZone: 'UTC',
+});
+
+function requestError(error: unknown, fallbackMessage: string): RequestErrorView {
   if (error instanceof AdminApiError) {
     return { message: error.message, correlationId: error.correlationId };
   }
-  return { message: 'A consulta da biblioteca falhou.', correlationId: null };
+  return { message: fallbackMessage, correlationId: null };
 }
 
 function itemKey(item: ContentLibraryItem): string {
   return `${item.releaseId}:${item.resourceKind}:${item.resourceId}`;
 }
 
+function unpublishedKey(release: ContentUnpublishedRelease): string {
+  return release.releaseId;
+}
+
+function formatTimestamp(value: string | null): string {
+  if (value === null) return 'Sem alteração registrada';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return `${UTC_DATE_TIME_FORMATTER.format(date)} UTC`;
+}
+
+function workflowLabel(release: ContentUnpublishedRelease): string {
+  return release.workflowState === 'READY_TO_PUBLISH' ? 'Pronta para revisão' : 'Em edição';
+}
+
+function recordedChangeLabel(value: string): string {
+  return value === '1' ? '1 alteração registrada' : `${value} alterações registradas`;
+}
+
 export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
   const [filters, setFilters] = useState<ContentLibraryFilters>(EMPTY_CONTENT_LIBRARY_FILTERS);
   const [items, setItems] = useState<readonly ContentLibraryItem[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [status, setStatus] = useState<LoadStatus>('idle');
   const [error, setError] = useState<RequestErrorView | null>(null);
+  const [unpublished, setUnpublished] = useState<readonly ContentUnpublishedRelease[]>([]);
+  const [unpublishedStatus, setUnpublishedStatus] = useState<LoadStatus>('idle');
+  const [unpublishedError, setUnpublishedError] = useState<RequestErrorView | null>(null);
   const query = useMemo(() => toContentLibraryQuery(filters), [filters]);
 
   function patchFilters(patch: Partial<ContentLibraryFilters>) {
@@ -58,7 +89,20 @@ export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
       setStatus('ready');
     } catch (cause) {
       setStatus('error');
-      setError(requestError(cause));
+      setError(requestError(cause, 'A consulta da biblioteca falhou.'));
+    }
+  }
+
+  async function loadUnpublished() {
+    setUnpublishedStatus('loading');
+    setUnpublishedError(null);
+    setUnpublished([]);
+    try {
+      setUnpublished(await client.listUnpublishedContent());
+      setUnpublishedStatus('ready');
+    } catch (cause) {
+      setUnpublishedStatus('error');
+      setUnpublishedError(requestError(cause, 'A consulta das alterações não publicadas falhou.'));
     }
   }
 
@@ -160,6 +204,102 @@ export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
             </button>
           </div>
         </form>
+      </section>
+
+      <section className="content-unpublished-panel" aria-labelledby="content-unpublished-title">
+        <div className="content-unpublished-heading">
+          <div>
+            <span className="panel-kicker">ALTERAÇÕES NÃO PUBLICADAS</span>
+            <h3 id="content-unpublished-title">Releases que ainda não chegaram ao estado publicado.</h3>
+            <p>
+              Estado autoritativo de releases DRAFT e VALIDATED. A contagem representa alterações
+              registradas no ledger; comparação detalhada pertence a uma fatia separada.
+            </p>
+          </div>
+          <div className="content-unpublished-actions">
+            <span className="content-library-safety-note">READ-ONLY</span>
+            <button
+              className="secondary-button"
+              type="button"
+              disabled={unpublishedStatus === 'loading'}
+              onClick={() => void loadUnpublished()}
+            >
+              {unpublishedStatus === 'loading' ? 'Consultando…' : 'Consultar alterações'}
+            </button>
+          </div>
+        </div>
+
+        <div className="content-unpublished-legend" aria-label="Estados não publicados">
+          <span className="content-library-status is-draft">DRAFT</span>
+          <span className="content-library-status is-validated">VALIDATED</span>
+          <small>Nenhuma consulta é disparada automaticamente.</small>
+        </div>
+
+        {unpublishedStatus === 'idle' ? (
+          <div className="content-library-state">
+            <strong>Consulte quando precisar revisar o trabalho ainda não publicado.</strong>
+            <span>A tela permanece silenciosa até uma ação explícita do operador.</span>
+          </div>
+        ) : null}
+
+        {unpublishedStatus === 'loading' ? (
+          <div className="content-library-state" role="status">
+            <strong>Consultando alterações não publicadas…</strong>
+            <span>O estado vem diretamente da Admin API.</span>
+          </div>
+        ) : null}
+
+        {unpublishedStatus === 'error' && unpublishedError !== null ? (
+          <div className="content-library-state is-error" role="alert">
+            <strong>{unpublishedError.message}</strong>
+            {unpublishedError.correlationId === null ? null : (
+              <span>Correlação: {unpublishedError.correlationId}</span>
+            )}
+          </div>
+        ) : null}
+
+        {unpublishedStatus === 'ready' && unpublished.length === 0 ? (
+          <div className="content-library-state">
+            <strong>Nenhuma release não publicada encontrada.</strong>
+            <span>Não há DRAFT ou VALIDATED visível para este principal.</span>
+          </div>
+        ) : null}
+
+        {unpublished.length > 0 ? (
+          <div className="content-unpublished-grid">
+            {unpublished.map((release) => (
+              <article className="content-unpublished-card" key={unpublishedKey(release)}>
+                <div className="content-unpublished-card-heading">
+                  <div>
+                    <strong>{release.releaseName}</strong>
+                    <small>Release #{release.releaseNo}</small>
+                  </div>
+                  <span className={`content-library-status is-${release.status.toLowerCase()}`}>
+                    {release.status}
+                  </span>
+                </div>
+                <dl className="content-unpublished-metadata">
+                  <div>
+                    <dt>Fluxo</dt>
+                    <dd>{workflowLabel(release)}</dd>
+                  </div>
+                  <div>
+                    <dt>Revisão</dt>
+                    <dd>{release.revision}</dd>
+                  </div>
+                  <div>
+                    <dt>Alterações</dt>
+                    <dd>{recordedChangeLabel(release.recordedChangeCount)}</dd>
+                  </div>
+                  <div>
+                    <dt>Última alteração</dt>
+                    <dd>{formatTimestamp(release.lastChangedAt)}</dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+        ) : null}
       </section>
 
       <section className="content-library-results" aria-live="polite">
