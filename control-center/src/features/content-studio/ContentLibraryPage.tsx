@@ -210,7 +210,9 @@ export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
         <div className="content-unpublished-heading">
           <div>
             <span className="panel-kicker">ALTERAÇÕES NÃO PUBLICADAS</span>
-            <h3 id="content-unpublished-title">Releases que ainda não chegaram ao estado publicado.</h3>
+            <h3 id="content-unpublished-title">
+              Releases que ainda não chegaram ao estado publicado.
+            </h3>
             <p>
               Estado autoritativo de releases DRAFT e VALIDATED. A contagem representa alterações
               registradas no ledger; comparação detalhada pertence a uma fatia separada.
@@ -229,7 +231,7 @@ export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
           </div>
         </div>
 
-        <div className="content-unpublished-legend" aria-label="Estados não publicados">
+        <div className="content-unpublished-legend">
           <span className="content-library-status is-draft">DRAFT</span>
           <span className="content-library-status is-validated">VALIDATED</span>
           <small>Nenhuma consulta é disparada automaticamente.</small>
