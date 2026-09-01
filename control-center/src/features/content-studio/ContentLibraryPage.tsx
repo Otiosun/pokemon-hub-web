@@ -134,7 +134,9 @@ export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
   const [unpublished, setUnpublished] = useState<readonly ContentUnpublishedRelease[]>([]);
   const [unpublishedStatus, setUnpublishedStatus] = useState<LoadStatus>('idle');
   const [unpublishedError, setUnpublishedError] = useState<RequestErrorView | null>(null);
-  const [releaseDiffs, setReleaseDiffs] = useState<Readonly<Record<string, ContentReleaseDiff>>>({});
+  const [releaseDiffs, setReleaseDiffs] = useState<Readonly<Record<string, ContentReleaseDiff>>>(
+    {},
+  );
   const [releaseDiffStatuses, setReleaseDiffStatuses] = useState<
     Readonly<Partial<Record<string, LoadStatus>>>
   >({});
