@@ -11,14 +11,12 @@ export type AdminOperationAuditStatus =
   | 'REJECTED'
   | 'FAILED'
   | 'COMPENSATED';
-
 export type AdminOperationAuditTimelineKind =
   | 'PROPOSED'
   | 'CONFIRMATION'
   | 'APPROVAL'
   | 'CHANGE'
   | 'AUDIT';
-
 export type AdminOperationAuditDecision = 'APPROVED' | 'REJECTED';
 
 export interface AdminOperationAuditPolicyView {
@@ -29,7 +27,6 @@ export interface AdminOperationAuditPolicyView {
   readonly requiresConfirmation: boolean;
   readonly requiredApprovals: number;
 }
-
 export interface AdminOperationAuditOperationView {
   readonly id: string;
   readonly principalId: string;
@@ -48,7 +45,6 @@ export interface AdminOperationAuditOperationView {
   readonly updatedAt: string;
   readonly appliedAt: string | null;
 }
-
 export interface AdminOperationAuditTimelineView {
   readonly kind: AdminOperationAuditTimelineKind;
   readonly occurredAt: string;
@@ -59,17 +55,15 @@ export interface AdminOperationAuditTimelineView {
   readonly resourceId: string | null;
   readonly eventId: string;
 }
-
 export interface AdminOperationAuditView {
   readonly operation: AdminOperationAuditOperationView;
   readonly timeline: readonly AdminOperationAuditTimelineView[];
 }
 
-type UnknownRecord = Record<string, unknown>;
-
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const INTEGER_STRING_PATTERN = /^\d+$/;
-const ROOT_KEYS = ['operation', 'timeline'] as const;
+type RecordValue = Record<string, unknown>;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const INTEGER = /^\d+$/;
+const ROOT_KEYS = ['operation', 'timeline'];
 const OPERATION_KEYS = [
   'id',
   'principalId',
@@ -87,7 +81,7 @@ const OPERATION_KEYS = [
   'createdAt',
   'updatedAt',
   'appliedAt',
-] as const;
+];
 const POLICY_KEYS = [
   'version',
   'requiresReason',
@@ -95,8 +89,8 @@ const POLICY_KEYS = [
   'requiresSimulation',
   'requiresConfirmation',
   'requiredApprovals',
-] as const;
-const TIMELINE_KEYS = [
+];
+const EVENT_KEYS = [
   'kind',
   'occurredAt',
   'actorPrincipalId',
@@ -105,8 +99,8 @@ const TIMELINE_KEYS = [
   'resourceType',
   'resourceId',
   'eventId',
-] as const;
-const STATUSES = new Set<AdminOperationAuditStatus>([
+];
+const STATUSES = [
   'DRAFT',
   'VALIDATED',
   'SIMULATED',
@@ -117,215 +111,112 @@ const STATUSES = new Set<AdminOperationAuditStatus>([
   'REJECTED',
   'FAILED',
   'COMPENSATED',
-]);
-const TIMELINE_KINDS = new Set<AdminOperationAuditTimelineKind>([
-  'PROPOSED',
-  'CONFIRMATION',
-  'APPROVAL',
-  'CHANGE',
-  'AUDIT',
-]);
-const DECISIONS = new Set<AdminOperationAuditDecision>(['APPROVED', 'REJECTED']);
+];
+const EVENT_KINDS = ['PROPOSED', 'CONFIRMATION', 'APPROVAL', 'CHANGE', 'AUDIT'];
+const DECISIONS = ['APPROVED', 'REJECTED'];
 
-function isRecord(value: unknown): value is UnknownRecord {
+function record(value: unknown): value is RecordValue {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
-
-function hasExactKeys(value: UnknownRecord, expected: readonly string[]): boolean {
-  const actual = Object.keys(value);
-  return actual.length === expected.length && actual.every((key) => expected.includes(key));
+function exact(value: unknown, keys: readonly string[]): value is RecordValue {
+  return record(value) && Object.keys(value).length === keys.length && keys.every((key) => key in value);
 }
-
-function isUuid(value: unknown): value is string {
-  return typeof value === 'string' && UUID_PATTERN.test(value);
+function uuid(value: unknown): value is string {
+  return typeof value === 'string' && UUID.test(value);
 }
-
-function isIntegerString(value: unknown): value is string {
-  return typeof value === 'string' && INTEGER_STRING_PATTERN.test(value);
-}
-
-function isNonEmptyString(value: unknown): value is string {
+function text(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0;
 }
-
-function isCanonicalIsoTimestamp(value: unknown): value is string {
+function integerText(value: unknown): value is string {
+  return typeof value === 'string' && INTEGER.test(value);
+}
+function iso(value: unknown): value is string {
   if (typeof value !== 'string') return false;
-  const parsed = new Date(value);
-  return !Number.isNaN(parsed.getTime()) && parsed.toISOString() === value;
+  const date = new Date(value);
+  return !Number.isNaN(date.getTime()) && date.toISOString() === value;
+}
+function nullable(value: unknown, predicate: (candidate: unknown) => boolean): boolean {
+  return value === null || predicate(value);
+}
+function fail(): never {
+  throw new Error('Invalid AdminOperation audit response.');
 }
 
-function isNullableUuid(value: unknown): value is string | null {
-  return value === null || isUuid(value);
-}
+function validateAudit(value: unknown, operationId: string): AdminOperationAuditView {
+  if (!exact(value, ROOT_KEYS) || !Array.isArray(value.timeline)) fail();
+  const operation = value.operation;
+  if (!exact(operation, OPERATION_KEYS)) fail();
+  const policy = operation.policy;
+  if (!exact(policy, POLICY_KEYS)) fail();
 
-function isNullableTimestamp(value: unknown): value is string | null {
-  return value === null || isCanonicalIsoTimestamp(value);
-}
-
-function assertPolicy(value: unknown): AdminOperationAuditPolicyView {
-  if (!isRecord(value) || !hasExactKeys(value, POLICY_KEYS)) {
-    throw new Error('Invalid AdminOperation audit policy.');
-  }
+  const booleans = [
+    policy.requiresReason,
+    policy.requiresExpectedRevision,
+    policy.requiresSimulation,
+    policy.requiresConfirmation,
+  ];
   if (
-    typeof value.version !== 'number' ||
-    !Number.isInteger(value.version) ||
-    value.version <= 0 ||
-    typeof value.requiresReason !== 'boolean' ||
-    typeof value.requiresExpectedRevision !== 'boolean' ||
-    typeof value.requiresSimulation !== 'boolean' ||
-    typeof value.requiresConfirmation !== 'boolean' ||
-    typeof value.requiredApprovals !== 'number' ||
-    !Number.isInteger(value.requiredApprovals) ||
-    value.requiredApprovals < 0 ||
-    value.requiredApprovals > 2
+    operation.id !== operationId ||
+    !uuid(operation.id) ||
+    !uuid(operation.principalId) ||
+    !text(operation.capabilityKey) ||
+    !text(operation.operationType) ||
+    !text(operation.targetType) ||
+    !nullable(operation.targetId, uuid) ||
+    typeof operation.riskTier !== 'number' ||
+    !Number.isInteger(operation.riskTier) ||
+    operation.riskTier < 0 ||
+    operation.riskTier > 4 ||
+    typeof operation.status !== 'string' ||
+    !STATUSES.includes(operation.status) ||
+    !uuid(operation.correlationId) ||
+    typeof operation.reasonRecorded !== 'boolean' ||
+    !nullable(operation.expectedRevision, integerText) ||
+    !integerText(operation.revision) ||
+    !iso(operation.createdAt) ||
+    !iso(operation.updatedAt) ||
+    !nullable(operation.appliedAt, iso) ||
+    typeof policy.version !== 'number' ||
+    !Number.isInteger(policy.version) ||
+    policy.version <= 0 ||
+    booleans.some((entry) => typeof entry !== 'boolean') ||
+    typeof policy.requiredApprovals !== 'number' ||
+    !Number.isInteger(policy.requiredApprovals) ||
+    policy.requiredApprovals < 0 ||
+    policy.requiredApprovals > 2
   ) {
-    throw new Error('Invalid AdminOperation audit policy.');
+    fail();
   }
-  return {
-    version: value.version,
-    requiresReason: value.requiresReason,
-    requiresExpectedRevision: value.requiresExpectedRevision,
-    requiresSimulation: value.requiresSimulation,
-    requiresConfirmation: value.requiresConfirmation,
-    requiredApprovals: value.requiredApprovals,
-  };
-}
 
-function assertOperation(
-  value: unknown,
-  expectedOperationId: string,
-): AdminOperationAuditOperationView {
-  if (!isRecord(value) || !hasExactKeys(value, OPERATION_KEYS)) {
-    throw new Error('Invalid AdminOperation audit operation.');
-  }
-  if (
-    value.id !== expectedOperationId ||
-    !isUuid(value.id) ||
-    !isUuid(value.principalId) ||
-    !isNonEmptyString(value.capabilityKey) ||
-    !isNonEmptyString(value.operationType) ||
-    !isNonEmptyString(value.targetType) ||
-    !isNullableUuid(value.targetId) ||
-    typeof value.riskTier !== 'number' ||
-    !Number.isInteger(value.riskTier) ||
-    value.riskTier < 0 ||
-    value.riskTier > 4 ||
-    typeof value.status !== 'string' ||
-    !STATUSES.has(value.status as AdminOperationAuditStatus) ||
-    !isUuid(value.correlationId) ||
-    typeof value.reasonRecorded !== 'boolean' ||
-    (value.expectedRevision !== null && !isIntegerString(value.expectedRevision)) ||
-    !isIntegerString(value.revision) ||
-    !isCanonicalIsoTimestamp(value.createdAt) ||
-    !isCanonicalIsoTimestamp(value.updatedAt) ||
-    !isNullableTimestamp(value.appliedAt)
-  ) {
-    throw new Error('Invalid AdminOperation audit operation.');
-  }
-  return {
-    id: value.id,
-    principalId: value.principalId,
-    capabilityKey: value.capabilityKey,
-    operationType: value.operationType,
-    targetType: value.targetType,
-    targetId: value.targetId,
-    riskTier: value.riskTier as 0 | 1 | 2 | 3 | 4,
-    status: value.status as AdminOperationAuditStatus,
-    correlationId: value.correlationId,
-    reasonRecorded: value.reasonRecorded,
-    expectedRevision: value.expectedRevision,
-    revision: value.revision,
-    policy: assertPolicy(value.policy),
-    createdAt: value.createdAt,
-    updatedAt: value.updatedAt,
-    appliedAt: value.appliedAt,
-  };
-}
-
-function assertTimelineEvent(value: unknown): AdminOperationAuditTimelineView {
-  if (!isRecord(value) || !hasExactKeys(value, TIMELINE_KEYS)) {
-    throw new Error('Invalid AdminOperation audit timeline event.');
-  }
-  if (
-    typeof value.kind !== 'string' ||
-    !TIMELINE_KINDS.has(value.kind as AdminOperationAuditTimelineKind) ||
-    !isCanonicalIsoTimestamp(value.occurredAt) ||
-    !isNullableUuid(value.actorPrincipalId) ||
-    !isNonEmptyString(value.action) ||
-    (value.decision !== null &&
-      (typeof value.decision !== 'string' ||
-        !DECISIONS.has(value.decision as AdminOperationAuditDecision))) ||
-    (value.resourceType !== null && !isNonEmptyString(value.resourceType)) ||
-    !isNullableUuid(value.resourceId) ||
-    !isUuid(value.eventId)
-  ) {
-    throw new Error('Invalid AdminOperation audit timeline event.');
-  }
-  return {
-    kind: value.kind as AdminOperationAuditTimelineKind,
-    occurredAt: value.occurredAt,
-    actorPrincipalId: value.actorPrincipalId,
-    action: value.action,
-    decision: value.decision as AdminOperationAuditDecision | null,
-    resourceType: value.resourceType,
-    resourceId: value.resourceId,
-    eventId: value.eventId,
-  };
-}
-
-function assertAdminOperationAudit(
-  value: unknown,
-  expectedOperationId: string,
-): AdminOperationAuditView {
-  if (!isRecord(value) || !hasExactKeys(value, ROOT_KEYS) || !Array.isArray(value.timeline)) {
-    throw new Error('Invalid AdminOperation audit response.');
-  }
-  return {
-    operation: assertOperation(value.operation, expectedOperationId),
-    timeline: value.timeline.map(assertTimelineEvent),
-  };
-}
-
-async function parseAuditError(response: Response): Promise<AdminApiError> {
-  let code = `HTTP_${response.status}`;
-  let message = 'A consulta de auditoria administrativa falhou.';
-  let correlationId = response.headers.get('x-correlation-id');
-  try {
-    const body: unknown = await response.json();
-    if (isRecord(body) && isRecord(body.error)) {
-      if (isNonEmptyString(body.error.code)) code = body.error.code;
-      if (isNonEmptyString(body.error.message)) message = body.error.message;
-      if (isNonEmptyString(body.error.correlationId)) correlationId = body.error.correlationId;
+  for (const event of value.timeline) {
+    if (!exact(event, EVENT_KEYS)) fail();
+    if (
+      typeof event.kind !== 'string' ||
+      !EVENT_KINDS.includes(event.kind) ||
+      !iso(event.occurredAt) ||
+      !nullable(event.actorPrincipalId, uuid) ||
+      !text(event.action) ||
+      !nullable(event.decision, (entry) => typeof entry === 'string' && DECISIONS.includes(entry)) ||
+      !nullable(event.resourceType, text) ||
+      !nullable(event.resourceId, uuid) ||
+      !uuid(event.eventId)
+    ) {
+      fail();
     }
-  } catch {
-    // The normalized transport error below is sufficient when the body is not JSON.
   }
-
-  const kind =
-    response.status === 401
-      ? 'unauthenticated'
-      : response.status === 403
-        ? 'forbidden'
-        : response.status === 400
-          ? 'invalid'
-          : response.status === 404
-            ? 'not-found'
-            : response.status === 409
-              ? 'conflict'
-              : 'server';
-  return new AdminApiError(kind, message, response.status, code, correlationId);
+  return value as unknown as AdminOperationAuditView;
 }
 
 export class AdminOperationAuditApiClient extends AdminApiClient {
   public constructor(
-    private readonly auditApiBaseUrl: string,
-    private readonly auditFetchImpl: typeof fetch = fetch,
+    private readonly baseUrl: string,
+    private readonly request: typeof fetch = fetch,
   ) {
-    super(auditApiBaseUrl, auditFetchImpl);
+    super(baseUrl, request);
   }
 
   public async getAdminOperationAudit(operationId: string): Promise<AdminOperationAuditView> {
-    if (!isUuid(operationId)) {
+    if (!uuid(operationId)) {
       throw new AdminApiError(
         'invalid',
         'O ID da operação administrativa é inválido.',
@@ -335,32 +226,32 @@ export class AdminOperationAuditApiClient extends AdminApiClient {
       );
     }
 
-    const url = new URL(`${this.auditApiBaseUrl}/admin/v1/operations/${operationId}/audit`);
     let response: Response;
     try {
-      response = await this.auditFetchImpl(url.toString(), {
+      response = await this.request(`${this.baseUrl}/admin/v1/operations/${operationId}/audit`, {
         method: 'GET',
         credentials: 'include',
         headers: { accept: 'application/json' },
       });
     } catch {
-      throw new AdminApiError(
-        'network',
-        'Não foi possível alcançar a Admin API.',
-        null,
-        'NETWORK_ERROR',
-        null,
-      );
+      throw new AdminApiError('network', 'Admin API indisponível.', null, 'NETWORK_ERROR', null);
     }
 
-    if (!response.ok) throw await parseAuditError(response);
-    try {
-      return assertAdminOperationAudit(await response.json(), operationId);
-    } catch (error) {
-      if (error instanceof AdminApiError) throw error;
+    if (!response.ok) {
       throw new AdminApiError(
         'server',
-        'A resposta da auditoria da operação é inválida.',
+        'A consulta de auditoria falhou.',
+        response.status,
+        `HTTP_${response.status}`,
+        response.headers.get('x-correlation-id'),
+      );
+    }
+    try {
+      return validateAudit(await response.json(), operationId);
+    } catch {
+      throw new AdminApiError(
+        'server',
+        'A resposta da auditoria é inválida.',
         200,
         'INVALID_ADMIN_OPERATION_AUDIT_RESPONSE',
         response.headers.get('x-correlation-id'),
