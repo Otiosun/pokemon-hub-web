@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { AdminApiError } from './admin-api';
-import { AdminOperationAuditApiClient as AdminApiClient } from './admin-api-operation-audit';
+import { AdminApiClient, AdminApiError } from './admin-api';
 
 const API_BASE_URL = 'https://admin-api.example.test';
 const OPERATION_ID = '33333333-3333-4333-8333-333333333333';
