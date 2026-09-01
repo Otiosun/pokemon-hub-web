@@ -9,6 +9,11 @@ describe('Content Library page', () => {
         client={{
           searchContent: async () => ({ items: [], nextCursor: null }),
           listUnpublishedContent: async () => [],
+          diffContentRelease: async ({ fromReleaseId, toReleaseId }) => ({
+            fromReleaseId,
+            toReleaseId,
+            sections: [],
+          }),
         }}
       />,
     );
