@@ -29,6 +29,47 @@ function sourceLabel(source: IncidentSignalView['source']): string {
   return 'Outbox';
 }
 
+function IncidentRunbook({ runbook }: { runbook: IncidentSignalView['runbook'] }) {
+  return (
+    <details className="incident-runbook">
+      <summary>Ver runbook</summary>
+      <div className="incident-runbook-body">
+        <div className="incident-runbook-intro">
+          <strong>{runbook.title}</strong>
+          <p>{runbook.summary}</p>
+        </div>
+
+        <div className="incident-runbook-section">
+          <span>Passos de investigação</span>
+          <ol>
+            {runbook.steps.map((step) => (
+              <li key={step}>{step}</li>
+            ))}
+          </ol>
+        </div>
+
+        <div className="incident-runbook-section">
+          <span>Evidências para coletar</span>
+          <ul className="incident-runbook-evidence">
+            {runbook.evidenceToCollect.map((evidence) => (
+              <li key={evidence}>{evidence}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="incident-runbook-section">
+          <span>Escalonamento</span>
+          <p>{runbook.escalation}</p>
+        </div>
+
+        <small className="incident-runbook-note">
+          Somente orientação · nenhuma ação é executada por este runbook.
+        </small>
+      </div>
+    </details>
+  );
+}
+
 function IncidentRow({ signal }: { signal: IncidentSignalView }) {
   return (
     <li>
@@ -47,6 +88,7 @@ function IncidentRow({ signal }: { signal: IncidentSignalView }) {
         </small>
       )}
       <small>Ocorrido: {signal.occurredAt}</small>
+      <IncidentRunbook runbook={signal.runbook} />
     </li>
   );
 }
