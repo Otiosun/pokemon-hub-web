@@ -9,6 +9,7 @@ import { ControlCenterSidebar } from './components/shell/ControlCenterSidebar';
 import { OperationalDiagnostics } from './components/shell/OperationalDiagnostics';
 import { SessionGate } from './components/shell/SessionGate';
 import { SessionProfilePanel } from './components/shell/SessionProfilePanel';
+import { MessagingOperationsCard } from './features/runtime/MessagingOperationsCard';
 import { RuntimeWhatsappHealthCard } from './features/runtime/RuntimeWhatsappHealthCard';
 import { displayAdminRole, useAdminSession } from './features/session/useAdminSession';
 import { AdminApiClient } from './lib/api/admin-api';
@@ -25,7 +26,7 @@ const ContentLibraryPage = lazy(() =>
   })),
 );
 
-const CANONICAL_PROGRESS = 45.71;
+const CANONICAL_PROGRESS = 46.28;
 
 const workQueue = [
   {
@@ -300,6 +301,7 @@ function TodayView({
             </div>
           </dl>
           <RuntimeWhatsappHealthCard client={client} expectedEnvironment={session.environment} />
+          <MessagingOperationsCard client={client} />
         </aside>
       </section>
     </>

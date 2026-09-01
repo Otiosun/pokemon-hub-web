@@ -41,6 +41,9 @@ export type RuntimeWhatsappProviderState =
   | 'STOPPED'
   | 'INVALIDATED';
 
+export type MessagingInboxStatus = 'RECEIVED' | 'PROCESSING' | 'PROCESSED' | 'FAILED';
+export type MessagingOutboxStatus = 'PENDING' | 'SENDING' | 'SENT' | 'FAILED' | 'DEAD';
+
 export interface ContentLibraryQuery {
   readonly query?: string;
   readonly resourceKind?: ContentResourceKind;
@@ -126,6 +129,52 @@ export interface RuntimeWhatsappHealthView {
   readonly runtime: RuntimeWhatsappHealthRuntime | null;
 }
 
+export interface MessagingInboxCounts {
+  readonly RECEIVED: number;
+  readonly PROCESSING: number;
+  readonly PROCESSED: number;
+  readonly FAILED: number;
+}
+
+export interface MessagingOutboxCounts {
+  readonly PENDING: number;
+  readonly SENDING: number;
+  readonly SENT: number;
+  readonly FAILED: number;
+  readonly DEAD: number;
+}
+
+export interface MessagingInboxMetadata {
+  readonly id: string;
+  readonly status: MessagingInboxStatus;
+  readonly attempts: number;
+  readonly receivedAt: string;
+  readonly processedAt: string | null;
+  readonly processingStartedAt: string | null;
+}
+
+export interface MessagingOutboxMetadata {
+  readonly id: string;
+  readonly status: MessagingOutboxStatus;
+  readonly attempts: number;
+  readonly nextAttemptAt: string | null;
+  readonly createdAt: string;
+  readonly sentAt: string | null;
+  readonly sendingStartedAt: string | null;
+}
+
+export interface MessagingOperationsView {
+  readonly inbox: {
+    readonly counts: MessagingInboxCounts;
+    readonly recent: readonly MessagingInboxMetadata[];
+  };
+  readonly outbox: {
+    readonly counts: MessagingOutboxCounts;
+    readonly recent: readonly MessagingOutboxMetadata[];
+    readonly deadLetter: readonly MessagingOutboxMetadata[];
+  };
+}
+
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const INTEGER_STRING_PATTERN = /^\d+$/;
 const DEPLOYMENT_REVISION_PATTERN = /^[0-9a-f]{40}$/;
@@ -176,6 +225,19 @@ const RUNTIME_PROVIDER_STATES = new Set<RuntimeWhatsappProviderState>([
   'STOPPED',
   'INVALIDATED',
 ]);
+const MESSAGING_INBOX_STATUSES = new Set<MessagingInboxStatus>([
+  'RECEIVED',
+  'PROCESSING',
+  'PROCESSED',
+  'FAILED',
+]);
+const MESSAGING_OUTBOX_STATUSES = new Set<MessagingOutboxStatus>([
+  'PENDING',
+  'SENDING',
+  'SENT',
+  'FAILED',
+  'DEAD',
+]);
 const RUNTIME_HEALTH_KEYS = ['environment', 'runtime'] as const;
 const RUNTIME_HEALTH_RUNTIME_KEYS = [
   'providerState',
@@ -186,6 +248,29 @@ const RUNTIME_HEALTH_RUNTIME_KEYS = [
   'lastDisconnectAt',
   'stoppedAt',
 ] as const;
+const MESSAGING_OPERATIONS_KEYS = ['inbox', 'outbox'] as const;
+const MESSAGING_INBOX_KEYS = ['counts', 'recent'] as const;
+const MESSAGING_OUTBOX_KEYS = ['counts', 'recent', 'deadLetter'] as const;
+const MESSAGING_INBOX_COUNT_KEYS = ['RECEIVED', 'PROCESSING', 'PROCESSED', 'FAILED'] as const;
+const MESSAGING_OUTBOX_COUNT_KEYS = ['PENDING', 'SENDING', 'SENT', 'FAILED', 'DEAD'] as const;
+const MESSAGING_INBOX_METADATA_KEYS = [
+  'id',
+  'status',
+  'attempts',
+  'receivedAt',
+  'processedAt',
+  'processingStartedAt',
+] as const;
+const MESSAGING_OUTBOX_METADATA_KEYS = [
+  'id',
+  'status',
+  'attempts',
+  'nextAttemptAt',
+  'createdAt',
+  'sentAt',
+  'sendingStartedAt',
+] as const;
+const MESSAGING_RECENT_LIMIT = 25;
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -227,6 +312,14 @@ function isNullableCanonicalIsoTimestamp(value: unknown): value is string | null
 function isRuntimeProviderState(value: unknown): value is RuntimeWhatsappProviderState {
   if (typeof value !== 'string') return false;
   return RUNTIME_PROVIDER_STATES.has(value as RuntimeWhatsappProviderState);
+}
+
+function isMessagingInboxStatus(value: unknown): value is MessagingInboxStatus {
+  return typeof value === 'string' && MESSAGING_INBOX_STATUSES.has(value as MessagingInboxStatus);
+}
+
+function isMessagingOutboxStatus(value: unknown): value is MessagingOutboxStatus {
+  return typeof value === 'string' && MESSAGING_OUTBOX_STATUSES.has(value as MessagingOutboxStatus);
 }
 
 function isResourceKind(value: unknown): value is ContentResourceKind {
@@ -449,6 +542,135 @@ function assertRuntimeWhatsappHealth(value: unknown): RuntimeWhatsappHealthView 
       lastHeartbeatAt: runtime.lastHeartbeatAt,
       lastDisconnectAt: runtime.lastDisconnectAt,
       stoppedAt: runtime.stoppedAt,
+    },
+  };
+}
+
+function assertMessagingInboxCounts(value: unknown): MessagingInboxCounts {
+  if (!isRecord(value) || !hasExactKeys(value, MESSAGING_INBOX_COUNT_KEYS)) {
+    throw new Error('Invalid messaging inbox counts.');
+  }
+  if (
+    !isNonNegativeInteger(value.RECEIVED) ||
+    !isNonNegativeInteger(value.PROCESSING) ||
+    !isNonNegativeInteger(value.PROCESSED) ||
+    !isNonNegativeInteger(value.FAILED)
+  ) {
+    throw new Error('Invalid messaging inbox counts.');
+  }
+  return {
+    RECEIVED: value.RECEIVED,
+    PROCESSING: value.PROCESSING,
+    PROCESSED: value.PROCESSED,
+    FAILED: value.FAILED,
+  };
+}
+
+function assertMessagingOutboxCounts(value: unknown): MessagingOutboxCounts {
+  if (!isRecord(value) || !hasExactKeys(value, MESSAGING_OUTBOX_COUNT_KEYS)) {
+    throw new Error('Invalid messaging outbox counts.');
+  }
+  if (
+    !isNonNegativeInteger(value.PENDING) ||
+    !isNonNegativeInteger(value.SENDING) ||
+    !isNonNegativeInteger(value.SENT) ||
+    !isNonNegativeInteger(value.FAILED) ||
+    !isNonNegativeInteger(value.DEAD)
+  ) {
+    throw new Error('Invalid messaging outbox counts.');
+  }
+  return {
+    PENDING: value.PENDING,
+    SENDING: value.SENDING,
+    SENT: value.SENT,
+    FAILED: value.FAILED,
+    DEAD: value.DEAD,
+  };
+}
+
+function assertMessagingInboxMetadata(value: unknown): MessagingInboxMetadata {
+  if (!isRecord(value) || !hasExactKeys(value, MESSAGING_INBOX_METADATA_KEYS)) {
+    throw new Error('Invalid messaging inbox metadata.');
+  }
+  if (
+    !isUuid(value.id) ||
+    !isMessagingInboxStatus(value.status) ||
+    !isNonNegativeInteger(value.attempts) ||
+    !isCanonicalIsoTimestamp(value.receivedAt) ||
+    !isNullableCanonicalIsoTimestamp(value.processedAt) ||
+    !isNullableCanonicalIsoTimestamp(value.processingStartedAt)
+  ) {
+    throw new Error('Invalid messaging inbox metadata.');
+  }
+  return {
+    id: value.id,
+    status: value.status,
+    attempts: value.attempts,
+    receivedAt: value.receivedAt,
+    processedAt: value.processedAt,
+    processingStartedAt: value.processingStartedAt,
+  };
+}
+
+function assertMessagingOutboxMetadata(value: unknown): MessagingOutboxMetadata {
+  if (!isRecord(value) || !hasExactKeys(value, MESSAGING_OUTBOX_METADATA_KEYS)) {
+    throw new Error('Invalid messaging outbox metadata.');
+  }
+  if (
+    !isUuid(value.id) ||
+    !isMessagingOutboxStatus(value.status) ||
+    !isNonNegativeInteger(value.attempts) ||
+    !isNullableCanonicalIsoTimestamp(value.nextAttemptAt) ||
+    !isCanonicalIsoTimestamp(value.createdAt) ||
+    !isNullableCanonicalIsoTimestamp(value.sentAt) ||
+    !isNullableCanonicalIsoTimestamp(value.sendingStartedAt)
+  ) {
+    throw new Error('Invalid messaging outbox metadata.');
+  }
+  return {
+    id: value.id,
+    status: value.status,
+    attempts: value.attempts,
+    nextAttemptAt: value.nextAttemptAt,
+    createdAt: value.createdAt,
+    sentAt: value.sentAt,
+    sendingStartedAt: value.sendingStartedAt,
+  };
+}
+
+function assertMessagingOperations(value: unknown): MessagingOperationsView {
+  if (!isRecord(value) || !hasExactKeys(value, MESSAGING_OPERATIONS_KEYS)) {
+    throw new Error('Invalid messaging operations response.');
+  }
+  if (
+    !isRecord(value.inbox) ||
+    !hasExactKeys(value.inbox, MESSAGING_INBOX_KEYS) ||
+    !Array.isArray(value.inbox.recent) ||
+    value.inbox.recent.length > MESSAGING_RECENT_LIMIT ||
+    !isRecord(value.outbox) ||
+    !hasExactKeys(value.outbox, MESSAGING_OUTBOX_KEYS) ||
+    !Array.isArray(value.outbox.recent) ||
+    !Array.isArray(value.outbox.deadLetter) ||
+    value.outbox.recent.length > MESSAGING_RECENT_LIMIT ||
+    value.outbox.deadLetter.length > MESSAGING_RECENT_LIMIT
+  ) {
+    throw new Error('Invalid messaging operations response.');
+  }
+
+  const deadLetter = value.outbox.deadLetter.map(assertMessagingOutboxMetadata);
+  if (deadLetter.some((item) => item.status !== 'DEAD')) {
+    throw new Error('Invalid messaging dead-letter metadata.');
+  }
+
+  return {
+    inbox: {
+      counts: assertMessagingInboxCounts(value.inbox.counts),
+      recent: value.inbox.recent.map(assertMessagingInboxMetadata),
+    },
+    outbox: {
+      counts: assertMessagingOutboxCounts(value.outbox.counts),
+      recent: value.outbox.recent.map(assertMessagingOutboxMetadata),
+      deadLetter,
     },
   };
 }
@@ -702,6 +924,41 @@ export class AdminApiClient {
         'A resposta de saúde do runtime WhatsApp é inválida.',
         200,
         'INVALID_RUNTIME_HEALTH_RESPONSE',
+        response.headers.get('x-correlation-id'),
+      );
+    }
+  }
+
+  public async getMessagingOperations(): Promise<MessagingOperationsView> {
+    const url = new URL(`${this.apiBaseUrl}/admin/v1/messaging/operations`);
+
+    let response: Response;
+    try {
+      response = await this.fetchImpl(url.toString(), {
+        method: 'GET',
+        credentials: 'include',
+        headers: { accept: 'application/json' },
+      });
+    } catch {
+      throw new AdminApiError(
+        'network',
+        'Não foi possível alcançar a Admin API.',
+        null,
+        'NETWORK_ERROR',
+        null,
+      );
+    }
+
+    if (!response.ok) throw await parseContentError(response);
+    try {
+      return assertMessagingOperations(await response.json());
+    } catch (error) {
+      if (error instanceof AdminApiError) throw error;
+      throw new AdminApiError(
+        'server',
+        'A resposta das filas de mensageria é inválida.',
+        200,
+        'INVALID_MESSAGING_OPERATIONS_RESPONSE',
         response.headers.get('x-correlation-id'),
       );
     }
