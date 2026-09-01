@@ -167,8 +167,8 @@ function assertPolicy(value: unknown): AdminOperationAuditPolicyView {
     throw new Error('Invalid AdminOperation audit policy.');
   }
   if (
-    !Number.isInteger(value.version) ||
     typeof value.version !== 'number' ||
+    !Number.isInteger(value.version) ||
     value.version <= 0 ||
     typeof value.requiresReason !== 'boolean' ||
     typeof value.requiresExpectedRevision !== 'boolean' ||
@@ -191,7 +191,10 @@ function assertPolicy(value: unknown): AdminOperationAuditPolicyView {
   };
 }
 
-function assertOperation(value: unknown, expectedOperationId: string): AdminOperationAuditOperationView {
+function assertOperation(
+  value: unknown,
+  expectedOperationId: string,
+): AdminOperationAuditOperationView {
   if (!isRecord(value) || !hasExactKeys(value, OPERATION_KEYS)) {
     throw new Error('Invalid AdminOperation audit operation.');
   }
@@ -270,7 +273,10 @@ function assertTimelineEvent(value: unknown): AdminOperationAuditTimelineView {
   };
 }
 
-function assertAdminOperationAudit(value: unknown, expectedOperationId: string): AdminOperationAuditView {
+function assertAdminOperationAudit(
+  value: unknown,
+  expectedOperationId: string,
+): AdminOperationAuditView {
   if (!isRecord(value) || !hasExactKeys(value, ROOT_KEYS) || !Array.isArray(value.timeline)) {
     throw new Error('Invalid AdminOperation audit response.');
   }
