@@ -45,7 +45,6 @@ function TimelineEvent({ event }: { event: AdminOperationAuditTimelineView }) {
           {event.resourceId === null ? '' : ` · #${shortId(event.resourceId)}`}
         </small>
       )}
-      <small title={event.eventId}>Evento: #{shortId(event.eventId)}</small>
     </li>
   );
 }
@@ -72,10 +71,6 @@ function AuditResult({ data }: { data: AdminOperationAuditView }) {
           {operation.targetId === null ? '' : ` · #${shortId(operation.targetId)}`}
         </small>
         <small>Motivo registrado: {yesNo(operation.reasonRecorded)}</small>
-        <small>Revisão esperada: {operation.expectedRevision ?? 'não registrada'}</small>
-        <small>Criada: {operation.createdAt}</small>
-        <small>Atualizada: {operation.updatedAt}</small>
-        {operation.appliedAt === null ? null : <small>Aplicada: {operation.appliedAt}</small>}
       </div>
 
       <details className="incident-runbook">
@@ -165,13 +160,6 @@ export function AdminOperationAuditCard({ client }: { client: AdminOperationAudi
           {state.status === 'loading' ? 'Consultando…' : 'Consultar auditoria'}
         </button>
       </div>
-
-      {state.status === 'idle' ? (
-        <div className="runtime-health-empty">
-          <strong>Consulta por ID exato.</strong>
-          <p>A Central reconstrói somente a operação administrativa informada.</p>
-        </div>
-      ) : null}
 
       {state.status === 'loading' ? (
         <p className="runtime-health-empty" role="status">
