@@ -21,7 +21,7 @@ describe('runtime WhatsApp health wiring', () => {
   it('binds the runtime card to the authenticated session environment', async () => {
     const app = await readFile(appPath, 'utf8');
 
-    expect(app).toContain("import { RuntimeWhatsappHealthCard }");
+    expect(app).toContain('import { RuntimeWhatsappHealthCard }');
     expect(app).toContain('<RuntimeWhatsappHealthCard');
     expect(app).toContain('client={client}');
     expect(app).toContain('expectedEnvironment={session.environment}');
