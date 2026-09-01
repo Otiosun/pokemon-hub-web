@@ -10,7 +10,6 @@ export type ContentResourceKind =
   | 'ENCOUNTER_TABLE'
   | 'REWARD'
   | 'EFFECT';
-
 export type ContentReleaseStatus = 'DRAFT' | 'VALIDATED' | 'PUBLISHED' | 'ARCHIVED';
 export type ContentUnpublishedStatus = 'DRAFT' | 'VALIDATED';
 export type ContentUnpublishedWorkflowState = 'EDITING' | 'READY_TO_PUBLISH';
@@ -33,14 +32,12 @@ export type ContentReleaseDiffCategory =
   | 'starterOptions'
   | 'purchaseOffers'
   | 'encounterTables';
-
 export type RuntimeWhatsappProviderState =
   | 'STARTING'
   | 'CONNECTED'
   | 'DISCONNECTED'
   | 'STOPPED'
   | 'INVALIDATED';
-
 export type MessagingInboxStatus = 'RECEIVED' | 'PROCESSING' | 'PROCESSED' | 'FAILED';
 export type MessagingOutboxStatus = 'PENDING' | 'SENDING' | 'SENT' | 'FAILED' | 'DEAD';
 export type IncidentSignalSource = 'ADMIN_OPERATION' | 'INBOX' | 'OUTBOX';
@@ -50,6 +47,24 @@ export type IncidentRunbookKey =
   | 'inbox-processing-failed'
   | 'outbox-delivery-failed'
   | 'outbox-dead-letter';
+export type AdminOperationAuditStatus =
+  | 'DRAFT'
+  | 'VALIDATED'
+  | 'SIMULATED'
+  | 'PENDING_CONFIRMATION'
+  | 'PENDING_APPROVAL'
+  | 'READY'
+  | 'APPLIED'
+  | 'REJECTED'
+  | 'FAILED'
+  | 'COMPENSATED';
+export type AdminOperationAuditTimelineKind =
+  | 'PROPOSED'
+  | 'CONFIRMATION'
+  | 'APPROVAL'
+  | 'CHANGE'
+  | 'AUDIT';
+export type AdminOperationAuditDecision = 'APPROVED' | 'REJECTED';
 
 export interface ContentLibraryQuery {
   readonly query?: string;
@@ -58,7 +73,6 @@ export interface ContentLibraryQuery {
   readonly active?: boolean;
   readonly limit: number;
 }
-
 export interface ContentLibraryItem {
   readonly releaseId: string;
   readonly releaseNo: string;
@@ -71,12 +85,10 @@ export interface ContentLibraryItem {
   readonly displayName: string;
   readonly active: boolean;
 }
-
 export interface ContentLibraryResult {
   readonly items: readonly ContentLibraryItem[];
   readonly nextCursor: string | null;
 }
-
 export interface ContentUnpublishedRelease {
   readonly releaseId: string;
   readonly releaseNo: string;
@@ -90,37 +102,31 @@ export interface ContentUnpublishedRelease {
   readonly recordedChangeCount: string;
   readonly lastChangedAt: string | null;
 }
-
 export interface ContentReleaseDiffQuery {
   readonly fromReleaseId: string;
   readonly toReleaseId: string;
 }
-
 export interface ContentReleaseDiffSection {
   readonly category: ContentReleaseDiffCategory;
   readonly added: number;
   readonly removed: number;
   readonly changed: number;
 }
-
 export interface ContentReleaseDiff {
   readonly fromReleaseId: string;
   readonly toReleaseId: string;
   readonly sections: readonly ContentReleaseDiffSection[];
 }
-
 export interface ContentReleaseValidationIssue {
   readonly code: string;
   readonly path: string;
   readonly message: string;
 }
-
 export interface ContentReleaseValidationPreview {
   readonly releaseId: string;
   readonly valid: boolean;
   readonly issues: readonly ContentReleaseValidationIssue[];
 }
-
 export interface RuntimeWhatsappHealthRuntime {
   readonly providerState: RuntimeWhatsappProviderState;
   readonly deploymentRevision: string;
@@ -130,19 +136,16 @@ export interface RuntimeWhatsappHealthRuntime {
   readonly lastDisconnectAt: string | null;
   readonly stoppedAt: string | null;
 }
-
 export interface RuntimeWhatsappHealthView {
   readonly environment: 'development' | 'staging' | 'production';
   readonly runtime: RuntimeWhatsappHealthRuntime | null;
 }
-
 export interface MessagingInboxCounts {
   readonly RECEIVED: number;
   readonly PROCESSING: number;
   readonly PROCESSED: number;
   readonly FAILED: number;
 }
-
 export interface MessagingOutboxCounts {
   readonly PENDING: number;
   readonly SENDING: number;
@@ -150,7 +153,6 @@ export interface MessagingOutboxCounts {
   readonly FAILED: number;
   readonly DEAD: number;
 }
-
 export interface MessagingInboxMetadata {
   readonly id: string;
   readonly status: MessagingInboxStatus;
@@ -159,7 +161,6 @@ export interface MessagingInboxMetadata {
   readonly processedAt: string | null;
   readonly processingStartedAt: string | null;
 }
-
 export interface MessagingOutboxMetadata {
   readonly id: string;
   readonly status: MessagingOutboxStatus;
@@ -169,7 +170,6 @@ export interface MessagingOutboxMetadata {
   readonly sentAt: string | null;
   readonly sendingStartedAt: string | null;
 }
-
 export interface MessagingOperationsView {
   readonly inbox: {
     readonly counts: MessagingInboxCounts;
@@ -181,7 +181,6 @@ export interface MessagingOperationsView {
     readonly deadLetter: readonly MessagingOutboxMetadata[];
   };
 }
-
 export interface IncidentRunbookView {
   readonly key: IncidentRunbookKey;
   readonly title: string;
@@ -190,7 +189,6 @@ export interface IncidentRunbookView {
   readonly evidenceToCollect: readonly string[];
   readonly escalation: string;
 }
-
 export interface IncidentSignalView {
   readonly source: IncidentSignalSource;
   readonly id: string;
@@ -204,35 +202,59 @@ export interface IncidentSignalView {
   readonly occurredAt: string;
   readonly runbook: IncidentRunbookView;
 }
-
 export interface IncidentCenterView {
   readonly signals: readonly IncidentSignalView[];
 }
+export interface AdminOperationAuditPolicyView {
+  readonly version: number;
+  readonly requiresReason: boolean;
+  readonly requiresExpectedRevision: boolean;
+  readonly requiresSimulation: boolean;
+  readonly requiresConfirmation: boolean;
+  readonly requiredApprovals: number;
+}
+export interface AdminOperationAuditOperationView {
+  readonly id: string;
+  readonly principalId: string;
+  readonly capabilityKey: string;
+  readonly operationType: string;
+  readonly targetType: string;
+  readonly targetId: string | null;
+  readonly riskTier: 0 | 1 | 2 | 3 | 4;
+  readonly status: AdminOperationAuditStatus;
+  readonly correlationId: string;
+  readonly reasonRecorded: boolean;
+  readonly expectedRevision: string | null;
+  readonly revision: string;
+  readonly policy: AdminOperationAuditPolicyView;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+  readonly appliedAt: string | null;
+}
+export interface AdminOperationAuditTimelineView {
+  readonly kind: AdminOperationAuditTimelineKind;
+  readonly occurredAt: string;
+  readonly actorPrincipalId: string | null;
+  readonly action: string;
+  readonly decision: AdminOperationAuditDecision | null;
+  readonly resourceType: string | null;
+  readonly resourceId: string | null;
+  readonly eventId: string;
+}
+export interface AdminOperationAuditView {
+  readonly operation: AdminOperationAuditOperationView;
+  readonly timeline: readonly AdminOperationAuditTimelineView[];
+}
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const INTEGER_STRING_PATTERN = /^\d+$/;
-const DEPLOYMENT_REVISION_PATTERN = /^[0-9a-f]{40}$/;
-const RESOURCE_KINDS = new Set<ContentResourceKind>([
-  'SPECIES',
-  'MOVE',
-  'ITEM',
-  'AREA',
-  'ENCOUNTER_TABLE',
-  'REWARD',
-  'EFFECT',
-]);
-const RELEASE_STATUSES = new Set<ContentReleaseStatus>([
-  'DRAFT',
-  'VALIDATED',
-  'PUBLISHED',
-  'ARCHIVED',
-]);
-const UNPUBLISHED_STATUSES = new Set<ContentUnpublishedStatus>(['DRAFT', 'VALIDATED']);
-const UNPUBLISHED_WORKFLOW_STATES = new Set<ContentUnpublishedWorkflowState>([
-  'EDITING',
-  'READY_TO_PUBLISH',
-]);
-const RELEASE_DIFF_CATEGORIES = new Set<ContentReleaseDiffCategory>([
+type UnknownRecord = Record<string, unknown>;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const INTEGER = /^\d+$/;
+const SHA40 = /^[0-9a-f]{40}$/;
+const RESOURCE_KINDS = ['SPECIES', 'MOVE', 'ITEM', 'AREA', 'ENCOUNTER_TABLE', 'REWARD', 'EFFECT'];
+const RELEASE_STATUSES = ['DRAFT', 'VALIDATED', 'PUBLISHED', 'ARCHIVED'];
+const UNPUBLISHED_STATUSES = ['DRAFT', 'VALIDATED'];
+const UNPUBLISHED_STATES = ['EDITING', 'READY_TO_PUBLISH'];
+const RELEASE_DIFF_CATEGORIES = [
   'types',
   'species',
   'forms',
@@ -251,41 +273,27 @@ const RELEASE_DIFF_CATEGORIES = new Set<ContentReleaseDiffCategory>([
   'starterOptions',
   'purchaseOffers',
   'encounterTables',
-]);
-const RUNTIME_PROVIDER_STATES = new Set<RuntimeWhatsappProviderState>([
-  'STARTING',
-  'CONNECTED',
-  'DISCONNECTED',
-  'STOPPED',
-  'INVALIDATED',
-]);
-const MESSAGING_INBOX_STATUSES = new Set<MessagingInboxStatus>([
-  'RECEIVED',
-  'PROCESSING',
-  'PROCESSED',
+];
+const RUNTIME_STATES = ['STARTING', 'CONNECTED', 'DISCONNECTED', 'STOPPED', 'INVALIDATED'];
+const INBOX_STATES = ['RECEIVED', 'PROCESSING', 'PROCESSED', 'FAILED'];
+const OUTBOX_STATES = ['PENDING', 'SENDING', 'SENT', 'FAILED', 'DEAD'];
+const INCIDENT_SOURCES = ['ADMIN_OPERATION', 'INBOX', 'OUTBOX'];
+const AUDIT_STATUSES = [
+  'DRAFT',
+  'VALIDATED',
+  'SIMULATED',
+  'PENDING_CONFIRMATION',
+  'PENDING_APPROVAL',
+  'READY',
+  'APPLIED',
+  'REJECTED',
   'FAILED',
-]);
-const MESSAGING_OUTBOX_STATUSES = new Set<MessagingOutboxStatus>([
-  'PENDING',
-  'SENDING',
-  'SENT',
-  'FAILED',
-  'DEAD',
-]);
-const INCIDENT_SIGNAL_SOURCES = new Set<IncidentSignalSource>([
-  'ADMIN_OPERATION',
-  'INBOX',
-  'OUTBOX',
-]);
-const INCIDENT_SIGNAL_STATES = new Set<IncidentSignalState>(['FAILED', 'DEAD']);
-const INCIDENT_RUNBOOK_KEY_VALUES = new Set<IncidentRunbookKey>([
-  'admin-operation-failed',
-  'inbox-processing-failed',
-  'outbox-delivery-failed',
-  'outbox-dead-letter',
-]);
-const RUNTIME_HEALTH_KEYS = ['environment', 'runtime'] as const;
-const RUNTIME_HEALTH_RUNTIME_KEYS = [
+  'COMPENSATED',
+];
+const AUDIT_KINDS = ['PROPOSED', 'CONFIRMATION', 'APPROVAL', 'CHANGE', 'AUDIT'];
+const AUDIT_DECISIONS = ['APPROVED', 'REJECTED'];
+const RUNTIME_KEYS = ['environment', 'runtime'];
+const RUNTIME_EVIDENCE_KEYS = [
   'providerState',
   'deploymentRevision',
   'startedAt',
@@ -293,21 +301,18 @@ const RUNTIME_HEALTH_RUNTIME_KEYS = [
   'lastHeartbeatAt',
   'lastDisconnectAt',
   'stoppedAt',
-] as const;
-const MESSAGING_OPERATIONS_KEYS = ['inbox', 'outbox'] as const;
-const MESSAGING_INBOX_KEYS = ['counts', 'recent'] as const;
-const MESSAGING_OUTBOX_KEYS = ['counts', 'recent', 'deadLetter'] as const;
-const MESSAGING_INBOX_COUNT_KEYS = ['RECEIVED', 'PROCESSING', 'PROCESSED', 'FAILED'] as const;
-const MESSAGING_OUTBOX_COUNT_KEYS = ['PENDING', 'SENDING', 'SENT', 'FAILED', 'DEAD'] as const;
-const MESSAGING_INBOX_METADATA_KEYS = [
+];
+const INBOX_COUNT_KEYS = ['RECEIVED', 'PROCESSING', 'PROCESSED', 'FAILED'];
+const OUTBOX_COUNT_KEYS = ['PENDING', 'SENDING', 'SENT', 'FAILED', 'DEAD'];
+const INBOX_META_KEYS = [
   'id',
   'status',
   'attempts',
   'receivedAt',
   'processedAt',
   'processingStartedAt',
-] as const;
-const MESSAGING_OUTBOX_METADATA_KEYS = [
+];
+const OUTBOX_META_KEYS = [
   'id',
   'status',
   'attempts',
@@ -315,9 +320,8 @@ const MESSAGING_OUTBOX_METADATA_KEYS = [
   'createdAt',
   'sentAt',
   'sendingStartedAt',
-] as const;
-const INCIDENT_CENTER_KEYS = ['signals'] as const;
-const INCIDENT_SIGNAL_KEYS = [
+];
+const SIGNAL_KEYS = [
   'source',
   'id',
   'correlationId',
@@ -329,556 +333,383 @@ const INCIDENT_SIGNAL_KEYS = [
   'attempts',
   'occurredAt',
   'runbook',
-] as const;
-const INCIDENT_RUNBOOK_KEYS = [
-  'key',
-  'title',
-  'summary',
-  'steps',
-  'evidenceToCollect',
-  'escalation',
-] as const;
-const MESSAGING_RECENT_LIMIT = 25;
-const INCIDENT_RECENT_LIMIT = 25;
-const INCIDENT_RUNBOOK_LIST_LIMIT = 8;
+];
+const RUNBOOK_KEYS = ['key', 'title', 'summary', 'steps', 'evidenceToCollect', 'escalation'];
+const AUDIT_OPERATION_KEYS = [
+  'id',
+  'principalId',
+  'capabilityKey',
+  'operationType',
+  'targetType',
+  'targetId',
+  'riskTier',
+  'status',
+  'correlationId',
+  'reasonRecorded',
+  'expectedRevision',
+  'revision',
+  'policy',
+  'createdAt',
+  'updatedAt',
+  'appliedAt',
+];
+const AUDIT_POLICY_KEYS = [
+  'version',
+  'requiresReason',
+  'requiresExpectedRevision',
+  'requiresSimulation',
+  'requiresConfirmation',
+  'requiredApprovals',
+];
+const AUDIT_EVENT_KEYS = [
+  'kind',
+  'occurredAt',
+  'actorPrincipalId',
+  'action',
+  'decision',
+  'resourceType',
+  'resourceId',
+  'eventId',
+];
 
-type UnknownRecord = Record<string, unknown>;
-
-function isRecord(value: unknown): value is UnknownRecord {
+function record(value: unknown): value is UnknownRecord {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
-
-function isUuid(value: unknown): value is string {
-  return typeof value === 'string' && UUID_PATTERN.test(value);
+function exact(value: unknown, keys: readonly string[]): value is UnknownRecord {
+  return record(value) && Object.keys(value).length === keys.length && keys.every((key) => key in value);
 }
-
-function isIntegerString(value: unknown): value is string {
-  return typeof value === 'string' && INTEGER_STRING_PATTERN.test(value);
+function uuid(value: unknown): value is string {
+  return typeof value === 'string' && UUID.test(value);
 }
-
-function isNonNegativeInteger(value: unknown): value is number {
-  return typeof value === 'number' && Number.isInteger(value) && value >= 0;
-}
-
-function isNonEmptyString(value: unknown): value is string {
+function text(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0;
 }
-
-function isNonEmptyStringList(value: unknown): value is string[] {
-  return (
-    Array.isArray(value) &&
-    value.length > 0 &&
-    value.length <= INCIDENT_RUNBOOK_LIST_LIMIT &&
-    value.every(isNonEmptyString)
-  );
+function intText(value: unknown): value is string {
+  return typeof value === 'string' && INTEGER.test(value);
 }
-
-function hasExactKeys(value: UnknownRecord, expected: readonly string[]): boolean {
-  const actual = Object.keys(value);
-  return actual.length === expected.length && actual.every((key) => expected.includes(key));
+function nonnegative(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0;
 }
-
-function isCanonicalIsoTimestamp(value: unknown): value is string {
+function iso(value: unknown): value is string {
   if (typeof value !== 'string') return false;
-  const parsed = new Date(value);
-  return !Number.isNaN(parsed.getTime()) && parsed.toISOString() === value;
+  const date = new Date(value);
+  return !Number.isNaN(date.getTime()) && date.toISOString() === value;
+}
+function nullable(value: unknown, test: (entry: unknown) => boolean): boolean {
+  return value === null || test(value);
+}
+function oneOf(value: unknown, values: readonly string[]): value is string {
+  return typeof value === 'string' && values.includes(value);
+}
+function fail(): never {
+  throw new Error('Invalid Admin API response.');
 }
 
-function isNullableCanonicalIsoTimestamp(value: unknown): value is string | null {
-  return value === null || isCanonicalIsoTimestamp(value);
-}
-
-function isRuntimeProviderState(value: unknown): value is RuntimeWhatsappProviderState {
-  if (typeof value !== 'string') return false;
-  return RUNTIME_PROVIDER_STATES.has(value as RuntimeWhatsappProviderState);
-}
-
-function isMessagingInboxStatus(value: unknown): value is MessagingInboxStatus {
-  return typeof value === 'string' && MESSAGING_INBOX_STATUSES.has(value as MessagingInboxStatus);
-}
-
-function isMessagingOutboxStatus(value: unknown): value is MessagingOutboxStatus {
-  return typeof value === 'string' && MESSAGING_OUTBOX_STATUSES.has(value as MessagingOutboxStatus);
-}
-
-function isIncidentSignalSource(value: unknown): value is IncidentSignalSource {
-  return typeof value === 'string' && INCIDENT_SIGNAL_SOURCES.has(value as IncidentSignalSource);
-}
-
-function isIncidentSignalState(value: unknown): value is IncidentSignalState {
-  return typeof value === 'string' && INCIDENT_SIGNAL_STATES.has(value as IncidentSignalState);
-}
-
-function expectedIncidentRunbookKey(
-  source: IncidentSignalSource,
-  state: IncidentSignalState,
-): IncidentRunbookKey {
+function runbookKey(source: string, state: string): IncidentRunbookKey {
   if (source === 'ADMIN_OPERATION' && state === 'FAILED') return 'admin-operation-failed';
   if (source === 'INBOX' && state === 'FAILED') return 'inbox-processing-failed';
   if (source === 'OUTBOX' && state === 'FAILED') return 'outbox-delivery-failed';
   if (source === 'OUTBOX' && state === 'DEAD') return 'outbox-dead-letter';
-  throw new Error('Invalid Incident Center runbook mapping.');
+  return fail();
 }
 
-function assertIncidentRunbook(
-  value: unknown,
-  source: IncidentSignalSource,
-  state: IncidentSignalState,
-): IncidentRunbookView {
-  if (!isRecord(value) || !hasExactKeys(value, INCIDENT_RUNBOOK_KEYS)) {
-    throw new Error('Invalid Incident Center runbook.');
-  }
-
-  const expectedKey = expectedIncidentRunbookKey(source, state);
+function validateRunbook(value: unknown, source: string, state: string): void {
+  if (!exact(value, RUNBOOK_KEYS)) fail();
+  const key = runbookKey(source, state);
+  const list = (entry: unknown) =>
+    Array.isArray(entry) && entry.length > 0 && entry.length <= 8 && entry.every(text);
   if (
-    typeof value.key !== 'string' ||
-    !INCIDENT_RUNBOOK_KEY_VALUES.has(value.key as IncidentRunbookKey) ||
-    value.key !== expectedKey ||
-    !isNonEmptyString(value.title) ||
-    !isNonEmptyString(value.summary) ||
-    !isNonEmptyStringList(value.steps) ||
-    !isNonEmptyStringList(value.evidenceToCollect) ||
-    !isNonEmptyString(value.escalation)
+    value.key !== key ||
+    !text(value.title) ||
+    !text(value.summary) ||
+    !list(value.steps) ||
+    !list(value.evidenceToCollect) ||
+    !text(value.escalation)
   ) {
-    throw new Error('Invalid Incident Center runbook.');
+    fail();
   }
-
-  return {
-    key: expectedKey,
-    title: value.title,
-    summary: value.summary,
-    steps: [...value.steps],
-    evidenceToCollect: [...value.evidenceToCollect],
-    escalation: value.escalation,
-  };
 }
 
-function isResourceKind(value: unknown): value is ContentResourceKind {
-  return typeof value === 'string' && RESOURCE_KINDS.has(value as ContentResourceKind);
-}
-
-function isReleaseStatus(value: unknown): value is ContentReleaseStatus {
-  return typeof value === 'string' && RELEASE_STATUSES.has(value as ContentReleaseStatus);
-}
-
-function isUnpublishedStatus(value: unknown): value is ContentUnpublishedStatus {
-  return typeof value === 'string' && UNPUBLISHED_STATUSES.has(value as ContentUnpublishedStatus);
-}
-
-function isUnpublishedWorkflowState(value: unknown): value is ContentUnpublishedWorkflowState {
-  return (
-    typeof value === 'string' &&
-    UNPUBLISHED_WORKFLOW_STATES.has(value as ContentUnpublishedWorkflowState)
-  );
-}
-
-function isReleaseDiffCategory(value: unknown): value is ContentReleaseDiffCategory {
-  return (
-    typeof value === 'string' && RELEASE_DIFF_CATEGORIES.has(value as ContentReleaseDiffCategory)
-  );
-}
-
-function assertContentLibraryItem(value: unknown): ContentLibraryItem {
+function contentItem(value: unknown): ContentLibraryItem {
   if (
-    !isRecord(value) ||
-    !isUuid(value.releaseId) ||
-    !isIntegerString(value.releaseNo) ||
-    !isNonEmptyString(value.releaseName) ||
-    !isReleaseStatus(value.releaseStatus) ||
-    !isIntegerString(value.releaseRevision) ||
-    !isResourceKind(value.resourceKind) ||
-    !isUuid(value.resourceId) ||
-    !isNonEmptyString(value.slug) ||
-    !isNonEmptyString(value.displayName) ||
+    !record(value) ||
+    !uuid(value.releaseId) ||
+    !intText(value.releaseNo) ||
+    !text(value.releaseName) ||
+    !oneOf(value.releaseStatus, RELEASE_STATUSES) ||
+    !intText(value.releaseRevision) ||
+    !oneOf(value.resourceKind, RESOURCE_KINDS) ||
+    !uuid(value.resourceId) ||
+    !text(value.slug) ||
+    !text(value.displayName) ||
     typeof value.active !== 'boolean'
   ) {
-    throw new Error('Invalid content library item.');
+    fail();
   }
-
   return {
     releaseId: value.releaseId,
     releaseNo: value.releaseNo,
     releaseName: value.releaseName,
-    releaseStatus: value.releaseStatus,
+    releaseStatus: value.releaseStatus as ContentReleaseStatus,
     releaseRevision: value.releaseRevision,
-    resourceKind: value.resourceKind,
+    resourceKind: value.resourceKind as ContentResourceKind,
     resourceId: value.resourceId,
     slug: value.slug,
     displayName: value.displayName,
     active: value.active,
   };
 }
-
-function assertContentLibraryResult(value: unknown): ContentLibraryResult {
-  if (
-    !isRecord(value) ||
-    !Array.isArray(value.items) ||
-    (value.nextCursor !== null && typeof value.nextCursor !== 'string')
-  ) {
-    throw new Error('Invalid content library response.');
-  }
-  return {
-    items: value.items.map(assertContentLibraryItem),
-    nextCursor: value.nextCursor,
-  };
+function contentResult(value: unknown): ContentLibraryResult {
+  if (!record(value) || !Array.isArray(value.items) || !nullable(value.nextCursor, text)) fail();
+  return { items: value.items.map(contentItem), nextCursor: value.nextCursor as string | null };
 }
-
-function assertUnpublishedRelease(value: unknown): ContentUnpublishedRelease {
+function unpublishedRow(value: unknown): ContentUnpublishedRelease {
   if (
-    !isRecord(value) ||
-    !isUuid(value.releaseId) ||
-    !isIntegerString(value.releaseNo) ||
-    !isNonEmptyString(value.releaseName) ||
-    !isUnpublishedStatus(value.status) ||
-    !isUnpublishedWorkflowState(value.workflowState) ||
-    !isIntegerString(value.revision) ||
-    (value.parentReleaseId !== null && !isUuid(value.parentReleaseId)) ||
-    !isNonEmptyString(value.createdAt) ||
-    (value.validatedAt !== null && !isNonEmptyString(value.validatedAt)) ||
-    !isIntegerString(value.recordedChangeCount) ||
-    (value.lastChangedAt !== null && !isNonEmptyString(value.lastChangedAt))
+    !record(value) ||
+    !uuid(value.releaseId) ||
+    !intText(value.releaseNo) ||
+    !text(value.releaseName) ||
+    !oneOf(value.status, UNPUBLISHED_STATUSES) ||
+    !oneOf(value.workflowState, UNPUBLISHED_STATES) ||
+    !intText(value.revision) ||
+    !nullable(value.parentReleaseId, uuid) ||
+    !text(value.createdAt) ||
+    !nullable(value.validatedAt, text) ||
+    !intText(value.recordedChangeCount) ||
+    !nullable(value.lastChangedAt, text)
   ) {
-    throw new Error('Invalid unpublished content release.');
+    fail();
   }
-
   return {
     releaseId: value.releaseId,
     releaseNo: value.releaseNo,
     releaseName: value.releaseName,
-    status: value.status,
-    workflowState: value.workflowState,
+    status: value.status as ContentUnpublishedStatus,
+    workflowState: value.workflowState as ContentUnpublishedWorkflowState,
     revision: value.revision,
-    parentReleaseId: value.parentReleaseId,
+    parentReleaseId: value.parentReleaseId as string | null,
     createdAt: value.createdAt,
-    validatedAt: value.validatedAt,
+    validatedAt: value.validatedAt as string | null,
     recordedChangeCount: value.recordedChangeCount,
-    lastChangedAt: value.lastChangedAt,
+    lastChangedAt: value.lastChangedAt as string | null,
   };
 }
-
-function assertUnpublishedContentResult(value: unknown): readonly ContentUnpublishedRelease[] {
-  if (!Array.isArray(value)) throw new Error('Invalid unpublished content response.');
-  return value.map(assertUnpublishedRelease);
+function unpublishedResult(value: unknown): readonly ContentUnpublishedRelease[] {
+  if (!Array.isArray(value)) fail();
+  return value.map(unpublishedRow);
 }
-
-function assertReleaseDiffSection(value: unknown): ContentReleaseDiffSection {
+function diffSection(value: unknown): ContentReleaseDiffSection {
   if (
-    !isRecord(value) ||
-    !isReleaseDiffCategory(value.category) ||
-    !isNonNegativeInteger(value.added) ||
-    !isNonNegativeInteger(value.removed) ||
-    !isNonNegativeInteger(value.changed)
+    !record(value) ||
+    !oneOf(value.category, RELEASE_DIFF_CATEGORIES) ||
+    !nonnegative(value.added) ||
+    !nonnegative(value.removed) ||
+    !nonnegative(value.changed)
   ) {
-    throw new Error('Invalid content release diff section.');
+    fail();
   }
-
   return {
-    category: value.category,
+    category: value.category as ContentReleaseDiffCategory,
     added: value.added,
     removed: value.removed,
     changed: value.changed,
   };
 }
-
-function assertContentReleaseDiff(
-  value: unknown,
-  expected: ContentReleaseDiffQuery,
-): ContentReleaseDiff {
+function diffResult(value: unknown, expected: ContentReleaseDiffQuery): ContentReleaseDiff {
   if (
-    !isRecord(value) ||
+    !record(value) ||
     value.fromReleaseId !== expected.fromReleaseId ||
     value.toReleaseId !== expected.toReleaseId ||
     !Array.isArray(value.sections)
   ) {
-    throw new Error('Invalid content release diff response.');
+    fail();
   }
-
-  return {
-    fromReleaseId: expected.fromReleaseId,
-    toReleaseId: expected.toReleaseId,
-    sections: value.sections.map(assertReleaseDiffSection),
-  };
+  return { ...expected, sections: value.sections.map(diffSection) };
 }
-
-function assertContentReleaseValidationIssue(value: unknown): ContentReleaseValidationIssue {
+function validationResult(value: unknown, releaseId: string): ContentReleaseValidationPreview {
   if (
-    !isRecord(value) ||
-    !isNonEmptyString(value.code) ||
-    !isNonEmptyString(value.path) ||
-    !isNonEmptyString(value.message)
-  ) {
-    throw new Error('Invalid content release validation issue.');
-  }
-  return { code: value.code, path: value.path, message: value.message };
-}
-
-function assertContentReleaseValidationPreview(
-  value: unknown,
-  expectedReleaseId: string,
-): ContentReleaseValidationPreview {
-  if (
-    !isRecord(value) ||
-    value.releaseId !== expectedReleaseId ||
+    !record(value) ||
+    value.releaseId !== releaseId ||
     typeof value.valid !== 'boolean' ||
     !Array.isArray(value.issues)
   ) {
-    throw new Error('Invalid content release validation preview response.');
+    fail();
   }
-  return {
-    releaseId: expectedReleaseId,
-    valid: value.valid,
-    issues: value.issues.map(assertContentReleaseValidationIssue),
-  };
+  const issues = value.issues.map((issue) => {
+    if (!record(issue) || !text(issue.code) || !text(issue.path) || !text(issue.message)) fail();
+    return { code: issue.code, path: issue.path, message: issue.message };
+  });
+  return { releaseId, valid: value.valid, issues };
 }
-
-function assertRuntimeWhatsappHealth(value: unknown): RuntimeWhatsappHealthView {
-  if (!isRecord(value) || !hasExactKeys(value, RUNTIME_HEALTH_KEYS)) {
-    throw new Error('Invalid runtime WhatsApp health response.');
+function runtimeResult(value: unknown): RuntimeWhatsappHealthView {
+  if (!exact(value, RUNTIME_KEYS) || !oneOf(value.environment, ['development', 'staging', 'production'])) {
+    fail();
   }
-  if (
-    value.environment !== 'development' &&
-    value.environment !== 'staging' &&
-    value.environment !== 'production'
-  ) {
-    throw new Error('Invalid runtime WhatsApp health environment.');
-  }
-  if (value.runtime === null) {
-    return { environment: value.environment, runtime: null };
-  }
-  if (!isRecord(value.runtime) || !hasExactKeys(value.runtime, RUNTIME_HEALTH_RUNTIME_KEYS)) {
-    throw new Error('Invalid runtime WhatsApp health evidence.');
-  }
-
+  if (value.runtime === null) return value as unknown as RuntimeWhatsappHealthView;
+  if (!exact(value.runtime, RUNTIME_EVIDENCE_KEYS)) fail();
   const runtime = value.runtime;
   if (
-    !isRuntimeProviderState(runtime.providerState) ||
+    !oneOf(runtime.providerState, RUNTIME_STATES) ||
     typeof runtime.deploymentRevision !== 'string' ||
-    !DEPLOYMENT_REVISION_PATTERN.test(runtime.deploymentRevision) ||
-    !isCanonicalIsoTimestamp(runtime.startedAt) ||
-    !isNullableCanonicalIsoTimestamp(runtime.lastConnectedAt) ||
-    !isCanonicalIsoTimestamp(runtime.lastHeartbeatAt) ||
-    !isNullableCanonicalIsoTimestamp(runtime.lastDisconnectAt) ||
-    !isNullableCanonicalIsoTimestamp(runtime.stoppedAt)
+    !SHA40.test(runtime.deploymentRevision) ||
+    !iso(runtime.startedAt) ||
+    !nullable(runtime.lastConnectedAt, iso) ||
+    !iso(runtime.lastHeartbeatAt) ||
+    !nullable(runtime.lastDisconnectAt, iso) ||
+    !nullable(runtime.stoppedAt, iso)
   ) {
-    throw new Error('Invalid runtime WhatsApp health evidence.');
+    fail();
   }
-
-  return {
-    environment: value.environment,
-    runtime: {
-      providerState: runtime.providerState,
-      deploymentRevision: runtime.deploymentRevision,
-      startedAt: runtime.startedAt,
-      lastConnectedAt: runtime.lastConnectedAt,
-      lastHeartbeatAt: runtime.lastHeartbeatAt,
-      lastDisconnectAt: runtime.lastDisconnectAt,
-      stoppedAt: runtime.stoppedAt,
-    },
-  };
+  return value as unknown as RuntimeWhatsappHealthView;
 }
-
-function assertMessagingInboxCounts(value: unknown): MessagingInboxCounts {
-  if (!isRecord(value) || !hasExactKeys(value, MESSAGING_INBOX_COUNT_KEYS)) {
-    throw new Error('Invalid messaging inbox counts.');
+function validateCounts(value: unknown, keys: readonly string[]): void {
+  if (!exact(value, keys) || keys.some((key) => !nonnegative(value[key]))) fail();
+}
+function validateInbox(value: unknown): void {
+  if (!exact(value, INBOX_META_KEYS)) fail();
+  if (
+    !uuid(value.id) ||
+    !oneOf(value.status, INBOX_STATES) ||
+    !nonnegative(value.attempts) ||
+    !iso(value.receivedAt) ||
+    !nullable(value.processedAt, iso) ||
+    !nullable(value.processingStartedAt, iso)
+  ) {
+    fail();
+  }
+}
+function validateOutbox(value: unknown): void {
+  if (!exact(value, OUTBOX_META_KEYS)) fail();
+  if (
+    !uuid(value.id) ||
+    !oneOf(value.status, OUTBOX_STATES) ||
+    !nonnegative(value.attempts) ||
+    !nullable(value.nextAttemptAt, iso) ||
+    !iso(value.createdAt) ||
+    !nullable(value.sentAt, iso) ||
+    !nullable(value.sendingStartedAt, iso)
+  ) {
+    fail();
+  }
+}
+function messagingResult(value: unknown): MessagingOperationsView {
+  if (!exact(value, ['inbox', 'outbox'])) fail();
+  const inbox = value.inbox;
+  const outbox = value.outbox;
+  if (!exact(inbox, ['counts', 'recent']) || !exact(outbox, ['counts', 'recent', 'deadLetter'])) {
+    fail();
   }
   if (
-    !isNonNegativeInteger(value.RECEIVED) ||
-    !isNonNegativeInteger(value.PROCESSING) ||
-    !isNonNegativeInteger(value.PROCESSED) ||
-    !isNonNegativeInteger(value.FAILED)
+    !Array.isArray(inbox.recent) ||
+    !Array.isArray(outbox.recent) ||
+    !Array.isArray(outbox.deadLetter) ||
+    inbox.recent.length > 25 ||
+    outbox.recent.length > 25 ||
+    outbox.deadLetter.length > 25
   ) {
-    throw new Error('Invalid messaging inbox counts.');
+    fail();
   }
-  return {
-    RECEIVED: value.RECEIVED,
-    PROCESSING: value.PROCESSING,
-    PROCESSED: value.PROCESSED,
-    FAILED: value.FAILED,
-  };
+  validateCounts(inbox.counts, INBOX_COUNT_KEYS);
+  validateCounts(outbox.counts, OUTBOX_COUNT_KEYS);
+  inbox.recent.forEach(validateInbox);
+  outbox.recent.forEach(validateOutbox);
+  outbox.deadLetter.forEach((item) => {
+    validateOutbox(item);
+    if (!record(item) || item.status !== 'DEAD') fail();
+  });
+  return value as unknown as MessagingOperationsView;
 }
-
-function assertMessagingOutboxCounts(value: unknown): MessagingOutboxCounts {
-  if (!isRecord(value) || !hasExactKeys(value, MESSAGING_OUTBOX_COUNT_KEYS)) {
-    throw new Error('Invalid messaging outbox counts.');
+function incidentResult(value: unknown): IncidentCenterView {
+  if (!exact(value, ['signals']) || !Array.isArray(value.signals) || value.signals.length > 25) fail();
+  for (const signal of value.signals) {
+    if (!exact(signal, SIGNAL_KEYS)) fail();
+    if (
+      !oneOf(signal.source, INCIDENT_SOURCES) ||
+      !uuid(signal.id) ||
+      !uuid(signal.correlationId) ||
+      !oneOf(signal.state, ['FAILED', 'DEAD']) ||
+      !text(signal.kind) ||
+      !nullable(signal.targetType, text) ||
+      !nullable(signal.targetId, uuid) ||
+      !nullable(signal.riskTier, nonnegative) ||
+      !nullable(signal.attempts, nonnegative) ||
+      !iso(signal.occurredAt)
+    ) {
+      fail();
+    }
+    if (signal.source === 'ADMIN_OPERATION' && signal.state !== 'FAILED') fail();
+    if (signal.source === 'INBOX' && (signal.state !== 'FAILED' || signal.kind !== 'INBOX_MESSAGE')) fail();
+    if (signal.source === 'OUTBOX' && signal.kind !== 'OUTBOX_MESSAGE') fail();
+    validateRunbook(signal.runbook, signal.source, signal.state);
   }
+  return value as unknown as IncidentCenterView;
+}
+function auditResult(value: unknown, operationId: string): AdminOperationAuditView {
+  if (!exact(value, ['operation', 'timeline']) || !Array.isArray(value.timeline)) fail();
+  const operation = value.operation;
+  if (!exact(operation, AUDIT_OPERATION_KEYS) || !exact(operation.policy, AUDIT_POLICY_KEYS)) fail();
+  const policy = operation.policy;
   if (
-    !isNonNegativeInteger(value.PENDING) ||
-    !isNonNegativeInteger(value.SENDING) ||
-    !isNonNegativeInteger(value.SENT) ||
-    !isNonNegativeInteger(value.FAILED) ||
-    !isNonNegativeInteger(value.DEAD)
+    operation.id !== operationId ||
+    !uuid(operation.id) ||
+    !uuid(operation.principalId) ||
+    !text(operation.capabilityKey) ||
+    !text(operation.operationType) ||
+    !text(operation.targetType) ||
+    !nullable(operation.targetId, uuid) ||
+    !nonnegative(operation.riskTier) ||
+    (operation.riskTier as number) > 4 ||
+    !oneOf(operation.status, AUDIT_STATUSES) ||
+    !uuid(operation.correlationId) ||
+    typeof operation.reasonRecorded !== 'boolean' ||
+    !nullable(operation.expectedRevision, intText) ||
+    !intText(operation.revision) ||
+    !iso(operation.createdAt) ||
+    !iso(operation.updatedAt) ||
+    !nullable(operation.appliedAt, iso) ||
+    typeof policy.version !== 'number' ||
+    !Number.isInteger(policy.version) ||
+    policy.version <= 0 ||
+    ['requiresReason', 'requiresExpectedRevision', 'requiresSimulation', 'requiresConfirmation'].some(
+      (key) => typeof policy[key] !== 'boolean',
+    ) ||
+    !nonnegative(policy.requiredApprovals) ||
+    (policy.requiredApprovals as number) > 2
   ) {
-    throw new Error('Invalid messaging outbox counts.');
+    fail();
   }
-  return {
-    PENDING: value.PENDING,
-    SENDING: value.SENDING,
-    SENT: value.SENT,
-    FAILED: value.FAILED,
-    DEAD: value.DEAD,
-  };
+  for (const event of value.timeline) {
+    if (!exact(event, AUDIT_EVENT_KEYS)) fail();
+    if (
+      !oneOf(event.kind, AUDIT_KINDS) ||
+      !iso(event.occurredAt) ||
+      !nullable(event.actorPrincipalId, uuid) ||
+      !text(event.action) ||
+      !nullable(event.decision, (entry) => oneOf(entry, AUDIT_DECISIONS)) ||
+      !nullable(event.resourceType, text) ||
+      !nullable(event.resourceId, uuid) ||
+      !uuid(event.eventId)
+    ) {
+      fail();
+    }
+  }
+  return value as unknown as AdminOperationAuditView;
 }
 
-function assertMessagingInboxMetadata(value: unknown): MessagingInboxMetadata {
-  if (!isRecord(value) || !hasExactKeys(value, MESSAGING_INBOX_METADATA_KEYS)) {
-    throw new Error('Invalid messaging inbox metadata.');
-  }
-  if (
-    !isUuid(value.id) ||
-    !isMessagingInboxStatus(value.status) ||
-    !isNonNegativeInteger(value.attempts) ||
-    !isCanonicalIsoTimestamp(value.receivedAt) ||
-    !isNullableCanonicalIsoTimestamp(value.processedAt) ||
-    !isNullableCanonicalIsoTimestamp(value.processingStartedAt)
-  ) {
-    throw new Error('Invalid messaging inbox metadata.');
-  }
-  return {
-    id: value.id,
-    status: value.status,
-    attempts: value.attempts,
-    receivedAt: value.receivedAt,
-    processedAt: value.processedAt,
-    processingStartedAt: value.processingStartedAt,
-  };
-}
-
-function assertMessagingOutboxMetadata(value: unknown): MessagingOutboxMetadata {
-  if (!isRecord(value) || !hasExactKeys(value, MESSAGING_OUTBOX_METADATA_KEYS)) {
-    throw new Error('Invalid messaging outbox metadata.');
-  }
-  if (
-    !isUuid(value.id) ||
-    !isMessagingOutboxStatus(value.status) ||
-    !isNonNegativeInteger(value.attempts) ||
-    !isNullableCanonicalIsoTimestamp(value.nextAttemptAt) ||
-    !isCanonicalIsoTimestamp(value.createdAt) ||
-    !isNullableCanonicalIsoTimestamp(value.sentAt) ||
-    !isNullableCanonicalIsoTimestamp(value.sendingStartedAt)
-  ) {
-    throw new Error('Invalid messaging outbox metadata.');
-  }
-  return {
-    id: value.id,
-    status: value.status,
-    attempts: value.attempts,
-    nextAttemptAt: value.nextAttemptAt,
-    createdAt: value.createdAt,
-    sentAt: value.sentAt,
-    sendingStartedAt: value.sendingStartedAt,
-  };
-}
-
-function assertMessagingOperations(value: unknown): MessagingOperationsView {
-  if (!isRecord(value) || !hasExactKeys(value, MESSAGING_OPERATIONS_KEYS)) {
-    throw new Error('Invalid messaging operations response.');
-  }
-  if (
-    !isRecord(value.inbox) ||
-    !hasExactKeys(value.inbox, MESSAGING_INBOX_KEYS) ||
-    !Array.isArray(value.inbox.recent) ||
-    value.inbox.recent.length > MESSAGING_RECENT_LIMIT ||
-    !isRecord(value.outbox) ||
-    !hasExactKeys(value.outbox, MESSAGING_OUTBOX_KEYS) ||
-    !Array.isArray(value.outbox.recent) ||
-    !Array.isArray(value.outbox.deadLetter) ||
-    value.outbox.recent.length > MESSAGING_RECENT_LIMIT ||
-    value.outbox.deadLetter.length > MESSAGING_RECENT_LIMIT
-  ) {
-    throw new Error('Invalid messaging operations response.');
-  }
-
-  const deadLetter = value.outbox.deadLetter.map(assertMessagingOutboxMetadata);
-  if (deadLetter.some((item) => item.status !== 'DEAD')) {
-    throw new Error('Invalid messaging dead-letter metadata.');
-  }
-
-  return {
-    inbox: {
-      counts: assertMessagingInboxCounts(value.inbox.counts),
-      recent: value.inbox.recent.map(assertMessagingInboxMetadata),
-    },
-    outbox: {
-      counts: assertMessagingOutboxCounts(value.outbox.counts),
-      recent: value.outbox.recent.map(assertMessagingOutboxMetadata),
-      deadLetter,
-    },
-  };
-}
-
-function assertIncidentSignal(value: unknown): IncidentSignalView {
-  if (!isRecord(value) || !hasExactKeys(value, INCIDENT_SIGNAL_KEYS)) {
-    throw new Error('Invalid Incident Center signal.');
-  }
-  if (
-    !isIncidentSignalSource(value.source) ||
-    !isUuid(value.id) ||
-    !isUuid(value.correlationId) ||
-    !isIncidentSignalState(value.state) ||
-    !isNonEmptyString(value.kind) ||
-    (value.targetType !== null && !isNonEmptyString(value.targetType)) ||
-    (value.targetId !== null && !isUuid(value.targetId)) ||
-    (value.riskTier !== null && !isNonNegativeInteger(value.riskTier)) ||
-    (value.attempts !== null && !isNonNegativeInteger(value.attempts)) ||
-    !isCanonicalIsoTimestamp(value.occurredAt)
-  ) {
-    throw new Error('Invalid Incident Center signal.');
-  }
-
-  if (value.source === 'ADMIN_OPERATION' && value.state !== 'FAILED') {
-    throw new Error('Invalid administrative incident state.');
-  }
-  if (value.source === 'INBOX' && (value.state !== 'FAILED' || value.kind !== 'INBOX_MESSAGE')) {
-    throw new Error('Invalid inbox incident signal.');
-  }
-  if (value.source === 'OUTBOX' && value.kind !== 'OUTBOX_MESSAGE') {
-    throw new Error('Invalid outbox incident signal.');
-  }
-
-  const runbook = assertIncidentRunbook(value.runbook, value.source, value.state);
-
-  return {
-    source: value.source,
-    id: value.id,
-    correlationId: value.correlationId,
-    state: value.state,
-    kind: value.kind,
-    targetType: value.targetType,
-    targetId: value.targetId,
-    riskTier: value.riskTier,
-    attempts: value.attempts,
-    occurredAt: value.occurredAt,
-    runbook,
-  };
-}
-
-function assertIncidentCenter(value: unknown): IncidentCenterView {
-  if (
-    !isRecord(value) ||
-    !hasExactKeys(value, INCIDENT_CENTER_KEYS) ||
-    !Array.isArray(value.signals) ||
-    value.signals.length > INCIDENT_RECENT_LIMIT
-  ) {
-    throw new Error('Invalid Incident Center response.');
-  }
-  return { signals: value.signals.map(assertIncidentSignal) };
-}
-
-async function parseContentError(response: Response): Promise<AdminApiError> {
+async function parseError(response: Response): Promise<AdminApiError> {
   let code = `HTTP_${response.status}`;
   let message = 'A consulta administrativa falhou.';
   let correlationId = response.headers.get('x-correlation-id');
   try {
     const body: unknown = await response.json();
-    if (isRecord(body) && isRecord(body.error)) {
-      if (isNonEmptyString(body.error.code)) code = body.error.code;
-      if (isNonEmptyString(body.error.message)) message = body.error.message;
-      if (isNonEmptyString(body.error.correlationId)) correlationId = body.error.correlationId;
+    if (record(body) && record(body.error)) {
+      if (text(body.error.code)) code = body.error.code;
+      if (text(body.error.message)) message = body.error.message;
+      if (text(body.error.correlationId)) correlationId = body.error.correlationId;
     }
   } catch {
-    // The normalized transport error below is sufficient when the body is not JSON.
+    // Normalized transport error is sufficient for a non-JSON error body.
   }
-
   const kind =
     response.status === 401
       ? 'unauthenticated'
@@ -893,7 +724,6 @@ async function parseContentError(response: Response): Promise<AdminApiError> {
               : 'server';
   return new AdminApiError(kind, message, response.status, code, correlationId);
 }
-
 function appendQuery(
   url: URL,
   query: Readonly<Record<string, string | number | boolean | undefined>>,
@@ -903,288 +733,122 @@ function appendQuery(
   }
 }
 
-/**
- * Stable façade over the existing Admin API client. Content Library is added
- * here without duplicating or weakening the proven Player 360 / PREPARE code.
- */
 export class AdminApiClient {
   private readonly core: CoreAdminApiClient;
-
   public constructor(
     private readonly apiBaseUrl: string,
     private readonly fetchImpl: typeof fetch = fetch,
   ) {
     this.core = new CoreAdminApiClient(apiBaseUrl, fetchImpl);
   }
-
   public getSession(...args: Parameters<CoreAdminApiClient['getSession']>) {
     return this.core.getSession(...args);
   }
-
   public searchPlayers(...args: Parameters<CoreAdminApiClient['searchPlayers']>) {
     return this.core.searchPlayers(...args);
   }
-
   public getPlayer(...args: Parameters<CoreAdminApiClient['getPlayer']>) {
     return this.core.getPlayer(...args);
   }
-
   public prepareOperation(...args: Parameters<CoreAdminApiClient['prepareOperation']>) {
     return this.core.prepareOperation(...args);
   }
 
-  public async searchContent(
-    query: ContentLibraryQuery,
-    cursor?: string,
-  ): Promise<ContentLibraryResult> {
+  private async read<T>(
+    url: URL | string,
+    validate: (value: unknown) => T,
+    invalidCode: string,
+  ): Promise<T> {
+    let response: Response;
+    try {
+      response = await this.fetchImpl(String(url), {
+        method: 'GET',
+        credentials: 'include',
+        headers: { accept: 'application/json' },
+      });
+    } catch {
+      throw new AdminApiError(
+        'network',
+        'Não foi possível alcançar a Admin API.',
+        null,
+        'NETWORK_ERROR',
+        null,
+      );
+    }
+    if (!response.ok) throw await parseError(response);
+    try {
+      return validate(await response.json());
+    } catch (error) {
+      if (error instanceof AdminApiError) throw error;
+      throw new AdminApiError(
+        'server',
+        'A resposta administrativa é inválida.',
+        200,
+        invalidCode,
+        response.headers.get('x-correlation-id'),
+      );
+    }
+  }
+
+  public searchContent(query: ContentLibraryQuery, cursor?: string): Promise<ContentLibraryResult> {
     const url = new URL(`${this.apiBaseUrl}/admin/v1/content`);
     appendQuery(url, { ...query, cursor });
-
-    let response: Response;
-    try {
-      response = await this.fetchImpl(url.toString(), {
-        method: 'GET',
-        credentials: 'include',
-        headers: { accept: 'application/json' },
-      });
-    } catch {
-      throw new AdminApiError(
-        'network',
-        'Não foi possível alcançar a Admin API.',
-        null,
-        'NETWORK_ERROR',
-        null,
-      );
-    }
-
-    if (!response.ok) throw await parseContentError(response);
-    try {
-      return assertContentLibraryResult(await response.json());
-    } catch (error) {
-      if (error instanceof AdminApiError) throw error;
-      throw new AdminApiError(
-        'server',
-        'A resposta da biblioteca de conteúdo é inválida.',
-        200,
-        'INVALID_CONTENT_LIBRARY_RESPONSE',
-        response.headers.get('x-correlation-id'),
-      );
-    }
+    return this.read(url, contentResult, 'INVALID_CONTENT_LIBRARY_RESPONSE');
   }
-
-  public async listUnpublishedContent(): Promise<readonly ContentUnpublishedRelease[]> {
-    const url = new URL(`${this.apiBaseUrl}/admin/v1/content/unpublished`);
-
-    let response: Response;
-    try {
-      response = await this.fetchImpl(url.toString(), {
-        method: 'GET',
-        credentials: 'include',
-        headers: { accept: 'application/json' },
-      });
-    } catch {
-      throw new AdminApiError(
-        'network',
-        'Não foi possível alcançar a Admin API.',
-        null,
-        'NETWORK_ERROR',
-        null,
-      );
-    }
-
-    if (!response.ok) throw await parseContentError(response);
-    try {
-      return assertUnpublishedContentResult(await response.json());
-    } catch (error) {
-      if (error instanceof AdminApiError) throw error;
-      throw new AdminApiError(
-        'server',
-        'A resposta do estado não publicado é inválida.',
-        200,
-        'INVALID_UNPUBLISHED_CONTENT_RESPONSE',
-        response.headers.get('x-correlation-id'),
-      );
-    }
+  public listUnpublishedContent(): Promise<readonly ContentUnpublishedRelease[]> {
+    return this.read(
+      `${this.apiBaseUrl}/admin/v1/content/unpublished`,
+      unpublishedResult,
+      'INVALID_UNPUBLISHED_CONTENT_RESPONSE',
+    );
   }
-
-  public async diffContentRelease(query: ContentReleaseDiffQuery): Promise<ContentReleaseDiff> {
+  public diffContentRelease(query: ContentReleaseDiffQuery): Promise<ContentReleaseDiff> {
     const url = new URL(`${this.apiBaseUrl}/admin/v1/content/releases/diff`);
-    appendQuery(url, {
-      fromReleaseId: query.fromReleaseId,
-      toReleaseId: query.toReleaseId,
-    });
-
-    let response: Response;
-    try {
-      response = await this.fetchImpl(url.toString(), {
-        method: 'GET',
-        credentials: 'include',
-        headers: { accept: 'application/json' },
-      });
-    } catch {
-      throw new AdminApiError(
-        'network',
-        'Não foi possível alcançar a Admin API.',
-        null,
-        'NETWORK_ERROR',
-        null,
-      );
-    }
-
-    if (!response.ok) throw await parseContentError(response);
-    try {
-      return assertContentReleaseDiff(await response.json(), query);
-    } catch (error) {
-      if (error instanceof AdminApiError) throw error;
-      throw new AdminApiError(
-        'server',
-        'A resposta do comparativo de releases é inválida.',
-        200,
-        'INVALID_CONTENT_RELEASE_DIFF_RESPONSE',
-        response.headers.get('x-correlation-id'),
-      );
-    }
+    appendQuery(url, query);
+    return this.read(url, (value) => diffResult(value, query), 'INVALID_CONTENT_RELEASE_DIFF_RESPONSE');
   }
-
-  public async previewContentReleaseValidation(
-    releaseId: string,
-  ): Promise<ContentReleaseValidationPreview> {
-    const url = new URL(`${this.apiBaseUrl}/admin/v1/content/releases/${releaseId}/validation`);
-
-    let response: Response;
-    try {
-      response = await this.fetchImpl(url.toString(), {
-        method: 'GET',
-        credentials: 'include',
-        headers: { accept: 'application/json' },
-      });
-    } catch {
-      throw new AdminApiError(
-        'network',
-        'Não foi possível alcançar a Admin API.',
-        null,
-        'NETWORK_ERROR',
-        null,
-      );
-    }
-
-    if (!response.ok) throw await parseContentError(response);
-    try {
-      return assertContentReleaseValidationPreview(await response.json(), releaseId);
-    } catch (error) {
-      if (error instanceof AdminApiError) throw error;
-      throw new AdminApiError(
-        'server',
-        'A resposta da pré-validação de conteúdo é inválida.',
-        200,
-        'INVALID_CONTENT_RELEASE_VALIDATION_RESPONSE',
-        response.headers.get('x-correlation-id'),
-      );
-    }
+  public previewContentReleaseValidation(releaseId: string): Promise<ContentReleaseValidationPreview> {
+    return this.read(
+      `${this.apiBaseUrl}/admin/v1/content/releases/${releaseId}/validation`,
+      (value) => validationResult(value, releaseId),
+      'INVALID_CONTENT_RELEASE_VALIDATION_RESPONSE',
+    );
   }
-
-  public async getRuntimeWhatsappHealth(): Promise<RuntimeWhatsappHealthView> {
-    const url = new URL(`${this.apiBaseUrl}/admin/v1/runtime/whatsapp/health`);
-
-    let response: Response;
-    try {
-      response = await this.fetchImpl(url.toString(), {
-        method: 'GET',
-        credentials: 'include',
-        headers: { accept: 'application/json' },
-      });
-    } catch {
-      throw new AdminApiError(
-        'network',
-        'Não foi possível alcançar a Admin API.',
-        null,
-        'NETWORK_ERROR',
-        null,
-      );
-    }
-
-    if (!response.ok) throw await parseContentError(response);
-    try {
-      return assertRuntimeWhatsappHealth(await response.json());
-    } catch (error) {
-      if (error instanceof AdminApiError) throw error;
-      throw new AdminApiError(
-        'server',
-        'A resposta de saúde do runtime WhatsApp é inválida.',
-        200,
-        'INVALID_RUNTIME_HEALTH_RESPONSE',
-        response.headers.get('x-correlation-id'),
-      );
-    }
+  public getRuntimeWhatsappHealth(): Promise<RuntimeWhatsappHealthView> {
+    return this.read(
+      `${this.apiBaseUrl}/admin/v1/runtime/whatsapp/health`,
+      runtimeResult,
+      'INVALID_RUNTIME_HEALTH_RESPONSE',
+    );
   }
-
-  public async getMessagingOperations(): Promise<MessagingOperationsView> {
-    const url = new URL(`${this.apiBaseUrl}/admin/v1/messaging/operations`);
-
-    let response: Response;
-    try {
-      response = await this.fetchImpl(url.toString(), {
-        method: 'GET',
-        credentials: 'include',
-        headers: { accept: 'application/json' },
-      });
-    } catch {
-      throw new AdminApiError(
-        'network',
-        'Não foi possível alcançar a Admin API.',
-        null,
-        'NETWORK_ERROR',
-        null,
-      );
-    }
-
-    if (!response.ok) throw await parseContentError(response);
-    try {
-      return assertMessagingOperations(await response.json());
-    } catch (error) {
-      if (error instanceof AdminApiError) throw error;
-      throw new AdminApiError(
-        'server',
-        'A resposta das filas de mensageria é inválida.',
-        200,
-        'INVALID_MESSAGING_OPERATIONS_RESPONSE',
-        response.headers.get('x-correlation-id'),
-      );
-    }
+  public getMessagingOperations(): Promise<MessagingOperationsView> {
+    return this.read(
+      `${this.apiBaseUrl}/admin/v1/messaging/operations`,
+      messagingResult,
+      'INVALID_MESSAGING_OPERATIONS_RESPONSE',
+    );
   }
-
-  public async getIncidentCenter(): Promise<IncidentCenterView> {
-    const url = new URL(`${this.apiBaseUrl}/admin/v1/incidents`);
-
-    let response: Response;
-    try {
-      response = await this.fetchImpl(url.toString(), {
-        method: 'GET',
-        credentials: 'include',
-        headers: { accept: 'application/json' },
-      });
-    } catch {
+  public getIncidentCenter(): Promise<IncidentCenterView> {
+    return this.read(
+      `${this.apiBaseUrl}/admin/v1/incidents`,
+      incidentResult,
+      'INVALID_INCIDENT_CENTER_RESPONSE',
+    );
+  }
+  public getAdminOperationAudit(operationId: string): Promise<AdminOperationAuditView> {
+    if (!uuid(operationId)) {
       throw new AdminApiError(
-        'network',
-        'Não foi possível alcançar a Admin API.',
-        null,
-        'NETWORK_ERROR',
+        'invalid',
+        'O ID da operação administrativa é inválido.',
+        400,
+        'INVALID_ADMIN_OPERATION_ID',
         null,
       );
     }
-
-    if (!response.ok) throw await parseContentError(response);
-    try {
-      return assertIncidentCenter(await response.json());
-    } catch (error) {
-      if (error instanceof AdminApiError) throw error;
-      throw new AdminApiError(
-        'server',
-        'A resposta do Incident Center é inválida.',
-        200,
-        'INVALID_INCIDENT_CENTER_RESPONSE',
-        response.headers.get('x-correlation-id'),
-      );
-    }
+    return this.read(
+      `${this.apiBaseUrl}/admin/v1/operations/${operationId}/audit`,
+      (value) => auditResult(value, operationId),
+      'INVALID_ADMIN_OPERATION_AUDIT_RESPONSE',
+    );
   }
 }
