@@ -129,9 +129,9 @@ export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
   const [filters, setFilters] = useState<ContentLibraryFilters>(EMPTY_CONTENT_LIBRARY_FILTERS);
   const [items, setItems] = useState<readonly ContentLibraryItem[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [committedQuery, setCommittedQuery] = useState<ReturnType<typeof toContentLibraryQuery> | null>(
-    null,
-  );
+  const [committedQuery, setCommittedQuery] = useState<ReturnType<
+    typeof toContentLibraryQuery
+  > | null>(null);
   const [status, setStatus] = useState<LoadStatus>('idle');
   const [error, setError] = useState<RequestErrorView | null>(null);
   const [unpublished, setUnpublished] = useState<readonly ContentUnpublishedRelease[]>([]);
