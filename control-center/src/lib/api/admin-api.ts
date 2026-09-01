@@ -225,10 +225,7 @@ function isNullableCanonicalIsoTimestamp(value: unknown): value is string | null
 }
 
 function isRuntimeProviderState(value: unknown): value is RuntimeWhatsappProviderState {
-  return (
-    typeof value === 'string' &&
-    RUNTIME_PROVIDER_STATES.has(value as RuntimeWhatsappProviderState)
-  );
+  return typeof value === 'string' && RUNTIME_PROVIDER_STATES.has(value as RuntimeWhatsappProviderState);
 }
 
 function isResourceKind(value: unknown): value is ContentResourceKind {
