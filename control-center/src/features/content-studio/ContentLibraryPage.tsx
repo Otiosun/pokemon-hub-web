@@ -3,6 +3,8 @@ import {
   type AdminApiClient,
   AdminApiError,
   type ContentLibraryItem,
+  type ContentReleaseDiff,
+  type ContentReleaseDiffCategory,
   type ContentUnpublishedRelease,
 } from '../../lib/api/admin-api';
 import {
@@ -16,7 +18,10 @@ import {
 import './content-library.css';
 
 interface ContentLibraryPageProps {
-  readonly client: Pick<AdminApiClient, 'searchContent' | 'listUnpublishedContent'>;
+  readonly client: Pick<
+    AdminApiClient,
+    'searchContent' | 'listUnpublishedContent' | 'diffContentRelease'
+  >;
 }
 
 interface RequestErrorView {
@@ -31,6 +36,27 @@ const UTC_DATE_TIME_FORMATTER = new Intl.DateTimeFormat('pt-BR', {
   timeStyle: 'short',
   timeZone: 'UTC',
 });
+
+const CONTENT_DIFF_CATEGORY_LABELS: Readonly<Record<ContentReleaseDiffCategory, string>> = {
+  types: 'Tipos',
+  species: 'Espécies',
+  forms: 'Formas',
+  moves: 'Golpes',
+  abilities: 'Habilidades',
+  items: 'Itens',
+  natures: 'Naturezas',
+  effects: 'Efeitos',
+  rewards: 'Recompensas',
+  regions: 'Regiões',
+  areas: 'Áreas',
+  connections: 'Conexões',
+  formAbilities: 'Habilidades por forma',
+  learnsets: 'Aprendizado de golpes',
+  evolutions: 'Evoluções',
+  starterOptions: 'Opções de starter',
+  purchaseOffers: 'Ofertas de compra',
+  encounterTables: 'Tabelas de encontro',
+};
 
 function requestError(error: unknown, fallbackMessage: string): RequestErrorView {
   if (error instanceof AdminApiError) {
@@ -62,6 +88,43 @@ function recordedChangeLabel(value: string): string {
   return value === '1' ? '1 alteração registrada' : `${value} alterações registradas`;
 }
 
+function ReleaseDiffDetails({ diff }: { readonly diff: ContentReleaseDiff }) {
+  const totals = diff.sections.reduce(
+    (current, section) => ({
+      added: current.added + section.added,
+      removed: current.removed + section.removed,
+      changed: current.changed + section.changed,
+    }),
+    { added: 0, removed: 0, changed: 0 },
+  );
+  const changedSections = diff.sections.filter(
+    (section) => section.added > 0 || section.removed > 0 || section.changed > 0,
+  );
+
+  return (
+    <div className="content-library-state">
+      <strong>Comparação com a release-base</strong>
+      <span>
+        {totals.added} adicionados · {totals.removed} removidos · {totals.changed} alterados
+      </span>
+      {changedSections.length === 0 ? (
+        <span>Nenhuma mudança semântica encontrada entre as duas releases.</span>
+      ) : (
+        <dl className="content-unpublished-metadata">
+          {changedSections.map((section) => (
+            <div key={section.category}>
+              <dt>{CONTENT_DIFF_CATEGORY_LABELS[section.category]}</dt>
+              <dd>
+                +{section.added} · −{section.removed} · ~{section.changed}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
+    </div>
+  );
+}
+
 export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
   const [filters, setFilters] = useState<ContentLibraryFilters>(EMPTY_CONTENT_LIBRARY_FILTERS);
   const [items, setItems] = useState<readonly ContentLibraryItem[]>([]);
@@ -71,6 +134,13 @@ export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
   const [unpublished, setUnpublished] = useState<readonly ContentUnpublishedRelease[]>([]);
   const [unpublishedStatus, setUnpublishedStatus] = useState<LoadStatus>('idle');
   const [unpublishedError, setUnpublishedError] = useState<RequestErrorView | null>(null);
+  const [releaseDiffs, setReleaseDiffs] = useState<Readonly<Record<string, ContentReleaseDiff>>>({});
+  const [releaseDiffStatuses, setReleaseDiffStatuses] = useState<
+    Readonly<Partial<Record<string, LoadStatus>>>
+  >({});
+  const [releaseDiffErrors, setReleaseDiffErrors] = useState<
+    Readonly<Partial<Record<string, RequestErrorView | null>>>
+  >({});
   const query = useMemo(() => toContentLibraryQuery(filters), [filters]);
 
   function patchFilters(patch: Partial<ContentLibraryFilters>) {
@@ -97,12 +167,36 @@ export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
     setUnpublishedStatus('loading');
     setUnpublishedError(null);
     setUnpublished([]);
+    setReleaseDiffs({});
+    setReleaseDiffStatuses({});
+    setReleaseDiffErrors({});
     try {
       setUnpublished(await client.listUnpublishedContent());
       setUnpublishedStatus('ready');
     } catch (cause) {
       setUnpublishedStatus('error');
       setUnpublishedError(requestError(cause, 'A consulta das alterações não publicadas falhou.'));
+    }
+  }
+
+  async function loadReleaseDiff(release: ContentUnpublishedRelease) {
+    if (release.parentReleaseId === null) return;
+
+    setReleaseDiffStatuses((current) => ({ ...current, [release.releaseId]: 'loading' }));
+    setReleaseDiffErrors((current) => ({ ...current, [release.releaseId]: null }));
+    try {
+      const diff = await client.diffContentRelease({
+        fromReleaseId: release.parentReleaseId,
+        toReleaseId: release.releaseId,
+      });
+      setReleaseDiffs((current) => ({ ...current, [release.releaseId]: diff }));
+      setReleaseDiffStatuses((current) => ({ ...current, [release.releaseId]: 'ready' }));
+    } catch (cause) {
+      setReleaseDiffStatuses((current) => ({ ...current, [release.releaseId]: 'error' }));
+      setReleaseDiffErrors((current) => ({
+        ...current,
+        [release.releaseId]: requestError(cause, 'A comparação entre releases falhou.'),
+      }));
     }
   }
 
@@ -214,8 +308,8 @@ export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
               Releases que ainda não chegaram ao estado publicado.
             </h3>
             <p>
-              Estado autoritativo de releases DRAFT e VALIDATED. A contagem representa alterações
-              registradas no ledger; comparação detalhada pertence a uma fatia separada.
+              Estado autoritativo de releases DRAFT e VALIDATED. A contagem representa registros do
+              ledger; a comparação semântica só é carregada quando o operador pede explicitamente.
             </p>
           </div>
           <div className="content-unpublished-actions">
@@ -269,37 +363,81 @@ export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
 
         {unpublished.length > 0 ? (
           <div className="content-unpublished-grid">
-            {unpublished.map((release) => (
-              <article className="content-unpublished-card" key={unpublishedKey(release)}>
-                <div className="content-unpublished-card-heading">
-                  <div>
-                    <strong>{release.releaseName}</strong>
-                    <small>Release #{release.releaseNo}</small>
+            {unpublished.map((release) => {
+              const diffStatus = releaseDiffStatuses[release.releaseId] ?? 'idle';
+              const diffError = releaseDiffErrors[release.releaseId] ?? null;
+              const diff = releaseDiffs[release.releaseId];
+
+              return (
+                <article className="content-unpublished-card" key={unpublishedKey(release)}>
+                  <div className="content-unpublished-card-heading">
+                    <div>
+                      <strong>{release.releaseName}</strong>
+                      <small>Release #{release.releaseNo}</small>
+                    </div>
+                    <span className={`content-library-status is-${release.status.toLowerCase()}`}>
+                      {release.status}
+                    </span>
                   </div>
-                  <span className={`content-library-status is-${release.status.toLowerCase()}`}>
-                    {release.status}
-                  </span>
-                </div>
-                <dl className="content-unpublished-metadata">
-                  <div>
-                    <dt>Fluxo</dt>
-                    <dd>{workflowLabel(release)}</dd>
-                  </div>
-                  <div>
-                    <dt>Revisão</dt>
-                    <dd>{release.revision}</dd>
-                  </div>
-                  <div>
-                    <dt>Alterações</dt>
-                    <dd>{recordedChangeLabel(release.recordedChangeCount)}</dd>
-                  </div>
-                  <div>
-                    <dt>Última alteração</dt>
-                    <dd>{formatTimestamp(release.lastChangedAt)}</dd>
-                  </div>
-                </dl>
-              </article>
-            ))}
+                  <dl className="content-unpublished-metadata">
+                    <div>
+                      <dt>Fluxo</dt>
+                      <dd>{workflowLabel(release)}</dd>
+                    </div>
+                    <div>
+                      <dt>Revisão</dt>
+                      <dd>{release.revision}</dd>
+                    </div>
+                    <div>
+                      <dt>Alterações</dt>
+                      <dd>{recordedChangeLabel(release.recordedChangeCount)}</dd>
+                    </div>
+                    <div>
+                      <dt>Última alteração</dt>
+                      <dd>{formatTimestamp(release.lastChangedAt)}</dd>
+                    </div>
+                  </dl>
+
+                  {release.parentReleaseId === null ? (
+                    <div className="content-library-state">
+                      <strong>Release inicial</strong>
+                      <span>Não existe release-base anterior para comparar.</span>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        className="content-library-more"
+                        type="button"
+                        disabled={diffStatus === 'loading'}
+                        onClick={() => void loadReleaseDiff(release)}
+                      >
+                        {diffStatus === 'loading' ? 'Comparando…' : 'Ver alterações'}
+                      </button>
+
+                      {diffStatus === 'loading' ? (
+                        <div className="content-library-state" role="status">
+                          <strong>Comparando com a release-base…</strong>
+                          <span>O resumo é calculado pelo backend autoritativo.</span>
+                        </div>
+                      ) : null}
+
+                      {diffStatus === 'error' && diffError !== null ? (
+                        <div className="content-library-state is-error" role="alert">
+                          <strong>{diffError.message}</strong>
+                          {diffError.correlationId === null ? null : (
+                            <span>Correlação: {diffError.correlationId}</span>
+                          )}
+                        </div>
+                      ) : null}
+
+                      {diffStatus === 'ready' && diff !== undefined ? (
+                        <ReleaseDiffDetails diff={diff} />
+                      ) : null}
+                    </>
+                  )}
+                </article>
+              );
+            })}
           </div>
         ) : null}
       </section>
