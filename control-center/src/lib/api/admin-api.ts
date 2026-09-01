@@ -14,6 +14,25 @@ export type ContentResourceKind =
 export type ContentReleaseStatus = 'DRAFT' | 'VALIDATED' | 'PUBLISHED' | 'ARCHIVED';
 export type ContentUnpublishedStatus = 'DRAFT' | 'VALIDATED';
 export type ContentUnpublishedWorkflowState = 'EDITING' | 'READY_TO_PUBLISH';
+export type ContentReleaseDiffCategory =
+  | 'types'
+  | 'species'
+  | 'forms'
+  | 'moves'
+  | 'abilities'
+  | 'items'
+  | 'natures'
+  | 'effects'
+  | 'rewards'
+  | 'regions'
+  | 'areas'
+  | 'connections'
+  | 'formAbilities'
+  | 'learnsets'
+  | 'evolutions'
+  | 'starterOptions'
+  | 'purchaseOffers'
+  | 'encounterTables';
 
 export interface ContentLibraryQuery {
   readonly query?: string;
@@ -55,6 +74,24 @@ export interface ContentUnpublishedRelease {
   readonly lastChangedAt: string | null;
 }
 
+export interface ContentReleaseDiffQuery {
+  readonly fromReleaseId: string;
+  readonly toReleaseId: string;
+}
+
+export interface ContentReleaseDiffSection {
+  readonly category: ContentReleaseDiffCategory;
+  readonly added: number;
+  readonly removed: number;
+  readonly changed: number;
+}
+
+export interface ContentReleaseDiff {
+  readonly fromReleaseId: string;
+  readonly toReleaseId: string;
+  readonly sections: readonly ContentReleaseDiffSection[];
+}
+
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const INTEGER_STRING_PATTERN = /^\d+$/;
 const RESOURCE_KINDS = new Set<ContentResourceKind>([
@@ -77,6 +114,26 @@ const UNPUBLISHED_WORKFLOW_STATES = new Set<ContentUnpublishedWorkflowState>([
   'EDITING',
   'READY_TO_PUBLISH',
 ]);
+const RELEASE_DIFF_CATEGORIES = new Set<ContentReleaseDiffCategory>([
+  'types',
+  'species',
+  'forms',
+  'moves',
+  'abilities',
+  'items',
+  'natures',
+  'effects',
+  'rewards',
+  'regions',
+  'areas',
+  'connections',
+  'formAbilities',
+  'learnsets',
+  'evolutions',
+  'starterOptions',
+  'purchaseOffers',
+  'encounterTables',
+]);
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -90,6 +147,10 @@ function isUuid(value: unknown): value is string {
 
 function isIntegerString(value: unknown): value is string {
   return typeof value === 'string' && INTEGER_STRING_PATTERN.test(value);
+}
+
+function isNonNegativeInteger(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0;
 }
 
 function isNonEmptyString(value: unknown): value is string {
@@ -112,6 +173,13 @@ function isUnpublishedWorkflowState(value: unknown): value is ContentUnpublished
   return (
     typeof value === 'string' &&
     UNPUBLISHED_WORKFLOW_STATES.has(value as ContentUnpublishedWorkflowState)
+  );
+}
+
+function isReleaseDiffCategory(value: unknown): value is ContentReleaseDiffCategory {
+  return (
+    typeof value === 'string' &&
+    RELEASE_DIFF_CATEGORIES.has(value as ContentReleaseDiffCategory)
   );
 }
 
@@ -196,6 +264,45 @@ function assertUnpublishedRelease(value: unknown): ContentUnpublishedRelease {
 function assertUnpublishedContentResult(value: unknown): readonly ContentUnpublishedRelease[] {
   if (!Array.isArray(value)) throw new Error('Invalid unpublished content response.');
   return value.map(assertUnpublishedRelease);
+}
+
+function assertReleaseDiffSection(value: unknown): ContentReleaseDiffSection {
+  if (
+    !isRecord(value) ||
+    !isReleaseDiffCategory(value.category) ||
+    !isNonNegativeInteger(value.added) ||
+    !isNonNegativeInteger(value.removed) ||
+    !isNonNegativeInteger(value.changed)
+  ) {
+    throw new Error('Invalid content release diff section.');
+  }
+
+  return {
+    category: value.category,
+    added: value.added,
+    removed: value.removed,
+    changed: value.changed,
+  };
+}
+
+function assertContentReleaseDiff(
+  value: unknown,
+  expected: ContentReleaseDiffQuery,
+): ContentReleaseDiff {
+  if (
+    !isRecord(value) ||
+    value.fromReleaseId !== expected.fromReleaseId ||
+    value.toReleaseId !== expected.toReleaseId ||
+    !Array.isArray(value.sections)
+  ) {
+    throw new Error('Invalid content release diff response.');
+  }
+
+  return {
+    fromReleaseId: expected.fromReleaseId,
+    toReleaseId: expected.toReleaseId,
+    sections: value.sections.map(assertReleaseDiffSection),
+  };
 }
 
 async function parseContentError(response: Response): Promise<AdminApiError> {
@@ -336,6 +443,42 @@ export class AdminApiClient {
         'A resposta do estado não publicado é inválida.',
         200,
         'INVALID_UNPUBLISHED_CONTENT_RESPONSE',
+        response.headers.get('x-correlation-id'),
+      );
+    }
+  }
+
+  public async diffContentRelease(query: ContentReleaseDiffQuery): Promise<ContentReleaseDiff> {
+    const url = new URL(`${this.apiBaseUrl}/admin/v1/content/releases/diff`);
+    appendQuery(url, query);
+
+    let response: Response;
+    try {
+      response = await this.fetchImpl(url.toString(), {
+        method: 'GET',
+        credentials: 'include',
+        headers: { accept: 'application/json' },
+      });
+    } catch {
+      throw new AdminApiError(
+        'network',
+        'Não foi possível alcançar a Admin API.',
+        null,
+        'NETWORK_ERROR',
+        null,
+      );
+    }
+
+    if (!response.ok) throw await parseContentError(response);
+    try {
+      return assertContentReleaseDiff(await response.json(), query);
+    } catch (error) {
+      if (error instanceof AdminApiError) throw error;
+      throw new AdminApiError(
+        'server',
+        'A resposta do comparativo de releases é inválida.',
+        200,
+        'INVALID_CONTENT_RELEASE_DIFF_RESPONSE',
         response.headers.get('x-correlation-id'),
       );
     }
