@@ -8,6 +8,7 @@ describe('Content Library page', () => {
       <ContentLibraryPage
         client={{
           searchContent: async () => ({ items: [], nextCursor: null }),
+          listUnpublishedContent: async () => [],
         }}
       />,
     );
@@ -21,8 +22,13 @@ describe('Content Library page', () => {
     expect(html).toContain('Encontros');
     expect(html).toContain('Recompensas');
     expect(html).toContain('Efeitos');
+    expect(html).toContain('ALTERAÇÕES NÃO PUBLICADAS');
+    expect(html).toContain('DRAFT');
+    expect(html).toContain('VALIDATED');
+    expect(html).toContain('Consultar alterações');
     expect(html).toContain('READ-ONLY');
     expect(html).not.toContain('Publicar');
+    expect(html).not.toContain('Diff');
     expect(html).not.toContain('Salvar');
     expect(html).not.toContain('JSON');
   });
