@@ -6,15 +6,20 @@ const cardPath = fileURLToPath(new URL('./IncidentCenterCard.tsx', import.meta.u
 const appPath = fileURLToPath(new URL('../../App.tsx', import.meta.url));
 
 describe('Incident Center wiring', () => {
-  it('keeps incident inspection explicit, correlated and mutation-free', async () => {
+  it('keeps incident inspection explicit, correlated, mutation-free and exposes contextual guidance progressively', async () => {
     const card = await readFile(cardPath, 'utf8');
 
     expect(card).toContain('getIncidentCenter');
     expect(card).toContain('Atualizar incidentes');
     expect(card).toContain('correlationId');
+    expect(card).toContain('signal.runbook');
+    expect(card).toContain('<details');
+    expect(card).toContain('<summary>Ver runbook</summary>');
+    expect(card).toContain('Evidências para coletar');
+    expect(card).toContain('Escalonamento');
     expect(card).not.toContain('useEffect');
     expect(card).not.toContain('setInterval');
-    expect(card).not.toMatch(/resolver|retry|reprocessar|compensar|runbook/i);
+    expect(card).not.toMatch(/resolver|retry|reprocessar|compensar|replay|requeue/i);
     expect(card).not.toMatch(/payload|destinationRef|lastErrorCode|reason/i);
   });
 
