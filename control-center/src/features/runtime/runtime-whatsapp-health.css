@@ -1,0 +1,86 @@
+.runtime-health-card {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.runtime-health-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.runtime-health-heading h3 {
+  margin: 4px 0 0;
+  font-size: 1rem;
+}
+
+.runtime-health-refresh {
+  flex: 0 0 auto;
+}
+
+.runtime-health-empty,
+.runtime-health-error {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.runtime-health-empty p,
+.runtime-health-error p {
+  margin: 6px 0 0;
+}
+
+.runtime-health-error small {
+  display: block;
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+
+.runtime-health-facts {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.runtime-health-facts > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: 12px;
+  align-items: baseline;
+}
+
+.runtime-health-facts dt {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+
+.runtime-health-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  text-align: right;
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+@media (max-width: 640px) {
+  .runtime-health-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .runtime-health-refresh {
+    width: 100%;
+  }
+
+  .runtime-health-facts > div {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+
+  .runtime-health-facts dd {
+    text-align: left;
+  }
+}
