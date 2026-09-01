@@ -16,6 +16,14 @@ const SNAPSHOT: IncidentCenterView = {
       riskTier: null,
       attempts: 8,
       occurredAt: '2026-09-01T13:00:00.000Z',
+      runbook: {
+        key: 'outbox-dead-letter',
+        title: 'Mensagem em dead-letter',
+        summary: 'Preserve o sinal para investigação.',
+        steps: ['Confirme a correlação.'],
+        evidenceToCollect: ['correlationId'],
+        escalation: 'Escalone quando a investigação exigir recuperação autorizada.',
+      },
     },
   ],
 };
