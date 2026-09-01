@@ -65,11 +65,35 @@ describe('AdminApiClient Incident Center', () => {
     { signals: [{ ...snapshot.signals[0], payload: 'must-not-be-accepted' }] },
     { signals: [{ ...snapshot.signals[0], reason: 'must-not-be-accepted' }] },
     { signals: [{ ...snapshot.signals[0], lastErrorCode: 'must-not-be-accepted' }] },
-    { signals: [{ ...snapshot.signals[0], runbook: { ...snapshot.signals[0].runbook, command: 'retry' } }] },
-    { signals: [{ ...snapshot.signals[0], runbook: { ...snapshot.signals[0].runbook, url: 'https://example.test' } }] },
-    { signals: [{ ...snapshot.signals[0], runbook: { ...snapshot.signals[0].runbook, action: 'requeue' } }] },
-    { signals: [{ ...snapshot.signals[0], runbook: { ...snapshot.signals[0].runbook, steps: [] } }] },
-    { signals: [{ ...snapshot.signals[0], runbook: { ...snapshot.signals[0].runbook, key: 'outbox-delivery-failed' } }] },
+    {
+      signals: [
+        { ...snapshot.signals[0], runbook: { ...snapshot.signals[0].runbook, command: 'retry' } },
+      ],
+    },
+    {
+      signals: [
+        {
+          ...snapshot.signals[0],
+          runbook: { ...snapshot.signals[0].runbook, url: 'https://example.test' },
+        },
+      ],
+    },
+    {
+      signals: [
+        { ...snapshot.signals[0], runbook: { ...snapshot.signals[0].runbook, action: 'requeue' } },
+      ],
+    },
+    {
+      signals: [{ ...snapshot.signals[0], runbook: { ...snapshot.signals[0].runbook, steps: [] } }],
+    },
+    {
+      signals: [
+        {
+          ...snapshot.signals[0],
+          runbook: { ...snapshot.signals[0].runbook, key: 'outbox-delivery-failed' },
+        },
+      ],
+    },
     { ...snapshot, environment: 'production' },
   ])('fails closed on malformed or expanded Incident Center payload %#', async (body) => {
     const fetchImpl = vi.fn<typeof fetch>(async () => jsonResponse(body));
