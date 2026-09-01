@@ -34,6 +34,13 @@ export type ContentReleaseDiffCategory =
   | 'purchaseOffers'
   | 'encounterTables';
 
+export type RuntimeWhatsappProviderState =
+  | 'STARTING'
+  | 'CONNECTED'
+  | 'DISCONNECTED'
+  | 'STOPPED'
+  | 'INVALIDATED';
+
 export interface ContentLibraryQuery {
   readonly query?: string;
   readonly resourceKind?: ContentResourceKind;
@@ -104,8 +111,24 @@ export interface ContentReleaseValidationPreview {
   readonly issues: readonly ContentReleaseValidationIssue[];
 }
 
+export interface RuntimeWhatsappHealthRuntime {
+  readonly providerState: RuntimeWhatsappProviderState;
+  readonly deploymentRevision: string;
+  readonly startedAt: string;
+  readonly lastConnectedAt: string | null;
+  readonly lastHeartbeatAt: string;
+  readonly lastDisconnectAt: string | null;
+  readonly stoppedAt: string | null;
+}
+
+export interface RuntimeWhatsappHealthView {
+  readonly environment: 'development' | 'staging' | 'production';
+  readonly runtime: RuntimeWhatsappHealthRuntime | null;
+}
+
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const INTEGER_STRING_PATTERN = /^\d+$/;
+const DEPLOYMENT_REVISION_PATTERN = /^[0-9a-f]{40}$/;
 const RESOURCE_KINDS = new Set<ContentResourceKind>([
   'SPECIES',
   'MOVE',
@@ -146,6 +169,23 @@ const RELEASE_DIFF_CATEGORIES = new Set<ContentReleaseDiffCategory>([
   'purchaseOffers',
   'encounterTables',
 ]);
+const RUNTIME_PROVIDER_STATES = new Set<RuntimeWhatsappProviderState>([
+  'STARTING',
+  'CONNECTED',
+  'DISCONNECTED',
+  'STOPPED',
+  'INVALIDATED',
+]);
+const RUNTIME_HEALTH_KEYS = ['environment', 'runtime'] as const;
+const RUNTIME_HEALTH_RUNTIME_KEYS = [
+  'providerState',
+  'deploymentRevision',
+  'startedAt',
+  'lastConnectedAt',
+  'lastHeartbeatAt',
+  'lastDisconnectAt',
+  'stoppedAt',
+] as const;
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -167,6 +207,28 @@ function isNonNegativeInteger(value: unknown): value is number {
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0;
+}
+
+function hasExactKeys(value: UnknownRecord, expected: readonly string[]): boolean {
+  const actual = Object.keys(value);
+  return actual.length === expected.length && actual.every((key) => expected.includes(key));
+}
+
+function isCanonicalIsoTimestamp(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  const parsed = new Date(value);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString() === value;
+}
+
+function isNullableCanonicalIsoTimestamp(value: unknown): value is string | null {
+  return value === null || isCanonicalIsoTimestamp(value);
+}
+
+function isRuntimeProviderState(value: unknown): value is RuntimeWhatsappProviderState {
+  return (
+    typeof value === 'string' &&
+    RUNTIME_PROVIDER_STATES.has(value as RuntimeWhatsappProviderState)
+  );
 }
 
 function isResourceKind(value: unknown): value is ContentResourceKind {
@@ -344,6 +406,52 @@ function assertContentReleaseValidationPreview(
     releaseId: expectedReleaseId,
     valid: value.valid,
     issues: value.issues.map(assertContentReleaseValidationIssue),
+  };
+}
+
+function assertRuntimeWhatsappHealth(value: unknown): RuntimeWhatsappHealthView {
+  if (!isRecord(value) || !hasExactKeys(value, RUNTIME_HEALTH_KEYS)) {
+    throw new Error('Invalid runtime WhatsApp health response.');
+  }
+  if (
+    value.environment !== 'development' &&
+    value.environment !== 'staging' &&
+    value.environment !== 'production'
+  ) {
+    throw new Error('Invalid runtime WhatsApp health environment.');
+  }
+  if (value.runtime === null) {
+    return { environment: value.environment, runtime: null };
+  }
+  if (!isRecord(value.runtime) || !hasExactKeys(value.runtime, RUNTIME_HEALTH_RUNTIME_KEYS)) {
+    throw new Error('Invalid runtime WhatsApp health evidence.');
+  }
+
+  const runtime = value.runtime;
+  if (
+    !isRuntimeProviderState(runtime.providerState) ||
+    typeof runtime.deploymentRevision !== 'string' ||
+    !DEPLOYMENT_REVISION_PATTERN.test(runtime.deploymentRevision) ||
+    !isCanonicalIsoTimestamp(runtime.startedAt) ||
+    !isNullableCanonicalIsoTimestamp(runtime.lastConnectedAt) ||
+    !isCanonicalIsoTimestamp(runtime.lastHeartbeatAt) ||
+    !isNullableCanonicalIsoTimestamp(runtime.lastDisconnectAt) ||
+    !isNullableCanonicalIsoTimestamp(runtime.stoppedAt)
+  ) {
+    throw new Error('Invalid runtime WhatsApp health evidence.');
+  }
+
+  return {
+    environment: value.environment,
+    runtime: {
+      providerState: runtime.providerState,
+      deploymentRevision: runtime.deploymentRevision,
+      startedAt: runtime.startedAt,
+      lastConnectedAt: runtime.lastConnectedAt,
+      lastHeartbeatAt: runtime.lastHeartbeatAt,
+      lastDisconnectAt: runtime.lastDisconnectAt,
+      stoppedAt: runtime.stoppedAt,
+    },
   };
 }
 
@@ -561,6 +669,41 @@ export class AdminApiClient {
         'A resposta da pré-validação de conteúdo é inválida.',
         200,
         'INVALID_CONTENT_RELEASE_VALIDATION_RESPONSE',
+        response.headers.get('x-correlation-id'),
+      );
+    }
+  }
+
+  public async getRuntimeWhatsappHealth(): Promise<RuntimeWhatsappHealthView> {
+    const url = new URL(`${this.apiBaseUrl}/admin/v1/runtime/whatsapp/health`);
+
+    let response: Response;
+    try {
+      response = await this.fetchImpl(url.toString(), {
+        method: 'GET',
+        credentials: 'include',
+        headers: { accept: 'application/json' },
+      });
+    } catch {
+      throw new AdminApiError(
+        'network',
+        'Não foi possível alcançar a Admin API.',
+        null,
+        'NETWORK_ERROR',
+        null,
+      );
+    }
+
+    if (!response.ok) throw await parseContentError(response);
+    try {
+      return assertRuntimeWhatsappHealth(await response.json());
+    } catch (error) {
+      if (error instanceof AdminApiError) throw error;
+      throw new AdminApiError(
+        'server',
+        'A resposta de saúde do runtime WhatsApp é inválida.',
+        200,
+        'INVALID_RUNTIME_HEALTH_RESPONSE',
         response.headers.get('x-correlation-id'),
       );
     }
