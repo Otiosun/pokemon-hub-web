@@ -119,7 +119,9 @@ function record(value: unknown): value is RecordValue {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 function exact(value: unknown, keys: readonly string[]): value is RecordValue {
-  return record(value) && Object.keys(value).length === keys.length && keys.every((key) => key in value);
+  return (
+    record(value) && Object.keys(value).length === keys.length && keys.every((key) => key in value)
+  );
 }
 function uuid(value: unknown): value is string {
   return typeof value === 'string' && UUID.test(value);
@@ -196,7 +198,10 @@ function validateAudit(value: unknown, operationId: string): AdminOperationAudit
       !iso(event.occurredAt) ||
       !nullable(event.actorPrincipalId, uuid) ||
       !text(event.action) ||
-      !nullable(event.decision, (entry) => typeof entry === 'string' && DECISIONS.includes(entry)) ||
+      !nullable(
+        event.decision,
+        (entry) => typeof entry === 'string' && DECISIONS.includes(entry),
+      ) ||
       !nullable(event.resourceType, text) ||
       !nullable(event.resourceId, uuid) ||
       !uuid(event.eventId)
