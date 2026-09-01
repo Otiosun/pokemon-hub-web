@@ -28,7 +28,7 @@ const ContentLibraryPage = lazy(() =>
   })),
 );
 
-const CANONICAL_PROGRESS = 47.42;
+const CANONICAL_PROGRESS = 48;
 
 const workQueue = [
   {
