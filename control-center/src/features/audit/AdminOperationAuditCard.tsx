@@ -62,7 +62,9 @@ function AuditResult({ data }: { data: AdminOperationAuditView }) {
           Risco R{operation.riskTier} · revisão {operation.revision}
         </p>
         <small title={operation.id}>Operação: #{shortId(operation.id)}</small>
-        <small title={operation.correlationId}>Correlação: #{shortId(operation.correlationId)}</small>
+        <small title={operation.correlationId}>
+          Correlação: #{shortId(operation.correlationId)}
+        </small>
         <small title={operation.principalId}>Principal: #{shortId(operation.principalId)}</small>
         <small>Capability: {operation.capabilityKey}</small>
         <small>
