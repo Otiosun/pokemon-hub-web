@@ -92,6 +92,18 @@ export interface ContentReleaseDiff {
   readonly sections: readonly ContentReleaseDiffSection[];
 }
 
+export interface ContentReleaseValidationIssue {
+  readonly code: string;
+  readonly path: string;
+  readonly message: string;
+}
+
+export interface ContentReleaseValidationPreview {
+  readonly releaseId: string;
+  readonly valid: boolean;
+  readonly issues: readonly ContentReleaseValidationIssue[];
+}
+
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const INTEGER_STRING_PATTERN = /^\d+$/;
 const RESOURCE_KINDS = new Set<ContentResourceKind>([
@@ -304,6 +316,37 @@ function assertContentReleaseDiff(
   };
 }
 
+function assertContentReleaseValidationIssue(value: unknown): ContentReleaseValidationIssue {
+  if (
+    !isRecord(value) ||
+    !isNonEmptyString(value.code) ||
+    !isNonEmptyString(value.path) ||
+    !isNonEmptyString(value.message)
+  ) {
+    throw new Error('Invalid content release validation issue.');
+  }
+  return { code: value.code, path: value.path, message: value.message };
+}
+
+function assertContentReleaseValidationPreview(
+  value: unknown,
+  expectedReleaseId: string,
+): ContentReleaseValidationPreview {
+  if (
+    !isRecord(value) ||
+    value.releaseId !== expectedReleaseId ||
+    typeof value.valid !== 'boolean' ||
+    !Array.isArray(value.issues)
+  ) {
+    throw new Error('Invalid content release validation preview response.');
+  }
+  return {
+    releaseId: expectedReleaseId,
+    valid: value.valid,
+    issues: value.issues.map(assertContentReleaseValidationIssue),
+  };
+}
+
 async function parseContentError(response: Response): Promise<AdminApiError> {
   let code = `HTTP_${response.status}`;
   let message = 'A consulta administrativa falhou.';
@@ -481,6 +524,43 @@ export class AdminApiClient {
         'A resposta do comparativo de releases é inválida.',
         200,
         'INVALID_CONTENT_RELEASE_DIFF_RESPONSE',
+        response.headers.get('x-correlation-id'),
+      );
+    }
+  }
+
+  public async previewContentReleaseValidation(
+    releaseId: string,
+  ): Promise<ContentReleaseValidationPreview> {
+    const url = new URL(`${this.apiBaseUrl}/admin/v1/content/releases/${releaseId}/validation`);
+
+    let response: Response;
+    try {
+      response = await this.fetchImpl(url.toString(), {
+        method: 'GET',
+        credentials: 'include',
+        headers: { accept: 'application/json' },
+      });
+    } catch {
+      throw new AdminApiError(
+        'network',
+        'Não foi possível alcançar a Admin API.',
+        null,
+        'NETWORK_ERROR',
+        null,
+      );
+    }
+
+    if (!response.ok) throw await parseContentError(response);
+    try {
+      return assertContentReleaseValidationPreview(await response.json(), releaseId);
+    } catch (error) {
+      if (error instanceof AdminApiError) throw error;
+      throw new AdminApiError(
+        'server',
+        'A resposta da pré-validação de conteúdo é inválida.',
+        200,
+        'INVALID_CONTENT_RELEASE_VALIDATION_RESPONSE',
         response.headers.get('x-correlation-id'),
       );
     }
