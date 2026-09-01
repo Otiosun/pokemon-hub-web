@@ -1,7 +1,4 @@
-import {
-  AdminApiClient as CoreAdminApiClient,
-  AdminApiError,
-} from './admin-api-core';
+import { AdminApiClient as CoreAdminApiClient, AdminApiError } from './admin-api-core';
 
 export * from './admin-api-core';
 
