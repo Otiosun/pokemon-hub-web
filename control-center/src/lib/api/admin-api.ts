@@ -45,6 +45,11 @@ export type MessagingInboxStatus = 'RECEIVED' | 'PROCESSING' | 'PROCESSED' | 'FA
 export type MessagingOutboxStatus = 'PENDING' | 'SENDING' | 'SENT' | 'FAILED' | 'DEAD';
 export type IncidentSignalSource = 'ADMIN_OPERATION' | 'INBOX' | 'OUTBOX';
 export type IncidentSignalState = 'FAILED' | 'DEAD';
+export type IncidentRunbookKey =
+  | 'admin-operation-failed'
+  | 'inbox-processing-failed'
+  | 'outbox-delivery-failed'
+  | 'outbox-dead-letter';
 
 export interface ContentLibraryQuery {
   readonly query?: string;
@@ -177,6 +182,15 @@ export interface MessagingOperationsView {
   };
 }
 
+export interface IncidentRunbookView {
+  readonly key: IncidentRunbookKey;
+  readonly title: string;
+  readonly summary: string;
+  readonly steps: readonly string[];
+  readonly evidenceToCollect: readonly string[];
+  readonly escalation: string;
+}
+
 export interface IncidentSignalView {
   readonly source: IncidentSignalSource;
   readonly id: string;
@@ -188,6 +202,7 @@ export interface IncidentSignalView {
   readonly riskTier: number | null;
   readonly attempts: number | null;
   readonly occurredAt: string;
+  readonly runbook: IncidentRunbookView;
 }
 
 export interface IncidentCenterView {
@@ -263,6 +278,12 @@ const INCIDENT_SIGNAL_SOURCES = new Set<IncidentSignalSource>([
   'OUTBOX',
 ]);
 const INCIDENT_SIGNAL_STATES = new Set<IncidentSignalState>(['FAILED', 'DEAD']);
+const INCIDENT_RUNBOOK_KEY_VALUES = new Set<IncidentRunbookKey>([
+  'admin-operation-failed',
+  'inbox-processing-failed',
+  'outbox-delivery-failed',
+  'outbox-dead-letter',
+]);
 const RUNTIME_HEALTH_KEYS = ['environment', 'runtime'] as const;
 const RUNTIME_HEALTH_RUNTIME_KEYS = [
   'providerState',
@@ -307,9 +328,19 @@ const INCIDENT_SIGNAL_KEYS = [
   'riskTier',
   'attempts',
   'occurredAt',
+  'runbook',
+] as const;
+const INCIDENT_RUNBOOK_KEYS = [
+  'key',
+  'title',
+  'summary',
+  'steps',
+  'evidenceToCollect',
+  'escalation',
 ] as const;
 const MESSAGING_RECENT_LIMIT = 25;
 const INCIDENT_RECENT_LIMIT = 25;
+const INCIDENT_RUNBOOK_LIST_LIMIT = 8;
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -331,6 +362,15 @@ function isNonNegativeInteger(value: unknown): value is number {
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0;
+}
+
+function isNonEmptyStringList(value: unknown): value is string[] {
+  return (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.length <= INCIDENT_RUNBOOK_LIST_LIMIT &&
+    value.every(isNonEmptyString)
+  );
 }
 
 function hasExactKeys(value: UnknownRecord, expected: readonly string[]): boolean {
@@ -367,6 +407,50 @@ function isIncidentSignalSource(value: unknown): value is IncidentSignalSource {
 
 function isIncidentSignalState(value: unknown): value is IncidentSignalState {
   return typeof value === 'string' && INCIDENT_SIGNAL_STATES.has(value as IncidentSignalState);
+}
+
+function expectedIncidentRunbookKey(
+  source: IncidentSignalSource,
+  state: IncidentSignalState,
+): IncidentRunbookKey {
+  if (source === 'ADMIN_OPERATION' && state === 'FAILED') return 'admin-operation-failed';
+  if (source === 'INBOX' && state === 'FAILED') return 'inbox-processing-failed';
+  if (source === 'OUTBOX' && state === 'FAILED') return 'outbox-delivery-failed';
+  if (source === 'OUTBOX' && state === 'DEAD') return 'outbox-dead-letter';
+  throw new Error('Invalid Incident Center runbook mapping.');
+}
+
+function assertIncidentRunbook(
+  value: unknown,
+  source: IncidentSignalSource,
+  state: IncidentSignalState,
+): IncidentRunbookView {
+  if (!isRecord(value) || !hasExactKeys(value, INCIDENT_RUNBOOK_KEYS)) {
+    throw new Error('Invalid Incident Center runbook.');
+  }
+
+  const expectedKey = expectedIncidentRunbookKey(source, state);
+  if (
+    typeof value.key !== 'string' ||
+    !INCIDENT_RUNBOOK_KEY_VALUES.has(value.key as IncidentRunbookKey) ||
+    value.key !== expectedKey ||
+    !isNonEmptyString(value.title) ||
+    !isNonEmptyString(value.summary) ||
+    !isNonEmptyStringList(value.steps) ||
+    !isNonEmptyStringList(value.evidenceToCollect) ||
+    !isNonEmptyString(value.escalation)
+  ) {
+    throw new Error('Invalid Incident Center runbook.');
+  }
+
+  return {
+    key: expectedKey,
+    title: value.title,
+    summary: value.summary,
+    steps: [...value.steps],
+    evidenceToCollect: [...value.evidenceToCollect],
+    escalation: value.escalation,
+  };
 }
 
 function isResourceKind(value: unknown): value is ContentResourceKind {
@@ -751,6 +835,8 @@ function assertIncidentSignal(value: unknown): IncidentSignalView {
     throw new Error('Invalid outbox incident signal.');
   }
 
+  const runbook = assertIncidentRunbook(value.runbook, value.source, value.state);
+
   return {
     source: value.source,
     id: value.id,
@@ -762,6 +848,7 @@ function assertIncidentSignal(value: unknown): IncidentSignalView {
     riskTier: value.riskTier,
     attempts: value.attempts,
     occurredAt: value.occurredAt,
+    runbook,
   };
 }
 
