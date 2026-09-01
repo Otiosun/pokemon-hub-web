@@ -43,6 +43,8 @@ export type RuntimeWhatsappProviderState =
 
 export type MessagingInboxStatus = 'RECEIVED' | 'PROCESSING' | 'PROCESSED' | 'FAILED';
 export type MessagingOutboxStatus = 'PENDING' | 'SENDING' | 'SENT' | 'FAILED' | 'DEAD';
+export type IncidentSignalSource = 'ADMIN_OPERATION' | 'INBOX' | 'OUTBOX';
+export type IncidentSignalState = 'FAILED' | 'DEAD';
 
 export interface ContentLibraryQuery {
   readonly query?: string;
@@ -175,6 +177,23 @@ export interface MessagingOperationsView {
   };
 }
 
+export interface IncidentSignalView {
+  readonly source: IncidentSignalSource;
+  readonly id: string;
+  readonly correlationId: string;
+  readonly state: IncidentSignalState;
+  readonly kind: string;
+  readonly targetType: string | null;
+  readonly targetId: string | null;
+  readonly riskTier: number | null;
+  readonly attempts: number | null;
+  readonly occurredAt: string;
+}
+
+export interface IncidentCenterView {
+  readonly signals: readonly IncidentSignalView[];
+}
+
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const INTEGER_STRING_PATTERN = /^\d+$/;
 const DEPLOYMENT_REVISION_PATTERN = /^[0-9a-f]{40}$/;
@@ -238,6 +257,12 @@ const MESSAGING_OUTBOX_STATUSES = new Set<MessagingOutboxStatus>([
   'FAILED',
   'DEAD',
 ]);
+const INCIDENT_SIGNAL_SOURCES = new Set<IncidentSignalSource>([
+  'ADMIN_OPERATION',
+  'INBOX',
+  'OUTBOX',
+]);
+const INCIDENT_SIGNAL_STATES = new Set<IncidentSignalState>(['FAILED', 'DEAD']);
 const RUNTIME_HEALTH_KEYS = ['environment', 'runtime'] as const;
 const RUNTIME_HEALTH_RUNTIME_KEYS = [
   'providerState',
@@ -270,7 +295,21 @@ const MESSAGING_OUTBOX_METADATA_KEYS = [
   'sentAt',
   'sendingStartedAt',
 ] as const;
+const INCIDENT_CENTER_KEYS = ['signals'] as const;
+const INCIDENT_SIGNAL_KEYS = [
+  'source',
+  'id',
+  'correlationId',
+  'state',
+  'kind',
+  'targetType',
+  'targetId',
+  'riskTier',
+  'attempts',
+  'occurredAt',
+] as const;
 const MESSAGING_RECENT_LIMIT = 25;
+const INCIDENT_RECENT_LIMIT = 25;
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -320,6 +359,14 @@ function isMessagingInboxStatus(value: unknown): value is MessagingInboxStatus {
 
 function isMessagingOutboxStatus(value: unknown): value is MessagingOutboxStatus {
   return typeof value === 'string' && MESSAGING_OUTBOX_STATUSES.has(value as MessagingOutboxStatus);
+}
+
+function isIncidentSignalSource(value: unknown): value is IncidentSignalSource {
+  return typeof value === 'string' && INCIDENT_SIGNAL_SOURCES.has(value as IncidentSignalSource);
+}
+
+function isIncidentSignalState(value: unknown): value is IncidentSignalState {
+  return typeof value === 'string' && INCIDENT_SIGNAL_STATES.has(value as IncidentSignalState);
 }
 
 function isResourceKind(value: unknown): value is ContentResourceKind {
@@ -675,6 +722,61 @@ function assertMessagingOperations(value: unknown): MessagingOperationsView {
   };
 }
 
+function assertIncidentSignal(value: unknown): IncidentSignalView {
+  if (!isRecord(value) || !hasExactKeys(value, INCIDENT_SIGNAL_KEYS)) {
+    throw new Error('Invalid Incident Center signal.');
+  }
+  if (
+    !isIncidentSignalSource(value.source) ||
+    !isUuid(value.id) ||
+    !isUuid(value.correlationId) ||
+    !isIncidentSignalState(value.state) ||
+    !isNonEmptyString(value.kind) ||
+    (value.targetType !== null && !isNonEmptyString(value.targetType)) ||
+    (value.targetId !== null && !isUuid(value.targetId)) ||
+    (value.riskTier !== null && !isNonNegativeInteger(value.riskTier)) ||
+    (value.attempts !== null && !isNonNegativeInteger(value.attempts)) ||
+    !isCanonicalIsoTimestamp(value.occurredAt)
+  ) {
+    throw new Error('Invalid Incident Center signal.');
+  }
+
+  if (value.source === 'ADMIN_OPERATION' && value.state !== 'FAILED') {
+    throw new Error('Invalid administrative incident state.');
+  }
+  if (value.source === 'INBOX' && (value.state !== 'FAILED' || value.kind !== 'INBOX_MESSAGE')) {
+    throw new Error('Invalid inbox incident signal.');
+  }
+  if (value.source === 'OUTBOX' && value.kind !== 'OUTBOX_MESSAGE') {
+    throw new Error('Invalid outbox incident signal.');
+  }
+
+  return {
+    source: value.source,
+    id: value.id,
+    correlationId: value.correlationId,
+    state: value.state,
+    kind: value.kind,
+    targetType: value.targetType,
+    targetId: value.targetId,
+    riskTier: value.riskTier,
+    attempts: value.attempts,
+    occurredAt: value.occurredAt,
+  };
+}
+
+function assertIncidentCenter(value: unknown): IncidentCenterView {
+  if (
+    !isRecord(value) ||
+    !hasExactKeys(value, INCIDENT_CENTER_KEYS) ||
+    !Array.isArray(value.signals) ||
+    value.signals.length > INCIDENT_RECENT_LIMIT
+  ) {
+    throw new Error('Invalid Incident Center response.');
+  }
+  return { signals: value.signals.map(assertIncidentSignal) };
+}
+
 async function parseContentError(response: Response): Promise<AdminApiError> {
   let code = `HTTP_${response.status}`;
   let message = 'A consulta administrativa falhou.';
@@ -959,6 +1061,41 @@ export class AdminApiClient {
         'A resposta das filas de mensageria é inválida.',
         200,
         'INVALID_MESSAGING_OPERATIONS_RESPONSE',
+        response.headers.get('x-correlation-id'),
+      );
+    }
+  }
+
+  public async getIncidentCenter(): Promise<IncidentCenterView> {
+    const url = new URL(`${this.apiBaseUrl}/admin/v1/incidents`);
+
+    let response: Response;
+    try {
+      response = await this.fetchImpl(url.toString(), {
+        method: 'GET',
+        credentials: 'include',
+        headers: { accept: 'application/json' },
+      });
+    } catch {
+      throw new AdminApiError(
+        'network',
+        'Não foi possível alcançar a Admin API.',
+        null,
+        'NETWORK_ERROR',
+        null,
+      );
+    }
+
+    if (!response.ok) throw await parseContentError(response);
+    try {
+      return assertIncidentCenter(await response.json());
+    } catch (error) {
+      if (error instanceof AdminApiError) throw error;
+      throw new AdminApiError(
+        'server',
+        'A resposta do Incident Center é inválida.',
+        200,
+        'INVALID_INCIDENT_CENTER_RESPONSE',
         response.headers.get('x-correlation-id'),
       );
     }
