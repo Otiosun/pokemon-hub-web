@@ -129,6 +129,9 @@ export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
   const [filters, setFilters] = useState<ContentLibraryFilters>(EMPTY_CONTENT_LIBRARY_FILTERS);
   const [items, setItems] = useState<readonly ContentLibraryItem[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [committedQuery, setCommittedQuery] = useState<ReturnType<typeof toContentLibraryQuery> | null>(
+    null,
+  );
   const [status, setStatus] = useState<LoadStatus>('idle');
   const [error, setError] = useState<RequestErrorView | null>(null);
   const [unpublished, setUnpublished] = useState<readonly ContentUnpublishedRelease[]>([]);
@@ -150,10 +153,14 @@ export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
   }
 
   async function runSearch(cursor?: string) {
+    const requestQuery = cursor === undefined ? query : committedQuery;
+    if (requestQuery === null) return;
+
     setStatus('loading');
     setError(null);
     try {
-      const response = await client.searchContent(query, cursor);
+      const response = await client.searchContent(requestQuery, cursor);
+      if (cursor === undefined) setCommittedQuery(query);
       setItems((current) =>
         cursor === undefined ? response.items : [...current, ...response.items],
       );
