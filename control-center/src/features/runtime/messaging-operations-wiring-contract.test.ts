@@ -21,7 +21,7 @@ describe('messaging operations wiring', () => {
   it('wires the messaging operations card to the authenticated Admin API client', async () => {
     const app = await readFile(appPath, 'utf8');
 
-    expect(app).toContain("import { MessagingOperationsCard }");
+    expect(app).toContain('import { MessagingOperationsCard }');
     expect(app).toContain('<MessagingOperationsCard');
     expect(app).toContain('client={client}');
   });
