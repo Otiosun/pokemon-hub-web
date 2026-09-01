@@ -5,6 +5,7 @@ import {
   type ContentLibraryItem,
   type ContentReleaseDiff,
   type ContentReleaseDiffCategory,
+  type ContentReleaseValidationPreview,
   type ContentUnpublishedRelease,
 } from '../../lib/api/admin-api';
 import {
@@ -20,7 +21,10 @@ import './content-library.css';
 interface ContentLibraryPageProps {
   readonly client: Pick<
     AdminApiClient,
-    'searchContent' | 'listUnpublishedContent' | 'diffContentRelease'
+    | 'searchContent'
+    | 'listUnpublishedContent'
+    | 'diffContentRelease'
+    | 'previewContentReleaseValidation'
   >;
 }
 
@@ -125,6 +129,43 @@ function ReleaseDiffDetails({ diff }: { readonly diff: ContentReleaseDiff }) {
   );
 }
 
+function ValidationPreviewDetails({
+  preview,
+}: {
+  readonly preview: ContentReleaseValidationPreview;
+}) {
+  if (preview.valid) {
+    return (
+      <div className="content-library-state">
+        <strong>Nenhum bloqueio de validação encontrado</strong>
+        <span>
+          O snapshot passou pelas regras autoritativas consultadas. Esta leitura não valida nem
+          publica a release.
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="content-library-state">
+      <strong>Bloqueios encontrados</strong>
+      <span>
+        {preview.issues.length} problema(s) precisam ser corrigidos antes do lifecycle de validação.
+      </span>
+      <dl className="content-unpublished-metadata">
+        {preview.issues.map((issue, index) => (
+          <div key={`${issue.code}:${issue.path}:${index}`}>
+            <dt>{issue.message}</dt>
+            <dd>
+              {issue.path} · {issue.code}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
 export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
   const [filters, setFilters] = useState<ContentLibraryFilters>(EMPTY_CONTENT_LIBRARY_FILTERS);
   const [items, setItems] = useState<readonly ContentLibraryItem[]>([]);
@@ -144,6 +185,15 @@ export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
     Readonly<Partial<Record<string, LoadStatus>>>
   >({});
   const [releaseDiffErrors, setReleaseDiffErrors] = useState<
+    Readonly<Partial<Record<string, RequestErrorView | null>>>
+  >({});
+  const [validationPreviews, setValidationPreviews] = useState<
+    Readonly<Record<string, ContentReleaseValidationPreview>>
+  >({});
+  const [validationPreviewStatuses, setValidationPreviewStatuses] = useState<
+    Readonly<Partial<Record<string, LoadStatus>>>
+  >({});
+  const [validationPreviewErrors, setValidationPreviewErrors] = useState<
     Readonly<Partial<Record<string, RequestErrorView | null>>>
   >({});
   const query = useMemo(() => toContentLibraryQuery(filters), [filters]);
@@ -179,6 +229,9 @@ export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
     setReleaseDiffs({});
     setReleaseDiffStatuses({});
     setReleaseDiffErrors({});
+    setValidationPreviews({});
+    setValidationPreviewStatuses({});
+    setValidationPreviewErrors({});
     try {
       setUnpublished(await client.listUnpublishedContent());
       setUnpublishedStatus('ready');
@@ -205,6 +258,31 @@ export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
       setReleaseDiffErrors((current) => ({
         ...current,
         [release.releaseId]: requestError(cause, 'A comparação entre releases falhou.'),
+      }));
+    }
+  }
+
+  async function loadValidationPreview(release: ContentUnpublishedRelease) {
+    setValidationPreviewStatuses((current) => ({
+      ...current,
+      [release.releaseId]: 'loading',
+    }));
+    setValidationPreviewErrors((current) => ({ ...current, [release.releaseId]: null }));
+    try {
+      const preview = await client.previewContentReleaseValidation(release.releaseId);
+      setValidationPreviews((current) => ({ ...current, [release.releaseId]: preview }));
+      setValidationPreviewStatuses((current) => ({
+        ...current,
+        [release.releaseId]: 'ready',
+      }));
+    } catch (cause) {
+      setValidationPreviewStatuses((current) => ({
+        ...current,
+        [release.releaseId]: 'error',
+      }));
+      setValidationPreviewErrors((current) => ({
+        ...current,
+        [release.releaseId]: requestError(cause, 'A consulta dos bloqueios de validação falhou.'),
       }));
     }
   }
@@ -318,7 +396,7 @@ export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
             </h3>
             <p>
               Estado autoritativo de releases DRAFT e VALIDATED. A contagem representa registros do
-              ledger; a comparação semântica só é carregada quando o operador pede explicitamente.
+              ledger; comparação e bloqueios só são carregados quando o operador pede explicitamente.
             </p>
           </div>
           <div className="content-unpublished-actions">
@@ -376,6 +454,9 @@ export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
               const diffStatus = releaseDiffStatuses[release.releaseId] ?? 'idle';
               const diffError = releaseDiffErrors[release.releaseId] ?? null;
               const diff = releaseDiffs[release.releaseId];
+              const validationStatus = validationPreviewStatuses[release.releaseId] ?? 'idle';
+              const validationError = validationPreviewErrors[release.releaseId] ?? null;
+              const validationPreview = validationPreviews[release.releaseId];
 
               return (
                 <article className="content-unpublished-card" key={unpublishedKey(release)}>
@@ -444,6 +525,35 @@ export function ContentLibraryPage({ client }: ContentLibraryPageProps) {
                       ) : null}
                     </>
                   )}
+
+                  <button
+                    className="content-library-more"
+                    type="button"
+                    disabled={validationStatus === 'loading'}
+                    onClick={() => void loadValidationPreview(release)}
+                  >
+                    {validationStatus === 'loading' ? 'Consultando bloqueios…' : 'Ver bloqueios'}
+                  </button>
+
+                  {validationStatus === 'loading' ? (
+                    <div className="content-library-state" role="status">
+                      <strong>Consultando bloqueios autoritativos…</strong>
+                      <span>Esta leitura não altera status, revisão ou publicação.</span>
+                    </div>
+                  ) : null}
+
+                  {validationStatus === 'error' && validationError !== null ? (
+                    <div className="content-library-state is-error" role="alert">
+                      <strong>{validationError.message}</strong>
+                      {validationError.correlationId === null ? null : (
+                        <span>Correlação: {validationError.correlationId}</span>
+                      )}
+                    </div>
+                  ) : null}
+
+                  {validationStatus === 'ready' && validationPreview !== undefined ? (
+                    <ValidationPreviewDetails preview={validationPreview} />
+                  ) : null}
                 </article>
               );
             })}
