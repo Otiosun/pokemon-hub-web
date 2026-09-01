@@ -22,14 +22,16 @@ describe('AdminOperation audit reconstruction wiring', () => {
     expect(card).not.toContain('prepareOperation');
     expect(card).not.toMatch(/simulateOperation|confirmOperation|approveOperation|applyOperation/i);
     expect(card).not.toMatch(/retry|replay|requeue|compensar/i);
-    expect(card).not.toMatch(/operation\.input|operation\.result|requestFingerprint|idempotencyKey/i);
+    expect(card).not.toMatch(
+      /operation\.input|operation\.result|requestFingerprint|idempotencyKey/i,
+    );
     expect(card).not.toMatch(/\bpayload\b|\bmetadata\b|beforeData|afterData/i);
   });
 
   it('wires audit.read capability to the authenticated card without broadening HTTP authority', async () => {
     const app = await readFile(appPath, 'utf8');
 
-    expect(app).toContain("import { AdminOperationAuditCard }");
+    expect(app).toContain('import { AdminOperationAuditCard }');
     expect(app).toContain("capabilities.has('audit.read')");
     expect(app).toContain('<AdminOperationAuditCard');
     expect(app).toContain('client={client}');
