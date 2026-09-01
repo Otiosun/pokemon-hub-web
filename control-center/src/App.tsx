@@ -9,6 +9,7 @@ import { ControlCenterSidebar } from './components/shell/ControlCenterSidebar';
 import { OperationalDiagnostics } from './components/shell/OperationalDiagnostics';
 import { SessionGate } from './components/shell/SessionGate';
 import { SessionProfilePanel } from './components/shell/SessionProfilePanel';
+import { IncidentCenterCard } from './features/incidents/IncidentCenterCard';
 import { MessagingOperationsCard } from './features/runtime/MessagingOperationsCard';
 import { RuntimeWhatsappHealthCard } from './features/runtime/RuntimeWhatsappHealthCard';
 import { displayAdminRole, useAdminSession } from './features/session/useAdminSession';
@@ -302,6 +303,7 @@ function TodayView({
           </dl>
           <RuntimeWhatsappHealthCard client={client} expectedEnvironment={session.environment} />
           <MessagingOperationsCard client={client} />
+          <IncidentCenterCard client={client} />
         </aside>
       </section>
     </>
