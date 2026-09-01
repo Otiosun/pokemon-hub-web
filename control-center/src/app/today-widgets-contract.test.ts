@@ -23,7 +23,7 @@ describe('Control Center Today page contract', () => {
   it('keeps the visible progress counter synchronized with the canonical Drive score', async () => {
     const app = await readFile(appPath, 'utf8');
 
-    expect(app).toContain('const CANONICAL_PROGRESS = 44.37;');
-    expect(app).not.toContain('const CANONICAL_PROGRESS = 43.59;');
+    expect(app).toContain('const CANONICAL_PROGRESS = 45.15;');
+    expect(app).not.toContain('const CANONICAL_PROGRESS = 44.37;');
   });
 });
