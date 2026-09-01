@@ -9,6 +9,7 @@ import { ControlCenterSidebar } from './components/shell/ControlCenterSidebar';
 import { OperationalDiagnostics } from './components/shell/OperationalDiagnostics';
 import { SessionGate } from './components/shell/SessionGate';
 import { SessionProfilePanel } from './components/shell/SessionProfilePanel';
+import { RuntimeWhatsappHealthCard } from './features/runtime/RuntimeWhatsappHealthCard';
 import { displayAdminRole, useAdminSession } from './features/session/useAdminSession';
 import { AdminApiClient } from './lib/api/admin-api';
 
@@ -41,8 +42,8 @@ const workQueue = [
   },
   {
     eyebrow: 'RUNTIME',
-    title: 'Admin API autenticada + prepare-only',
-    copy: 'Sessão, Player 360 e preparação de operação usam o backend real; o lifecycle de mutation permanece fechado.',
+    title: 'Evidência operacional consultável',
+    copy: 'O estado registrado do runtime WhatsApp pode ser consultado manualmente, sem expor controles de lifecycle.',
     tone: 'quiet',
   },
 ] as const;
@@ -146,10 +147,12 @@ export function App() {
           {activeSection === 'today' ? (
             <TodayView
               canReadPlayers={canReadPlayers}
+              client={client}
               onOpenPlayers={() => setActiveSection('players')}
               principalId={session.principalId}
               query={query}
               roleLabel={roleLabel}
+              session={session}
             />
           ) : activeSection === 'players' ? (
             <Suspense
@@ -193,16 +196,22 @@ export function App() {
 
 function TodayView({
   canReadPlayers,
+  client,
   onOpenPlayers,
   principalId,
   query,
   roleLabel,
+  session,
 }: {
   canReadPlayers: boolean;
+  client: AdminApiClient;
   onOpenPlayers: () => void;
   principalId: string;
   query: string;
   roleLabel: string;
+  session: {
+    readonly environment: 'development' | 'staging' | 'production';
+  };
 }) {
   return (
     <>
@@ -290,6 +299,7 @@ function TodayView({
               <dd>Prepare-only</dd>
             </div>
           </dl>
+          <RuntimeWhatsappHealthCard client={client} expectedEnvironment={session.environment} />
         </aside>
       </section>
     </>
