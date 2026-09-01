@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run verify:control-center",
     "preview": "vite preview",
     "deploy:cf": "wrangler deploy",
     "postinstall": "node --version && npm --version && npm exec --yes --package=pnpm@11.23.0 -- pnpm --version && node control-center/scripts/materialize-lockfile.mjs && npm exec --yes --package=pnpm@11.23.0 -- pnpm --dir control-center install --frozen-lockfile --ignore-scripts",
