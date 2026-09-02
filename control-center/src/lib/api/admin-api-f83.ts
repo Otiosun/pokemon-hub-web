@@ -1,4 +1,4 @@
-import { AdminApiClient as BaseAdminApiClient, AdminApiError } from './admin-api';
+import { AdminApiError, AdminApiClient as BaseAdminApiClient } from './admin-api';
 
 export * from './admin-api';
 
@@ -44,7 +44,14 @@ const iso = (value: unknown): value is string => {
 
 function economyResult(value: unknown): EconomyAnalyticsView {
   if (
-    !exact(value, ['asOf', 'window', 'currencies', 'currenciesTruncated', 'inventory', 'anomalies']) ||
+    !exact(value, [
+      'asOf',
+      'window',
+      'currencies',
+      'currenciesTruncated',
+      'inventory',
+      'anomalies',
+    ]) ||
     !iso(value.asOf) ||
     value.window !== '30d' ||
     !Array.isArray(value.currencies) ||
@@ -104,7 +111,11 @@ export class AdminApiClient extends BaseAdminApiClient {
     }
     if (!response.ok) {
       throw new AdminApiError(
-        response.status === 403 ? 'forbidden' : response.status === 401 ? 'unauthenticated' : 'server',
+        response.status === 403
+          ? 'forbidden'
+          : response.status === 401
+            ? 'unauthenticated'
+            : 'server',
         'A consulta de economia falhou.',
         response.status,
         `HTTP_${response.status}`,
