@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { AdminApiClient, AdminApiError } from './admin-api';
+import { AdminApiClient, AdminApiError } from './admin-api-f83';
 
 const API = 'https://admin-api.example.com';
 const PLAYER_ID = '00000000-0000-4000-8000-000000000444';
@@ -66,6 +66,34 @@ function canonicalPlayer360() {
     recentActivity: [],
     unsupportedSections: ['COOLDOWNS', 'PUNISHMENTS_FLAGS'],
   };
+}
+
+function canonicalEconomyAnalytics() {
+  return {
+    asOf: '2026-09-02T12:00:00.000Z',
+    window: '30d',
+    currencies: [
+      {
+        slug: 'poke-dollar',
+        displayName: 'Poké Dollar',
+        inflow: '1000',
+        outflow: '400',
+        netFlow: '600',
+        totalBalance: '9000',
+      },
+    ],
+    currenciesTruncated: false,
+    inventory: {
+      inflowUnits: '80',
+      outflowUnits: '30',
+      netFlowUnits: '50',
+      totalUnitsHeld: '700',
+    },
+    anomalies: {
+      walletProjectionMismatches: '2',
+      inventoryProjectionMismatches: '1',
+    },
+  } as const;
 }
 
 describe('AdminApiClient', () => {
@@ -155,6 +183,54 @@ describe('AdminApiClient', () => {
     await expect(client.getPlayer(PLAYER_ID, false)).rejects.toMatchObject({
       kind: 'server',
       code: 'INVALID_PLAYER360_RESPONSE',
+    });
+  });
+
+  it('loads F8.3 economy analytics through one fixed credentialed GET', async () => {
+    const payload = canonicalEconomyAnalytics();
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse(payload));
+    const client = new AdminApiClient(API, fetchImpl);
+
+    await expect(client.getEconomyAnalytics()).resolves.toEqual(payload);
+    expect(fetchImpl).toHaveBeenCalledWith(`${API}/admin/v1/analytics/economy`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { accept: 'application/json' },
+    });
+  });
+
+  it('fails closed on extra or unsafe F8.3 economy analytics fields', async () => {
+    const malformed = {
+      ...canonicalEconomyAnalytics(),
+      playerId: PLAYER_ID,
+    };
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse(malformed));
+    const client = new AdminApiClient(API, fetchImpl);
+
+    await expect(client.getEconomyAnalytics()).rejects.toMatchObject({
+      kind: 'server',
+      code: 'INVALID_ECONOMY_ANALYTICS_RESPONSE',
+    });
+  });
+
+  it('rejects invalid integer-text or arbitrary-window F8.3 economy analytics payloads', async () => {
+    const invalidNumeric = canonicalEconomyAnalytics();
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        jsonResponse({
+          ...invalidNumeric,
+          currencies: [{ ...invalidNumeric.currencies[0], inflow: '1.5' }],
+        }),
+      )
+      .mockResolvedValueOnce(jsonResponse({ ...canonicalEconomyAnalytics(), window: '7d' }));
+    const client = new AdminApiClient(API, fetchImpl);
+
+    await expect(client.getEconomyAnalytics()).rejects.toMatchObject({
+      code: 'INVALID_ECONOMY_ANALYTICS_RESPONSE',
+    });
+    await expect(client.getEconomyAnalytics()).rejects.toMatchObject({
+      code: 'INVALID_ECONOMY_ANALYTICS_RESPONSE',
     });
   });
 

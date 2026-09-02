@@ -21,9 +21,26 @@ describe('Control Center Today page contract', () => {
     expect(app).toContain('Ativos 30d');
     expect(app).toContain('Retornaram em 7d');
     expect(app).toContain('getPlayerActivityAnalytics');
-    expect(app).toContain('Estado operacional');
     expect(app).not.toContain('workQueue');
     expect(app).not.toContain('Fila de trabalho');
+  });
+
+  it('surfaces F8.3 economy evidence only behind economy.read without adding dashboard controls', async () => {
+    const app = await readFile(appPath, 'utf8');
+
+    expect(app).toContain("const canReadEconomy = capabilities.has('economy.read');");
+    expect(app).toContain('canReadEconomy={canReadEconomy}');
+    expect(app).toContain('Economia agregada');
+    expect(app).toContain('Fluxo líquido');
+    expect(app).toContain('Saldo agregado');
+    expect(app).toContain('Volume de inventário');
+    expect(app).toContain('Anomalias de projeção');
+    expect(app).toContain('getEconomyAnalytics');
+    expect(app).toContain('Sem permissão economy.read.');
+    expect(app).not.toContain('Estado operacional');
+    expect(app).not.toContain('Exportar');
+    expect(app).not.toContain('window=');
+    expect(app).not.toContain('sourceType');
   });
 
   it('keeps the visible progress counter synchronized with the canonical Drive score', async () => {

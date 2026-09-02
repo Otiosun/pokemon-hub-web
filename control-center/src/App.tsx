@@ -14,21 +14,24 @@ import { IncidentCenterCard } from './features/incidents/IncidentCenterCard';
 import { MessagingOperationsCard } from './features/runtime/MessagingOperationsCard';
 import { RuntimeWhatsappHealthCard } from './features/runtime/RuntimeWhatsappHealthCard';
 import { displayAdminRole, useAdminSession } from './features/session/useAdminSession';
-import { AdminApiClient } from './lib/api/admin-api';
+import { AdminApiClient } from './lib/api/admin-api-f83';
 
 const Player360Page = lazy(() =>
   import('./features/player360/Player360Page').then((module) => ({
     default: module.Player360Page,
   })),
 );
-
 const ContentLibraryPage = lazy(() =>
   import('./features/content-studio/ContentLibraryPage').then((module) => ({
     default: module.ContentLibraryPage,
   })),
 );
-
 const CANONICAL_PROGRESS = 49.2;
+const MODULE_LOADING = (
+  <section className="foundation-placeholder" role="status">
+    Carregando…
+  </section>
+);
 
 export function App() {
   const config = useMemo(() => loadControlCenterConfig(), []);
@@ -52,9 +55,9 @@ export function App() {
   const session = sessionState.session;
   const canReadSensitive = capabilities.has('player.read_sensitive');
   const canReadPlayers = capabilities.has('player.read');
+  const canReadEconomy = capabilities.has('economy.read');
   const canReadAudit = capabilities.has('audit.read');
   const roleLabel = displayAdminRole(session);
-  const apiState = 'CONECTADA · SESSÃO VALIDADA' as const;
 
   return (
     <div className="control-center">
@@ -68,24 +71,16 @@ export function App() {
         roleLabel={roleLabel}
         sections={sections}
       />
-
       <main className="workspace">
         <header className="topbar">
-          <div className="topbar-context">
-            <span className="context-kicker">{active?.label ?? 'CONTROL CENTER'}</span>
-            <strong>{active?.description ?? 'Superfície administrativa autenticada'}</strong>
-          </div>
-
           <div className="topbar-actions">
             <div className="global-search">
-              <span aria-hidden="true">⌕</span>
               <input
                 aria-label="Busca global"
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Buscar jogador, operação ou área"
                 value={query}
               />
-              <kbd>⌘ K</kbd>
             </div>
             <button
               className="session-profile-mobile"
@@ -99,7 +94,6 @@ export function App() {
             </button>
           </div>
         </header>
-
         <div className="workspace-scroll">
           {sessionProfileOpen ? (
             <SessionProfilePanel
@@ -109,47 +103,31 @@ export function App() {
               session={session}
             />
           ) : null}
-
           <section className="page-heading">
-            <div>
-              <span className="eyebrow">CENTRAL ADMINISTRATIVA</span>
-              <h1>{active?.label ?? 'Control Center'}</h1>
-              <p>{active?.description ?? 'Operação administrativa autenticada.'}</p>
-            </div>
+            <h1>{active?.label ?? 'Control Center'}</h1>
             <div className="heading-actions">
               <OperationalDiagnostics
                 buildLabel={config.buildLabel}
                 environment={session.environment}
-                apiState={apiState}
+                apiState="CONECTADA · SESSÃO VALIDADA"
                 inline
               />
               <span className="status-pill">READ + PREPARE · ADMIN API</span>
             </div>
           </section>
-
           {activeSection === 'today' ? (
             <TodayView
               canReadAudit={canReadAudit}
+              canReadEconomy={canReadEconomy}
               canReadPlayers={canReadPlayers}
               client={client}
               onOpenPlayers={() => setActiveSection('players')}
-              principalId={session.principalId}
               query={query}
               roleLabel={roleLabel}
               session={session}
             />
           ) : activeSection === 'players' ? (
-            <Suspense
-              fallback={
-                <section className="foundation-placeholder" role="status">
-                  <span className="eyebrow">PLAYER 360</span>
-                  <h2>Carregando workspace de jogadores…</h2>
-                  <p>
-                    O shell administrativo continua disponível enquanto este módulo é carregado.
-                  </p>
-                </section>
-              }
-            >
+            <Suspense fallback={MODULE_LOADING}>
               <Player360Page
                 canReadSensitive={canReadSensitive}
                 capabilities={capabilities}
@@ -158,15 +136,7 @@ export function App() {
               />
             </Suspense>
           ) : activeSection === 'game' ? (
-            <Suspense
-              fallback={
-                <section className="foundation-placeholder" role="status">
-                  <span className="eyebrow">CONTENT STUDIO</span>
-                  <h2>Carregando biblioteca de conteúdo…</h2>
-                  <p>O shell continua disponível enquanto o catálogo autorizado é carregado.</p>
-                </section>
-              }
-            >
+            <Suspense fallback={MODULE_LOADING}>
               <ContentLibraryPage client={client} key={session.principalId} />
             </Suspense>
           ) : (
@@ -180,33 +150,41 @@ export function App() {
 
 function TodayView({
   canReadAudit,
+  canReadEconomy,
   canReadPlayers,
   client,
   onOpenPlayers,
-  principalId,
   query,
   roleLabel,
   session,
 }: {
   canReadAudit: boolean;
+  canReadEconomy: boolean;
   canReadPlayers: boolean;
   client: AdminApiClient;
   onOpenPlayers: () => void;
-  principalId: string;
   query: string;
   roleLabel: string;
-  session: {
-    readonly environment: 'development' | 'staging' | 'production';
-  };
+  session: { readonly environment: 'development' | 'staging' | 'production' };
 }) {
   const [activity, setActivity] = useState<
     Awaited<ReturnType<AdminApiClient['getPlayerActivityAnalytics']>> | false | null
+  >(null);
+  const [economy, setEconomy] = useState<
+    Awaited<ReturnType<AdminApiClient['getEconomyAnalytics']>> | false | null
   >(null);
   const refreshActivity = async () => {
     try {
       setActivity(await client.getPlayerActivityAnalytics());
     } catch {
       setActivity(false);
+    }
+  };
+  const refreshEconomy = async () => {
+    try {
+      setEconomy(await client.getEconomyAnalytics());
+    } catch {
+      setEconomy(false);
     }
   };
 
@@ -216,47 +194,25 @@ function TodayView({
         <article className="metric-card is-primary">
           <span>PROGRESSO CANÔNICO</span>
           <strong>{CANONICAL_PROGRESS.toFixed(2)}%</strong>
-          <small>Checklist oficial do Control Center</small>
-        </article>
-        <article className="metric-card">
-          <span>PRINCIPAL</span>
-          <strong>{roleLabel}</strong>
-          <small title={principalId}>{principalId}</small>
-        </article>
-        <article className="metric-card">
-          <span>PLAYER 360</span>
-          <strong>{canReadPlayers ? 'READ' : 'BLOQUEADO'}</strong>
-          <small>Permissão efetiva: player.read</small>
+          <small>
+            PRINCIPAL · {roleLabel} · PLAYER 360 · {canReadPlayers ? 'READ' : 'BLOQUEADO'}
+          </small>
         </article>
       </section>
-
       {query ? (
-        <section className="search-foundation-card">
-          <div>
-            <span className="eyebrow">BUSCA GLOBAL · FOUNDATION</span>
-            <h2>“{query}”</h2>
-            <p>
-              A busca global continua apenas como fundação. Para localizar um jogador agora, use a
-              busca tipada do Player 360.
-            </p>
-          </div>
-          <button
-            className="primary-button"
-            disabled={!canReadPlayers}
-            onClick={onOpenPlayers}
-            type="button"
-          >
-            Buscar jogador
-          </button>
-        </section>
+        <button
+          className="search-foundation-card"
+          disabled={!canReadPlayers}
+          onClick={onOpenPlayers}
+          type="button"
+        >
+          BUSCA GLOBAL · FOUNDATION — Para localizar um jogador agora, use a Player 360.
+        </button>
       ) : null}
-
       <section className="dashboard-grid">
         <div className="panel work-panel">
           <div className="panel-heading">
-            <div>
-              <h2>Atividade de jogadores</h2>
-            </div>
+            <h2>Atividade de jogadores</h2>
             <button
               className="secondary-button"
               disabled={!canReadPlayers}
@@ -290,32 +246,49 @@ function TodayView({
             </p>
           )}
         </div>
-
         <aside className="panel foundation-panel">
           <div className="panel-heading">
-            <div>
-              <span className="eyebrow">FUNDAÇÃO</span>
-              <h2>Estado operacional</h2>
-            </div>
+            <h2>Economia agregada</h2>
+            <button
+              className="secondary-button"
+              disabled={!canReadEconomy}
+              onClick={() => void refreshEconomy()}
+              type="button"
+            >
+              Atualizar
+            </button>
           </div>
-          <dl className="foundation-list">
-            <div>
-              <dt>Sessão</dt>
-              <dd>Backend-authoritative</dd>
+          {economy ? (
+            <div className="foundation-list">
+              {economy.currencies.map((currency) => (
+                <p key={currency.slug}>
+                  <strong>{currency.displayName}</strong>: Entradas {currency.inflow} · Saídas{' '}
+                  {currency.outflow} · Fluxo líquido {currency.netFlow} · Saldo agregado{' '}
+                  {currency.totalBalance}
+                </p>
+              ))}
+              <p>
+                <strong>Volume de inventário</strong>: Entradas {economy.inventory.inflowUnits} ·
+                Saídas {economy.inventory.outflowUnits} · Fluxo líquido{' '}
+                {economy.inventory.netFlowUnits} · {economy.inventory.totalUnitsHeld} unidades
+                mantidas
+              </p>
+              <p>
+                <strong>Anomalias de projeção</strong>: Carteiras{' '}
+                {economy.anomalies.walletProjectionMismatches} · Inventários{' '}
+                {economy.anomalies.inventoryProjectionMismatches}
+              </p>
+              {economy.currenciesTruncated ? <small>Moedas agregadas limitadas.</small> : null}
             </div>
-            <div>
-              <dt>Capabilities</dt>
-              <dd>Efetivas</dd>
-            </div>
-            <div>
-              <dt>Player 360</dt>
-              <dd>Read-only conectado</dd>
-            </div>
-            <div>
-              <dt>Mutations</dt>
-              <dd>Prepare-only</dd>
-            </div>
-          </dl>
+          ) : (
+            <p className="runtime-health-empty">
+              {economy === false
+                ? 'Consulta indisponível.'
+                : canReadEconomy
+                  ? 'Ainda não consultado.'
+                  : 'Sem permissão economy.read.'}
+            </p>
+          )}
           <RuntimeWhatsappHealthCard client={client} expectedEnvironment={session.environment} />
           <MessagingOperationsCard client={client} />
           <IncidentCenterCard client={client} />
@@ -328,19 +301,10 @@ function TodayView({
 
 function FoundationView({ sectionId }: { sectionId: ControlCenterSectionId }) {
   const section = CONTROL_CENTER_SECTIONS.find((candidate) => candidate.id === sectionId);
-
   return (
     <section className="foundation-placeholder">
-      <span className="eyebrow">FOUNDATION</span>
       <h2>{section?.label ?? 'Área administrativa'}</h2>
-      <p>
-        {section?.description ?? 'Área planejada.'} Nenhuma operação adicional desta área é exposta
-        neste slice.
-      </p>
-      <div className="placeholder-rule" />
-      <small>
-        Conectaremos esta área apenas quando contrato, authority e testes do backend existirem.
-      </small>
+      <p>{section?.description ?? 'Área planejada.'}</p>
     </section>
   );
 }
