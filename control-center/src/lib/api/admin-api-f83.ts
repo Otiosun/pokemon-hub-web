@@ -34,10 +34,7 @@ const record = (value: unknown): value is R =>
 const exact = (value: unknown, keys: readonly string[]): value is R =>
   record(value) && Object.keys(value).length === keys.length && keys.every((key) => key in value);
 const text = (value: unknown, max: number): value is string =>
-  typeof value === 'string' &&
-  value === value.trim() &&
-  value.length > 0 &&
-  value.length <= max;
+  typeof value === 'string' && value === value.trim() && value.length > 0 && value.length <= max;
 const integer = (value: unknown, allowNegative = false): value is string =>
   typeof value === 'string' && (allowNegative ? signed : unsigned).test(value);
 const iso = (value: unknown): value is string => {
