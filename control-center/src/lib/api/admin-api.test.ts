@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { AdminApiClient, AdminApiError } from './admin-api';
+import { AdminApiClient, AdminApiError } from './admin-api-f83';
 
 const API = 'https://admin-api.example.com';
 const PLAYER_ID = '00000000-0000-4000-8000-000000000444';
