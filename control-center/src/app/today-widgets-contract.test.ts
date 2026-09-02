@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 const appPath = fileURLToPath(new URL('../App.tsx', import.meta.url));
 
 describe('Control Center Today page contract', () => {
-  it('provides an operational widget structure before every data source is live', async () => {
+  it('surfaces F8.2 global player activity instead of the placeholder work queue', async () => {
     const app = await readFile(appPath, 'utf8');
 
     expect(app).toContain("activeSection === 'today'");
@@ -15,9 +15,15 @@ describe('Control Center Today page contract', () => {
     expect(app).toContain('PRINCIPAL');
     expect(app).toContain('PLAYER 360');
     expect(app).toContain('className="dashboard-grid"');
-    expect(app).toContain('Fila de trabalho');
+    expect(app).toContain('Atividade de jogadores');
+    expect(app).toContain('Ativos 24h');
+    expect(app).toContain('Ativos 7d');
+    expect(app).toContain('Ativos 30d');
+    expect(app).toContain('Retornaram em 7d');
+    expect(app).toContain('getPlayerActivityAnalytics');
     expect(app).toContain('Estado operacional');
-    expect(app).toContain('workQueue.map');
+    expect(app).not.toContain('workQueue');
+    expect(app).not.toContain('Fila de trabalho');
   });
 
   it('keeps the visible progress counter synchronized with the canonical Drive score', async () => {
