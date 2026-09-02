@@ -33,7 +33,11 @@ const record = (value: unknown): value is R =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 const exact = (value: unknown, keys: readonly string[]): value is R =>
   record(value) && Object.keys(value).length === keys.length && keys.every((key) => key in value);
-const text = (value: unknown): value is string => typeof value === 'string' && value.length > 0;
+const text = (value: unknown, max: number): value is string =>
+  typeof value === 'string' &&
+  value === value.trim() &&
+  value.length > 0 &&
+  value.length <= max;
 const integer = (value: unknown, allowNegative = false): value is string =>
   typeof value === 'string' && (allowNegative ? signed : unsigned).test(value);
 const iso = (value: unknown): value is string => {
@@ -66,19 +70,19 @@ function economyResult(value: unknown): EconomyAnalyticsView {
     !integer(value.anomalies.walletProjectionMismatches) ||
     !integer(value.anomalies.inventoryProjectionMismatches)
   ) {
-    throw new Error('Invalid economy analytics response.');
+    throw new Error();
   }
   for (const currency of value.currencies) {
     if (
       !exact(currency, ['slug', 'displayName', 'inflow', 'outflow', 'netFlow', 'totalBalance']) ||
-      !text(currency.slug) ||
-      !text(currency.displayName) ||
+      !text(currency.slug, 128) ||
+      !text(currency.displayName, 160) ||
       !integer(currency.inflow) ||
       !integer(currency.outflow) ||
       !integer(currency.netFlow, true) ||
       !integer(currency.totalBalance, true)
     ) {
-      throw new Error('Invalid economy analytics response.');
+      throw new Error();
     }
   }
   return value as unknown as EconomyAnalyticsView;
