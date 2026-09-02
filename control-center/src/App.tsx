@@ -109,7 +109,7 @@ export function App() {
               <OperationalDiagnostics
                 buildLabel={config.buildLabel}
                 environment={session.environment}
-                apiState="CONECTADA"
+                apiState="CONECTADA · SESSÃO VALIDADA"
                 inline
               />
               <span className="status-pill">READ + PREPARE · ADMIN API</span>
