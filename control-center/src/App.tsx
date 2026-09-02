@@ -255,7 +255,6 @@ function TodayView({
         <div className="panel work-panel">
           <div className="panel-heading">
             <div>
-              <span className="eyebrow">JOGADORES</span>
               <h2>Atividade de jogadores</h2>
             </div>
             <button
