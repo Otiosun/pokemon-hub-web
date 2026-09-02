@@ -27,15 +27,15 @@ export interface EconomyAnalyticsView {
 }
 
 type R = Record<string, unknown>;
-const unsigned = /^\d+$/;
-const signed = /^-?\d+$/;
+const integerPattern = /^-?\d+$/;
 const record = (value: unknown): value is R =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 const exact = (value: unknown, keys: readonly string[]): value is R =>
   record(value) && Object.keys(value).length === keys.length && keys.every((key) => key in value);
-const text = (value: unknown): value is string => typeof value === 'string' && value.length > 0;
-const integer = (value: unknown, allowNegative = false): value is string =>
-  typeof value === 'string' && (allowNegative ? signed : unsigned).test(value);
+const integer = (value: unknown, signed = false): value is string =>
+  typeof value === 'string' && integerPattern.test(value) && (signed || value[0] !== '-');
+const integerRecord = (value: unknown, keys: readonly string[], signed: readonly string[] = []) =>
+  exact(value, keys) && keys.every((key) => integer(value[key], signed.includes(key)));
 const iso = (value: unknown): value is string => {
   if (typeof value !== 'string') return false;
   const date = new Date(value);
@@ -57,26 +57,29 @@ function economyResult(value: unknown): EconomyAnalyticsView {
     !Array.isArray(value.currencies) ||
     value.currencies.length > 32 ||
     typeof value.currenciesTruncated !== 'boolean' ||
-    !exact(value.inventory, ['inflowUnits', 'outflowUnits', 'netFlowUnits', 'totalUnitsHeld']) ||
-    !integer(value.inventory.inflowUnits) ||
-    !integer(value.inventory.outflowUnits) ||
-    !integer(value.inventory.netFlowUnits, true) ||
-    !integer(value.inventory.totalUnitsHeld) ||
-    !exact(value.anomalies, ['walletProjectionMismatches', 'inventoryProjectionMismatches']) ||
-    !integer(value.anomalies.walletProjectionMismatches) ||
-    !integer(value.anomalies.inventoryProjectionMismatches)
+    !integerRecord(
+      value.inventory,
+      ['inflowUnits', 'outflowUnits', 'netFlowUnits', 'totalUnitsHeld'],
+      ['netFlowUnits'],
+    ) ||
+    !integerRecord(value.anomalies, [
+      'walletProjectionMismatches',
+      'inventoryProjectionMismatches',
+    ])
   ) {
     throw new Error('Invalid economy analytics response.');
   }
   for (const currency of value.currencies) {
     if (
       !exact(currency, ['slug', 'displayName', 'inflow', 'outflow', 'netFlow', 'totalBalance']) ||
-      !text(currency.slug) ||
-      !text(currency.displayName) ||
-      !integer(currency.inflow) ||
-      !integer(currency.outflow) ||
-      !integer(currency.netFlow, true) ||
-      !integer(currency.totalBalance, true)
+      typeof currency.slug !== 'string' ||
+      currency.slug.length === 0 ||
+      typeof currency.displayName !== 'string' ||
+      currency.displayName.length === 0 ||
+      !integerRecord(currency, ['inflow', 'outflow', 'netFlow', 'totalBalance'], [
+        'netFlow',
+        'totalBalance',
+      ])
     ) {
       throw new Error('Invalid economy analytics response.');
     }
