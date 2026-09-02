@@ -1,4 +1,4 @@
-import { AdminApiError, AdminApiClient as BaseAdminApiClient } from './admin-api';
+import { AdminApiClient as BaseAdminApiClient } from './admin-api';
 
 export * from './admin-api';
 
@@ -84,54 +84,18 @@ function economyResult(value: unknown): EconomyAnalyticsView {
   return value as unknown as EconomyAnalyticsView;
 }
 
-export class AdminApiClient extends BaseAdminApiClient {
-  public constructor(
-    private readonly f83ApiBaseUrl: string,
-    private readonly f83Fetch: typeof fetch = fetch,
-  ) {
-    super(f83ApiBaseUrl, f83Fetch);
-  }
+type BaseReader = {
+  readonly apiBaseUrl: string;
+  read<T>(url: URL | string, validate: (value: unknown) => T, invalidCode: string): Promise<T>;
+};
 
-  public async getEconomyAnalytics(): Promise<EconomyAnalyticsView> {
-    let response: Response;
-    try {
-      response = await this.f83Fetch(`${this.f83ApiBaseUrl}/admin/v1/analytics/economy`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: { accept: 'application/json' },
-      });
-    } catch {
-      throw new AdminApiError(
-        'network',
-        'Não foi possível alcançar a Admin API.',
-        null,
-        'NETWORK_ERROR',
-        null,
-      );
-    }
-    if (!response.ok) {
-      throw new AdminApiError(
-        response.status === 403
-          ? 'forbidden'
-          : response.status === 401
-            ? 'unauthenticated'
-            : 'server',
-        'A consulta de economia falhou.',
-        response.status,
-        `HTTP_${response.status}`,
-        response.headers.get('x-correlation-id'),
-      );
-    }
-    try {
-      return economyResult(await response.json());
-    } catch {
-      throw new AdminApiError(
-        'server',
-        'A resposta administrativa é inválida.',
-        200,
-        'INVALID_ECONOMY_ANALYTICS_RESPONSE',
-        response.headers.get('x-correlation-id'),
-      );
-    }
+export class AdminApiClient extends BaseAdminApiClient {
+  public getEconomyAnalytics(): Promise<EconomyAnalyticsView> {
+    const base = this as unknown as BaseReader;
+    return base.read(
+      `${base.apiBaseUrl}/admin/v1/analytics/economy`,
+      economyResult,
+      'INVALID_ECONOMY_ANALYTICS_RESPONSE',
+    );
   }
 }
