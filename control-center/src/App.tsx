@@ -17,9 +17,7 @@ import { displayAdminRole, useAdminSession } from './features/session/useAdminSe
 import { AdminApiClient } from './lib/api/admin-api-f83';
 
 const Player360Page = lazy(() =>
-  import('./features/player360/Player360Page').then((module) => ({
-    default: module.Player360Page,
-  })),
+  import('./features/player360/Player360Page').then((module) => ({ default: module.Player360Page })),
 );
 const ContentLibraryPage = lazy(() =>
   import('./features/content-studio/ContentLibraryPage').then((module) => ({
@@ -66,7 +64,6 @@ export function App() {
         roleLabel={roleLabel}
         sections={sections}
       />
-
       <main className="workspace">
         <header className="topbar">
           <div className="topbar-actions">
@@ -90,7 +87,6 @@ export function App() {
             </button>
           </div>
         </header>
-
         <div className="workspace-scroll">
           {sessionProfileOpen ? (
             <SessionProfilePanel
@@ -100,12 +96,8 @@ export function App() {
               session={session}
             />
           ) : null}
-
           <section className="page-heading">
-            <div>
-              <h1>{active?.label ?? 'Control Center'}</h1>
-              <p>{active?.description ?? 'Operação administrativa autenticada.'}</p>
-            </div>
+            <h1>{active?.label ?? 'Control Center'}</h1>
             <div className="heading-actions">
               <OperationalDiagnostics
                 buildLabel={config.buildLabel}
@@ -116,7 +108,6 @@ export function App() {
               <span className="status-pill">READ + PREPARE · ADMIN API</span>
             </div>
           </section>
-
           {activeSection === 'today' ? (
             <TodayView
               canReadAudit={canReadAudit}
@@ -124,7 +115,6 @@ export function App() {
               canReadPlayers={canReadPlayers}
               client={client}
               onOpenPlayers={() => setActiveSection('players')}
-              principalId={session.principalId}
               query={query}
               roleLabel={roleLabel}
               session={session}
@@ -154,8 +144,7 @@ export function App() {
 function ModuleLoading({ label }: { label: string }) {
   return (
     <section className="foundation-placeholder" role="status">
-      <h2>Carregando {label}…</h2>
-      <p>O shell administrativo continua disponível durante o carregamento.</p>
+      Carregando {label}…
     </section>
   );
 }
@@ -166,7 +155,6 @@ function TodayView({
   canReadPlayers,
   client,
   onOpenPlayers,
-  principalId,
   query,
   roleLabel,
   session,
@@ -176,7 +164,6 @@ function TodayView({
   canReadPlayers: boolean;
   client: AdminApiClient;
   onOpenPlayers: () => void;
-  principalId: string;
   query: string;
   roleLabel: string;
   session: { readonly environment: 'development' | 'staging' | 'production' };
@@ -208,37 +195,22 @@ function TodayView({
         <article className="metric-card is-primary">
           <span>PROGRESSO CANÔNICO</span>
           <strong>{CANONICAL_PROGRESS.toFixed(2)}%</strong>
-          <small>Checklist oficial do Control Center</small>
-        </article>
-        <article className="metric-card">
-          <span>PRINCIPAL</span>
-          <strong>{roleLabel}</strong>
-          <small>{principalId}</small>
-        </article>
-        <article className="metric-card">
-          <span>PLAYER 360</span>
-          <strong>{canReadPlayers ? 'READ' : 'BLOQUEADO'}</strong>
-          <small>Permissão efetiva: player.read</small>
+          <small>
+            PRINCIPAL · {roleLabel} · PLAYER 360 · {canReadPlayers ? 'READ' : 'BLOQUEADO'}
+          </small>
         </article>
       </section>
-
       {query ? (
-        <section className="search-foundation-card">
-          <p>
-            <strong>BUSCA GLOBAL · FOUNDATION</strong> — Para localizar um jogador agora, use a
-            busca tipada do Player 360.
-          </p>
-          <button
-            className="primary-button"
-            disabled={!canReadPlayers}
-            onClick={onOpenPlayers}
-            type="button"
-          >
-            Buscar jogador
-          </button>
-        </section>
+        <button
+          className="search-foundation-card"
+          disabled={!canReadPlayers}
+          onClick={onOpenPlayers}
+          type="button"
+        >
+          BUSCA GLOBAL · FOUNDATION — Para localizar um jogador agora, use a busca tipada do Player
+          360.
+        </button>
       ) : null}
-
       <section className="dashboard-grid">
         <div className="panel work-panel">
           <div className="panel-heading">
@@ -276,7 +248,6 @@ function TodayView({
             </p>
           )}
         </div>
-
         <aside className="panel foundation-panel">
           <div className="panel-heading">
             <h2>Economia agregada</h2>
@@ -337,10 +308,7 @@ function FoundationView({ sectionId }: { sectionId: ControlCenterSectionId }) {
   return (
     <section className="foundation-placeholder">
       <h2>{section?.label ?? 'Área administrativa'}</h2>
-      <p>
-        {section?.description ?? 'Área planejada.'} Nenhuma operação adicional desta área é exposta
-        neste slice. Conectaremos apenas quando contrato, authority e testes do backend existirem.
-      </p>
+      <p>{section?.description ?? 'Área planejada.'} Nenhuma operação adicional é exposta.</p>
     </section>
   );
 }
