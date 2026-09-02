@@ -127,6 +127,15 @@ export interface ContentReleaseValidationPreview {
   readonly valid: boolean;
   readonly issues: readonly ContentReleaseValidationIssue[];
 }
+export interface PlayerActivityAnalyticsView {
+  readonly asOf: string;
+  readonly activePlayers: {
+    readonly last24Hours: number;
+    readonly last7Days: number;
+    readonly last30Days: number;
+  };
+  readonly returningPlayers7Days: number;
+}
 export interface RuntimeWhatsappHealthRuntime {
   readonly providerState: RuntimeWhatsappProviderState;
   readonly deploymentRevision: string;
@@ -543,6 +552,21 @@ function validationResult(value: unknown, releaseId: string): ContentReleaseVali
   });
   return { releaseId, valid: value.valid, issues };
 }
+function playerActivityResult(value: unknown): PlayerActivityAnalyticsView {
+  if (!exact(value, ['asOf', 'activePlayers', 'returningPlayers7Days'])) fail();
+  const active = value.activePlayers;
+  if (
+    !iso(value.asOf) ||
+    !exact(active, ['last24Hours', 'last7Days', 'last30Days']) ||
+    !nonnegative(active.last24Hours) ||
+    !nonnegative(active.last7Days) ||
+    !nonnegative(active.last30Days) ||
+    !nonnegative(value.returningPlayers7Days)
+  ) {
+    fail();
+  }
+  return value as unknown as PlayerActivityAnalyticsView;
+}
 function runtimeResult(value: unknown): RuntimeWhatsappHealthView {
   if (
     !exact(value, RUNTIME_KEYS) ||
@@ -829,6 +853,13 @@ export class AdminApiClient {
       `${this.apiBaseUrl}/admin/v1/content/releases/${releaseId}/validation`,
       (value) => validationResult(value, releaseId),
       'INVALID_CONTENT_RELEASE_VALIDATION_RESPONSE',
+    );
+  }
+  public getPlayerActivityAnalytics(): Promise<PlayerActivityAnalyticsView> {
+    return this.read(
+      `${this.apiBaseUrl}/admin/v1/analytics/player-activity`,
+      playerActivityResult,
+      'INVALID_PLAYER_ACTIVITY_ANALYTICS_RESPONSE',
     );
   }
   public getRuntimeWhatsappHealth(): Promise<RuntimeWhatsappHealthView> {
