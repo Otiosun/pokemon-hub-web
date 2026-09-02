@@ -30,27 +30,6 @@ const ContentLibraryPage = lazy(() =>
 
 const CANONICAL_PROGRESS = 48.6;
 
-const workQueue = [
-  {
-    eyebrow: 'OPERAÇÕES',
-    title: 'Preparação auditável disponível',
-    copy: 'A Central já pode preparar AdminOperations. Simular, confirmar, aprovar e aplicar continuam bloqueados no HTTP até o wizard seguro.',
-    tone: 'planned',
-  },
-  {
-    eyebrow: 'LIVEOPS',
-    title: 'Camada ainda não materializada',
-    copy: 'Eventos, segmentos e overrides entram depois de Player 360 e Content Studio.',
-    tone: 'planned',
-  },
-  {
-    eyebrow: 'RUNTIME',
-    title: 'Evidência operacional consultável',
-    copy: 'O estado registrado do runtime WhatsApp pode ser consultado manualmente, sem expor controles de lifecycle.',
-    tone: 'quiet',
-  },
-] as const;
-
 export function App() {
   const config = useMemo(() => loadControlCenterConfig(), []);
   const client = useMemo(() => new AdminApiClient(config.apiBaseUrl), [config.apiBaseUrl]);
@@ -220,6 +199,17 @@ function TodayView({
     readonly environment: 'development' | 'staging' | 'production';
   };
 }) {
+  const [activity, setActivity] = useState<
+    Awaited<ReturnType<AdminApiClient['getPlayerActivityAnalytics']>> | false | null
+  >(null);
+  const refreshActivity = async () => {
+    try {
+      setActivity(await client.getPlayerActivityAnalytics());
+    } catch {
+      setActivity(false);
+    }
+  };
+
   return (
     <>
       <section className="metric-grid" aria-label="Resumo da fundação">
@@ -265,20 +255,41 @@ function TodayView({
         <div className="panel work-panel">
           <div className="panel-heading">
             <div>
-              <span className="eyebrow">AGORA</span>
-              <h2>Fila de trabalho</h2>
+              <span className="eyebrow">JOGADORES</span>
+              <h2>Atividade de jogadores</h2>
             </div>
-            <span className="panel-meta">PREPARE-ONLY</span>
+            <button
+              className="secondary-button"
+              disabled={!canReadPlayers}
+              onClick={() => void refreshActivity()}
+              type="button"
+            >
+              Atualizar
+            </button>
           </div>
-          <div className="work-list">
-            {workQueue.map((item) => (
-              <article className={`work-item is-${item.tone}`} key={item.title}>
-                <span className="work-eyebrow">{item.eyebrow}</span>
-                <strong>{item.title}</strong>
-                <p>{item.copy}</p>
-              </article>
-            ))}
-          </div>
+          {activity ? (
+            <dl className="foundation-list">
+              {[
+                ['Ativos 24h', activity.activePlayers.last24Hours],
+                ['Ativos 7d', activity.activePlayers.last7Days],
+                ['Ativos 30d', activity.activePlayers.last30Days],
+                ['Retornaram em 7d', activity.returningPlayers7Days],
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <dt>{label}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : (
+            <p className="runtime-health-empty">
+              {activity === false
+                ? 'Consulta indisponível.'
+                : canReadPlayers
+                  ? 'Ainda não consultado.'
+                  : 'Sem permissão player.read.'}
+            </p>
+          )}
         </div>
 
         <aside className="panel foundation-panel">
