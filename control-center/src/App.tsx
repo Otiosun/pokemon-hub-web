@@ -35,6 +35,7 @@ export function App() {
   const client = useMemo(() => new AdminApiClient(config.apiBaseUrl), [config.apiBaseUrl]);
   const { state: sessionState, capabilities, reload } = useAdminSession(client);
   const [activeSection, setActiveSection] = useState<ControlCenterSectionId>('today');
+  const [query, setQuery] = useState('');
   const [sessionProfileOpen, setSessionProfileOpen] = useState(false);
   const sections = useMemo(() => visibleSections(capabilities), [capabilities]);
   const active =
@@ -77,6 +78,16 @@ export function App() {
           </div>
 
           <div className="topbar-actions">
+            <div className="global-search">
+              <span aria-hidden="true">⌕</span>
+              <input
+                aria-label="Busca global"
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Buscar jogador, operação ou área"
+                value={query}
+              />
+              <kbd>⌘ K</kbd>
+            </div>
             <button
               className="session-profile-mobile"
               type="button"
@@ -123,7 +134,9 @@ export function App() {
               canReadEconomy={canReadEconomy}
               canReadPlayers={canReadPlayers}
               client={client}
+              onOpenPlayers={() => setActiveSection('players')}
               principalId={session.principalId}
+              query={query}
               roleLabel={roleLabel}
               session={session}
             />
@@ -172,7 +185,9 @@ function TodayView({
   canReadEconomy,
   canReadPlayers,
   client,
+  onOpenPlayers,
   principalId,
+  query,
   roleLabel,
   session,
 }: {
@@ -180,7 +195,9 @@ function TodayView({
   canReadEconomy: boolean;
   canReadPlayers: boolean;
   client: AdminApiClient;
+  onOpenPlayers: () => void;
   principalId: string;
+  query: string;
   roleLabel: string;
   session: {
     readonly environment: 'development' | 'staging' | 'production';
@@ -226,6 +243,27 @@ function TodayView({
           <small>Permissão efetiva: player.read</small>
         </article>
       </section>
+
+      {query ? (
+        <section className="search-foundation-card">
+          <div>
+            <span className="eyebrow">BUSCA GLOBAL · FOUNDATION</span>
+            <h2>“{query}”</h2>
+            <p>
+              A busca global continua apenas como fundação. Para localizar um jogador agora, use a
+              busca tipada do Player 360.
+            </p>
+          </div>
+          <button
+            className="primary-button"
+            disabled={!canReadPlayers}
+            onClick={onOpenPlayers}
+            type="button"
+          >
+            Buscar jogador
+          </button>
+        </section>
+      ) : null}
 
       <section className="dashboard-grid">
         <div className="panel work-panel">
