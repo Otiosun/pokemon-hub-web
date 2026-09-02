@@ -26,7 +26,7 @@ const ContentLibraryPage = lazy(() =>
     default: module.ContentLibraryPage,
   })),
 );
-const CANONICAL_PROGRESS = 49.2;
+const CANONICAL_PROGRESS = 49.8;
 const MODULE_LOADING = (
   <section className="foundation-placeholder" role="status">
     Carregando…
