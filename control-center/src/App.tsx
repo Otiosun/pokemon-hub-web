@@ -28,7 +28,7 @@ const ContentLibraryPage = lazy(() =>
   })),
 );
 
-const CANONICAL_PROGRESS = 48.6;
+const CANONICAL_PROGRESS = 49.2;
 
 export function App() {
   const config = useMemo(() => loadControlCenterConfig(), []);
