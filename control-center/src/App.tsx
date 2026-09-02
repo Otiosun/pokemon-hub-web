@@ -278,9 +278,7 @@ function TodayView({
                 {economy.anomalies.walletProjectionMismatches} · Inventários{' '}
                 {economy.anomalies.inventoryProjectionMismatches}
               </p>
-              {economy.currenciesTruncated ? (
-                <small>Exibição limitada às moedas agregadas permitidas.</small>
-              ) : null}
+              {economy.currenciesTruncated ? <small>Moedas agregadas limitadas.</small> : null}
             </div>
           ) : (
             <p className="runtime-health-empty">
