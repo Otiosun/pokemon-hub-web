@@ -17,7 +17,9 @@ import { displayAdminRole, useAdminSession } from './features/session/useAdminSe
 import { AdminApiClient } from './lib/api/admin-api-f83';
 
 const Player360Page = lazy(() =>
-  import('./features/player360/Player360Page').then((module) => ({ default: module.Player360Page })),
+  import('./features/player360/Player360Page').then((module) => ({
+    default: module.Player360Page,
+  })),
 );
 const ContentLibraryPage = lazy(() =>
   import('./features/content-studio/ContentLibraryPage').then((module) => ({
