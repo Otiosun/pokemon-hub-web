@@ -33,7 +33,10 @@ describe('AdminApiClient player activity analytics', () => {
     { ...aggregate, returningPlayers7Days: 1.5 },
     { ...aggregate, asOf: 'not-an-iso-timestamp' },
   ])('fails closed on malformed or privacy-expanded payload %#', async (body) => {
-    const client = new AdminApiClient(API_BASE_URL, vi.fn<typeof fetch>(async () => jsonResponse(body)));
+    const client = new AdminApiClient(
+      API_BASE_URL,
+      vi.fn<typeof fetch>(async () => jsonResponse(body)),
+    );
 
     const request = client.getPlayerActivityAnalytics();
     await expect(request).rejects.toBeInstanceOf(AdminApiError);
