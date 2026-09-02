@@ -27,19 +27,22 @@ export interface EconomyAnalyticsView {
 }
 
 type R = Record<string, unknown>;
-const unsigned = /^\d+$/;
-const signed = /^-?\d+$/;
-const record = (value: unknown): value is R =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+const integer = (value: unknown): value is string =>
+  typeof value === 'string' && /^-?\d+$/.test(value);
 const exact = (value: unknown, keys: readonly string[]): value is R =>
-  record(value) && Object.keys(value).length === keys.length && keys.every((key) => key in value);
-const text = (value: unknown): value is string => typeof value === 'string' && value.length > 0;
-const integer = (value: unknown, allowNegative = false): value is string =>
-  typeof value === 'string' && (allowNegative ? signed : unsigned).test(value);
+  typeof value === 'object' &&
+  value !== null &&
+  !Array.isArray(value) &&
+  Object.keys(value).length === keys.length &&
+  keys.every((key) => key in value);
+const integers = (value: R, keys: readonly string[]) => keys.every((key) => integer(value[key]));
 const iso = (value: unknown): value is string => {
   if (typeof value !== 'string') return false;
   const date = new Date(value);
   return !Number.isNaN(date.getTime()) && date.toISOString() === value;
+};
+const invalid = () => {
+  throw new Error('Invalid economy analytics response.');
 };
 
 function economyResult(value: unknown): EconomyAnalyticsView {
@@ -58,27 +61,22 @@ function economyResult(value: unknown): EconomyAnalyticsView {
     value.currencies.length > 32 ||
     typeof value.currenciesTruncated !== 'boolean' ||
     !exact(value.inventory, ['inflowUnits', 'outflowUnits', 'netFlowUnits', 'totalUnitsHeld']) ||
-    !integer(value.inventory.inflowUnits) ||
-    !integer(value.inventory.outflowUnits) ||
-    !integer(value.inventory.netFlowUnits, true) ||
-    !integer(value.inventory.totalUnitsHeld) ||
+    !integers(value.inventory, ['inflowUnits', 'outflowUnits', 'netFlowUnits', 'totalUnitsHeld']) ||
     !exact(value.anomalies, ['walletProjectionMismatches', 'inventoryProjectionMismatches']) ||
-    !integer(value.anomalies.walletProjectionMismatches) ||
-    !integer(value.anomalies.inventoryProjectionMismatches)
+    !integers(value.anomalies, ['walletProjectionMismatches', 'inventoryProjectionMismatches'])
   ) {
-    throw new Error('Invalid economy analytics response.');
+    invalid();
   }
   for (const currency of value.currencies) {
     if (
       !exact(currency, ['slug', 'displayName', 'inflow', 'outflow', 'netFlow', 'totalBalance']) ||
-      !text(currency.slug) ||
-      !text(currency.displayName) ||
-      !integer(currency.inflow) ||
-      !integer(currency.outflow) ||
-      !integer(currency.netFlow, true) ||
-      !integer(currency.totalBalance, true)
+      typeof currency.slug !== 'string' ||
+      currency.slug.length === 0 ||
+      typeof currency.displayName !== 'string' ||
+      currency.displayName.length === 0 ||
+      !integers(currency, ['inflow', 'outflow', 'netFlow', 'totalBalance'])
     ) {
-      throw new Error('Invalid economy analytics response.');
+      invalid();
     }
   }
   return value as unknown as EconomyAnalyticsView;
