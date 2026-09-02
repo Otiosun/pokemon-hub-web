@@ -27,6 +27,11 @@ const ContentLibraryPage = lazy(() =>
   })),
 );
 const CANONICAL_PROGRESS = 49.2;
+const MODULE_LOADING = (
+  <section className="foundation-placeholder" role="status">
+    Carregando…
+  </section>
+);
 
 export function App() {
   const config = useMemo(() => loadControlCenterConfig(), []);
@@ -104,7 +109,7 @@ export function App() {
               <OperationalDiagnostics
                 buildLabel={config.buildLabel}
                 environment={session.environment}
-                apiState="CONECTADA · SESSÃO VALIDADA"
+                apiState="CONECTADA"
                 inline
               />
               <span className="status-pill">READ + PREPARE · ADMIN API</span>
@@ -122,7 +127,7 @@ export function App() {
               session={session}
             />
           ) : activeSection === 'players' ? (
-            <Suspense fallback={<ModuleLoading label="Player 360" />}>
+            <Suspense fallback={MODULE_LOADING}>
               <Player360Page
                 canReadSensitive={canReadSensitive}
                 capabilities={capabilities}
@@ -131,7 +136,7 @@ export function App() {
               />
             </Suspense>
           ) : activeSection === 'game' ? (
-            <Suspense fallback={<ModuleLoading label="Content Studio" />}>
+            <Suspense fallback={MODULE_LOADING}>
               <ContentLibraryPage client={client} key={session.principalId} />
             </Suspense>
           ) : (
@@ -140,14 +145,6 @@ export function App() {
         </div>
       </main>
     </div>
-  );
-}
-
-function ModuleLoading({ label }: { label: string }) {
-  return (
-    <section className="foundation-placeholder" role="status">
-      Carregando {label}…
-    </section>
   );
 }
 
@@ -209,8 +206,7 @@ function TodayView({
           onClick={onOpenPlayers}
           type="button"
         >
-          BUSCA GLOBAL · FOUNDATION — Para localizar um jogador agora, use a busca tipada do Player
-          360.
+          BUSCA GLOBAL · FOUNDATION — Para localizar um jogador agora, use a Player 360.
         </button>
       ) : null}
       <section className="dashboard-grid">
@@ -310,7 +306,7 @@ function FoundationView({ sectionId }: { sectionId: ControlCenterSectionId }) {
   return (
     <section className="foundation-placeholder">
       <h2>{section?.label ?? 'Área administrativa'}</h2>
-      <p>{section?.description ?? 'Área planejada.'} Nenhuma operação adicional é exposta.</p>
+      <p>{section?.description ?? 'Área planejada.'}</p>
     </section>
   );
 }
