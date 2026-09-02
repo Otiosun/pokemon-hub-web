@@ -297,9 +297,10 @@ function TodayView({
                 <div>
                   <dt>Volume de inventário</dt>
                   <dd>
-                    Entradas {economy.inventory.inflowUnits} · Saídas {economy.inventory.outflowUnits}{' '}
-                    · Fluxo líquido {economy.inventory.netFlowUnits} ·{' '}
-                    {economy.inventory.totalUnitsHeld} unidades mantidas
+                    Entradas {economy.inventory.inflowUnits} · Saídas{' '}
+                    {economy.inventory.outflowUnits} · Fluxo líquido{' '}
+                    {economy.inventory.netFlowUnits} · {economy.inventory.totalUnitsHeld} unidades
+                    mantidas
                   </dd>
                 </div>
                 <div>
@@ -311,7 +312,9 @@ function TodayView({
                 </div>
               </dl>
               {economy.currenciesTruncated ? (
-                <p className="runtime-health-empty">Exibição limitada às moedas agregadas permitidas.</p>
+                <p className="runtime-health-empty">
+                  Exibição limitada às moedas agregadas permitidas.
+                </p>
               ) : null}
             </>
           ) : (
