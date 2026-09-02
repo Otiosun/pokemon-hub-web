@@ -14,7 +14,7 @@ import { IncidentCenterCard } from './features/incidents/IncidentCenterCard';
 import { MessagingOperationsCard } from './features/runtime/MessagingOperationsCard';
 import { RuntimeWhatsappHealthCard } from './features/runtime/RuntimeWhatsappHealthCard';
 import { displayAdminRole, useAdminSession } from './features/session/useAdminSession';
-import { AdminApiClient } from './lib/api/admin-api';
+import { AdminApiClient } from './lib/api/admin-api-f83';
 
 const Player360Page = lazy(() =>
   import('./features/player360/Player360Page').then((module) => ({
@@ -35,7 +35,6 @@ export function App() {
   const client = useMemo(() => new AdminApiClient(config.apiBaseUrl), [config.apiBaseUrl]);
   const { state: sessionState, capabilities, reload } = useAdminSession(client);
   const [activeSection, setActiveSection] = useState<ControlCenterSectionId>('today');
-  const [query, setQuery] = useState('');
   const [sessionProfileOpen, setSessionProfileOpen] = useState(false);
   const sections = useMemo(() => visibleSections(capabilities), [capabilities]);
   const active =
@@ -52,6 +51,7 @@ export function App() {
   const session = sessionState.session;
   const canReadSensitive = capabilities.has('player.read_sensitive');
   const canReadPlayers = capabilities.has('player.read');
+  const canReadEconomy = capabilities.has('economy.read');
   const canReadAudit = capabilities.has('audit.read');
   const roleLabel = displayAdminRole(session);
   const apiState = 'CONECTADA · SESSÃO VALIDADA' as const;
@@ -77,16 +77,6 @@ export function App() {
           </div>
 
           <div className="topbar-actions">
-            <div className="global-search">
-              <span aria-hidden="true">⌕</span>
-              <input
-                aria-label="Busca global"
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Buscar jogador, operação ou área"
-                value={query}
-              />
-              <kbd>⌘ K</kbd>
-            </div>
             <button
               className="session-profile-mobile"
               type="button"
@@ -130,11 +120,10 @@ export function App() {
           {activeSection === 'today' ? (
             <TodayView
               canReadAudit={canReadAudit}
+              canReadEconomy={canReadEconomy}
               canReadPlayers={canReadPlayers}
               client={client}
-              onOpenPlayers={() => setActiveSection('players')}
               principalId={session.principalId}
-              query={query}
               roleLabel={roleLabel}
               session={session}
             />
@@ -180,20 +169,18 @@ export function App() {
 
 function TodayView({
   canReadAudit,
+  canReadEconomy,
   canReadPlayers,
   client,
-  onOpenPlayers,
   principalId,
-  query,
   roleLabel,
   session,
 }: {
   canReadAudit: boolean;
+  canReadEconomy: boolean;
   canReadPlayers: boolean;
   client: AdminApiClient;
-  onOpenPlayers: () => void;
   principalId: string;
-  query: string;
   roleLabel: string;
   session: {
     readonly environment: 'development' | 'staging' | 'production';
@@ -202,11 +189,21 @@ function TodayView({
   const [activity, setActivity] = useState<
     Awaited<ReturnType<AdminApiClient['getPlayerActivityAnalytics']>> | false | null
   >(null);
+  const [economy, setEconomy] = useState<
+    Awaited<ReturnType<AdminApiClient['getEconomyAnalytics']>> | false | null
+  >(null);
   const refreshActivity = async () => {
     try {
       setActivity(await client.getPlayerActivityAnalytics());
     } catch {
       setActivity(false);
+    }
+  };
+  const refreshEconomy = async () => {
+    try {
+      setEconomy(await client.getEconomyAnalytics());
+    } catch {
+      setEconomy(false);
     }
   };
 
@@ -229,27 +226,6 @@ function TodayView({
           <small>Permissão efetiva: player.read</small>
         </article>
       </section>
-
-      {query ? (
-        <section className="search-foundation-card">
-          <div>
-            <span className="eyebrow">BUSCA GLOBAL · FOUNDATION</span>
-            <h2>“{query}”</h2>
-            <p>
-              A busca global continua apenas como fundação. Para localizar um jogador agora, use a
-              busca tipada do Player 360.
-            </p>
-          </div>
-          <button
-            className="primary-button"
-            disabled={!canReadPlayers}
-            onClick={onOpenPlayers}
-            type="button"
-          >
-            Buscar jogador
-          </button>
-        </section>
-      ) : null}
 
       <section className="dashboard-grid">
         <div className="panel work-panel">
@@ -294,28 +270,59 @@ function TodayView({
         <aside className="panel foundation-panel">
           <div className="panel-heading">
             <div>
-              <span className="eyebrow">FUNDAÇÃO</span>
-              <h2>Estado operacional</h2>
+              <span className="eyebrow">F8.3 · 30 DIAS</span>
+              <h2>Economia agregada</h2>
             </div>
+            <button
+              className="secondary-button"
+              disabled={!canReadEconomy}
+              onClick={() => void refreshEconomy()}
+              type="button"
+            >
+              Atualizar
+            </button>
           </div>
-          <dl className="foundation-list">
-            <div>
-              <dt>Sessão</dt>
-              <dd>Backend-authoritative</dd>
-            </div>
-            <div>
-              <dt>Capabilities</dt>
-              <dd>Efetivas</dd>
-            </div>
-            <div>
-              <dt>Player 360</dt>
-              <dd>Read-only conectado</dd>
-            </div>
-            <div>
-              <dt>Mutations</dt>
-              <dd>Prepare-only</dd>
-            </div>
-          </dl>
+          {economy ? (
+            <>
+              <dl className="foundation-list">
+                {economy.currencies.map((currency) => (
+                  <div key={currency.slug}>
+                    <dt>{currency.displayName}</dt>
+                    <dd>
+                      Entradas {currency.inflow} · Saídas {currency.outflow} · Fluxo líquido{' '}
+                      {currency.netFlow} · Saldo agregado {currency.totalBalance}
+                    </dd>
+                  </div>
+                ))}
+                <div>
+                  <dt>Volume de inventário</dt>
+                  <dd>
+                    Entradas {economy.inventory.inflowUnits} · Saídas {economy.inventory.outflowUnits}{' '}
+                    · Fluxo líquido {economy.inventory.netFlowUnits} ·{' '}
+                    {economy.inventory.totalUnitsHeld} unidades mantidas
+                  </dd>
+                </div>
+                <div>
+                  <dt>Anomalias de projeção</dt>
+                  <dd>
+                    Carteiras {economy.anomalies.walletProjectionMismatches} · Inventários{' '}
+                    {economy.anomalies.inventoryProjectionMismatches}
+                  </dd>
+                </div>
+              </dl>
+              {economy.currenciesTruncated ? (
+                <p className="runtime-health-empty">Exibição limitada às moedas agregadas permitidas.</p>
+              ) : null}
+            </>
+          ) : (
+            <p className="runtime-health-empty">
+              {economy === false
+                ? 'Consulta indisponível.'
+                : canReadEconomy
+                  ? 'Ainda não consultado.'
+                  : 'Sem permissão economy.read.'}
+            </p>
+          )}
           <RuntimeWhatsappHealthCard client={client} expectedEnvironment={session.environment} />
           <MessagingOperationsCard client={client} />
           <IncidentCenterCard client={client} />
