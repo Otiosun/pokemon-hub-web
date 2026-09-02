@@ -78,10 +78,11 @@ function economyResult(value: unknown): EconomyAnalyticsView {
       currency.slug.length === 0 ||
       typeof currency.displayName !== 'string' ||
       currency.displayName.length === 0 ||
-      !integers(currency, ['inflow', 'outflow', 'netFlow', 'totalBalance'], [
-        'netFlow',
-        'totalBalance',
-      ])
+      !integers(
+        currency,
+        ['inflow', 'outflow', 'netFlow', 'totalBalance'],
+        ['netFlow', 'totalBalance'],
+      )
     ) {
       throw new Error('Invalid economy analytics response.');
     }
