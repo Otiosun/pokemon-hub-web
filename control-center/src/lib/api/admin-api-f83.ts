@@ -41,7 +41,7 @@ const iso = (value: unknown): value is string => {
   const date = new Date(value);
   return !Number.isNaN(date.getTime()) && date.toISOString() === value;
 };
-const invalid = () => {
+const invalid = (): never => {
   throw new Error('Invalid economy analytics response.');
 };
 
