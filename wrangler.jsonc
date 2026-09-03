@@ -1,4 +1,5 @@
 {
+  // Redeploy marker: sync the legacy Cloudflare URL with the current public-site main (2026-09-03).
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "pokemon-hub-web",
   "compatibility_date": "2026-08-26",
