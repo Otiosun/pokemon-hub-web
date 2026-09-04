@@ -795,10 +795,14 @@ function appendQuery(
 }
 
 export class AdminApiClient {
+  private readonly fetchImpl: typeof fetch;
+
   public constructor(
     private readonly apiBaseUrl: string,
-    private readonly fetchImpl: typeof fetch = fetch,
-  ) {}
+    fetchImpl: typeof fetch = fetch,
+  ) {
+    this.fetchImpl = (input, init) => fetchImpl(input, init);
+  }
 
   private async getJson(path: string): Promise<unknown> {
     let response: Response;
