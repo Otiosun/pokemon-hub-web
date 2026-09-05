@@ -62,10 +62,9 @@ function HubFrame({
   children: ReactNode;
 }) {
   return (
-    <div className="hub-with-navigation">
-      <HubNavigation active={active} destinations={destinations} />
-      <div className="hub-navigation-content">{children}</div>
-    </div>
+    <HubNavigation active={active} destinations={destinations}>
+      {children}
+    </HubNavigation>
   );
 }
 
