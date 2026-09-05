@@ -4,7 +4,6 @@ import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import { TypeBadge } from '../../visual-assets/TypeBadge';
 import { GenerationsPokemonViewer } from '../asset-lab/GenerationsPokemonViewer';
 import { typeAccent } from '../pokemon-detail/fieldDexSpecies';
-import { readTeamDraftOrder, readTeamDraftSlot } from '../team/teamSession';
 import {
   getOwnedPokemonDetailPreview,
   getOwnedPokemonNeighbours,
@@ -90,11 +89,8 @@ export function OwnedPokemonDetailPage({
   const returningToJourney =
     resolvedReturnHref === '/jornada' || resolvedReturnHref.startsWith('/jornada?');
   const returnLabel = returningToTeam ? 'TIME' : returningToJourney ? 'JORNADA' : 'BOX';
-  const teamDraftActive = returningToTeam && Boolean(readTeamDraftOrder());
-  const draftSlot = teamDraftActive ? readTeamDraftSlot(instanceId) : null;
-  const contextualTeamSlot = draftSlot ?? pokemon.teamSlot;
-  const locationLabel = contextualTeamSlot
-    ? `${teamDraftActive ? 'TIME · PRÉVIA SLOT' : 'TIME · SLOT'} ${contextualTeamSlot}`
+  const locationLabel = pokemon.teamSlot
+    ? `TIME · SLOT ${pokemon.teamSlot}`
     : pokemon.box.toUpperCase();
   const speciesSlug = speciesAssetSlug(pokemon.species);
   const identityLine = pokemon.nickname === pokemon.species
