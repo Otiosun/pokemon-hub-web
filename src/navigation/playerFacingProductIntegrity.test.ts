@@ -1,11 +1,12 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import hubNavigationSource from '../components/HubNavigation.tsx?raw';
-import hubNavigationCss from '../components/hub-navigation.css?inline';
 import viewerSource from '../features/asset-lab/GenerationsPokemonViewer.tsx?raw';
 import collectionPageSource from '../features/collection/OwnedPokemonCollectionPage.tsx?raw';
 import ownedDetailSource from '../features/collection/OwnedPokemonDetailPage.tsx?raw';
 import teamPageSource from '../features/team/TeamPage.tsx?raw';
 
+const hubNavigationCss = readFileSync(new URL('../components/hub-navigation.css', import.meta.url), 'utf8');
 const teamModules = import.meta.glob('../features/team/*');
 
 const PLAYER_FACING_TECHNICAL_MARKERS = [
