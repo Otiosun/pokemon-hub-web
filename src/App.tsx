@@ -10,6 +10,7 @@ import {
   type HubSection,
 } from './navigation/hubNavigationSession';
 import { resolveProductRoute } from './navigation/productIntegrity';
+import { preloadProductRoute } from './navigation/productRoutePreload';
 import './hub-route-fallback-v3.css';
 
 const JourneyPage = lazy(() =>
@@ -203,6 +204,20 @@ function stateForPrimaryDestination(destinationPath: string): HubHistoryState {
   };
 }
 
+function warmAnchorTarget(target: EventTarget | null) {
+  if (!(target instanceof Element)) return;
+  const anchor = target.closest('a[href]');
+  if (!(anchor instanceof HTMLAnchorElement)) return;
+  if (anchor.target && anchor.target !== '_self') return;
+  if (anchor.hasAttribute('download')) return;
+
+  const destination = new URL(anchor.href, window.location.href);
+  if (destination.origin !== window.location.origin) return;
+
+  const pending = preloadProductRoute(destination.pathname);
+  if (pending) void pending.catch(() => undefined);
+}
+
 export function App() {
   const [path, setPath] = useState(getPath);
   const [hubDestinations, setHubDestinations] = useState(readHubDestinations);
@@ -237,6 +252,10 @@ export function App() {
       setPath(nextPath);
       setHubDestinations(rememberHubDestination(getHubLocation()));
       if (isRecordPath(nextPath)) resetRecordViewport();
+    };
+
+    const onDocumentPreloadIntent = (event: Event) => {
+      warmAnchorTarget(event.target);
     };
 
     const onDocumentClick = (event: MouseEvent) => {
@@ -334,9 +353,15 @@ export function App() {
     };
 
     window.addEventListener('popstate', onPopState);
+    document.addEventListener('pointerover', onDocumentPreloadIntent);
+    document.addEventListener('pointerdown', onDocumentPreloadIntent);
+    document.addEventListener('focusin', onDocumentPreloadIntent);
     document.addEventListener('click', onDocumentClick);
     return () => {
       window.removeEventListener('popstate', onPopState);
+      document.removeEventListener('pointerover', onDocumentPreloadIntent);
+      document.removeEventListener('pointerdown', onDocumentPreloadIntent);
+      document.removeEventListener('focusin', onDocumentPreloadIntent);
       document.removeEventListener('click', onDocumentClick);
     };
   }, []);
