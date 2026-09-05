@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ReactNode, useEffect, useState } from 'react';
+import { lazy, startTransition, Suspense, type ReactNode, useEffect, useState } from 'react';
 import { HubNavigation } from './components/HubNavigation';
 import { rememberPokedexIndexScroll } from './features/pokedex/pokedexIndexSession';
 import {
@@ -247,11 +247,21 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    if (isRecordPath(path)) {
+      resetRecordViewport();
+    } else if (!isPokedexIndexPath(path)) {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+  }, [path]);
+
+  useEffect(() => {
     const onPopState = () => {
       const nextPath = getPath();
-      setPath(nextPath);
-      setHubDestinations(rememberHubDestination(getHubLocation()));
-      if (isRecordPath(nextPath)) resetRecordViewport();
+      const remembered = rememberHubDestination(getHubLocation());
+      startTransition(() => {
+        setPath(nextPath);
+        setHubDestinations(remembered);
+      });
     };
 
     const onDocumentPreloadIntent = (event: Event) => {
@@ -342,14 +352,11 @@ export function App() {
         window.history.pushState(nextState, '', nextLocation);
       }
 
-      setPath(destination.pathname);
-      setHubDestinations(rememberHubDestination(`${destination.pathname}${destination.search}`));
-
-      if (isRecordPath(destination.pathname)) {
-        resetRecordViewport();
-      } else if (!isPokedexIndexPath(destination.pathname)) {
-        window.scrollTo({ top: 0, behavior: 'auto' });
-      }
+      const remembered = rememberHubDestination(`${destination.pathname}${destination.search}`);
+      startTransition(() => {
+        setPath(destination.pathname);
+        setHubDestinations(remembered);
+      });
     };
 
     window.addEventListener('popstate', onPopState);
