@@ -59,5 +59,6 @@ describe('player-facing product integrity', () => {
     expect(hubNavigationSource).toContain('hub-menu-chrome');
     expect(hubNavigationCss).not.toMatch(/\.hub-menu-trigger\s*\{[^}]*position:\s*fixed/s);
     expect(hubNavigationCss).toMatch(/\.hub-menu-chrome\s*\{[^}]*display:\s*flex/s);
+    expect(hubNavigationCss).not.toContain('padding-bottom: calc(76px + env(safe-area-inset-bottom))');
   });
 });
