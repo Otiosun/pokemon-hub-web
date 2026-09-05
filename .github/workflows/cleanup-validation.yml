@@ -30,8 +30,8 @@ jobs:
       - name: Install pnpm
         run: corepack prepare pnpm@11.23.0 --activate
 
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+      - name: Install dependencies without lifecycle scripts
+        run: pnpm install --ignore-scripts --no-frozen-lockfile
 
       - name: Lint
         run: pnpm check
