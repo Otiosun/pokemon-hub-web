@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import hubNavigationSource from '../components/HubNavigation.tsx?raw';
+import hubNavigationCss from '../components/hub-navigation.css?raw';
 import viewerSource from '../features/asset-lab/GenerationsPokemonViewer.tsx?raw';
 import collectionPageSource from '../features/collection/OwnedPokemonCollectionPage.tsx?raw';
 import ownedDetailSource from '../features/collection/OwnedPokemonDetailPage.tsx?raw';
@@ -51,5 +53,11 @@ describe('player-facing product integrity', () => {
 
     expect(firstPaint).toBeGreaterThan(-1);
     expect(readySignal).toBeGreaterThan(firstPaint);
+  });
+
+  it('keeps the global menu trigger in structural chrome instead of floating over player content', () => {
+    expect(hubNavigationSource).toContain('hub-menu-chrome');
+    expect(hubNavigationCss).not.toMatch(/\.hub-menu-trigger\s*\{[^}]*position:\s*fixed/s);
+    expect(hubNavigationCss).toMatch(/\.hub-menu-chrome\s*\{[^}]*display:\s*flex/s);
   });
 });
