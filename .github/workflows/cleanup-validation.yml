@@ -15,7 +15,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 40
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -116,10 +116,75 @@ jobs:
           smoke "/pokemon" "Time + Box"
           smoke "/pokemon/pkm-charmander-a1" "Brasa"
           smoke "/team" "Meu Time"
-
           smoke "/pokemon/demo-charmander" "Nº 004"
-
           smoke "/asset-lab" "ENDEREÇO INDISPONÍVEL"
           smoke "/pokemon/demo-inexistente" "ENDEREÇO INDISPONÍVEL"
           smoke "/pokedex/999" "ENDEREÇO INDISPONÍVEL"
           smoke "/rota-inexistente" "ENDEREÇO INDISPONÍVEL"
+
+      - name: Capture mobile viewport evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [[ -z "$CHROME" ]]; then
+            echo "No Chrome/Chromium binary available on runner"
+            exit 1
+          fi
+
+          mkdir -p /tmp/mobile-viewport-evidence
+          pnpm exec vite preview --host 127.0.0.1 --port 4174 > /tmp/pokemon-hub-mobile-preview.log 2>&1 &
+          PREVIEW_PID=$!
+          trap 'kill "$PREVIEW_PID" 2>/dev/null || true' EXIT
+
+          for _ in {1..40}; do
+            if curl -fsS http://127.0.0.1:4174/jornada >/dev/null; then
+              break
+            fi
+            sleep 0.25
+          done
+          curl -fsS http://127.0.0.1:4174/jornada >/dev/null
+
+          capture() {
+            local name="$1"
+            local path="$2"
+            local width="$3"
+            local output="/tmp/mobile-viewport-evidence/${name}-${width}x900.png"
+            echo "CAPTURE ${path} @ ${width}x900"
+            "$CHROME" \
+              --headless=new \
+              --no-sandbox \
+              --disable-dev-shm-usage \
+              --hide-scrollbars \
+              --force-device-scale-factor=1 \
+              --window-size="${width},900" \
+              --virtual-time-budget=5000 \
+              --screenshot="$output" \
+              "http://127.0.0.1:4174${path}" \
+              >/tmp/pokemon-hub-mobile-chrome.log 2>&1 || {
+                cat /tmp/pokemon-hub-mobile-chrome.log
+                cat /tmp/pokemon-hub-mobile-preview.log
+                exit 1
+              }
+            test -s "$output"
+          }
+
+          for width in 320 360 390 430; do
+            capture jornada "/jornada" "$width"
+            capture pokedex "/pokedex" "$width"
+            capture species-004 "/pokedex/4" "$width"
+            capture box "/pokemon" "$width"
+            capture team "/team" "$width"
+            capture owned-charmander "/pokemon/pkm-charmander-a1" "$width"
+          done
+
+          test "$(find /tmp/mobile-viewport-evidence -type f -name '*.png' | wc -l)" -eq 24
+
+      - name: Upload mobile viewport evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-viewport-evidence
+          path: /tmp/mobile-viewport-evidence/*.png
+          if-no-files-found: error
+          retention-days: 3
