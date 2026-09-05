@@ -4,6 +4,8 @@ const navigationCss = readFileSync(new URL('../src/components/hub-navigation.css
 const moduleHeaderCss = readFileSync(new URL('../src/components/hub-module-header.css', import.meta.url), 'utf8');
 const navigationSource = readFileSync(new URL('../src/components/HubNavigation.tsx', import.meta.url), 'utf8');
 const moduleHeaderSource = readFileSync(new URL('../src/components/HubModuleHeader.tsx', import.meta.url), 'utf8');
+const ownedDetailSource = readFileSync(new URL('../src/features/collection/OwnedPokemonDetailPage.tsx', import.meta.url), 'utf8');
+const ownedDetailMenuCss = readFileSync(new URL('../src/features/collection/owned-pokemon-detail-menu.css', import.meta.url), 'utf8');
 
 function assert(condition, message) {
   if (condition) return;
@@ -26,6 +28,14 @@ assert(
 assert(
   /\.hub-module-actions\s*\{[^}]*display:\s*flex/s.test(moduleHeaderCss),
   'the module header must reserve structural space for meta and menu actions',
+);
+assert(
+  ownedDetailSource.includes('className="owned-detail-stage-actions"') && ownedDetailSource.includes('<HubMenuTrigger />'),
+  'the immersive owned-Pokémon stage must retain the global menu trigger',
+);
+assert(
+  /\.owned-detail-stage-actions\s*\{[^}]*display:\s*flex/s.test(ownedDetailMenuCss),
+  'the immersive stage must reserve a structural action group for view mode and menu',
 );
 assert(
   !navigationCss.includes('padding-bottom: calc(76px + env(safe-area-inset-bottom))'),
