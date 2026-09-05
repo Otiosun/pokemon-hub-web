@@ -157,6 +157,7 @@ jobs:
             "$CHROME" \
               --headless=new \
               --no-sandbox \
+              --enable-unsafe-swiftshader \
               --disable-dev-shm-usage \
               --hide-scrollbars \
               --force-device-scale-factor=1 \
