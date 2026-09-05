@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { HubMenuTrigger } from '../../components/HubNavigation';
 import { HubModuleHeader } from '../../components/HubModuleHeader';
 import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import { TypeBadge } from '../../visual-assets/TypeBadge';
@@ -10,6 +11,7 @@ import {
   isJourneyLeadInstance,
 } from './ownedPokemonDetailPreview';
 import './owned-pokemon-detail.css';
+import './owned-pokemon-detail-menu.css';
 
 type OwnedDetailTab = 'summary' | 'combat' | 'history';
 type OwnedVisualMode = '2d' | '3d';
@@ -109,28 +111,31 @@ export function OwnedPokemonDetailPage({
             <span>{returnLabel}</span>
           </a>
 
-          <fieldset className="owned-detail-view-switch" aria-label="Visual do Pokémon">
-            <button
-              type="button"
-              aria-pressed={visualMode === '2d'}
-              onClick={() => {
-                setViewerReady(false);
-                setVisualMode('2d');
-              }}
-            >
-              2D
-            </button>
-            <button
-              type="button"
-              aria-pressed={visualMode === '3d'}
-              onClick={() => {
-                setViewerReady(false);
-                setVisualMode('3d');
-              }}
-            >
-              3D
-            </button>
-          </fieldset>
+          <div className="owned-detail-stage-actions">
+            <fieldset className="owned-detail-view-switch" aria-label="Visual do Pokémon">
+              <button
+                type="button"
+                aria-pressed={visualMode === '2d'}
+                onClick={() => {
+                  setViewerReady(false);
+                  setVisualMode('2d');
+                }}
+              >
+                2D
+              </button>
+              <button
+                type="button"
+                aria-pressed={visualMode === '3d'}
+                onClick={() => {
+                  setViewerReady(false);
+                  setVisualMode('3d');
+                }}
+              >
+                3D
+              </button>
+            </fieldset>
+            <HubMenuTrigger />
+          </div>
 
           <div className={`owned-detail-visual${visualMode === '3d' ? ' is-3d' : ''}`}>
             {visualMode === '2d' ? (
