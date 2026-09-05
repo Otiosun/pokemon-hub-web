@@ -14,7 +14,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -44,3 +44,71 @@ jobs:
 
       - name: Full production verify
         run: pnpm verify
+
+      - name: Browser smoke against production build
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [[ -z "$CHROME" ]]; then
+            echo "No Chrome/Chromium binary available on runner"
+            exit 1
+          fi
+
+          pnpm exec vite preview --host 127.0.0.1 --port 4173 > /tmp/pokemon-hub-vite-preview.log 2>&1 &
+          PREVIEW_PID=$!
+          trap 'kill "$PREVIEW_PID" 2>/dev/null || true' EXIT
+
+          for _ in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/jornada >/dev/null; then
+              break
+            fi
+            sleep 0.25
+          done
+          curl -fsS http://127.0.0.1:4173/jornada >/dev/null
+
+          smoke() {
+            local path="$1"
+            local needle="$2"
+            local dom
+            echo "SMOKE ${path} -> ${needle}"
+            dom="$($CHROME \
+              --headless=new \
+              --no-sandbox \
+              --disable-gpu \
+              --disable-dev-shm-usage \
+              --virtual-time-budget=5000 \
+              --dump-dom \
+              "http://127.0.0.1:4173${path}" \
+              2>/tmp/pokemon-hub-chrome.log)" || {
+                cat /tmp/pokemon-hub-chrome.log
+                cat /tmp/pokemon-hub-vite-preview.log
+                exit 1
+              }
+
+            if ! grep -Fq "$needle" <<<"$dom"; then
+              echo "Expected marker not found for ${path}: ${needle}"
+              echo "$dom" | head -c 12000
+              echo
+              cat /tmp/pokemon-hub-chrome.log || true
+              cat /tmp/pokemon-hub-vite-preview.log || true
+              exit 1
+            fi
+          }
+
+          smoke "/jornada" "TRAINER REGISTRATION LICENSE"
+          smoke "/pokedex" "Índice Nacional"
+          smoke "/pokedex/4" "Nº 004"
+          smoke "/pokemon" "Time + Box"
+          smoke "/pokemon/pkm-charmander-a1" "Brasa"
+          smoke "/team" "Meu Time"
+
+          # Legacy player-facing species URLs must resolve into the current Pokédex record.
+          smoke "/pokemon/demo-charmander" "Nº 004"
+
+          # Removed/invalid surfaces must render the explicit current-product not-found state.
+          smoke "/asset-lab" "ENDEREÇO INDISPONÍVEL"
+          smoke "/pokemon/demo-inexistente" "ENDEREÇO INDISPONÍVEL"
+          smoke "/pokedex/999" "ENDEREÇO INDISPONÍVEL"
+          smoke "/rota-inexistente" "ENDEREÇO INDISPONÍVEL"
