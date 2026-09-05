@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import hubNavigationSource from '../components/HubNavigation.tsx?raw';
-import hubNavigationCss from '../components/hub-navigation.css?raw';
+import hubNavigationCss from '../components/hub-navigation.css?inline';
 import viewerSource from '../features/asset-lab/GenerationsPokemonViewer.tsx?raw';
 import collectionPageSource from '../features/collection/OwnedPokemonCollectionPage.tsx?raw';
 import ownedDetailSource from '../features/collection/OwnedPokemonDetailPage.tsx?raw';
