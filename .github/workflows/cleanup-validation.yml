@@ -38,7 +38,19 @@ jobs:
         run: pnpm check
 
       - name: Typecheck
-        run: pnpm typecheck
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm typecheck 2>&1 | tee /tmp/typecheck.log
+
+      - name: Upload typecheck diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: typecheck-diagnostics
+          path: /tmp/typecheck.log
+          if-no-files-found: error
+          retention-days: 3
 
       - name: Unit tests
         run: pnpm test:run
@@ -105,10 +117,8 @@ jobs:
           smoke "/pokemon/pkm-charmander-a1" "Brasa"
           smoke "/team" "Meu Time"
 
-          # Legacy player-facing species URLs must resolve into the current Pokédex record.
           smoke "/pokemon/demo-charmander" "Nº 004"
 
-          # Removed/invalid surfaces must render the explicit current-product not-found state.
           smoke "/asset-lab" "ENDEREÇO INDISPONÍVEL"
           smoke "/pokemon/demo-inexistente" "ENDEREÇO INDISPONÍVEL"
           smoke "/pokedex/999" "ENDEREÇO INDISPONÍVEL"
