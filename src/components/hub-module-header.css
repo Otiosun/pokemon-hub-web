@@ -56,6 +56,14 @@
   box-shadow: 0 0 0 2px rgba(0,0,0,.14),0 0 18px rgba(91,226,242,.2);
 }
 
+.hub-module-actions {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
 .hub-module-meta {
   display: grid;
   justify-items: end;
@@ -68,6 +76,24 @@
   letter-spacing: .035em;
 }
 
+.hub-module-header .hub-menu-trigger {
+  min-width: 88px;
+  min-height: 42px;
+  flex: none;
+  border-color: rgba(255, 255, 255, 0.24);
+  border-bottom-color: rgba(255, 255, 255, 0.44);
+  background: rgba(8, 14, 15, 0.24);
+  color: #fff;
+  box-shadow: none;
+  backdrop-filter: blur(4px);
+}
+
+.hub-module-header .hub-menu-trigger:hover {
+  border-color: rgba(255, 255, 255, 0.42);
+  border-bottom-color: rgba(255, 255, 255, 0.7);
+  background: rgba(8, 14, 15, 0.34);
+}
+
 .hub-module-brand:focus-visible {
   outline: 2px solid #e9ffff;
   outline-offset: 4px;
@@ -76,14 +102,76 @@
 @media (max-width: 800px) {
   .hub-module-header {
     min-height: 72px;
-    padding-inline: 14px;
+    gap: 10px;
+    padding-inline: 12px;
+  }
+
+  .hub-module-brand {
+    gap: 9px;
   }
 
   .hub-module-lens {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
+    border-width: 3px;
   }
 
-  .hub-module-brand strong { font-size: .88rem; }
-  .hub-module-meta strong { font-size: .68rem; }
+  .hub-module-brand strong { font-size: .82rem; }
+  .hub-module-meta strong { font-size: .64rem; }
+  .hub-module-actions { gap: 8px; }
+
+  .hub-module-header .hub-menu-trigger {
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    min-height: 42px;
+    gap: 0;
+    padding: 0;
+    border-radius: 12px;
+  }
+
+  .hub-module-header .hub-menu-trigger > span:last-child {
+    display: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .hub-module-header {
+    gap: 7px;
+    padding-inline: 10px;
+  }
+
+  .hub-module-brand {
+    gap: 7px;
+  }
+
+  .hub-module-lens {
+    width: 36px;
+    height: 36px;
+  }
+
+  .hub-module-brand strong {
+    font-size: .76rem;
+    letter-spacing: .065em;
+  }
+
+  .hub-module-brand small,
+  .hub-module-meta small {
+    font-size: .45rem;
+  }
+
+  .hub-module-meta strong {
+    font-size: .59rem;
+  }
+
+  .hub-module-actions {
+    gap: 6px;
+  }
+
+  .hub-module-header .hub-menu-trigger {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+  }
 }
