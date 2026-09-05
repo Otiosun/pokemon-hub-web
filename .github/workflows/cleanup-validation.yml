@@ -1,12 +1,13 @@
 name: Cleanup validation
 
 on:
-  push:
-    branches:
-      - cleanup/product-integrity-v1
   pull_request:
     branches:
       - feat/pokemon-detail-v1
+
+concurrency:
+  group: cleanup-validation-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
