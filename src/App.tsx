@@ -1,7 +1,6 @@
 import { lazy, Suspense, type ReactNode, useEffect, useState } from 'react';
 import { HubNavigation } from './components/HubNavigation';
 import { rememberPokedexIndexScroll } from './features/pokedex/pokedexIndexSession';
-import { PokemonDetailRoute } from './features/pokemon-detail/PokemonDetailRoute';
 import {
   hubSectionForPath,
   readHubDestinations,
@@ -10,6 +9,7 @@ import {
   type HubDestinations,
   type HubSection,
 } from './navigation/hubNavigationSession';
+import { resolveProductRoute } from './navigation/productIntegrity';
 import './hub-route-fallback-v3.css';
 
 const JourneyPage = lazy(() =>
@@ -30,12 +30,6 @@ const OwnedPokemonDetailPage = lazy(() =>
 const TeamPage = lazy(() =>
   import('./features/team/TeamPage').then((module) => ({ default: module.TeamPage })),
 );
-const AssetLabPage = lazy(() =>
-  import('./features/asset-lab/AssetLabPage').then((module) => ({ default: module.AssetLabPage })),
-);
-const GenerationsLabPage = lazy(() =>
-  import('./features/asset-lab/GenerationsLabPage').then((module) => ({ default: module.GenerationsLabPage })),
-);
 
 const SECTION_ROOTS: Record<HubSection, string> = {
   journey: '/jornada',
@@ -49,13 +43,12 @@ type HubHistoryState = {
   hubParentInHistory?: boolean;
 };
 
-type FallbackModule = 'journey' | 'pokedex' | 'box' | 'lab';
+type FallbackModule = 'journey' | 'pokedex' | 'box';
 
 const FALLBACK_LABELS: Record<FallbackModule, string> = {
   journey: 'JORNADA',
   pokedex: 'POKÉDEX',
   box: 'BOX',
-  lab: 'LAB',
 };
 
 function HubFrame({
@@ -99,8 +92,35 @@ function RouteFallback({ label, module }: { label: string; module: FallbackModul
   );
 }
 
+function ProductNotFound({ destinations }: { destinations: HubDestinations }) {
+  return (
+    <HubFrame active={null} destinations={destinations}>
+      <section className="hub-route-fallback hub-product-not-found" data-hub-fallback="journey">
+        <div className="hub-route-fallback-head">
+          <span className="hub-route-fallback-lens" aria-hidden="true" />
+          <span>
+            <strong>POKÉMON HUB</strong>
+            <small>ENDEREÇO INDISPONÍVEL</small>
+          </span>
+        </div>
+        <div className="hub-product-not-found-body">
+          <p>Este endereço não faz parte da versão atual do Hub.</p>
+          <a href="/jornada">VOLTAR À JORNADA</a>
+        </div>
+      </section>
+    </HubFrame>
+  );
+}
+
 function getPath() {
-  return window.location.pathname === '/' ? '/jornada' : window.location.pathname;
+  const rawPath = window.location.pathname === '/' ? '/jornada' : window.location.pathname;
+  const resolution = resolveProductRoute(rawPath);
+  if (resolution.kind === 'redirect') {
+    const nextLocation = `${resolution.to}${window.location.search}${window.location.hash}`;
+    window.history.replaceState(window.history.state, '', nextLocation);
+    return resolution.to;
+  }
+  return rawPath;
 }
 
 function getHubLocation() {
@@ -108,21 +128,16 @@ function getHubLocation() {
 }
 
 function getPokemonRouteSlug(path: string) {
-  return path.split('/').filter(Boolean).at(-1) ?? 'demo-charmander';
-}
-
-function isLegacyFieldDexPath(path: string) {
-  return path.startsWith('/pokemon/demo-');
+  return path.split('/').filter(Boolean).at(-1) ?? '';
 }
 
 function isOwnedPokemonInstancePath(path: string) {
-  return path.startsWith('/pokemon/') && !isLegacyFieldDexPath(path);
+  return path.startsWith('/pokemon/') && resolveProductRoute(path).kind === 'route';
 }
 
 function getPokedexDex(path: string) {
   const raw = path.split('/').filter(Boolean)[1] ?? '1';
-  const parsed = Number.parseInt(raw, 10);
-  return Number.isInteger(parsed) && parsed >= 1 && parsed <= 386 ? parsed : 1;
+  return Number.parseInt(raw, 10);
 }
 
 function resetRecordViewport() {
@@ -243,13 +258,13 @@ export function App() {
       if (anchor.target && anchor.target !== '_self') return;
       if (anchor.hasAttribute('download')) return;
 
-      if (anchor.closest('.dex-route.is-pending .dex-nav')) {
-        event.preventDefault();
-        return;
-      }
-
       const destination = new URL(anchor.href, window.location.href);
       if (destination.origin !== window.location.origin) return;
+
+      const resolution = resolveProductRoute(destination.pathname);
+      if (resolution.kind === 'redirect') {
+        destination.pathname = resolution.to;
+      }
 
       const currentPath = window.location.pathname;
       const sameDocumentHash =
@@ -353,9 +368,6 @@ export function App() {
       </HubFrame>
     );
   }
-  if (isLegacyFieldDexPath(path)) {
-    return <PokemonDetailRoute routeSlug={getPokemonRouteSlug(path)} />;
-  }
   if (isOwnedPokemonInstancePath(path)) {
     const historyState = (window.history.state ?? {}) as HubHistoryState;
     const instanceId = getPokemonRouteSlug(path);
@@ -371,7 +383,7 @@ export function App() {
       </HubFrame>
     );
   }
-  if (path.startsWith('/pokedex/')) {
+  if (path.startsWith('/pokedex/') && resolveProductRoute(path).kind === 'route') {
     return (
       <HubFrame active="pokedex" destinations={hubDestinations}>
         <Suspense fallback={<RouteFallback module="pokedex" label="ABRINDO REGISTRO" />}>
@@ -389,25 +401,6 @@ export function App() {
       </HubFrame>
     );
   }
-  if (path.startsWith('/asset-lab/generations')) {
-    return (
-      <Suspense fallback={<RouteFallback module="lab" label="CARREGANDO LABORATÓRIO" />}>
-        <GenerationsLabPage />
-      </Suspense>
-    );
-  }
-  if (path.startsWith('/asset-lab')) {
-    return (
-      <Suspense fallback={<RouteFallback module="lab" label="CARREGANDO LABORATÓRIO" />}>
-        <AssetLabPage />
-      </Suspense>
-    );
-  }
-  return (
-    <HubFrame active="journey" destinations={hubDestinations}>
-      <Suspense fallback={<RouteFallback module="journey" label="RETOMANDO JORNADA" />}>
-        <JourneyPage />
-      </Suspense>
-    </HubFrame>
-  );
+
+  return <ProductNotFound destinations={hubDestinations} />;
 }
