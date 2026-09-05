@@ -141,23 +141,25 @@ export function HubNavigation({ active, destinations }: HubNavigationProps) {
 
   return (
     <>
-      <button
-        ref={triggerRef}
-        type="button"
-        className="hub-menu-trigger"
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        aria-controls="hub-global-menu"
-        onClick={openMenu}
-      >
-        <span className="hub-menu-trigger-grid" aria-hidden="true">
-          <i />
-          <i />
-          <i />
-          <i />
-        </span>
-        <span>MENU</span>
-      </button>
+      <div className="hub-menu-chrome">
+        <button
+          ref={triggerRef}
+          type="button"
+          className="hub-menu-trigger"
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          aria-controls="hub-global-menu"
+          onClick={openMenu}
+        >
+          <span className="hub-menu-trigger-grid" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+            <i />
+          </span>
+          <span>MENU</span>
+        </button>
+      </div>
 
       {open ? (
         <div
