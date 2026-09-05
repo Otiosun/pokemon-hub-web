@@ -61,4 +61,9 @@ describe('player-facing product integrity', () => {
     expect(hubModuleHeaderSource).toContain('<HubMenuTrigger />');
     expect(hubModuleHeaderSource).toContain('className="hub-module-actions"');
   });
+
+  it('keeps the global menu reachable in the immersive owned-Pokémon stage', () => {
+    expect(ownedDetailSource).toContain('className="owned-detail-stage-actions"');
+    expect(ownedDetailSource).toContain('<HubMenuTrigger />');
+  });
 });
