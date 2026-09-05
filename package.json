@@ -22,7 +22,6 @@
     "verify": "rm -rf /tmp/poke-importer /tmp/pokemon-hub-py /tmp/generations-smoke && git clone --depth 1 --quiet https://github.com/ChicoEevee/Pokemon-Switch-Model-Importer-Blender.git /tmp/poke-importer && python3 -m pip install --disable-pip-version-check --quiet --target /tmp/pokemon-hub-py py7zr flatbuffers pillow numpy && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/build-generations-format-samples.py && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/audit-generations-semantic.py && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/build-generations-batch.py --dex 1,7,10,123,165,245,249,292,384 --output /tmp/generations-smoke && biome lint --max-diagnostics=500 . && tsc --noEmit && vitest run && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/build-generations-player-preview.py && vite build"
   },
   "dependencies": {
-    "@google/model-viewer": "4.3.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "three": "0.183.2"
