@@ -1,0 +1,55 @@
+.owned-detail-stage-actions {
+  position: absolute;
+  z-index: 12;
+  top: 20px;
+  right: 22px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.owned-detail-stage-actions .owned-detail-view-switch {
+  position: static;
+}
+
+.owned-detail-stage-actions .hub-menu-trigger {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  flex: none;
+  gap: 0;
+  padding: 0;
+  border-color: rgba(210, 235, 236, 0.18);
+  border-bottom-color: rgba(210, 235, 236, 0.3);
+  border-radius: 12px;
+  background: rgba(9, 15, 17, 0.66);
+  color: #eef8f8;
+  box-shadow: none;
+  backdrop-filter: blur(9px);
+}
+
+.owned-detail-stage-actions .hub-menu-trigger > span:last-child {
+  display: none;
+}
+
+.owned-detail-stage-actions .hub-menu-trigger:hover {
+  border-color: rgba(210, 235, 236, 0.34);
+  border-bottom-color: rgba(210, 235, 236, 0.5);
+  background: rgba(17, 26, 29, 0.78);
+}
+
+@media (max-width: 520px) {
+  .owned-detail-stage-actions {
+    top: 16px;
+    right: 14px;
+    gap: 7px;
+  }
+
+  .owned-detail-stage-actions .hub-menu-trigger {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+  }
+}

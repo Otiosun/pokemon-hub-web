@@ -498,6 +498,7 @@ export function GenerationsPokemonViewer({
         pendingMixer = null;
 
         frameModel(activeRuntime, model);
+        activeRuntime.renderer.render(activeRuntime.scene, activeRuntime.camera);
         setDisplayedName(name);
         displayedSpeciesCallbackRef.current?.(species);
         setViewerState('ready');

@@ -210,7 +210,7 @@ export function OwnedPokemonCollectionPage() {
               <span>TIME ATUAL · {team.length}/6</span>
               <h2 id="owned-current-team-title">Seus parceiros ativos</h2>
             </div>
-            <a href="/team">EDITAR TIME <span aria-hidden="true">→</span></a>
+            <a href="/team">VER TIME <span aria-hidden="true">→</span></a>
           </header>
           <div className="owned-pokemon-team-grid">
             {team.map((pokemon) => <TeamPreviewCard key={pokemon.instanceId} pokemon={pokemon} />)}

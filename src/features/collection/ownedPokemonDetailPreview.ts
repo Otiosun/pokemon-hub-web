@@ -1,4 +1,3 @@
-import { readTeamDraftOrder } from '../team/teamSession';
 import { applyCollectionFilters } from './collectionFilters';
 import { readCollectionSession } from './collectionSession';
 import { getTeamPreview, OWNED_POKEMON_PREVIEW, type OwnedPokemonPreview } from './ownedPokemonPreview';
@@ -63,21 +62,10 @@ export function isJourneyLeadInstance(instanceId: string) {
   return getTeamPreview()[0]?.instanceId === instanceId;
 }
 
-function orderedTeamContext() {
-  const canonical = getTeamPreview();
-  const draftOrder = readTeamDraftOrder();
-  if (!draftOrder) return canonical;
-  const byId = new Map(canonical.map((pokemon) => [pokemon.instanceId, pokemon]));
-  const ordered = draftOrder
-    .map((instanceId) => byId.get(instanceId))
-    .filter((pokemon): pokemon is OwnedPokemonPreview => Boolean(pokemon));
-  return ordered.length === canonical.length ? ordered : canonical;
-}
-
 function collectionContextSequence(returnHref: string) {
   const context = parseContextLocation(returnHref);
   if (context.pathname === '/team' || context.pathname === '/team/') {
-    return orderedTeamContext();
+    return getTeamPreview();
   }
   if (isJourneyLeadContext(returnHref)) {
     return getTeamPreview().slice(0, 1);

@@ -1,8 +1,3 @@
-import {
-  getPokemonSpeciesVisualAssets,
-  type PokemonSpeciesVisualAssets,
-} from '../../visual-assets/pokemonVisualRegistry';
-
 export type FieldDexSpecies = {
   routeSlug: string;
   dex: number;
@@ -15,8 +10,6 @@ export type FieldDexSpecies = {
   weight: string;
   types: string[];
 };
-
-export type FieldDexVisual = PokemonSpeciesVisualAssets;
 
 const reviewSpecies = [
   {
@@ -86,37 +79,7 @@ const reviewSpecies = [
   },
 ] satisfies FieldDexSpecies[];
 
-function requireSpecies(species: FieldDexSpecies | undefined): FieldDexSpecies {
-  if (!species) throw new Error('Field Dex review registry is empty');
-  return species;
-}
-
-const defaultSpecies = requireSpecies(reviewSpecies[0]);
-
 export const FIELD_DEX_REVIEW_SPECIES: readonly FieldDexSpecies[] = reviewSpecies;
-
-const byRoute = new Map(reviewSpecies.map((species) => [species.routeSlug, species]));
-
-export function getFieldDexSpecies(routeSlug: string): FieldDexSpecies {
-  return byRoute.get(routeSlug) ?? defaultSpecies;
-}
-
-export function getFieldDexNeighbours(routeSlug: string): {
-  previous: FieldDexSpecies;
-  next: FieldDexSpecies;
-} {
-  const index = Math.max(
-    0,
-    reviewSpecies.findIndex((species) => species.routeSlug === routeSlug),
-  );
-  const previous = reviewSpecies[(index - 1 + reviewSpecies.length) % reviewSpecies.length] ?? defaultSpecies;
-  const next = reviewSpecies[(index + 1) % reviewSpecies.length] ?? defaultSpecies;
-  return { previous, next };
-}
-
-export function getFieldDexVisual(dex: number): FieldDexVisual {
-  return getPokemonSpeciesVisualAssets(dex);
-}
 
 export function typeAccent(type: string) {
   const accents: Record<string, string> = {

@@ -1,3 +1,4 @@
+import { HubMenuTrigger } from './HubNavigation';
 import './hub-module-header.css';
 
 export type HubModule = 'journey' | 'pokedex' | 'pokemon' | 'team';
@@ -26,9 +27,12 @@ export function HubModuleHeader({ module, metaLabel, metaValue }: HubModuleHeade
           <small>{meta.label}</small>
         </span>
       </a>
-      <div className="hub-module-meta">
-        <small>{metaLabel}</small>
-        <strong>{metaValue}</strong>
+      <div className="hub-module-actions">
+        <div className="hub-module-meta">
+          <small>{metaLabel}</small>
+          <strong>{metaValue}</strong>
+        </div>
+        <HubMenuTrigger />
       </div>
     </header>
   );
