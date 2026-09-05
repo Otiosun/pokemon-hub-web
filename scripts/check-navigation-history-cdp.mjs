@@ -153,16 +153,19 @@ async function main() {
 
     console.log(`HISTORY_SMOKE base=${baseUrl}`);
 
+    // Direct deep links accept the compact dex form.
     await navigate(client, '/pokedex/4', 'Charmander');
     await reload(client, '/pokedex/4', 'Charmander', true);
     console.log('RELOAD_COLD /pokedex/4 = OK');
     await reload(client, '/pokedex/4', 'Charmander', false);
     console.log('RELOAD_HOT /pokedex/4 = OK');
 
+    // The index intentionally emits zero-padded dex hrefs (e.g. #004 -> /pokedex/004).
+    // Preserve and test the actual player-facing path instead of coercing it to /pokedex/4.
     await navigate(client, '/pokedex', 'Índice Nacional');
-    await clickRoute(client, '/pokedex/4', 'Charmander');
+    await clickRoute(client, '/pokedex/004', 'Charmander');
     await traverseHistory(client, 'back', '/pokedex', 'Índice Nacional');
-    await traverseHistory(client, 'forward', '/pokedex/4', 'Charmander');
+    await traverseHistory(client, 'forward', '/pokedex/004', 'Charmander');
     console.log('BACK_FORWARD Pokédex = OK');
 
     await navigate(client, '/pokemon', 'Time + Box');
