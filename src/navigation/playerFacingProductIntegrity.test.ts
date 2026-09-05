@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import viewerSource from '../features/asset-lab/GenerationsPokemonViewer.tsx?raw';
 import collectionPageSource from '../features/collection/OwnedPokemonCollectionPage.tsx?raw';
 import ownedDetailSource from '../features/collection/OwnedPokemonDetailPage.tsx?raw';
-import pokedexSpeciesSource from '../features/pokedex/PokedexSpeciesPage.tsx?raw';
 import teamPageSource from '../features/team/TeamPage.tsx?raw';
 
 const teamModules = import.meta.glob('../features/team/*');
@@ -43,12 +43,13 @@ describe('player-facing product integrity', () => {
     expect(collectionPageSource).not.toContain('EDITAR TIME');
   });
 
-  it('keeps a visible 2D fallback while the selected 3D viewer is not ready', () => {
-    expect(pokedexSpeciesSource).toContain('onReadyChange={setViewerReady}');
-    expect(pokedexSpeciesSource).toContain('pokedex-species-model-fallback');
-    expect(pokedexSpeciesSource).toContain('!viewerReady');
+  it('paints the loaded 3D model before announcing the viewer as ready', () => {
+    const firstPaint = viewerSource.indexOf(
+      'activeRuntime.renderer.render(activeRuntime.scene, activeRuntime.camera);',
+    );
+    const readySignal = viewerSource.indexOf("setViewerState('ready');", firstPaint);
 
-    expect(ownedDetailSource).toContain('owned-detail-model-fallback');
-    expect(ownedDetailSource).toContain('!viewerReady');
+    expect(firstPaint).toBeGreaterThan(-1);
+    expect(readySignal).toBeGreaterThan(firstPaint);
   });
 });
