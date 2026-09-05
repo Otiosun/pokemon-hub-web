@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import hubModuleHeaderSource from '../components/HubModuleHeader.tsx?raw';
 import hubNavigationSource from '../components/HubNavigation.tsx?raw';
 import viewerSource from '../features/asset-lab/GenerationsPokemonViewer.tsx?raw';
 import collectionPageSource from '../features/collection/OwnedPokemonCollectionPage.tsx?raw';
@@ -54,8 +55,10 @@ describe('player-facing product integrity', () => {
     expect(readySignal).toBeGreaterThan(firstPaint);
   });
 
-  it('places the global menu trigger inside structural chrome', () => {
-    expect(hubNavigationSource).toContain('className="hub-menu-chrome"');
-    expect(hubNavigationSource).toMatch(/hub-menu-chrome[\s\S]*className="hub-menu-trigger"/);
+  it('mounts the global menu trigger inside the canonical module header', () => {
+    expect(hubNavigationSource).toContain('export function HubMenuTrigger()');
+    expect(hubNavigationSource).not.toContain('className="hub-menu-chrome"');
+    expect(hubModuleHeaderSource).toContain('<HubMenuTrigger />');
+    expect(hubModuleHeaderSource).toContain('className="hub-module-actions"');
   });
 });
