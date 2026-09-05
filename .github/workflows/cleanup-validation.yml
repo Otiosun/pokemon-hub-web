@@ -133,7 +133,7 @@ jobs:
             exit 1
           fi
 
-          mkdir -p /tmp/mobile-viewport-evidence
+          mkdir -p /tmp/mobile-viewport-evidence /tmp/mobile-viewer-diagnostics
           pnpm exec vite preview --host 127.0.0.1 --port 4174 > /tmp/pokemon-hub-mobile-preview.log 2>&1 &
           PREVIEW_PID=$!
           trap 'kill "$PREVIEW_PID" 2>/dev/null || true' EXIT
@@ -151,6 +151,8 @@ jobs:
             local path="$2"
             local width="$3"
             local output="/tmp/mobile-viewport-evidence/${name}-${width}x900.png"
+            local dom="/tmp/mobile-viewer-diagnostics/${name}-${width}x900.dom.html"
+            local log="/tmp/mobile-viewer-diagnostics/${name}-${width}x900.chrome.log"
             echo "CAPTURE ${path} @ ${width}x900"
             "$CHROME" \
               --headless=new \
@@ -160,14 +162,16 @@ jobs:
               --force-device-scale-factor=1 \
               --window-size="${width},900" \
               --virtual-time-budget=5000 \
+              --dump-dom \
               --screenshot="$output" \
               "http://127.0.0.1:4174${path}" \
-              >/tmp/pokemon-hub-mobile-chrome.log 2>&1 || {
-                cat /tmp/pokemon-hub-mobile-chrome.log
+              >"$dom" 2>"$log" || {
+                cat "$log"
                 cat /tmp/pokemon-hub-mobile-preview.log
                 exit 1
               }
             test -s "$output"
+            test -s "$dom"
           }
 
           for width in 320 360 390 430; do
@@ -180,11 +184,38 @@ jobs:
           done
 
           test "$(find /tmp/mobile-viewport-evidence -type f -name '*.png' | wc -l)" -eq 24
+          test "$(find /tmp/mobile-viewer-diagnostics -type f -name '*.dom.html' | wc -l)" -eq 24
+
+          for width in 320 360 390 430; do
+            for name in species-004 owned-charmander; do
+              dom="/tmp/mobile-viewer-diagnostics/${name}-${width}x900.dom.html"
+              if grep -Fq "Charmander · Idle" "$dom"; then
+                state="ready"
+              elif grep -Fq "Falha ao carregar Charmander." "$dom"; then
+                state="failed"
+              elif grep -Fq "carregando Charmander" "$dom"; then
+                state="loading"
+              else
+                state="unknown"
+              fi
+              echo "VIEWER_STATE ${name} ${width}px = ${state}" | tee -a /tmp/mobile-viewer-diagnostics/viewer-state-summary.txt
+            done
+          done
+
+          cp /tmp/pokemon-hub-mobile-preview.log /tmp/mobile-viewer-diagnostics/vite-preview.log
 
       - name: Upload mobile viewport evidence
         uses: actions/upload-artifact@v4
         with:
           name: mobile-viewport-evidence
           path: /tmp/mobile-viewport-evidence/*.png
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Upload mobile viewer diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-viewer-diagnostics
+          path: /tmp/mobile-viewer-diagnostics
           if-no-files-found: error
           retention-days: 3
