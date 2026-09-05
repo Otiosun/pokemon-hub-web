@@ -130,7 +130,11 @@ async function clickRoute(client, route, marker) {
 
 async function traverseHistory(client, direction, route, marker) {
   const method = direction === 'back' ? 'history.back()' : 'history.forward()';
-  await runtimeValue(client, method);
+  try {
+    await runtimeValue(client, method);
+  } catch {
+    // A successful traversal may destroy the old execution context before CDP replies.
+  }
   await waitForRoute(client, route, marker);
 }
 
