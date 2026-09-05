@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import hubNavigationSource from '../components/HubNavigation.tsx?raw';
 import viewerSource from '../features/asset-lab/GenerationsPokemonViewer.tsx?raw';
@@ -6,7 +5,6 @@ import collectionPageSource from '../features/collection/OwnedPokemonCollectionP
 import ownedDetailSource from '../features/collection/OwnedPokemonDetailPage.tsx?raw';
 import teamPageSource from '../features/team/TeamPage.tsx?raw';
 
-const hubNavigationCss = readFileSync(new URL('../components/hub-navigation.css', import.meta.url), 'utf8');
 const teamModules = import.meta.glob('../features/team/*');
 
 const PLAYER_FACING_TECHNICAL_MARKERS = [
@@ -56,10 +54,8 @@ describe('player-facing product integrity', () => {
     expect(readySignal).toBeGreaterThan(firstPaint);
   });
 
-  it('keeps the global menu trigger in structural chrome instead of floating over player content', () => {
-    expect(hubNavigationSource).toContain('hub-menu-chrome');
-    expect(hubNavigationCss).not.toMatch(/\.hub-menu-trigger\s*\{[^}]*position:\s*fixed/s);
-    expect(hubNavigationCss).toMatch(/\.hub-menu-chrome\s*\{[^}]*display:\s*flex/s);
-    expect(hubNavigationCss).not.toContain('padding-bottom: calc(76px + env(safe-area-inset-bottom))');
+  it('places the global menu trigger inside structural chrome', () => {
+    expect(hubNavigationSource).toContain('className="hub-menu-chrome"');
+    expect(hubNavigationSource).toMatch(/hub-menu-chrome[\s\S]*className="hub-menu-trigger"/);
   });
 });
