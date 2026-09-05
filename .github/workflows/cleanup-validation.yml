@@ -133,10 +133,26 @@ jobs:
             exit 1
           fi
 
+          rm -rf /tmp/mobile-viewport-evidence /tmp/mobile-viewer-diagnostics /tmp/pokemon-hub-cdp-profile
           mkdir -p /tmp/mobile-viewport-evidence /tmp/mobile-viewer-diagnostics
+
           pnpm exec vite preview --host 127.0.0.1 --port 4174 > /tmp/pokemon-hub-mobile-preview.log 2>&1 &
           PREVIEW_PID=$!
-          trap 'kill "$PREVIEW_PID" 2>/dev/null || true' EXIT
+
+          "$CHROME" \
+            --headless=new \
+            --no-sandbox \
+            --disable-dev-shm-usage \
+            --enable-unsafe-swiftshader \
+            --hide-scrollbars \
+            --remote-debugging-address=127.0.0.1 \
+            --remote-debugging-port=9222 \
+            --user-data-dir=/tmp/pokemon-hub-cdp-profile \
+            about:blank \
+            > /tmp/pokemon-hub-cdp-chrome.log 2>&1 &
+          CHROME_PID=$!
+
+          trap 'kill "$CHROME_PID" 2>/dev/null || true; kill "$PREVIEW_PID" 2>/dev/null || true' EXIT
 
           for _ in {1..40}; do
             if curl -fsS http://127.0.0.1:4174/jornada >/dev/null; then
@@ -146,64 +162,26 @@ jobs:
           done
           curl -fsS http://127.0.0.1:4174/jornada >/dev/null
 
-          capture() {
-            local name="$1"
-            local path="$2"
-            local width="$3"
-            local output="/tmp/mobile-viewport-evidence/${name}-${width}x900.png"
-            local dom="/tmp/mobile-viewer-diagnostics/${name}-${width}x900.dom.html"
-            local log="/tmp/mobile-viewer-diagnostics/${name}-${width}x900.chrome.log"
-            echo "CAPTURE ${path} @ ${width}x900"
-            "$CHROME" \
-              --headless=new \
-              --no-sandbox \
-              --enable-unsafe-swiftshader \
-              --disable-dev-shm-usage \
-              --hide-scrollbars \
-              --force-device-scale-factor=1 \
-              --window-size="${width},900" \
-              --virtual-time-budget=5000 \
-              --dump-dom \
-              --screenshot="$output" \
-              "http://127.0.0.1:4174${path}" \
-              >"$dom" 2>"$log" || {
-                cat "$log"
-                cat /tmp/pokemon-hub-mobile-preview.log
-                exit 1
-              }
-            test -s "$output"
-            test -s "$dom"
-          }
-
-          for width in 320 360 390 430; do
-            capture jornada "/jornada" "$width"
-            capture pokedex "/pokedex" "$width"
-            capture species-004 "/pokedex/4" "$width"
-            capture box "/pokemon" "$width"
-            capture team "/team" "$width"
-            capture owned-charmander "/pokemon/pkm-charmander-a1" "$width"
+          for _ in {1..80}; do
+            if curl -fsS http://127.0.0.1:9222/json/version >/dev/null; then
+              break
+            fi
+            sleep 0.25
           done
+          curl -fsS http://127.0.0.1:9222/json/version >/dev/null
+
+          CDP_ENDPOINT=http://127.0.0.1:9222 \
+          BASE_URL=http://127.0.0.1:4174 \
+          OUTPUT_DIR=/tmp/mobile-viewport-evidence \
+          DIAGNOSTICS_DIR=/tmp/mobile-viewer-diagnostics \
+          node scripts/capture-mobile-cdp.mjs
 
           test "$(find /tmp/mobile-viewport-evidence -type f -name '*.png' | wc -l)" -eq 24
           test "$(find /tmp/mobile-viewer-diagnostics -type f -name '*.dom.html' | wc -l)" -eq 24
-
-          for width in 320 360 390 430; do
-            for name in species-004 owned-charmander; do
-              dom="/tmp/mobile-viewer-diagnostics/${name}-${width}x900.dom.html"
-              if grep -Fq "Charmander · Idle" "$dom"; then
-                state="ready"
-              elif grep -Fq "Falha ao carregar Charmander." "$dom"; then
-                state="failed"
-              elif grep -Fq "carregando Charmander" "$dom"; then
-                state="loading"
-              else
-                state="unknown"
-              fi
-              echo "VIEWER_STATE ${name} ${width}px = ${state}" | tee -a /tmp/mobile-viewer-diagnostics/viewer-state-summary.txt
-            done
-          done
+          test "$(grep -c '= ready' /tmp/mobile-viewer-diagnostics/viewer-state-summary.txt)" -eq 8
 
           cp /tmp/pokemon-hub-mobile-preview.log /tmp/mobile-viewer-diagnostics/vite-preview.log
+          cp /tmp/pokemon-hub-cdp-chrome.log /tmp/mobile-viewer-diagnostics/chrome-cdp.log
 
       - name: Upload mobile viewport evidence
         uses: actions/upload-artifact@v4
