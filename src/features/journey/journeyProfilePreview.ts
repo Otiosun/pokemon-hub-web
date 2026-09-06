@@ -16,6 +16,7 @@ export type JourneyBadgePreview = {
   key: string;
   name: string;
   earned: boolean;
+  assetUrl?: string | null;
 };
 
 export type JourneyProfilePreview = {
