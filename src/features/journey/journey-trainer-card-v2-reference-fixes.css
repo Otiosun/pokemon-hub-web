@@ -121,6 +121,10 @@
   display: none;
 }
 
+.journey-card-v2-avatar img {
+  object-position: var(--trainer-photo-x, 50%) var(--trainer-photo-y, 50%);
+}
+
 .journey-card-v2-kicker {
   margin-bottom: 0.36cqw;
   font-size: 1.34cqw;
@@ -214,13 +218,14 @@
 .journey-card-v2-badge-row {
   min-width: 0;
   grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: 0.8cqw;
+  gap: 0;
 }
 
 .journey-card-v2-badge {
   position: relative;
   width: min(5.05cqw, 100%);
   aspect-ratio: 0.92;
+  justify-self: center;
   border: 0;
   border-radius: 0;
   background: rgba(55, 76, 65, 0.19);
