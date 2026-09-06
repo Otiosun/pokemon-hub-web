@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import type { JourneyBadgePreview, JourneyProfilePreview } from './journeyProfilePreview';
 import { KantoLeagueSeal, KantoTrainerPlaceholder } from './kantoLeagueVisualKit';
+import { resolveTrainerPhotoFocalPoint, type TrainerPhotoFocalPoint } from './trainerCardPhotoFocal';
 import { ZhouliaEPrimeMark } from './zhouliaLeagueVisualKit';
 import './journey-trainer-card-v2.css';
 import './journey-trainer-card-v2-reference-fixes.css';
@@ -23,10 +24,48 @@ function LocationIcon() {
   );
 }
 
+const DEFAULT_PHOTO_FOCAL: TrainerPhotoFocalPoint = {
+  x: 0.5,
+  y: 0.5,
+  source: 'orientation-fallback',
+};
+
 function TrainerAvatar({ avatarUrl }: { avatarUrl: string | null }) {
+  const [focalPoint, setFocalPoint] = useState<TrainerPhotoFocalPoint>(DEFAULT_PHOTO_FOCAL);
+
+  useEffect(() => {
+    let cancelled = false;
+    setFocalPoint(DEFAULT_PHOTO_FOCAL);
+
+    if (!avatarUrl) return () => {
+      cancelled = true;
+    };
+
+    resolveTrainerPhotoFocalPoint(avatarUrl)
+      .then((next) => {
+        if (!cancelled) setFocalPoint(next);
+      })
+      .catch(() => {
+        if (!cancelled) setFocalPoint(DEFAULT_PHOTO_FOCAL);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [avatarUrl]);
+
   return (
     <div className={`journey-card-v2-avatar${avatarUrl ? ' has-image' : ''}`}>
-      {avatarUrl ? <img src={avatarUrl} alt="Foto do treinador" /> : <KantoTrainerPlaceholder />}
+      {avatarUrl ? (
+        <img
+          src={avatarUrl}
+          alt="Foto do treinador"
+          data-focal-source={focalPoint.source}
+          style={{ objectPosition: `${focalPoint.x * 100}% ${focalPoint.y * 100}%` }}
+        />
+      ) : (
+        <KantoTrainerPlaceholder />
+      )}
       <span className="journey-card-v2-avatar-node node-left" aria-hidden="true" />
       <span className="journey-card-v2-avatar-node node-right" aria-hidden="true" />
     </div>
