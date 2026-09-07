@@ -2,13 +2,14 @@ import { describe, expect, it } from 'vitest';
 import vercelConfig from '../../vercel.json';
 import viteConfigSource from '../../vite.config.ts?raw';
 
-const REQUIRED_SECURITY_HEADERS = {
+const SHARED_BROWSER_SECURITY_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
   'X-Frame-Options': 'DENY',
-  'Strict-Transport-Security': 'max-age=31536000',
 } as const;
+
+const CLOUDFLARE_HSTS = 'max-age=31536000';
 
 function getVercelGlobalHeaders(): Map<string, string> {
   const globalRule = vercelConfig.headers.find((rule) => rule.source === '/(.*)');
@@ -29,12 +30,13 @@ describe('deployment integrity', () => {
     expect(viteConfigSource).not.toMatch(/sourcemap:\s*true/);
   });
 
-  it('pins the baseline browser security headers on Vercel', () => {
+  it('pins the baseline browser security headers on Vercel without weakening provider HSTS', () => {
     const headers = getVercelGlobalHeaders();
 
-    for (const [key, value] of Object.entries(REQUIRED_SECURITY_HEADERS)) {
+    for (const [key, value] of Object.entries(SHARED_BROWSER_SECURITY_HEADERS)) {
       expect(headers.get(key), key).toBe(value);
     }
+    expect(headers.has('Strict-Transport-Security')).toBe(false);
   });
 
   it('mirrors the baseline browser security headers for Cloudflare static assets', () => {
@@ -49,8 +51,9 @@ describe('deployment integrity', () => {
     if (!cloudflareHeaders) return;
 
     expect(cloudflareHeaders).toContain('/*');
-    for (const [key, value] of Object.entries(REQUIRED_SECURITY_HEADERS)) {
+    for (const [key, value] of Object.entries(SHARED_BROWSER_SECURITY_HEADERS)) {
       expect(cloudflareHeaders).toContain(`${key}: ${value}`);
     }
+    expect(cloudflareHeaders).toContain(`Strict-Transport-Security: ${CLOUDFLARE_HSTS}`);
   });
 });
