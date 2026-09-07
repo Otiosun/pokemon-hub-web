@@ -1,7 +1,6 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import vercelConfig from '../../vercel.json';
+import viteConfigSource from '../../vite.config.ts?raw';
 
 const REQUIRED_SECURITY_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
@@ -26,9 +25,6 @@ describe('deployment integrity', () => {
   });
 
   it('does not publish production source maps', () => {
-    const viteConfigPath = fileURLToPath(new URL('../../vite.config.ts', import.meta.url));
-    const viteConfigSource = readFileSync(viteConfigPath, 'utf8');
-
     expect(viteConfigSource).toMatch(/sourcemap:\s*false/);
     expect(viteConfigSource).not.toMatch(/sourcemap:\s*true/);
   });
@@ -42,12 +38,16 @@ describe('deployment integrity', () => {
   });
 
   it('mirrors the baseline browser security headers for Cloudflare static assets', () => {
-    const cloudflareHeadersPath = fileURLToPath(new URL('../../public/_headers', import.meta.url));
+    const cloudflareHeaderModules = import.meta.glob('../../public/_headers', {
+      eager: true,
+      query: '?raw',
+      import: 'default',
+    }) as Record<string, string>;
+    const cloudflareHeaders = cloudflareHeaderModules['../../public/_headers'];
 
-    expect(() => readFileSync(cloudflareHeadersPath, 'utf8')).not.toThrow();
-    if (!existsSync(cloudflareHeadersPath)) return;
+    expect(cloudflareHeaders, 'public/_headers').toBeDefined();
+    if (!cloudflareHeaders) return;
 
-    const cloudflareHeaders = readFileSync(cloudflareHeadersPath, 'utf8');
     expect(cloudflareHeaders).toContain('/*');
     for (const [key, value] of Object.entries(REQUIRED_SECURITY_HEADERS)) {
       expect(cloudflareHeaders).toContain(`${key}: ${value}`);
