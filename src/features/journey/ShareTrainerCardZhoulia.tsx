@@ -95,11 +95,11 @@ export function ShareTrainerCardZhoulia({
 
           <div className="journey-zhoulia-card-title">TRAINER CARD</div>
 
-          <div className="journey-zhoulia-card-region" role="group" aria-label={`Liga de ${profile.originRegion}`}>
+          <section className="journey-zhoulia-card-region" aria-label={`Liga de ${profile.originRegion}`}>
             <strong>{profile.originRegion.toUpperCase()}</strong>
             <span aria-hidden="true" />
             <ZhouliaEPrimeMark className="journey-zhoulia-card-region-mark" />
-          </div>
+          </section>
 
           <div className="journey-zhoulia-card-fields">
             {rows.map(([label, value], index) => (
@@ -113,11 +113,7 @@ export function ShareTrainerCardZhoulia({
           <TrainerPhoto src={avatarUrl} />
 
           {profile.leadPokemon ? (
-            <div
-              className="journey-zhoulia-card-partner"
-              role="group"
-              aria-label={`Parceiro ${profile.leadPokemon.nickname}`}
-            >
+            <section className="journey-zhoulia-card-partner" aria-label={`Parceiro ${profile.leadPokemon.nickname}`}>
               <PokemonAssetImage
                 dex={profile.leadPokemon.dex}
                 assetRole="home-artwork"
@@ -126,10 +122,10 @@ export function ShareTrainerCardZhoulia({
                 decoding="async"
                 fallbackLabel="?"
               />
-            </div>
+            </section>
           ) : null}
 
-          <div className="journey-zhoulia-card-badges" role="group" aria-label={`Insígnias de ${profile.originRegion}`}>
+          <section className="journey-zhoulia-card-badges" aria-label={`Insígnias de ${profile.originRegion}`}>
             {profile.badges.slice(0, 8).map((badge) => (
               <span
                 className={`journey-zhoulia-card-badge${badge.earned ? ' is-earned' : ''}`}
@@ -141,7 +137,7 @@ export function ShareTrainerCardZhoulia({
                 {badge.earned && badge.assetUrl ? <img src={badge.assetUrl} alt="" aria-hidden="true" /> : <i aria-hidden="true" />}
               </span>
             ))}
-          </div>
+          </section>
         </article>
       </section>
     </div>
