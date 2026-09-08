@@ -1,8 +1,8 @@
 const PUBLIC_VERIFICATION_ID_PATTERN = /^tcv_[A-Za-z0-9]{24}$/;
 
 export interface TrainerCardVerificationPresentationInput {
-  readonly publicId?: string;
-  readonly verificationOrigin?: string;
+  readonly publicId?: string | undefined;
+  readonly verificationOrigin?: string | undefined;
 }
 
 export interface TrainerCardVerificationPresentation {
