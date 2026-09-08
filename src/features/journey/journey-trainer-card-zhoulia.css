@@ -25,6 +25,15 @@
   pointer-events: none;
 }
 
+.journey-zhoulia-card-region,
+.journey-zhoulia-card-partner,
+.journey-zhoulia-card-badges {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
 .journey-zhoulia-card-title {
   position: absolute;
   z-index: 4;
