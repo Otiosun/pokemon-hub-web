@@ -23,6 +23,7 @@ export type JourneyProfilePreview = {
   trainerName: string;
   trainerTitle: string;
   trainerId: string;
+  publicVerificationId: string | null;
   originRegion: string;
   currentLocation: string;
   leadPokemon: OwnedPokemonPreview | null;
@@ -56,6 +57,7 @@ export function getJourneyProfilePreview(): JourneyProfilePreview {
     trainerName: 'Whatever',
     trainerTitle: 'Treinador iniciante',
     trainerId: 'KNT-028419',
+    publicVerificationId: null,
     originRegion: 'Kanto',
     currentLocation: 'Route 1',
     leadPokemon: getTeamPreview()[0] ?? null,
