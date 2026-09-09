@@ -4,6 +4,10 @@ export type TrainerPhotoFocalPoint = {
   source: 'orientation-fallback' | 'face-detector';
 };
 
+export type TrainerPhotoPlacement = TrainerPhotoFocalPoint & {
+  zoom: number;
+};
+
 type FaceDetection = {
   boundingBox: { x: number; y: number; width: number; height: number };
 };
@@ -17,6 +21,8 @@ type FaceDetectorConstructor = new (options?: {
   maxDetectedFaces?: number;
 }) => FaceDetectorLike;
 
+const ZHOULIA_PHOTO_SLOT_RATIO = 0.86337;
+
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
@@ -28,6 +34,16 @@ export function getTrainerPhotoFallback(width: number, height: number): TrainerP
   if (ratio < 0.72) return { x: 0.5, y: 0.46, source: 'orientation-fallback' };
   if (ratio > 1.45) return { x: 0.5, y: 0.48, source: 'orientation-fallback' };
   return { x: 0.5, y: 0.5, source: 'orientation-fallback' };
+}
+
+export function getTrainerPhotoPlacementFallback(width: number, height: number): TrainerPhotoPlacement {
+  const focal = getTrainerPhotoFallback(width, height);
+  if (width <= 0 || height <= 0) return { ...focal, zoom: 1 };
+
+  const ratio = width / height;
+  if (ratio < 0.62) return { ...focal, y: 0.43, zoom: 1.08 };
+  if (ratio > 1.75) return { ...focal, y: 0.47, zoom: 1.04 };
+  return { ...focal, zoom: 1 };
 }
 
 function loadImage(src: string) {
@@ -58,9 +74,45 @@ function pickPrimaryFace(faces: FaceDetection[], imageWidth: number) {
     .sort((a, b) => b.score - a.score)[0]?.face ?? null;
 }
 
+function getFaceAwareZoom(
+  imageWidth: number,
+  imageHeight: number,
+  faceHeight: number,
+  targetRatio = ZHOULIA_PHOTO_SLOT_RATIO,
+) {
+  if (imageWidth <= 0 || imageHeight <= 0 || faceHeight <= 0) return 1;
+
+  const imageRatio = imageWidth / imageHeight;
+  const visibleHeightFraction = imageRatio >= targetRatio ? 1 : imageRatio / targetRatio;
+  const faceHeightFraction = faceHeight / imageHeight;
+  const desiredFaceShare = 0.32;
+  return clamp((desiredFaceShare * visibleHeightFraction) / faceHeightFraction, 1, 1.55);
+}
+
+export function getTrainerPhotoFacePlacement(
+  imageWidth: number,
+  imageHeight: number,
+  box: FaceDetection['boundingBox'],
+): TrainerPhotoPlacement {
+  const faceCenterX = box.x + box.width / 2;
+  const faceCenterY = box.y + box.height / 2;
+
+  return {
+    x: clamp(faceCenterX / imageWidth, 0.24, 0.76),
+    y: clamp((faceCenterY + box.height * 0.72) / imageHeight, 0.34, 0.66),
+    zoom: getFaceAwareZoom(imageWidth, imageHeight, box.height),
+    source: 'face-detector',
+  };
+}
+
 export async function resolveTrainerPhotoFocalPoint(src: string): Promise<TrainerPhotoFocalPoint> {
+  const placement = await resolveTrainerPhotoPlacement(src);
+  return { x: placement.x, y: placement.y, source: placement.source };
+}
+
+export async function resolveTrainerPhotoPlacement(src: string): Promise<TrainerPhotoPlacement> {
   const image = await loadImage(src);
-  const fallback = getTrainerPhotoFallback(image.naturalWidth, image.naturalHeight);
+  const fallback = getTrainerPhotoPlacementFallback(image.naturalWidth, image.naturalHeight);
   const FaceDetector = getFaceDetectorConstructor();
   if (!FaceDetector) return fallback;
 
@@ -68,16 +120,7 @@ export async function resolveTrainerPhotoFocalPoint(src: string): Promise<Traine
     const detector = new FaceDetector({ fastMode: true, maxDetectedFaces: 4 });
     const primary = pickPrimaryFace(await detector.detect(image), image.naturalWidth);
     if (!primary) return fallback;
-
-    const box = primary.boundingBox;
-    const faceCenterX = box.x + box.width / 2;
-    const faceCenterY = box.y + box.height / 2;
-
-    return {
-      x: clamp(faceCenterX / image.naturalWidth, 0.28, 0.72),
-      y: clamp((faceCenterY + box.height * 0.65) / image.naturalHeight, 0.34, 0.68),
-      source: 'face-detector',
-    };
+    return getTrainerPhotoFacePlacement(image.naturalWidth, image.naturalHeight, primary.boundingBox);
   } catch {
     return fallback;
   }
