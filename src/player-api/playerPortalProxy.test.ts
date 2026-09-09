@@ -5,14 +5,15 @@ const baseUrl = 'https://player-api.example.test';
 
 describe('proxyPlayerPortalRequest', () => {
   it('forwards the authenticated self read to the canonical upstream without leaking extra headers', async () => {
-    const fetcher = vi.fn(async () =>
-      new Response('{"profile":{"trainerName":"Natan"}}', {
-        status: 200,
-        headers: {
-          'cache-control': 'no-store',
-          'content-type': 'application/json; charset=utf-8',
-        },
-      }),
+    const fetcher = vi.fn(
+      async () =>
+        new Response('{"profile":{"trainerName":"Natan"}}', {
+          status: 200,
+          headers: {
+            'cache-control': 'no-store',
+            'content-type': 'application/json; charset=utf-8',
+          },
+        }),
     );
     const request = new Request('https://hub.example.test/api/hub/player/self', {
       headers: {
@@ -44,15 +45,16 @@ describe('proxyPlayerPortalRequest', () => {
   it('forwards login exchange JSON and preserves the upstream session cookie', async () => {
     const sessionCookie =
       '__Host-pokemon_hub_session=session-token; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=43200';
-    const fetcher = vi.fn(async () =>
-      new Response('{"profile":{"trainerName":"Natan"}}', {
-        status: 200,
-        headers: {
-          'cache-control': 'no-store',
-          'content-type': 'application/json; charset=utf-8',
-          'set-cookie': sessionCookie,
-        },
-      }),
+    const fetcher = vi.fn(
+      async () =>
+        new Response('{"profile":{"trainerName":"Natan"}}', {
+          status: 200,
+          headers: {
+            'cache-control': 'no-store',
+            'content-type': 'application/json; charset=utf-8',
+            'set-cookie': sessionCookie,
+          },
+        }),
     );
     const request = new Request('https://hub.example.test/api/hub/auth/exchange', {
       method: 'POST',
@@ -69,7 +71,10 @@ describe('proxyPlayerPortalRequest', () => {
 
     const [input, init] = fetcher.mock.calls[0] ?? [];
     expect(input).toBe('https://player-api.example.test/v1/hub/auth/exchange');
-    expect(init).toMatchObject({ method: 'POST', body: JSON.stringify({ ticket: 'A'.repeat(43) }) });
+    expect(init).toMatchObject({
+      method: 'POST',
+      body: JSON.stringify({ ticket: 'A'.repeat(43) }),
+    });
     expect(new Headers(init?.headers).get('content-type')).toBe('application/json');
     expect(response.headers.get('set-cookie')).toBe(sessionCookie);
   });
