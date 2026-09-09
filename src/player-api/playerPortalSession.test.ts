@@ -19,9 +19,7 @@ const profile = {
 
 describe('bootstrapPlayerPortalSession', () => {
   it('restores an existing authenticated session when no ticket is supplied', async () => {
-    const fetcher = vi.fn(
-      async () => new Response(JSON.stringify({ profile }), { status: 200 }),
-    );
+    const fetcher = vi.fn(async () => new Response(JSON.stringify({ profile }), { status: 200 }));
 
     await expect(bootstrapPlayerPortalSession(null, fetcher)).resolves.toEqual({
       status: 'authenticated',
@@ -49,9 +47,7 @@ describe('bootstrapPlayerPortalSession', () => {
   });
 
   it('does not fall back to another browser session when the supplied ticket is invalid', async () => {
-    const fetcher = vi.fn(
-      async () => new Response('{"error":"UNAUTHENTICATED"}', { status: 401 }),
-    );
+    const fetcher = vi.fn(async () => new Response('{"error":"UNAUTHENTICATED"}', { status: 401 }));
 
     await expect(bootstrapPlayerPortalSession(ticket, fetcher)).resolves.toEqual({
       status: 'invalid_ticket',
@@ -60,9 +56,7 @@ describe('bootstrapPlayerPortalSession', () => {
   });
 
   it('preserves the explicit unauthenticated state when no browser session exists', async () => {
-    const fetcher = vi.fn(
-      async () => new Response('{"error":"UNAUTHENTICATED"}', { status: 401 }),
-    );
+    const fetcher = vi.fn(async () => new Response('{"error":"UNAUTHENTICATED"}', { status: 401 }));
 
     await expect(bootstrapPlayerPortalSession(null, fetcher)).resolves.toEqual({
       status: 'unauthenticated',
