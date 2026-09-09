@@ -1,11 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import { proxyPlayerPortalRequest } from './playerPortalProxy';
 
+type Fetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+
 const baseUrl = 'https://player-api.example.test';
 
 describe('proxyPlayerPortalRequest', () => {
   it('forwards the authenticated self read to the canonical upstream without leaking extra headers', async () => {
-    const fetcher = vi.fn(
+    const fetcher = vi.fn<Fetcher>(
       async () =>
         new Response('{"profile":{"trainerName":"Natan"}}', {
           status: 200,
@@ -45,7 +47,7 @@ describe('proxyPlayerPortalRequest', () => {
   it('forwards login exchange JSON and preserves the upstream session cookie', async () => {
     const sessionCookie =
       '__Host-pokemon_hub_session=session-token; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=43200';
-    const fetcher = vi.fn(
+    const fetcher = vi.fn<Fetcher>(
       async () =>
         new Response('{"profile":{"trainerName":"Natan"}}', {
           status: 200,
@@ -80,7 +82,7 @@ describe('proxyPlayerPortalRequest', () => {
   });
 
   it('fails closed when no upstream is configured', async () => {
-    const fetcher = vi.fn();
+    const fetcher = vi.fn<Fetcher>();
     const request = new Request('https://hub.example.test/api/hub/player/self');
 
     const response = await proxyPlayerPortalRequest(request, {
@@ -96,7 +98,7 @@ describe('proxyPlayerPortalRequest', () => {
   });
 
   it('returns a generic gateway error when the upstream request fails', async () => {
-    const fetcher = vi.fn(async () => {
+    const fetcher = vi.fn<Fetcher>(async () => {
       throw new Error('private upstream detail');
     });
     const request = new Request('https://hub.example.test/api/hub/player/self');
@@ -113,7 +115,7 @@ describe('proxyPlayerPortalRequest', () => {
   });
 
   it('rejects methods outside the route contract before contacting the upstream', async () => {
-    const fetcher = vi.fn();
+    const fetcher = vi.fn<Fetcher>();
     const request = new Request('https://hub.example.test/api/hub/player/self', {
       method: 'POST',
     });
