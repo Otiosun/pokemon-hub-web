@@ -4,18 +4,17 @@ import {
   emitZhouliaTrainerCard,
   type EmittedTrainerCard,
 } from './trainerCardEmissionRuntime';
+import { markTrainerCardEmitted } from './trainerCardEmissionState';
 import './journey-trainer-card-zhoulia.css';
 
 export function ShareTrainerCardZhoulia({
   profile,
   avatarUrl,
   onClose,
-  onEmitted,
 }: {
   profile: JourneyProfilePreview;
   avatarUrl: string | null;
   onClose: () => void;
-  onEmitted?: () => void;
 }) {
   const [result, setResult] = useState<EmittedTrainerCard | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +48,7 @@ export function ShareTrainerCardZhoulia({
           return;
         }
         setResult(next);
-        onEmitted?.();
+        markTrainerCardEmitted(profile.trainerId);
       })
       .catch((cause) => {
         console.error('Zhoulia Trainer Card emission failed', cause);
@@ -60,7 +59,7 @@ export function ShareTrainerCardZhoulia({
       cancelled = true;
       if (generatedUrl) URL.revokeObjectURL(generatedUrl);
     };
-  }, [avatarUrl, onEmitted, profile, retryKey]);
+  }, [avatarUrl, profile, retryKey]);
 
   const download = () => {
     if (!result) return;
