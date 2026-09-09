@@ -1,29 +1,72 @@
 import { describe, expect, it } from 'vitest';
-import { OWNED_POKEMON_PREVIEW } from '../collection/ownedPokemonPreview';
-import { countRegisteredSpeciesPreview, getJourneyProfilePreview } from './journeyProfilePreview';
+import type { PlayerPortalProfile } from '../../player-api/playerPortalClient';
+import { createJourneyProfileView } from './journeyProfilePreview';
 
-describe('journey profile preview', () => {
-  it('derives collection totals instead of duplicating arbitrary profile numbers', () => {
-    const profile = getJourneyProfilePreview();
-    expect(profile.ownedPokemonCount).toBe(OWNED_POKEMON_PREVIEW.length);
-    expect(profile.registeredSpeciesCount).toBe(countRegisteredSpeciesPreview());
-    expect(profile.registeredSpeciesCount).toBe(36);
-  });
+const realProfile: PlayerPortalProfile = {
+  playerId: '11111111-1111-4111-8111-111111111111',
+  playerStatus: 'ACTIVE',
+  trainerName: 'Natan',
+  originRegionId: '22222222-2222-4222-8222-222222222222',
+  locale: 'pt-BR',
+  trainerLevel: 7,
+  progressionPoints: '1234',
+  onboardingState: 'COMPLETE',
+  contentReleaseId: '33333333-3333-4333-8333-333333333333',
+  rulesetId: '44444444-4444-4444-8444-444444444444',
+  starterPokemonInstanceId: '55555555-5555-4555-8555-555555555555',
+  team: [
+    {
+      pokemonInstanceId: '66666666-6666-4666-8666-666666666666',
+      formId: '77777777-7777-4777-8777-777777777777',
+      level: 12,
+      currentHp: 31,
+      slotNo: 1,
+    },
+    {
+      pokemonInstanceId: '88888888-8888-4888-8888-888888888888',
+      formId: '99999999-9999-4999-8999-999999999999',
+      level: 9,
+      currentHp: 24,
+      slotNo: 2,
+    },
+  ],
+};
 
-  it('keeps unsupported personal presentation fields empty', () => {
-    expect(getJourneyProfilePreview().personal).toEqual({
-      age: null,
-      height: null,
-      appearance: null,
-      bio: null,
+describe('createJourneyProfileView', () => {
+  it('uses authoritative trainer/progression data without inventing unsupported world data', () => {
+    const profile = createJourneyProfileView(realProfile);
+
+    expect(profile).toMatchObject({
+      trainerName: 'Natan',
+      trainerTitle: 'Treinador · Nv. 7',
+      trainerId: '—',
+      originRegion: 'Não disponível',
+      currentLocation: 'Não disponível',
+      leadPokemon: null,
+      badges: [],
+      ownedPokemonCount: null,
+      registeredSpeciesCount: null,
+      teamSize: 2,
+      progressionPoints: '1234',
     });
+    expect(JSON.stringify(profile)).not.toContain('Whatever');
+    expect(JSON.stringify(profile)).not.toContain('Kanto');
+    expect(JSON.stringify(profile)).not.toContain('Route 1');
   });
 
-  it('exposes trainer-license identity without fabricating badge progress', () => {
-    const profile = getJourneyProfilePreview();
-    expect(profile.trainerTitle).toBe('Treinador iniciante');
-    expect(profile.trainerId).toBe('KNT-028419');
-    expect(profile.badges).toHaveLength(8);
-    expect(profile.badges.every((badge) => badge.earned === false)).toBe(true);
+  it('renders an honest disconnected shell instead of falling back to preview trainer data', () => {
+    const profile = createJourneyProfileView(null);
+
+    expect(profile).toMatchObject({
+      trainerName: 'Treinador',
+      trainerTitle: 'Registro não conectado',
+      trainerId: '—',
+      originRegion: 'Não disponível',
+      currentLocation: 'Não disponível',
+      leadPokemon: null,
+      badges: [],
+      teamSize: null,
+      progressionPoints: null,
+    });
   });
 });
