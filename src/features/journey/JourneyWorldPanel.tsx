@@ -161,7 +161,7 @@ export function JourneyWorldPanel({ enabled }: { enabled: boolean }) {
         </div>
       ) : null}
 
-      <div className="journey-world-connections" role="group" aria-label="Rotas disponíveis">
+      <fieldset className="journey-world-connections" aria-label="Rotas disponíveis">
         <div className="journey-world-connections-head">
           <span>ROTAS CONECTADAS</span>
           <small>REV. {location.revision}</small>
@@ -200,7 +200,7 @@ export function JourneyWorldPanel({ enabled }: { enabled: boolean }) {
             );
           })
         )}
-      </div>
+      </fieldset>
     </section>
   );
 }
