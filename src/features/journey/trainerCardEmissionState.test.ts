@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { JourneyProfilePreview } from './journeyProfilePreview';
 import {
+  getTrainerCardActionLabel,
   getTrainerCardEmissionReadiness,
   mapProfileToZhouliaTrainerCardFields,
 } from './trainerCardEmissionState';
@@ -68,5 +69,11 @@ describe('Trainer Card emission readiness', () => {
       ready: true,
       missing: [],
     });
+  });
+
+  it('uses Emitir only before the first Zhoulia issuance and Ver afterwards', () => {
+    expect(getTrainerCardActionLabel({ isZhoulia: true, hasEmitted: false })).toBe('EMITIR TRAINER CARD');
+    expect(getTrainerCardActionLabel({ isZhoulia: true, hasEmitted: true })).toBe('VER TRAINER CARD');
+    expect(getTrainerCardActionLabel({ isZhoulia: false, hasEmitted: false })).toBe('VER TRAINER CARD');
   });
 });
