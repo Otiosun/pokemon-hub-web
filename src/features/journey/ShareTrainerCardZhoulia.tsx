@@ -107,7 +107,7 @@ export function ShareTrainerCardZhoulia({
 
           <div className="journey-zhoulia-card-title">TRAINER CARD</div>
 
-          <div className="journey-zhoulia-card-region" role="group" aria-label={`Liga de ${profile.originRegion}`}>
+          <div className="journey-zhoulia-card-region">
             <strong>{profile.originRegion.toUpperCase()}</strong>
             <span aria-hidden="true" />
             <ZhouliaEPrimeMark className="journey-zhoulia-card-region-mark" />
@@ -125,7 +125,7 @@ export function ShareTrainerCardZhoulia({
           <TrainerPhoto src={avatarUrl} />
 
           {profile.leadPokemon ? (
-            <div className="journey-zhoulia-card-partner" role="group" aria-label={`Parceiro ${profile.leadPokemon.nickname}`}>
+            <div className="journey-zhoulia-card-partner">
               <PokemonAssetImage
                 dex={profile.leadPokemon.dex}
                 assetRole="home-artwork"
@@ -137,7 +137,7 @@ export function ShareTrainerCardZhoulia({
             </div>
           ) : null}
 
-          <div className="journey-zhoulia-card-badges" role="group" aria-label={`Insígnias de ${profile.originRegion}`}>
+          <div className="journey-zhoulia-card-badges">
             {profile.badges.slice(0, 8).map((badge) => (
               <span
                 className={`journey-zhoulia-card-badge${badge.earned ? ' is-earned' : ''}`}
