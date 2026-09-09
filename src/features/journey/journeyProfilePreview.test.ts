@@ -72,10 +72,14 @@ describe('createJourneyProfileView', () => {
       ...realProfile,
       team: [
         {
-          ...realProfile.team[0],
+          pokemonInstanceId: '66666666-6666-4666-8666-666666666666',
+          formId: '77777777-7777-4777-8777-777777777777',
           displayName: null,
           nationalDex: null,
           typeNames: [],
+          level: 12,
+          currentHp: 31,
+          slotNo: 1,
         },
       ],
     });
