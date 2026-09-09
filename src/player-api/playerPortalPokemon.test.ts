@@ -1,8 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import {
-  getPlayerPortalPokemon,
-  type PlayerPortalPokemon,
-} from './playerPortalClient';
+import { getPlayerPortalPokemon, type PlayerPortalPokemon } from './playerPortalClient';
 
 const pokemon: PlayerPortalPokemon = {
   pokemonInstanceId: '11111111-1111-4111-8111-111111111111',
