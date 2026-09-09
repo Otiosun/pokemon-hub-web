@@ -41,38 +41,46 @@
   white-space: nowrap;
 }
 
+/*
+ * Right header is positioned against the 1448×1086 AI master instead of
+ * relying on a grid. This prevents ZHOULIA / divider / E from pushing each
+ * other when the card scales down.
+ */
 .journey-zhoulia-card-region {
   position: absolute;
   z-index: 4;
-  top: 5.8%;
-  right: 4.35%;
-  width: 29.1%;
-  height: 11.8%;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 0.16cqw 7.05cqw;
-  align-items: center;
-  gap: 1.45cqw;
+  inset: 0;
+  pointer-events: none;
 }
 
 .journey-zhoulia-card-region strong {
-  min-width: 0;
+  position: absolute;
+  top: 11.15%;
+  left: 67.35%;
+  width: 18.1%;
   color: #153f6b;
-  font: 750 2.92cqw/1 'IBM Plex Sans', system-ui, sans-serif;
-  letter-spacing: 0.3em;
-  text-align: right;
+  font: 760 3.08cqw/0.95 'IBM Plex Sans', system-ui, sans-serif;
+  letter-spacing: 0.19em;
+  text-align: center;
   white-space: nowrap;
 }
 
 .journey-zhoulia-card-region > span {
+  position: absolute;
+  top: 8.78%;
+  left: 86.15%;
   width: 0.16cqw;
-  height: 6.4cqw;
+  height: 8.45%;
   background: #154b76;
   opacity: 0.95;
 }
 
 .journey-zhoulia-card-region-mark {
-  width: 7.05cqw;
-  height: 7.8cqw;
+  position: absolute;
+  top: 7.72%;
+  left: 89.05%;
+  width: 7.15%;
+  height: 10.7%;
   display: block;
   object-fit: contain;
 }
@@ -117,15 +125,29 @@
   font-size: 2.36cqw;
 }
 
+/*
+ * Exact photo aperture measured from the approved 4:3 reference/master.
+ * The image is always cover-fitted, then clipped to the beveled aperture.
+ */
 .journey-zhoulia-card-photo {
   position: absolute;
   z-index: 3;
-  top: 20.8%;
-  left: 57.65%;
-  width: 27.55%;
-  height: 44.85%;
+  top: 20.139%;
+  left: 55.925%;
+  width: 29.622%;
+  height: 45.747%;
   overflow: hidden;
-  clip-path: polygon(4.5% 0, 95.5% 0, 100% 4.5%, 100% 89.5%, 88% 100%, 3% 100%, 0 97%, 0 4%);
+  clip-path: polygon(
+    4.39% 0,
+    96.48% 0,
+    100% 3.04%,
+    100% 90.89%,
+    89.45% 100%,
+    2.86% 100%,
+    0 97.53%,
+    0 2.85%
+  );
+  background: rgba(204, 224, 239, 0.3);
 }
 
 .journey-zhoulia-card-photo img {
@@ -133,16 +155,17 @@
   height: 100%;
   display: block;
   object-fit: cover;
-  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 .journey-zhoulia-card-partner {
   position: absolute;
   z-index: 5;
-  top: 46%;
-  right: 2.6%;
-  width: 12.2%;
-  height: 23.1%;
+  top: 45.57%;
+  right: 3.32%;
+  width: 11.39%;
+  height: 23.87%;
   display: grid;
   place-items: end center;
   pointer-events: none;
@@ -162,12 +185,17 @@
   filter: drop-shadow(0 0.55cqw 0.7cqw rgba(23, 45, 63, 0.18));
 }
 
+/*
+ * Badge cadence is deliberately asymmetric: it fills the rail without
+ * crowding the right corner decoration. These endpoints match the approved
+ * fine-tuning pass instead of centering eight slots in a narrower strip.
+ */
 .journey-zhoulia-card-badges {
   position: absolute;
   z-index: 5;
-  left: 8.6%;
-  right: 8.6%;
-  bottom: 8.55%;
+  left: 5.27%;
+  right: 8.38%;
+  bottom: 12.43%;
   height: 12.8%;
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
