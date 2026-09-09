@@ -107,9 +107,11 @@ function isPlayerPortalTeamSlot(value: unknown): value is PlayerPortalTeamSlot {
   return (
     isUuid(value.pokemonInstanceId) &&
     isUuid(value.formId) &&
+    typeof value.level === 'number' &&
     Number.isInteger(value.level) &&
     value.level >= 1 &&
     isNonNegativeInteger(value.currentHp) &&
+    typeof value.slotNo === 'number' &&
     Number.isInteger(value.slotNo) &&
     value.slotNo >= 1 &&
     value.slotNo <= 6
