@@ -1,6 +1,8 @@
 import type { JourneyProfilePreview } from './journeyProfilePreview';
 import type { ZhouliaTrainerCardFields } from './trainerCardZhouliaCompositor';
 
+export const TRAINER_CARD_EMITTED_EVENT = 'pokemon-hub:trainer-card:zhoulia:emitted';
+
 export type TrainerCardMissingField = 'name' | 'title' | 'feat' | 'partner' | 'idNo' | 'photo';
 
 export type TrainerCardEmissionReadiness = {
@@ -10,6 +12,10 @@ export type TrainerCardEmissionReadiness = {
 
 function normalized(value: string | null | undefined) {
   return value?.trim() ?? '';
+}
+
+function safeKeyPart(value: string) {
+  return value.trim().replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'unknown';
 }
 
 export function mapProfileToZhouliaTrainerCardFields(profile: JourneyProfilePreview): ZhouliaTrainerCardFields {
@@ -48,4 +54,19 @@ export function getTrainerCardActionLabel({
 }) {
   if (!isZhoulia) return 'VER TRAINER CARD';
   return hasEmitted ? 'VER TRAINER CARD' : 'EMITIR TRAINER CARD';
+}
+
+export function getTrainerCardEmissionStorageKey(trainerId: string) {
+  return `pokemon-hub:trainer-card:zhoulia:emitted:${safeKeyPart(trainerId)}`;
+}
+
+export function hasTrainerCardBeenEmitted(trainerId: string) {
+  if (typeof window === 'undefined') return false;
+  return window.localStorage.getItem(getTrainerCardEmissionStorageKey(trainerId)) === '1';
+}
+
+export function markTrainerCardEmitted(trainerId: string) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(getTrainerCardEmissionStorageKey(trainerId), '1');
+  window.dispatchEvent(new CustomEvent(TRAINER_CARD_EMITTED_EVENT, { detail: { trainerId } }));
 }
