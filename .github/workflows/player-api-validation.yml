@@ -8,6 +8,7 @@ on:
       - "src/player-api/**"
       - "src/features/journey/**"
       - "src/features/team/**"
+      - "src/vite-env.d.ts"
       - "api/**"
       - "tsconfig.json"
       - "vercel.json"
@@ -52,7 +53,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          pnpm exec biome format src/player-api api tsconfig.json vercel.json 2>&1 | tee /tmp/player-api-format.log
+          pnpm exec biome format src/player-api src/vite-env.d.ts api tsconfig.json vercel.json 2>&1 | tee /tmp/player-api-format.log
 
       - name: Upload format diagnostics
         if: always() && steps.format_check.outcome == 'failure'
