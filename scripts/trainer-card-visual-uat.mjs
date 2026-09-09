@@ -47,6 +47,19 @@ function buildBadgeDataUrl(index) {
   return canvas.toDataURL('image/png');
 }
 
+async function readPngSize(blob) {
+  const header = new Uint8Array(await blob.slice(0, 24).arrayBuffer());
+  const pngSignature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+  if (header.length < 24 || !pngSignature.every((byte, index) => header[index] === byte)) {
+    throw new Error('uat-output-is-not-png');
+  }
+  const view = new DataView(header.buffer, header.byteOffset, header.byteLength);
+  return {
+    width: view.getUint32(16, false),
+    height: view.getUint32(20, false),
+  };
+}
+
 const profile = {
   trainerName: 'Enzo',
   trainerTitle: 'Explorador de Fronteiras',
@@ -92,17 +105,17 @@ try {
     profile,
     avatarUrl: buildPortraitDataUrl(),
   });
+  const size = await readPngSize(result.pngBlob);
 
-  card.src = result.pngUrl;
-  await card.decode();
-
-  if (card.naturalWidth !== 1448 || card.naturalHeight !== 1086) {
-    throw new Error(`uat-invalid-output-size-${card.naturalWidth}x${card.naturalHeight}`);
+  if (size.width !== 1448 || size.height !== 1086) {
+    throw new Error(`uat-invalid-output-size-${size.width}x${size.height}`);
   }
 
-  status.textContent = `READY ${card.naturalWidth}x${card.naturalHeight}`;
+  card.src = result.pngUrl;
+  status.textContent = `READY ${size.width}x${size.height}`;
   document.documentElement.dataset.uatReady = 'true';
   document.documentElement.dataset.uatDownloadName = result.downloadName;
+  void card.decode().catch(() => undefined);
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
   status.textContent = `ERROR ${message}`;
