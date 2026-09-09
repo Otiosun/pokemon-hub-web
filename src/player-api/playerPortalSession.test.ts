@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { PlayerPortalFetcher } from './playerPortalClient';
 import { bootstrapPlayerPortalSession } from './playerPortalSession';
 
 const ticket = 'A'.repeat(43);
@@ -17,9 +18,13 @@ const profile = {
   team: [],
 };
 
+function typedFetcher(responseFactory: () => Response) {
+  return vi.fn<PlayerPortalFetcher>(async (_input, _init) => responseFactory());
+}
+
 describe('bootstrapPlayerPortalSession', () => {
   it('restores an existing authenticated session when no ticket is supplied', async () => {
-    const fetcher = vi.fn(async () => new Response(JSON.stringify({ profile }), { status: 200 }));
+    const fetcher = typedFetcher(() => new Response(JSON.stringify({ profile }), { status: 200 }));
 
     await expect(bootstrapPlayerPortalSession(null, fetcher)).resolves.toEqual({
       status: 'authenticated',
@@ -32,8 +37,8 @@ describe('bootstrapPlayerPortalSession', () => {
 
   it('uses a supplied ticket instead of probing a potentially unrelated existing session', async () => {
     const sessionExpiresAt = '2026-09-10T00:00:00.000Z';
-    const fetcher = vi.fn(
-      async () => new Response(JSON.stringify({ profile, sessionExpiresAt }), { status: 200 }),
+    const fetcher = typedFetcher(
+      () => new Response(JSON.stringify({ profile, sessionExpiresAt }), { status: 200 }),
     );
 
     await expect(bootstrapPlayerPortalSession(ticket, fetcher)).resolves.toEqual({
@@ -47,7 +52,9 @@ describe('bootstrapPlayerPortalSession', () => {
   });
 
   it('does not fall back to another browser session when the supplied ticket is invalid', async () => {
-    const fetcher = vi.fn(async () => new Response('{"error":"UNAUTHENTICATED"}', { status: 401 }));
+    const fetcher = typedFetcher(
+      () => new Response('{"error":"UNAUTHENTICATED"}', { status: 401 }),
+    );
 
     await expect(bootstrapPlayerPortalSession(ticket, fetcher)).resolves.toEqual({
       status: 'invalid_ticket',
@@ -56,7 +63,9 @@ describe('bootstrapPlayerPortalSession', () => {
   });
 
   it('preserves the explicit unauthenticated state when no browser session exists', async () => {
-    const fetcher = vi.fn(async () => new Response('{"error":"UNAUTHENTICATED"}', { status: 401 }));
+    const fetcher = typedFetcher(
+      () => new Response('{"error":"UNAUTHENTICATED"}', { status: 401 }),
+    );
 
     await expect(bootstrapPlayerPortalSession(null, fetcher)).resolves.toEqual({
       status: 'unauthenticated',
