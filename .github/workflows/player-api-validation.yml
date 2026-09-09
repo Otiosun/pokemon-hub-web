@@ -5,12 +5,12 @@ on:
     branches:
       - main
     paths:
-      - 'src/player-api/**'
-      - 'src/features/journey/**'
-      - 'src/features/team/**'
-      - 'api/**'
-      - 'vercel.json'
-      - '.github/workflows/player-api-validation.yml'
+      - "src/player-api/**"
+      - "src/features/journey/**"
+      - "src/features/team/**"
+      - "api/**"
+      - "vercel.json"
+      - ".github/workflows/player-api-validation.yml"
 
 concurrency:
   group: player-api-validation-${{ github.event.pull_request.number }}
