@@ -2,6 +2,7 @@ import {
   PHOTO_CLIP_POLYGON_MASTER,
   computeTrainerPhotoCrop,
   cropToTrainerPhotoPlacement,
+  type TrainerPhotoCropInput,
   type TrainerPhotoFace,
   type TrainerPhotoOverride,
 } from './trainerCardPhotoCrop';
@@ -108,15 +109,17 @@ function buildBadges(badgeHrefs: readonly (string | null | undefined)[]) {
 }
 
 export function buildZhouliaTrainerCardSvg(input: ZhouliaTrainerCardCompositorInput) {
-  const crop = computeTrainerPhotoCrop({
+  const cropInput: TrainerPhotoCropInput = {
     width: input.photo.width,
     height: input.photo.height,
     faces: input.photo.faces ? [...input.photo.faces] : [],
-    subjectBox: input.photo.subjectBox,
-    subjectCenter: input.photo.subjectCenter,
-    subjectConcentration: input.photo.subjectConcentration,
-    override: input.photo.override,
-  });
+  };
+  if (input.photo.subjectBox !== undefined) cropInput.subjectBox = input.photo.subjectBox;
+  if (input.photo.subjectCenter !== undefined) cropInput.subjectCenter = input.photo.subjectCenter;
+  if (input.photo.subjectConcentration !== undefined) cropInput.subjectConcentration = input.photo.subjectConcentration;
+  if (input.photo.override !== undefined) cropInput.override = input.photo.override;
+
+  const crop = computeTrainerPhotoCrop(cropInput);
   const placement = cropToTrainerPhotoPlacement(input.photo.width, input.photo.height, crop.crop);
   const baseHref = escapeXml(input.baseHref ?? ZHOULIA_CARD_BASE_HREF);
 
