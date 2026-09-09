@@ -25,23 +25,26 @@ const profile = {
 };
 
 describe('getPlayerPortalSelf', () => {
-  it('reads the current player through the same-origin BFF with credentials included', async () => {
-    const fetcher = vi.fn(async () =>
-      new Response(JSON.stringify({ profile }), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      }),
-    );
+  it(
+    'reads the current player through the same-origin BFF with credentials included',
+    async () => {
+      const fetcher = vi.fn(async () =>
+        new Response(JSON.stringify({ profile }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
 
-    const result = await getPlayerPortalSelf(fetcher);
+      const result = await getPlayerPortalSelf(fetcher);
 
-    expect(fetcher).toHaveBeenCalledWith('/api/hub/player/self', {
-      method: 'GET',
-      credentials: 'include',
-      headers: { accept: 'application/json' },
-    });
-    expect(result).toEqual({ status: 'authenticated', profile });
-  });
+      expect(fetcher).toHaveBeenCalledWith('/api/hub/player/self', {
+        method: 'GET',
+        credentials: 'include',
+        headers: { accept: 'application/json' },
+      });
+      expect(result).toEqual({ status: 'authenticated', profile });
+    },
+  );
 
   it(
     'returns an explicit unauthenticated state for 401 without fabricating profile data',
