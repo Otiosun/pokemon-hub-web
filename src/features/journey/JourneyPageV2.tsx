@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { HubModuleHeader } from '../../components/HubModuleHeader';
+import type { PlayerPortalBrowserSessionState } from '../../player-api/playerPortalBrowserSession';
 import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import {
-  getJourneyProfilePreview,
+  createJourneyProfileView,
   type JourneyBadgePreview,
 } from './journeyProfilePreview';
 import { ShareTrainerCardV2 } from './ShareTrainerCardV2';
@@ -103,47 +104,112 @@ function BadgeStrip({ badges }: { badges: JourneyBadgePreview[] }) {
           title={badge.name}
         >
           <span className={`journey-badge-shape badge-${badge.key}`} aria-hidden="true" />
-          <span className="journey-badge-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+          <span className="journey-badge-index" aria-hidden="true">
+            {String(index + 1).padStart(2, '0')}
+          </span>
         </div>
       ))}
     </div>
   );
 }
 
-export function JourneyPageV2() {
-  const profile = getJourneyProfilePreview();
+function sessionPresentation(session: PlayerPortalBrowserSessionState) {
+  switch (session.status) {
+    case 'authenticated':
+      return {
+        metaLabel: 'NÍVEL',
+        metaValue: String(session.profile.trainerLevel),
+        subtitle: `Treinador · Nv. ${session.profile.trainerLevel}`,
+      };
+    case 'loading':
+      return { metaLabel: 'STATUS', metaValue: 'CONECTANDO', subtitle: 'Conectando registro...' };
+    case 'unauthenticated':
+      return {
+        metaLabel: 'ACESSO',
+        metaValue: 'NÃO CONECTADO',
+        subtitle: 'Abra seu link do Hub enviado pelo Rotom',
+      };
+    case 'invalid_ticket':
+      return {
+        metaLabel: 'ACESSO',
+        metaValue: 'LINK INVÁLIDO',
+        subtitle: 'Este link expirou ou já foi utilizado',
+      };
+    case 'ineligible':
+      return {
+        metaLabel: 'ACESSO',
+        metaValue: 'INDISPONÍVEL',
+        subtitle: 'Seu registro ainda não pode acessar o Hub',
+      };
+    case 'unavailable':
+      return {
+        metaLabel: 'STATUS',
+        metaValue: 'INDISPONÍVEL',
+        subtitle: 'O Hub não conseguiu carregar seu registro agora',
+      };
+  }
+}
+
+export function JourneyPageV2({
+  playerPortalSession,
+}: {
+  playerPortalSession: PlayerPortalBrowserSessionState;
+}) {
+  const authoritativeProfile =
+    playerPortalSession.status === 'authenticated' ? playerPortalSession.profile : null;
+  const profile = createJourneyProfileView(authoritativeProfile);
+  const presentation = sessionPresentation(playerPortalSession);
   const cover = useImagePreview('cover');
   const avatar = useImagePreview('avatar');
   const [editing, setEditing] = useState(false);
   const [showShareCard, setShowShareCard] = useState(false);
   const imageError = cover.error ?? avatar.error;
+  const canEditProfileImages = false;
 
   return (
     <main className="journey-page">
-      <HubModuleHeader module="journey" metaLabel="REGIÃO" metaValue={profile.originRegion.toUpperCase()} />
+      <HubModuleHeader
+        module="journey"
+        metaLabel={presentation.metaLabel}
+        metaValue={presentation.metaValue}
+      />
 
       <div className="journey-profile-shell">
         <section className="journey-license" aria-labelledby="journey-trainer-name">
           <div className="journey-license-rail" aria-hidden="true">
-            <span>KNT</span>
+            <span>PKM</span>
           </div>
 
           <div className="journey-license-head">
             <div>
-              <strong>{profile.originRegion.toUpperCase()} LEAGUE</strong>
+              <strong>POKÉMON LEAGUE</strong>
               <small>TRAINER REGISTRATION LICENSE</small>
             </div>
-            <div className="journey-license-id">{profile.trainerId}</div>
-            <button className="journey-edit-toggle" type="button" onClick={() => setEditing((value) => !value)}>
-              {editing ? 'CONCLUIR' : 'EDITAR'}
-            </button>
+            <div className="journey-license-id">ID PÚBLICO {profile.trainerId}</div>
+            {canEditProfileImages ? (
+              <button
+                className="journey-edit-toggle"
+                type="button"
+                onClick={() => setEditing((value) => !value)}
+              >
+                {editing ? 'CONCLUIR' : 'EDITAR'}
+              </button>
+            ) : null}
           </div>
 
           <div className={`journey-cover${cover.url ? ' has-image' : ''}`}>
-            {cover.url ? <img className="journey-cover-image" src={cover.url} alt="Capa personalizada do treinador" /> : null}
+            {cover.url ? (
+              <img
+                className="journey-cover-image"
+                src={cover.url}
+                alt="Capa personalizada do treinador"
+              />
+            ) : null}
             <span className="journey-cover-mark" aria-hidden="true" />
-            <span className="journey-cover-code" aria-hidden="true">KNT</span>
-            {editing ? (
+            <span className="journey-cover-code" aria-hidden="true">
+              PKM
+            </span>
+            {editing && canEditProfileImages ? (
               <label className="journey-cover-edit" title="Alterar capa">
                 <EditIcon />
                 <span>ALTERAR BANNER</span>
@@ -163,7 +229,7 @@ export function JourneyPageV2() {
           <div className="journey-identity">
             <div className="journey-avatar-wrap">
               <TrainerAvatar avatarUrl={avatar.url} />
-              {editing ? (
+              {editing && canEditProfileImages ? (
                 <label className="journey-avatar-edit" title="Alterar foto de perfil">
                   <EditIcon />
                   <input
@@ -181,13 +247,13 @@ export function JourneyPageV2() {
 
             <div className="journey-identity-copy">
               <h1 id="journey-trainer-name">{profile.trainerName}</h1>
-              <span className="journey-trainer-title">— {profile.trainerTitle}</span>
+              <span className="journey-trainer-title">— {presentation.subtitle}</span>
             </div>
 
             <div className="journey-league-seal" aria-hidden="true">
-              <span>KANTO</span>
+              <span>POKÉMON</span>
               <i />
-              <small>POKÉMON LEAGUE</small>
+              <small>TRAINER REGISTRY</small>
             </div>
           </div>
 
@@ -226,30 +292,46 @@ export function JourneyPageV2() {
             </a>
           ) : null}
 
-          <section className="journey-badges" aria-labelledby="journey-badges-title">
-            <div className="journey-section-heading">
-              <strong id="journey-badges-title">INSÍGNIAS DE {profile.originRegion.toUpperCase()}</strong>
-              <span>{profile.badges.length} GINÁSIOS</span>
-            </div>
-            <BadgeStrip badges={profile.badges} />
-          </section>
+          {profile.badges.length > 0 ? (
+            <section className="journey-badges" aria-labelledby="journey-badges-title">
+              <div className="journey-section-heading">
+                <strong id="journey-badges-title">INSÍGNIAS</strong>
+                <span>{profile.badges.length} REGISTROS</span>
+              </div>
+              <BadgeStrip badges={profile.badges} />
+            </section>
+          ) : null}
 
-          <button className="journey-share-action" type="button" onClick={() => setShowShareCard(true)}>
-            <span className="journey-share-action-icon"><CardIcon /></span>
-            <span className="journey-share-action-copy">
-              <strong>VER TRAINER CARD</strong>
-              <small>Artefato horizontal para compartilhar</small>
-            </span>
-            <span className="journey-share-action-chevron"><ChevronIcon /></span>
-          </button>
+          {profile.publicVerificationId ? (
+            <button
+              className="journey-share-action"
+              type="button"
+              onClick={() => setShowShareCard(true)}
+            >
+              <span className="journey-share-action-icon">
+                <CardIcon />
+              </span>
+              <span className="journey-share-action-copy">
+                <strong>VER TRAINER CARD</strong>
+                <small>Artefato horizontal para compartilhar</small>
+              </span>
+              <span className="journey-share-action-chevron">
+                <ChevronIcon />
+              </span>
+            </button>
+          ) : null}
 
           <div className="journey-license-footer">
-            <span>ISSUED BY {profile.originRegion.toUpperCase()} LEAGUE</span>
+            <span>POKÉMON TRAINER REGISTRY</span>
             <span>{profile.trainerId}</span>
           </div>
         </section>
 
-        {imageError ? <p className="journey-image-error" role="alert">{imageError}</p> : null}
+        {imageError ? (
+          <p className="journey-image-error" role="alert">
+            {imageError}
+          </p>
+        ) : null}
 
         <details className="journey-profile-details">
           <summary>
@@ -257,13 +339,17 @@ export function JourneyPageV2() {
               <strong>Sobre o treinador</strong>
               <small>Identidade pessoal</small>
             </span>
-            <span className="journey-details-chevron"><ChevronIcon /></span>
+            <span className="journey-details-chevron">
+              <ChevronIcon />
+            </span>
           </summary>
           <div className="journey-details-body">
             <dl className="journey-about-grid">
               <div>
                 <dt>Idade</dt>
-                <dd>{profile.personal.age === null ? 'Não informada' : `${profile.personal.age} anos`}</dd>
+                <dd>
+                  {profile.personal.age === null ? 'Não informada' : `${profile.personal.age} anos`}
+                </dd>
               </div>
               <div>
                 <dt>Altura</dt>
@@ -271,7 +357,9 @@ export function JourneyPageV2() {
               </div>
               <div className="journey-about-wide">
                 <dt>Aparência atual</dt>
-                <dd>{displayValue(profile.personal.appearance, 'Nenhuma aparência descrita ainda.')}</dd>
+                <dd>
+                  {displayValue(profile.personal.appearance, 'Nenhuma aparência descrita ainda.')}
+                </dd>
               </div>
               <div className="journey-about-wide">
                 <dt>Descrição</dt>
@@ -287,7 +375,9 @@ export function JourneyPageV2() {
               <strong>Registro do treinador</strong>
               <small>Registro oficial da Liga</small>
             </span>
-            <span className="journey-details-chevron"><ChevronIcon /></span>
+            <span className="journey-details-chevron">
+              <ChevronIcon />
+            </span>
           </summary>
           <div className="journey-details-body">
             <dl className="journey-register-list">
@@ -300,12 +390,12 @@ export function JourneyPageV2() {
                 <dd>{profile.currentLocation}</dd>
               </div>
               <div>
-                <dt>Pokémon possuídos</dt>
-                <dd>{profile.ownedPokemonCount}</dd>
+                <dt>Time ativo</dt>
+                <dd>{profile.teamSize ?? '—'}</dd>
               </div>
               <div>
-                <dt>Espécies registradas</dt>
-                <dd>{profile.registeredSpeciesCount}</dd>
+                <dt>Pontos de progressão</dt>
+                <dd>{profile.progressionPoints ?? '—'}</dd>
               </div>
             </dl>
           </div>

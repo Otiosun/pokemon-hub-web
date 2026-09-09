@@ -11,6 +11,7 @@ import {
 } from './navigation/hubNavigationSession';
 import { resolveProductRoute } from './navigation/productIntegrity';
 import { preloadProductRoute } from './navigation/productRoutePreload';
+import { usePlayerPortalBrowserSession } from './player-api/playerPortalBrowserSession';
 import './hub-route-fallback-v3.css';
 
 const JourneyPage = lazy(() =>
@@ -220,6 +221,7 @@ function warmAnchorTarget(target: EventTarget | null) {
 export function App() {
   const [path, setPath] = useState(getPath);
   const [hubDestinations, setHubDestinations] = useState(readHubDestinations);
+  const playerPortalSession = usePlayerPortalBrowserSession();
 
   useEffect(() => {
     if (window.location.pathname === '/') {
@@ -376,7 +378,7 @@ export function App() {
     return (
       <HubFrame active="journey" destinations={hubDestinations}>
         <Suspense fallback={<RouteFallback module="journey" label="RETOMANDO JORNADA" />}>
-          <JourneyPage />
+          <JourneyPage playerPortalSession={playerPortalSession} />
         </Suspense>
       </HubFrame>
     );
