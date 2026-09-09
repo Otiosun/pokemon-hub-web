@@ -396,7 +396,7 @@ export function App() {
     return (
       <HubFrame active="box" destinations={hubDestinations}>
         <Suspense fallback={<RouteFallback module="box" label="ABRINDO TIME" />}>
-          <TeamPage />
+          <TeamPage playerPortalSession={playerPortalSession} />
         </Suspense>
       </HubFrame>
     );
