@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import type { JourneyProfilePreview } from './journeyProfilePreview';
-import { resolveTrainerPhotoFocalPoint, type TrainerPhotoFocalPoint } from './trainerCardPhotoFocal';
+import {
+  getTrainerPhotoPlacementFallback,
+  resolveTrainerPhotoPlacement,
+  type TrainerPhotoPlacement,
+} from './trainerCardPhotoFocal';
 import { ZhouliaEPrimeMark } from './zhouliaLeagueVisualKit';
 import './journey-trainer-card-zhoulia.css';
 
-const DEFAULT_FOCAL: TrainerPhotoFocalPoint = {
-  x: 0.5,
-  y: 0.5,
-  source: 'orientation-fallback',
-};
+const DEFAULT_PLACEMENT: TrainerPhotoPlacement = getTrainerPhotoPlacementFallback(0, 0);
 
 function CloseIcon() {
   return (
@@ -20,21 +20,23 @@ function CloseIcon() {
 }
 
 function TrainerPhoto({ src }: { src: string | null }) {
-  const [focal, setFocal] = useState<TrainerPhotoFocalPoint>(DEFAULT_FOCAL);
+  const [placement, setPlacement] = useState<TrainerPhotoPlacement>(DEFAULT_PLACEMENT);
 
   useEffect(() => {
     let cancelled = false;
-    setFocal(DEFAULT_FOCAL);
-    if (!src) return () => {
-      cancelled = true;
-    };
+    setPlacement(DEFAULT_PLACEMENT);
+    if (!src) {
+      return () => {
+        cancelled = true;
+      };
+    }
 
-    resolveTrainerPhotoFocalPoint(src)
+    resolveTrainerPhotoPlacement(src)
       .then((next) => {
-        if (!cancelled) setFocal(next);
+        if (!cancelled) setPlacement(next);
       })
       .catch(() => {
-        if (!cancelled) setFocal(DEFAULT_FOCAL);
+        if (!cancelled) setPlacement(DEFAULT_PLACEMENT);
       });
 
     return () => {
@@ -44,12 +46,22 @@ function TrainerPhoto({ src }: { src: string | null }) {
 
   if (!src) return null;
 
+  const position = `${placement.x * 100}% ${placement.y * 100}%`;
+
   return (
-    <div className="journey-zhoulia-card-photo" data-focal-source={focal.source}>
+    <div
+      className="journey-zhoulia-card-photo"
+      data-focal-source={placement.source}
+      data-photo-zoom={placement.zoom.toFixed(2)}
+    >
       <img
         src={src}
         alt="Foto do treinador"
-        style={{ objectPosition: `${focal.x * 100}% ${focal.y * 100}%` }}
+        style={{
+          objectPosition: position,
+          transform: `scale(${placement.zoom})`,
+          transformOrigin: position,
+        }}
       />
     </div>
   );
