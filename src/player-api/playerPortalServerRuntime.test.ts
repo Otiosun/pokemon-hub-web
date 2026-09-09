@@ -1,8 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { readPlayerPortalApiBaseUrl } from './playerPortalServerRuntime';
 
-const STAGING_PLAYER_API_URL =
-  'https://pokemon-rpg-player-api-staging-staging.up.railway.app';
+const STAGING_PLAYER_API_URL = 'https://pokemon-rpg-player-api-staging-staging.up.railway.app';
 
 function runtimeEnvironment(): Record<string, unknown> {
   const runtimeProcess = Reflect.get(globalThis, 'process');
