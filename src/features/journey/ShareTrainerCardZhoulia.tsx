@@ -31,6 +31,7 @@ export function ShareTrainerCardZhoulia({
   useEffect(() => {
     let cancelled = false;
     let generatedUrl: string | null = null;
+    const attempt = retryKey + 1;
 
     setResult(null);
     setError(null);
@@ -51,7 +52,7 @@ export function ShareTrainerCardZhoulia({
         markTrainerCardEmitted(profile.trainerId);
       })
       .catch((cause) => {
-        console.error('Zhoulia Trainer Card emission failed', cause);
+        console.error(`Zhoulia Trainer Card emission attempt ${attempt} failed`, cause);
         if (!cancelled) setError('Não foi possível emitir o Trainer Card. Tente novamente.');
       });
 
@@ -72,12 +73,7 @@ export function ShareTrainerCardZhoulia({
   };
 
   return (
-    <div
-      className="journey-card-v2-backdrop"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
+    <div className="journey-card-v2-backdrop">
       <section
         className="journey-zhoulia-card-dialog"
         role="dialog"
