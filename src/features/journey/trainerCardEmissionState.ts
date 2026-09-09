@@ -38,3 +38,14 @@ export function getTrainerCardEmissionReadiness(
 
   return { ready: missing.length === 0, missing };
 }
+
+export function getTrainerCardActionLabel({
+  isZhoulia,
+  hasEmitted,
+}: {
+  isZhoulia: boolean;
+  hasEmitted: boolean;
+}) {
+  if (!isZhoulia) return 'VER TRAINER CARD';
+  return hasEmitted ? 'VER TRAINER CARD' : 'EMITIR TRAINER CARD';
+}
