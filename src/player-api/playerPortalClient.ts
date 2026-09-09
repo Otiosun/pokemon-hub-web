@@ -22,6 +22,22 @@ export type PlayerPortalTeamSlot = {
   slotNo: number;
 };
 
+export type PlayerPortalPokemon = {
+  pokemonInstanceId: string;
+  formId: string;
+  displayName: string | null;
+  nationalDex: number | null;
+  typeNames: string[];
+  nickname: string | null;
+  level: number;
+  currentHp: number;
+  gender: string | null;
+  shiny: boolean;
+  placementKind: 'TEAM' | 'BOX';
+  boxNo: number | null;
+  slotNo: number;
+};
+
 export type PlayerPortalProfile = {
   playerId: string;
   playerStatus: 'ACTIVE';
@@ -46,6 +62,10 @@ export type PlayerPortalProfile = {
 
 export type PlayerPortalSelfResult =
   | { status: 'authenticated'; profile: PlayerPortalProfile }
+  | { status: 'unauthenticated' };
+
+export type PlayerPortalPokemonResult =
+  | { status: 'authenticated'; pokemon: PlayerPortalPokemon[] }
   | { status: 'unauthenticated' };
 
 export type PlayerPortalExchangeResult =
@@ -80,6 +100,30 @@ export async function getPlayerPortalSelf(
   }
 
   return { status: 'authenticated', profile: body.profile };
+}
+
+export async function getPlayerPortalPokemon(
+  fetcher: PlayerPortalFetcher = fetch,
+): Promise<PlayerPortalPokemonResult> {
+  const response = await fetcher('/api/hub/player/pokemon', {
+    method: 'GET',
+    credentials: 'include',
+    headers: { accept: 'application/json' },
+  });
+
+  if (response.status === 401) return { status: 'unauthenticated' };
+  if (!response.ok) throw new Error(`Player portal request failed (${response.status})`);
+
+  const body = await readJsonBody(response);
+  if (
+    !isRecord(body) ||
+    !Array.isArray(body.pokemon) ||
+    !body.pokemon.every(isPlayerPortalPokemon)
+  ) {
+    throw new Error('Invalid player portal response');
+  }
+
+  return { status: 'authenticated', pokemon: body.pokemon };
 }
 
 export async function exchangePlayerPortalTicket(
@@ -181,6 +225,37 @@ function isPlayerPortalTeamSlot(value: unknown): value is PlayerPortalTeamSlot {
   return true;
 }
 
+function isPlayerPortalPokemon(value: unknown): value is PlayerPortalPokemon {
+  if (!isRecord(value)) return false;
+  if (
+    !isUuid(value.pokemonInstanceId) ||
+    !isUuid(value.formId) ||
+    !isCatalogPresentation(value) ||
+    !isNullableString(value.nickname) ||
+    typeof value.level !== 'number' ||
+    !Number.isInteger(value.level) ||
+    value.level < 1 ||
+    !isNonNegativeInteger(value.currentHp) ||
+    !isNullableString(value.gender) ||
+    typeof value.shiny !== 'boolean' ||
+    typeof value.slotNo !== 'number' ||
+    !Number.isInteger(value.slotNo) ||
+    value.slotNo < 1
+  ) {
+    return false;
+  }
+
+  if (value.placementKind === 'TEAM') {
+    return value.boxNo === null && value.slotNo <= 6;
+  }
+
+  if (value.placementKind === 'BOX') {
+    return isPositiveInteger(value.boxNo);
+  }
+
+  return false;
+}
+
 function isCatalogPresentation(value: Record<string, unknown>): boolean {
   if (!Array.isArray(value.typeNames) || value.typeNames.length > 2) return false;
   if (!value.typeNames.every(isDisplayString)) return false;
@@ -225,6 +300,10 @@ function isNullableDisplayString(value: unknown): value is string | null {
 
 function isNonNegativeInteger(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value >= 0;
+}
+
+function isPositiveInteger(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 1;
 }
 
 function isIsoTimestamp(value: unknown): value is string {

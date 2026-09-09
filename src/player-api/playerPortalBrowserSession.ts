@@ -9,6 +9,8 @@ export type PlayerPortalBrowserSessionState =
   | PlayerPortalSessionBootstrap
   | { status: 'unavailable' };
 
+let sharedBootstrap: Promise<PlayerPortalSessionBootstrap> | null = null;
+
 export function extractPlayerPortalTicketFromUrl(url: URL): {
   ticket: string | null;
   cleanPath: string | null;
@@ -27,18 +29,25 @@ export function extractPlayerPortalTicketFromUrl(url: URL): {
   };
 }
 
+function bootstrapBrowserSession(): Promise<PlayerPortalSessionBootstrap> {
+  if (sharedBootstrap) return sharedBootstrap;
+
+  const extracted = extractPlayerPortalTicketFromUrl(new URL(window.location.href));
+  if (extracted.cleanPath !== null) {
+    window.history.replaceState(window.history.state, '', extracted.cleanPath);
+  }
+
+  sharedBootstrap = bootstrapPlayerPortalSession(extracted.ticket);
+  return sharedBootstrap;
+}
+
 export function usePlayerPortalBrowserSession(): PlayerPortalBrowserSessionState {
   const [state, setState] = useState<PlayerPortalBrowserSessionState>({ status: 'loading' });
 
   useEffect(() => {
     let cancelled = false;
-    const extracted = extractPlayerPortalTicketFromUrl(new URL(window.location.href));
 
-    if (extracted.cleanPath !== null) {
-      window.history.replaceState(window.history.state, '', extracted.cleanPath);
-    }
-
-    bootstrapPlayerPortalSession(extracted.ticket)
+    bootstrapBrowserSession()
       .then((next) => {
         if (!cancelled) setState(next);
       })
