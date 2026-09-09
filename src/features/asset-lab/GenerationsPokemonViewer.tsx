@@ -69,6 +69,9 @@ type Runtime = {
 type Props = {
   species: string;
   name: string;
+  onReadyChange?: (ready: boolean) => void;
+  onDisplayedSpeciesChange?: (species: string) => void;
+  onFailedSpeciesChange?: (species: string) => void;
 };
 
 function disposeModel(runtime: Runtime) {
@@ -97,14 +100,73 @@ function disposeDetached(model: Group, textures: Texture[], materials: Material[
   for (const material of materials) material.dispose();
 }
 
-export function GenerationsPokemonViewer({ species, name }: Props) {
+function frameModel(runtime: Runtime, model: Group) {
+  const { THREE, camera, controls } = runtime;
+  model.updateMatrixWorld(true);
+
+  const box = new THREE.Box3().setFromObject(model);
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const maxDimension = Math.max(size.x, size.y, size.z, 0.01);
+
+  const verticalFov = THREE.MathUtils.degToRad(camera.fov);
+  const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * Math.max(camera.aspect, 0.01));
+  const fitHeight = (Math.max(size.y, 0.01) * 0.5) / Math.tan(verticalFov / 2);
+  const fitWidth = (Math.max(size.x, 0.01) * 0.5) / Math.tan(horizontalFov / 2);
+  const depthAllowance = Math.max(size.z, maxDimension * 0.14) * 0.5;
+  const aspectMargin = camera.aspect < 0.72 ? 1.34 : camera.aspect < 1 ? 1.25 : 1.16;
+  const distance = Math.max((Math.max(fitHeight, fitWidth) + depthAllowance) * aspectMargin, 0.8);
+
+  const yaw = camera.aspect < 0.8 ? 0.08 : 0.12;
+  camera.position.set(
+    center.x + Math.sin(yaw) * distance,
+    center.y + size.y * 0.015,
+    center.z + Math.cos(yaw) * distance,
+  );
+  camera.near = Math.max(distance / 120, 0.01);
+  camera.far = Math.max(distance * 24, maxDimension * 30, 20);
+  camera.updateProjectionMatrix();
+  camera.lookAt(center);
+
+  controls.target.copy(center);
+  controls.minDistance = Math.max(distance * 0.9, maxDimension * 0.78);
+  controls.maxDistance = Math.max(distance * 1.42, maxDimension * 1.7);
+  controls.update();
+}
+
+function waitForSwap(ms: number) {
+  return new Promise<void>((resolve) => window.setTimeout(resolve, ms));
+}
+
+export function GenerationsPokemonViewer({
+  species,
+  name,
+  onReadyChange,
+  onDisplayedSpeciesChange,
+  onFailedSpeciesChange,
+}: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const runtimeRef = useRef<Runtime | null>(null);
   const loadVersionRef = useRef(0);
+  const displayedSpeciesCallbackRef = useRef(onDisplayedSpeciesChange);
+  const failedSpeciesCallbackRef = useRef(onFailedSpeciesChange);
   const [engineReady, setEngineReady] = useState(false);
   const [viewerState, setViewerState] = useState<ViewerState>('loading');
   const [displayedName, setDisplayedName] = useState('');
   const [errorDetail, setErrorDetail] = useState('');
+  const [isSwapping, setIsSwapping] = useState(false);
+
+  useEffect(() => {
+    displayedSpeciesCallbackRef.current = onDisplayedSpeciesChange;
+  }, [onDisplayedSpeciesChange]);
+
+  useEffect(() => {
+    failedSpeciesCallbackRef.current = onFailedSpeciesChange;
+  }, [onFailedSpeciesChange]);
+
+  useEffect(() => {
+    onReadyChange?.(viewerState === 'ready');
+  }, [onReadyChange, viewerState]);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -136,18 +198,21 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
         });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isTouch ? 1.15 : 1.6));
         renderer.outputColorSpace = THREE.SRGBColorSpace;
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.08;
+        renderer.toneMapping = THREE.NoToneMapping;
+        renderer.toneMappingExposure = 1;
         renderer.domElement.className = 'generations-canvas';
         mount.replaceChildren(renderer.domElement);
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(32, 1, 0.01, 100);
-        scene.add(new THREE.HemisphereLight(0xffffff, 0x758070, 2.25));
-        const key = new THREE.DirectionalLight(0xffffff, 3.0);
+        scene.add(new THREE.HemisphereLight(0xffffff, 0x73807b, 1.35));
+        const key = new THREE.DirectionalLight(0xffffff, 1.65);
         key.position.set(4, 6, 5);
         scene.add(key);
-        const rim = new THREE.DirectionalLight(0xffd8b2, 1.1);
+        const fill = new THREE.DirectionalLight(0xddeeff, 0.45);
+        fill.position.set(-4, 1, 4);
+        scene.add(fill);
+        const rim = new THREE.DirectionalLight(0xffd6ae, 0.5);
         rim.position.set(-4, 2, -3);
         scene.add(rim);
 
@@ -160,6 +225,10 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.enablePan = false;
+        controls.rotateSpeed = isTouch ? 0.55 : 0.7;
+        controls.zoomSpeed = 0.62;
+        controls.minPolarAngle = THREE.MathUtils.degToRad(66);
+        controls.maxPolarAngle = THREE.MathUtils.degToRad(108);
 
         const runtime: Runtime = {
           THREE,
@@ -178,12 +247,16 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
         runtimeRef.current = runtime;
 
         const clock = new THREE.Clock();
-        const render = () => {
+        const frameInterval = isTouch ? 1000 / 30 : 0;
+        let lastRenderedAt = 0;
+        const render = (timestamp: number) => {
           if (disposed || !running) return;
+          frameId = requestAnimationFrame(render);
+          if (frameInterval > 0 && timestamp - lastRenderedAt < frameInterval) return;
+          lastRenderedAt = timestamp;
           runtime.mixer?.update(Math.min(clock.getDelta(), 0.05));
           controls.update();
           renderer.render(scene, camera);
-          frameId = requestAnimationFrame(render);
         };
         const syncLoop = () => {
           const shouldRun = inViewport && !document.hidden && !disposed;
@@ -196,6 +269,7 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
             cancelAnimationFrame(frameId);
           }
         };
+
         const onVisibilityChange = () => syncLoop();
         document.addEventListener('visibilitychange', onVisibilityChange);
         removeVisibilityListener = () => document.removeEventListener('visibilitychange', onVisibilityChange);
@@ -215,6 +289,7 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
           renderer.setSize(width, height, false);
           camera.aspect = width / height;
           camera.updateProjectionMatrix();
+          if (runtime.model) frameModel(runtime, runtime.model);
         };
         resizeObserver = new ResizeObserver(resize);
         resizeObserver.observe(mount);
@@ -259,12 +334,13 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
     const controller = new AbortController();
     let cancelled = false;
 
-    async function loadSpecies(runtime: Runtime) {
+    async function loadSpecies(activeRuntime: Runtime) {
       setViewerState('loading');
       setErrorDetail('');
       let pendingTextures: Texture[] = [];
       let pendingMaterials: Material[] = [];
       let pendingModel: Group | null = null;
+      let pendingMixer: AnimationMixer | null = null;
 
       try {
         const assetResponse = await fetch(getPokemonAssetUrl(species, 'asset.json'), {
@@ -272,6 +348,10 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
           cache: 'force-cache',
         });
         if (!assetResponse.ok) throw new Error(`asset.json HTTP ${assetResponse.status}`);
+        const contentType = assetResponse.headers.get('content-type') ?? '';
+        if (!contentType.toLowerCase().includes('json')) {
+          throw new Error(`asset.json retornou ${contentType || 'conteúdo não JSON'}`);
+        }
         const payload = (await assetResponse.json()) as AssetPayload;
         if (payload.missingAnimationNodes.length > 0) {
           throw new Error(`animation nodes ausentes: ${payload.missingAnimationNodes.join(', ')}`);
@@ -284,13 +364,13 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
         const [texturePairs, modelResponse] = await Promise.all([
           Promise.all(
             textureNames.map(async (textureName) => {
-              const texture = await runtime.textureLoader.loadAsync(
+              const texture = await activeRuntime.textureLoader.loadAsync(
                 getPokemonAssetUrl(species, textureName),
               );
               texture.flipY = false;
-              texture.wrapS = runtime.THREE.RepeatWrapping;
-              texture.wrapT = runtime.THREE.RepeatWrapping;
-              texture.colorSpace = runtime.THREE.SRGBColorSpace;
+              texture.wrapS = activeRuntime.THREE.RepeatWrapping;
+              texture.wrapT = activeRuntime.THREE.RepeatWrapping;
+              texture.colorSpace = activeRuntime.THREE.SRGBColorSpace;
               texture.needsUpdate = true;
               pendingTextures.push(texture);
               return [textureName, texture] as const;
@@ -303,7 +383,7 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
         ]);
         if (!modelResponse.ok) throw new Error(`model.glb HTTP ${modelResponse.status}`);
         const modelBuffer = await modelResponse.arrayBuffer();
-        const gltf = await runtime.gltfLoader.parseAsync(modelBuffer, '');
+        const gltf = await activeRuntime.gltfLoader.parseAsync(modelBuffer, '');
         pendingModel = gltf.scene;
 
         if (cancelled || loadVersion !== loadVersionRef.current) {
@@ -323,7 +403,8 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
           if (!binding) return;
           const texture = textures.get(binding.texture);
           if (!texture) return;
-          const side = binding.doubleSided ? runtime.THREE.DoubleSide : runtime.THREE.FrontSide;
+
+          const side = binding.doubleSided ? activeRuntime.THREE.DoubleSide : activeRuntime.THREE.FrontSide;
           const common = {
             map: texture,
             transparent: binding.transparent,
@@ -332,8 +413,12 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
           };
           const material =
             !binding.useLight || mesh.name.toLowerCase().includes('fire')
-              ? new runtime.THREE.MeshBasicMaterial({ ...common, depthWrite: !binding.transparent })
-              : new runtime.THREE.MeshStandardMaterial({ ...common, roughness: 0.72, metalness: 0 });
+              ? new activeRuntime.THREE.MeshBasicMaterial({ ...common, depthWrite: !binding.transparent })
+              : new activeRuntime.THREE.MeshStandardMaterial({
+                  ...common,
+                  roughness: 0.82,
+                  metalness: 0,
+                });
           mesh.material = material;
           pendingMaterials.push(material);
         });
@@ -344,47 +429,43 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
           if (!namedNodes.has(bone.name)) continue;
           if (bone.position?.times.length) {
             tracks.push(
-              new runtime.THREE.VectorKeyframeTrack(
+              new activeRuntime.THREE.VectorKeyframeTrack(
                 `${bone.name}.position`,
                 bone.position.times,
                 bone.position.values,
-                runtime.THREE.InterpolateLinear,
+                activeRuntime.THREE.InterpolateLinear,
               ),
             );
           }
           if (bone.rotation?.times.length) {
             tracks.push(
-              new runtime.THREE.QuaternionKeyframeTrack(
+              new activeRuntime.THREE.QuaternionKeyframeTrack(
                 `${bone.name}.quaternion`,
                 bone.rotation.times,
                 bone.rotation.values,
-                runtime.THREE.InterpolateLinear,
+                activeRuntime.THREE.InterpolateLinear,
               ),
             );
           }
           if (bone.scale?.times.length) {
             tracks.push(
-              new runtime.THREE.VectorKeyframeTrack(
+              new activeRuntime.THREE.VectorKeyframeTrack(
                 `${bone.name}.scale`,
                 bone.scale.times,
                 bone.scale.values,
-                runtime.THREE.InterpolateLinear,
+                activeRuntime.THREE.InterpolateLinear,
               ),
             );
           }
         }
-        const clip = new runtime.THREE.AnimationClip('Generations:idle', motion.duration, tracks);
-        const mixer = new runtime.THREE.AnimationMixer(model);
+        const clip = new activeRuntime.THREE.AnimationClip('Generations:idle', motion.duration, tracks);
+        const mixer = new activeRuntime.THREE.AnimationMixer(model);
+        pendingMixer = mixer;
         const idle = mixer.clipAction(clip);
-        idle.setLoop(runtime.THREE.LoopRepeat, Infinity);
+        idle.setLoop(activeRuntime.THREE.LoopRepeat, Infinity);
         idle.play();
         mixer.update(0);
         model.updateMatrixWorld(true);
-
-        const box = new runtime.THREE.Box3().setFromObject(model);
-        const size = box.getSize(new runtime.THREE.Vector3());
-        const center = box.getCenter(new runtime.THREE.Vector3());
-        const radius = Math.max(size.x, size.y, size.z) * 0.5;
 
         if (cancelled || loadVersion !== loadVersionRef.current) {
           mixer.stopAllAction();
@@ -392,30 +473,39 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
           return;
         }
 
-        disposeModel(runtime);
-        runtime.scene.add(model);
-        runtime.model = model;
-        runtime.mixer = mixer;
-        runtime.textures = pendingTextures;
-        runtime.materials = pendingMaterials;
+        const replacingVisibleModel = Boolean(activeRuntime.model);
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (replacingVisibleModel) {
+          setIsSwapping(true);
+          await waitForSwap(reducedMotion ? 16 : 110);
+          if (cancelled || loadVersion !== loadVersionRef.current) {
+            setIsSwapping(false);
+            mixer.stopAllAction();
+            disposeDetached(model, pendingTextures, pendingMaterials);
+            return;
+          }
+        }
+
+        disposeModel(activeRuntime);
+        activeRuntime.scene.add(model);
+        activeRuntime.model = model;
+        activeRuntime.mixer = mixer;
+        activeRuntime.textures = pendingTextures;
+        activeRuntime.materials = pendingMaterials;
         pendingTextures = [];
         pendingMaterials = [];
         pendingModel = null;
+        pendingMixer = null;
 
-        runtime.camera.position.set(
-          center.x + radius * 0.28,
-          center.y + radius * 0.04,
-          center.z + radius * 3.2,
-        );
-        runtime.camera.lookAt(center);
-        runtime.controls.target.copy(center);
-        runtime.controls.minDistance = Math.max(radius * 1.45, 0.6);
-        runtime.controls.maxDistance = Math.max(radius * 5.2, 3.0);
-        runtime.controls.update();
-
+        frameModel(activeRuntime, model);
+        activeRuntime.renderer.render(activeRuntime.scene, activeRuntime.camera);
         setDisplayedName(name);
+        displayedSpeciesCallbackRef.current?.(species);
         setViewerState('ready');
+        setIsSwapping(false);
       } catch (error) {
+        pendingMixer?.stopAllAction();
+        setIsSwapping(false);
         if (pendingModel) disposeDetached(pendingModel, pendingTextures, pendingMaterials);
         else {
           for (const texture of pendingTextures) texture.dispose();
@@ -423,6 +513,7 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
         }
         if (controller.signal.aborted || cancelled || loadVersion !== loadVersionRef.current) return;
         console.error(`Generations ${species} viewer failed`, error);
+        failedSpeciesCallbackRef.current?.(species);
         setErrorDetail(error instanceof Error ? error.message : String(error));
         setViewerState('failed');
       }
@@ -432,19 +523,20 @@ export function GenerationsPokemonViewer({ species, name }: Props) {
     return () => {
       cancelled = true;
       controller.abort();
+      setIsSwapping(false);
     };
   }, [engineReady, name, species]);
 
   return (
     <div className="generations-demo">
-      <div className="generations-viewer-shell">
+      <div className={`generations-viewer-shell${isSwapping ? ' is-swapping' : ''}`}>
         <div
           ref={hostRef}
           className="generations-host"
           role="region"
           aria-label={`${displayedName || name} em 3D. Arraste para girar e use roda ou pinça para zoom.`}
         />
-        {viewerState === 'loading' && (
+        {viewerState === 'loading' && !displayedName && (
           <div className="generations-loading">carregando {name}…</div>
         )}
         {viewerState === 'failed' && (

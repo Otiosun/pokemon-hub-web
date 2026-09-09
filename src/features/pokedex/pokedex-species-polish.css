@@ -1,0 +1,374 @@
+/* Species record polish: keep the specimen stage, strip the paper view down to a real field record. */
+.pokedex-species-page > .pokedex-index-header {
+  border-bottom-color: rgba(102, 18, 27, 0.72) !important;
+  background: linear-gradient(180deg, #da414b 0%, #c72d39 100%) !important;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.18) !important;
+}
+
+.pokedex-species-page > .pokedex-index-header .pokedex-index-brand small,
+.pokedex-species-page > .pokedex-index-header .pokedex-index-counter small {
+  color: rgba(255, 255, 255, 0.68) !important;
+}
+
+.pokedex-species-page > .pokedex-index-header .pokedex-index-counter strong {
+  color: rgba(255, 255, 255, 0.94) !important;
+}
+
+.pokedex-species-page.is-caught .pokedex-species-stage,
+.pokedex-species-page.is-seen .pokedex-species-stage,
+.pokedex-species-page.is-unknown .pokedex-species-stage {
+  box-shadow: inset 0 -2px 0 rgba(190, 226, 228, 0.13) !important;
+}
+
+/* Development chrome never belongs in the player-facing record. */
+.pokedex-species-sync,
+.pokedex-species-mode,
+.pokedex-species-note,
+.pokedex-species-nav.is-index-only {
+  display: none !important;
+}
+
+.pokedex-species-stage-top {
+  color: #89999b;
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+}
+
+.pokedex-species-view-modes button,
+.pokedex-species-side-nav a,
+.pokedex-species-model-hint {
+  font-size: 0.56rem;
+}
+
+.pokedex-species-view-modes button.is-active {
+  box-shadow: inset 0 -2px 0 rgba(235, 242, 242, 0.62);
+}
+
+/* Flat paper surface: no spreadsheet/grid wallpaper. */
+.pokedex-species-data {
+  background: linear-gradient(180deg, #f4f1e8 0%, #efede4 100%) !important;
+  padding: clamp(24px, 3vw, 36px) !important;
+}
+
+/* Kill the redundant second title. Keep only the optional sound action. */
+.pokedex-species-data-head {
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 0 12px !important;
+  border: 0 !important;
+}
+
+.pokedex-species-data-head > div:first-child {
+  display: none !important;
+}
+
+.pokedex-species-actions {
+  justify-content: flex-start !important;
+}
+
+.pokedex-species-cry {
+  min-height: 34px !important;
+  padding: 0 10px !important;
+  border: 1px solid rgba(23, 32, 36, 0.13) !important;
+  color: #465255 !important;
+  background: transparent !important;
+  font-size: 0 !important;
+}
+
+.pokedex-species-cry::after {
+  content: 'OUVIR SOM';
+  font: 700 0.56rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+/* One compact status strip instead of three dashboard cells. */
+.pokedex-species-player-state {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0 !important;
+  margin: 0 0 16px !important;
+  padding: 10px 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(23, 32, 36, 0.12) !important;
+  background: transparent !important;
+}
+
+.pokedex-species-player-state > div {
+  min-height: 0 !important;
+  padding: 0 14px !important;
+  border: 0 !important;
+}
+
+.pokedex-species-player-state > div:first-child {
+  padding-left: 0 !important;
+}
+
+.pokedex-species-player-state > div + div {
+  border-left: 1px solid rgba(23, 32, 36, 0.1) !important;
+}
+
+.pokedex-species-discovery,
+.pokedex-species-owned-readout {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 6px !important;
+}
+
+.pokedex-species-research {
+  flex: 1 1 auto;
+  min-width: 100px;
+  display: grid !important;
+  gap: 5px !important;
+}
+
+.pokedex-species-research > div:first-child {
+  display: flex !important;
+  align-items: baseline !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+}
+
+.pokedex-species-discovery span,
+.pokedex-species-owned-readout span,
+.pokedex-species-research > div > span,
+.pokedex-species-facts dt,
+.pokedex-species-field-grid span,
+.pokedex-species-varieties header,
+.pokedex-species-evolution header span,
+.pokedex-species-evolution header strong,
+.pokedex-species-owned-link span,
+.pokedex-species-owned-link strong {
+  color: #7d8789 !important;
+  font-size: 0.55rem !important;
+  letter-spacing: 0.045em !important;
+}
+
+.pokedex-species-discovery strong,
+.pokedex-species-owned-readout strong,
+.pokedex-species-research > div > strong {
+  color: #3f4b4e !important;
+  font-size: 0.8rem !important;
+}
+
+.pokedex-species-owned-readout small {
+  display: none !important;
+}
+
+.pokedex-species-research-meter {
+  gap: 3px !important;
+}
+
+.pokedex-species-research-meter span {
+  height: 3px !important;
+  background: rgba(23, 32, 36, 0.1) !important;
+}
+
+.pokedex-species-research-meter span.is-filled {
+  background: #68787b !important;
+}
+
+/* Description becomes the first real content block. */
+.pokedex-species-description {
+  max-width: 58ch;
+  margin: 0 0 18px !important;
+  color: #465154 !important;
+  font-size: 0.86rem !important;
+  line-height: 1.55 !important;
+}
+
+/* Region/height/weight are a quiet fact row. Type is already visible on the specimen stage. */
+.pokedex-species-facts {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 16px !important;
+  margin: 0 !important;
+  padding: 0 0 16px !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(23, 32, 36, 0.12) !important;
+}
+
+.pokedex-species-facts > div {
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+.pokedex-species-facts > div:nth-child(2) {
+  display: none !important;
+}
+
+.pokedex-species-facts dd {
+  margin-top: 4px !important;
+  color: #202a2d !important;
+  font-size: 0.86rem !important;
+}
+
+/* Ecology is a terse row, never a large locked card. */
+.pokedex-species-field-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 18px !important;
+  margin: 0 !important;
+  padding: 14px 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(23, 32, 36, 0.12) !important;
+}
+
+.pokedex-species-field-grid > div,
+.pokedex-species-field-grid > div + div {
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.pokedex-species-field-grid > div {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: baseline !important;
+  gap: 5px 7px !important;
+}
+
+.pokedex-species-field-grid strong {
+  color: #344044 !important;
+  font-size: 0.76rem !important;
+}
+
+.pokedex-species-field-grid small {
+  color: #929b9d !important;
+  font-size: 0.5rem !important;
+}
+
+.pokedex-species-field-grid .is-locked strong {
+  color: #727d7f !important;
+}
+
+.pokedex-species-varieties {
+  margin-top: 12px !important;
+  padding: 10px 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(23, 32, 36, 0.12) !important;
+  background: transparent !important;
+}
+
+/* Evolution gets priority; locked state is a single line. */
+.pokedex-species-evolution {
+  margin-top: 0 !important;
+  border-top: 0 !important;
+  border-bottom: 1px solid rgba(23, 32, 36, 0.12) !important;
+}
+
+.pokedex-species-evolution > header {
+  min-height: 48px !important;
+}
+
+.pokedex-species-evolution > header > div {
+  align-items: baseline !important;
+}
+
+.pokedex-species-evolution header strong {
+  color: #747f81 !important;
+  font-weight: 600 !important;
+}
+
+.pokedex-species-evolution-locked {
+  display: none !important;
+}
+
+.pokedex-species-evolution-tree {
+  padding-bottom: 14px !important;
+}
+
+/* Owned species link is navigation, not another data card. */
+.pokedex-species-owned-link {
+  min-height: 46px !important;
+  margin-top: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(23, 32, 36, 0.12) !important;
+  color: #334044 !important;
+  background: transparent !important;
+}
+
+.pokedex-species-owned-link strong {
+  color: #4d595c !important;
+}
+
+@media (max-width: 520px) {
+  .pokedex-species-data {
+    padding: 16px 16px 24px !important;
+  }
+
+  .pokedex-species-player-state {
+    gap: 0 !important;
+    padding: 9px 0 11px !important;
+  }
+
+  .pokedex-species-player-state > div {
+    padding: 0 9px !important;
+  }
+
+  .pokedex-species-player-state > div:first-child {
+    padding-left: 0 !important;
+  }
+
+  .pokedex-species-discovery,
+  .pokedex-species-owned-readout {
+    display: grid !important;
+    gap: 2px !important;
+  }
+
+  .pokedex-species-discovery span,
+  .pokedex-species-owned-readout span,
+  .pokedex-species-research > div > span,
+  .pokedex-species-facts dt,
+  .pokedex-species-field-grid span,
+  .pokedex-species-evolution header span,
+  .pokedex-species-evolution header strong,
+  .pokedex-species-owned-link span,
+  .pokedex-species-owned-link strong {
+    font-size: 0.5rem !important;
+  }
+
+  .pokedex-species-discovery strong,
+  .pokedex-species-owned-readout strong,
+  .pokedex-species-research > div > strong {
+    font-size: 0.74rem !important;
+  }
+
+  .pokedex-species-description {
+    margin-bottom: 16px !important;
+    font-size: 0.82rem !important;
+  }
+
+  .pokedex-species-facts {
+    gap: 10px !important;
+  }
+
+  .pokedex-species-facts dd {
+    font-size: 0.78rem !important;
+  }
+
+  .pokedex-species-field-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    padding: 12px 0 !important;
+  }
+
+  .pokedex-species-field-grid > div + div {
+    padding-top: 8px !important;
+    border-top: 1px solid rgba(23, 32, 36, 0.07) !important;
+  }
+
+  .pokedex-species-evolution > header {
+    min-height: 44px !important;
+  }
+
+  .pokedex-species-owned-link {
+    min-height: 44px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding-block: 0 !important;
+  }
+}

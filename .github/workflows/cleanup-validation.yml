@@ -1,0 +1,411 @@
+name: Cleanup validation
+
+on:
+  pull_request:
+    branches:
+      - feat/pokemon-detail-v1
+
+concurrency:
+  group: cleanup-validation-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  checks: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install pnpm
+        run: corepack prepare pnpm@11.23.0 --activate
+
+      - name: Install dependencies without lifecycle scripts
+        run: pnpm install --ignore-scripts --no-frozen-lockfile
+
+      - name: Lint
+        run: pnpm check
+
+      - name: Typecheck
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm typecheck 2>&1 | tee /tmp/typecheck.log
+
+      - name: Upload typecheck diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: typecheck-diagnostics
+          path: /tmp/typecheck.log
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Unit tests
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm test:run --reporter=verbose 2>&1 | tee /tmp/unit-tests.log
+
+      - name: Upload unit-test diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-diagnostics
+          path: /tmp/unit-tests.log
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Full production verify
+        run: pnpm verify
+
+      - name: Browser smoke against production build
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [[ -z "$CHROME" ]]; then
+            echo "No Chrome/Chromium binary available on runner"
+            exit 1
+          fi
+
+          pnpm exec vite preview --host 127.0.0.1 --port 4173 > /tmp/pokemon-hub-vite-preview.log 2>&1 &
+          PREVIEW_PID=$!
+          trap 'kill "$PREVIEW_PID" 2>/dev/null || true' EXIT
+
+          for _ in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/jornada >/dev/null; then
+              break
+            fi
+            sleep 0.25
+          done
+          curl -fsS http://127.0.0.1:4173/jornada >/dev/null
+
+          smoke() {
+            local path="$1"
+            local needle="$2"
+            local dom
+            echo "SMOKE ${path} -> ${needle}"
+            dom="$($CHROME \
+              --headless=new \
+              --no-sandbox \
+              --disable-gpu \
+              --disable-dev-shm-usage \
+              --virtual-time-budget=5000 \
+              --dump-dom \
+              "http://127.0.0.1:4173${path}" \
+              2>/tmp/pokemon-hub-chrome.log)" || {
+                cat /tmp/pokemon-hub-chrome.log
+                cat /tmp/pokemon-hub-vite-preview.log
+                exit 1
+              }
+
+            if ! grep -Fq "$needle" <<<"$dom"; then
+              echo "Expected marker not found for ${path}: ${needle}"
+              echo "$dom" | head -c 12000
+              echo
+              cat /tmp/pokemon-hub-chrome.log || true
+              cat /tmp/pokemon-hub-vite-preview.log || true
+              exit 1
+            fi
+          }
+
+          smoke "/jornada" "TRAINER REGISTRATION LICENSE"
+          smoke "/pokedex" "Índice Nacional"
+          smoke "/pokedex/4" "Nº 004"
+          smoke "/pokemon" "Time + Box"
+          smoke "/pokemon/pkm-charmander-a1" "Brasa"
+          smoke "/team" "Meu Time"
+          smoke "/pokemon/demo-charmander" "Nº 004"
+          smoke "/asset-lab" "ENDEREÇO INDISPONÍVEL"
+          smoke "/pokemon/demo-inexistente" "ENDEREÇO INDISPONÍVEL"
+          smoke "/pokedex/999" "ENDEREÇO INDISPONÍVEL"
+          smoke "/rota-inexistente" "ENDEREÇO INDISPONÍVEL"
+
+      - name: Browser reload and history against production build
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [[ -z "$CHROME" ]]; then
+            echo "No Chrome/Chromium binary available on runner"
+            exit 1
+          fi
+
+          rm -rf /tmp/pokemon-hub-history-profile
+          pnpm exec vite preview --host 127.0.0.1 --port 4175 > /tmp/pokemon-hub-history-preview.log 2>&1 &
+          PREVIEW_PID=$!
+
+          "$CHROME" \
+            --headless=new \
+            --no-sandbox \
+            --disable-gpu \
+            --disable-dev-shm-usage \
+            --remote-debugging-address=127.0.0.1 \
+            --remote-debugging-port=9223 \
+            --user-data-dir=/tmp/pokemon-hub-history-profile \
+            about:blank \
+            > /tmp/pokemon-hub-history-chrome.log 2>&1 &
+          CHROME_PID=$!
+
+          trap 'kill "$CHROME_PID" 2>/dev/null || true; kill "$PREVIEW_PID" 2>/dev/null || true' EXIT
+
+          for _ in {1..40}; do
+            if curl -fsS http://127.0.0.1:4175/jornada >/dev/null; then
+              break
+            fi
+            sleep 0.25
+          done
+          curl -fsS http://127.0.0.1:4175/jornada >/dev/null
+
+          for _ in {1..80}; do
+            if curl -fsS http://127.0.0.1:9223/json/version >/dev/null; then
+              break
+            fi
+            sleep 0.25
+          done
+          curl -fsS http://127.0.0.1:9223/json/version >/dev/null
+
+          CDP_ENDPOINT=http://127.0.0.1:9223 \
+          BASE_URL=http://127.0.0.1:4175 \
+          node scripts/check-navigation-history-cdp.mjs
+
+      - name: Capture mobile viewport evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [[ -z "$CHROME" ]]; then
+            echo "No Chrome/Chromium binary available on runner"
+            exit 1
+          fi
+
+          rm -rf /tmp/mobile-viewport-evidence /tmp/mobile-viewer-diagnostics /tmp/pokemon-hub-cdp-profile
+          mkdir -p /tmp/mobile-viewport-evidence /tmp/mobile-viewer-diagnostics
+
+          pnpm exec vite preview --host 127.0.0.1 --port 4174 > /tmp/pokemon-hub-mobile-preview.log 2>&1 &
+          PREVIEW_PID=$!
+
+          "$CHROME" \
+            --headless=new \
+            --no-sandbox \
+            --disable-dev-shm-usage \
+            --enable-unsafe-swiftshader \
+            --hide-scrollbars \
+            --remote-debugging-address=127.0.0.1 \
+            --remote-debugging-port=9222 \
+            --user-data-dir=/tmp/pokemon-hub-cdp-profile \
+            about:blank \
+            > /tmp/pokemon-hub-cdp-chrome.log 2>&1 &
+          CHROME_PID=$!
+
+          trap 'kill "$CHROME_PID" 2>/dev/null || true; kill "$PREVIEW_PID" 2>/dev/null || true' EXIT
+
+          for _ in {1..40}; do
+            if curl -fsS http://127.0.0.1:4174/jornada >/dev/null; then
+              break
+            fi
+            sleep 0.25
+          done
+          curl -fsS http://127.0.0.1:4174/jornada >/dev/null
+
+          for _ in {1..80}; do
+            if curl -fsS http://127.0.0.1:9222/json/version >/dev/null; then
+              break
+            fi
+            sleep 0.25
+          done
+          curl -fsS http://127.0.0.1:9222/json/version >/dev/null
+
+          CDP_ENDPOINT=http://127.0.0.1:9222 \
+          BASE_URL=http://127.0.0.1:4174 \
+          OUTPUT_DIR=/tmp/mobile-viewport-evidence \
+          DIAGNOSTICS_DIR=/tmp/mobile-viewer-diagnostics \
+          node scripts/capture-mobile-cdp.mjs
+
+          test "$(find /tmp/mobile-viewport-evidence -type f -name '*.png' | wc -l)" -eq 24
+          test "$(find /tmp/mobile-viewer-diagnostics -type f -name '*.dom.html' | wc -l)" -eq 24
+          test "$(grep -c '= ready' /tmp/mobile-viewer-diagnostics/viewer-state-summary.txt)" -eq 8
+
+          cp /tmp/pokemon-hub-mobile-preview.log /tmp/mobile-viewer-diagnostics/vite-preview.log
+          cp /tmp/pokemon-hub-cdp-chrome.log /tmp/mobile-viewer-diagnostics/chrome-cdp.log
+
+      - name: Upload mobile viewport evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-viewport-evidence
+          path: /tmp/mobile-viewport-evidence/*.png
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Upload mobile viewer diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-viewer-diagnostics
+          path: /tmp/mobile-viewer-diagnostics
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Resolve Cloudflare preview for this SHA
+        id: cloudflare_preview
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          api="https://api.github.com/repos/${GITHUB_REPOSITORY}/commits/${HEAD_SHA}/check-runs"
+          preview=""
+
+          for _ in {1..90}; do
+            payload="$(curl -fsSL \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "$api")"
+
+            status="$(jq -r '[.check_runs[] | select(.name == "Workers Builds: pokemon-hub-web")][0].status // "missing"' <<<"$payload")"
+            conclusion="$(jq -r '[.check_runs[] | select(.name == "Workers Builds: pokemon-hub-web")][0].conclusion // ""' <<<"$payload")"
+
+            echo "Cloudflare check for ${HEAD_SHA}: status=${status} conclusion=${conclusion:-pending}"
+
+            if [[ "$status" == "completed" && "$conclusion" != "success" ]]; then
+              echo "Cloudflare build concluded: $conclusion"
+              exit 1
+            fi
+
+            if [[ "$status" == "completed" && "$conclusion" == "success" ]]; then
+              summary="$(jq -r '[.check_runs[] | select(.name == "Workers Builds: pokemon-hub-web")][0].output.summary // ""' <<<"$payload")"
+              preview="$(sed -n 's/^Preview Alias URL: \(https:\/\/[^[:space:]]*\)$/\1/p' <<<"$summary" | head -n1)"
+              if [[ -n "$preview" ]]; then
+                break
+              fi
+            fi
+
+            sleep 2
+          done
+
+          if [[ -z "$preview" ]]; then
+            echo "Could not resolve a successful Cloudflare Preview Alias URL for $HEAD_SHA"
+            exit 1
+          fi
+
+          echo "Cloudflare preview: $preview"
+          echo "url=$preview" >> "$GITHUB_OUTPUT"
+
+      - name: Browser smoke against Cloudflare preview
+        shell: bash
+        env:
+          BASE_URL: ${{ steps.cloudflare_preview.outputs.url }}
+        run: |
+          set -euo pipefail
+
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [[ -z "$CHROME" ]]; then
+            echo "No Chrome/Chromium binary available on runner"
+            exit 1
+          fi
+
+          for _ in {1..40}; do
+            if curl -fsS "$BASE_URL/jornada" >/dev/null; then
+              break
+            fi
+            sleep 0.5
+          done
+          curl -fsS "$BASE_URL/jornada" >/dev/null
+
+          smoke() {
+            local path="$1"
+            local needle="$2"
+            local dom
+            echo "EXTERNAL_SMOKE ${path} -> ${needle}"
+            dom="$($CHROME \
+              --headless=new \
+              --no-sandbox \
+              --disable-gpu \
+              --disable-dev-shm-usage \
+              --virtual-time-budget=6000 \
+              --dump-dom \
+              "${BASE_URL}${path}" \
+              2>/tmp/pokemon-hub-external-chrome.log)" || {
+                cat /tmp/pokemon-hub-external-chrome.log || true
+                exit 1
+              }
+
+            if ! grep -Fq "$needle" <<<"$dom"; then
+              echo "Expected external marker not found for ${path}: ${needle}"
+              echo "$dom" | head -c 12000
+              echo
+              cat /tmp/pokemon-hub-external-chrome.log || true
+              exit 1
+            fi
+          }
+
+          smoke "/jornada" "TRAINER REGISTRATION LICENSE"
+          smoke "/pokedex" "Índice Nacional"
+          smoke "/pokedex/4" "Nº 004"
+          smoke "/pokemon" "Time + Box"
+          smoke "/pokemon/pkm-charmander-a1" "Brasa"
+          smoke "/team" "Meu Time"
+          smoke "/pokemon/demo-charmander" "Nº 004"
+          smoke "/asset-lab" "ENDEREÇO INDISPONÍVEL"
+          smoke "/pokemon/demo-inexistente" "ENDEREÇO INDISPONÍVEL"
+          smoke "/pokedex/999" "ENDEREÇO INDISPONÍVEL"
+          smoke "/rota-inexistente" "ENDEREÇO INDISPONÍVEL"
+
+      - name: Browser reload and history against Cloudflare preview
+        shell: bash
+        env:
+          BASE_URL: ${{ steps.cloudflare_preview.outputs.url }}
+        run: |
+          set -euo pipefail
+
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [[ -z "$CHROME" ]]; then
+            echo "No Chrome/Chromium binary available on runner"
+            exit 1
+          fi
+
+          rm -rf /tmp/pokemon-hub-external-cdp-profile
+          "$CHROME" \
+            --headless=new \
+            --no-sandbox \
+            --disable-gpu \
+            --disable-dev-shm-usage \
+            --remote-debugging-address=127.0.0.1 \
+            --remote-debugging-port=9224 \
+            --user-data-dir=/tmp/pokemon-hub-external-cdp-profile \
+            about:blank \
+            > /tmp/pokemon-hub-external-cdp-chrome.log 2>&1 &
+          CHROME_PID=$!
+          trap 'kill "$CHROME_PID" 2>/dev/null || true' EXIT
+
+          for _ in {1..80}; do
+            if curl -fsS http://127.0.0.1:9224/json/version >/dev/null; then
+              break
+            fi
+            sleep 0.25
+          done
+          curl -fsS http://127.0.0.1:9224/json/version >/dev/null
+
+          CDP_ENDPOINT=http://127.0.0.1:9224 \
+          BASE_URL="$BASE_URL" \
+          node scripts/check-navigation-history-cdp.mjs

@@ -1,0 +1,177 @@
+.hub-module-header {
+  --module-accent: #d9433f;
+  position: sticky;
+  z-index: 30;
+  top: 0;
+  min-height: 78px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 10px clamp(16px, 4vw, 42px);
+  border-bottom: 3px solid color-mix(in srgb, var(--module-accent) 62%, #240509);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--module-accent) 93%, #b92f39), color-mix(in srgb, var(--module-accent) 72%, #8f2630));
+  color: #fff;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14);
+}
+
+.hub-module-header.is-pokemon { --module-accent: #187c8d; }
+.hub-module-header.is-team { --module-accent: #9a7621; }
+
+.hub-module-brand {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.hub-module-brand > span:last-child {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.hub-module-brand strong {
+  font: 700 .96rem 'Space Grotesk', sans-serif;
+  letter-spacing: .09em;
+}
+
+.hub-module-brand small,
+.hub-module-meta small {
+  color: rgba(255,255,255,.64);
+  font: 600 .5rem 'IBM Plex Mono', monospace;
+  letter-spacing: .09em;
+}
+
+.hub-module-lens {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border: 4px solid #eef7f6;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%,#ebffff 0 8%,#68e7ef 10% 28%,#1b91b5 56%,#0b5870 78%);
+  box-shadow: 0 0 0 2px rgba(0,0,0,.14),0 0 18px rgba(91,226,242,.2);
+}
+
+.hub-module-actions {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.hub-module-meta {
+  display: grid;
+  justify-items: end;
+  gap: 3px;
+  text-align: right;
+}
+
+.hub-module-meta strong {
+  font: 650 .78rem 'IBM Plex Mono', monospace;
+  letter-spacing: .035em;
+}
+
+.hub-module-header .hub-menu-trigger {
+  min-width: 88px;
+  min-height: 42px;
+  flex: none;
+  border-color: rgba(255, 255, 255, 0.24);
+  border-bottom-color: rgba(255, 255, 255, 0.44);
+  background: rgba(8, 14, 15, 0.24);
+  color: #fff;
+  box-shadow: none;
+  backdrop-filter: blur(4px);
+}
+
+.hub-module-header .hub-menu-trigger:hover {
+  border-color: rgba(255, 255, 255, 0.42);
+  border-bottom-color: rgba(255, 255, 255, 0.7);
+  background: rgba(8, 14, 15, 0.34);
+}
+
+.hub-module-brand:focus-visible {
+  outline: 2px solid #e9ffff;
+  outline-offset: 4px;
+}
+
+@media (max-width: 800px) {
+  .hub-module-header {
+    min-height: 72px;
+    gap: 10px;
+    padding-inline: 12px;
+  }
+
+  .hub-module-brand {
+    gap: 9px;
+  }
+
+  .hub-module-lens {
+    width: 38px;
+    height: 38px;
+    border-width: 3px;
+  }
+
+  .hub-module-brand strong { font-size: .82rem; }
+  .hub-module-meta strong { font-size: .64rem; }
+  .hub-module-actions { gap: 8px; }
+
+  .hub-module-header .hub-menu-trigger {
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    min-height: 42px;
+    gap: 0;
+    padding: 0;
+    border-radius: 12px;
+  }
+
+  .hub-module-header .hub-menu-trigger > span:last-child {
+    display: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .hub-module-header {
+    gap: 7px;
+    padding-inline: 10px;
+  }
+
+  .hub-module-brand {
+    gap: 7px;
+  }
+
+  .hub-module-lens {
+    width: 36px;
+    height: 36px;
+  }
+
+  .hub-module-brand strong {
+    font-size: .76rem;
+    letter-spacing: .065em;
+  }
+
+  .hub-module-brand small,
+  .hub-module-meta small {
+    font-size: .45rem;
+  }
+
+  .hub-module-meta strong {
+    font-size: .59rem;
+  }
+
+  .hub-module-actions {
+    gap: 6px;
+  }
+
+  .hub-module-header .hub-menu-trigger {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+  }
+}

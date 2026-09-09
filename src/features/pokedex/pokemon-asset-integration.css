@@ -1,0 +1,21 @@
+.pokedex-species-artwork-slot .pokemon-asset-placeholder.pokedex-species-artwork {
+  width: min(72%, 420px);
+  height: min(72%, 420px);
+  min-width: 180px;
+  min-height: 180px;
+  border-radius: 50%;
+  font-size: clamp(3rem, 8vw, 6rem);
+}
+
+.pokedex-species-evolution-stage .pokemon-asset-placeholder {
+  width: 64px;
+  height: 48px;
+  font-size: 1.25rem;
+}
+
+@media (max-width: 520px) {
+  .pokedex-species-artwork-slot .pokemon-asset-placeholder.pokedex-species-artwork {
+    min-width: 150px;
+    min-height: 150px;
+  }
+}

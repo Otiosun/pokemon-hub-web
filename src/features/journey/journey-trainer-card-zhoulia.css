@@ -1,0 +1,243 @@
+.journey-zhoulia-card-dialog {
+  position: relative;
+  width: min(94vw, calc(88vh * 4 / 3));
+  max-width: 1080px;
+}
+
+.journey-zhoulia-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  container-type: inline-size;
+  isolation: isolate;
+}
+
+.journey-zhoulia-card-base {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: fill;
+  user-select: none;
+  pointer-events: none;
+}
+
+.journey-zhoulia-card-title {
+  position: absolute;
+  z-index: 4;
+  top: 7.35%;
+  left: 6.2%;
+  max-width: 43%;
+  color: #f8fbff;
+  font: 950 5.35cqw/0.9 'IBM Plex Sans Condensed', 'Arial Narrow', system-ui, sans-serif;
+  letter-spacing: 0.015em;
+  text-shadow:
+    0 0.18cqw 0 #173f69,
+    0.16cqw 0 0 #173f69,
+    -0.16cqw 0 0 #173f69;
+  white-space: nowrap;
+}
+
+.journey-zhoulia-card-region {
+  position: absolute;
+  z-index: 4;
+  top: 5.8%;
+  right: 4.35%;
+  width: 29.1%;
+  height: 11.8%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 0.16cqw 7.05cqw;
+  align-items: center;
+  gap: 1.45cqw;
+}
+
+.journey-zhoulia-card-region strong {
+  min-width: 0;
+  color: #153f6b;
+  font: 750 2.92cqw/1 'IBM Plex Sans', system-ui, sans-serif;
+  letter-spacing: 0.3em;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.journey-zhoulia-card-region > span {
+  width: 0.16cqw;
+  height: 6.4cqw;
+  background: #154b76;
+  opacity: 0.95;
+}
+
+.journey-zhoulia-card-region-mark {
+  width: 7.05cqw;
+  height: 7.8cqw;
+  display: block;
+  object-fit: contain;
+}
+
+.journey-zhoulia-card-fields {
+  position: absolute;
+  z-index: 4;
+  top: 20.65%;
+  left: 5.75%;
+  width: 49.2%;
+  height: 47.35%;
+  display: grid;
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+}
+
+.journey-zhoulia-card-field {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 26.5% minmax(0, 1fr);
+  align-items: center;
+  padding: 0 1.25cqw 0 0.25cqw;
+}
+
+.journey-zhoulia-card-field > span {
+  color: #326393;
+  font: 760 1.92cqw/1 'IBM Plex Sans Condensed', 'Arial Narrow', system-ui, sans-serif;
+  letter-spacing: 0.025em;
+}
+
+.journey-zhoulia-card-field > strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #112f54;
+  font: 820 2.72cqw/1 'IBM Plex Sans Condensed', 'Arial Narrow', system-ui, sans-serif;
+  letter-spacing: -0.012em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.journey-zhoulia-card-field[data-row='2'] > strong,
+.journey-zhoulia-card-field[data-row='3'] > strong {
+  font-size: 2.36cqw;
+}
+
+.journey-zhoulia-card-photo {
+  position: absolute;
+  z-index: 3;
+  top: 20.8%;
+  left: 57.65%;
+  width: 27.55%;
+  height: 44.85%;
+  overflow: hidden;
+  clip-path: polygon(4.5% 0, 95.5% 0, 100% 4.5%, 100% 89.5%, 88% 100%, 3% 100%, 0 97%, 0 4%);
+}
+
+.journey-zhoulia-card-photo img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transform: translateZ(0);
+}
+
+.journey-zhoulia-card-partner {
+  position: absolute;
+  z-index: 5;
+  top: 46%;
+  right: 2.6%;
+  width: 12.2%;
+  height: 23.1%;
+  display: grid;
+  place-items: end center;
+  pointer-events: none;
+}
+
+.journey-zhoulia-card-partner img,
+.journey-zhoulia-card-partner picture {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.journey-zhoulia-card-partner img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 0.55cqw 0.7cqw rgba(23, 45, 63, 0.18));
+}
+
+.journey-zhoulia-card-badges {
+  position: absolute;
+  z-index: 5;
+  left: 8.6%;
+  right: 8.6%;
+  bottom: 8.55%;
+  height: 12.8%;
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  align-items: center;
+}
+
+.journey-zhoulia-card-badge {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.journey-zhoulia-card-badge > i {
+  width: 0.78cqw;
+  height: 0.78cqw;
+  border: 0.13cqw solid rgba(38, 91, 122, 0.36);
+  border-radius: 999px;
+  background: rgba(235, 246, 249, 0.45);
+}
+
+.journey-zhoulia-card-badge.is-earned > i {
+  border-color: rgba(2, 96, 60, 0.62);
+  background: rgba(2, 96, 60, 0.22);
+}
+
+.journey-zhoulia-card-badge img {
+  max-width: 74%;
+  max-height: 74%;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 0.28cqw 0.42cqw rgba(18, 42, 58, 0.17));
+}
+
+.journey-zhoulia-card-close {
+  position: absolute;
+  z-index: 8;
+  top: -14px;
+  right: -6px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 999px;
+  background: rgba(12, 22, 28, 0.92);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
+}
+
+.journey-zhoulia-card-close svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+@media (max-width: 520px) {
+  .journey-zhoulia-card-dialog {
+    width: min(96vw, calc(84vh * 4 / 3));
+  }
+
+  .journey-zhoulia-card-close {
+    top: -11px;
+    right: 1px;
+    width: 32px;
+    height: 32px;
+  }
+}

@@ -25,6 +25,16 @@
           }
         }
       }
+    },
+    {
+      "includes": ["public/assets/type-icons/*.svg"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noSvgWithoutTitle": "off"
+          }
+        }
+      }
     }
   ],
   "javascript": {

@@ -1,0 +1,12 @@
+.pokemon-asset-placeholder {
+  display: grid;
+  place-items: center;
+  flex: none;
+  border: 1px dashed rgba(139, 176, 179, 0.18);
+  background:
+    linear-gradient(rgba(161, 203, 206, 0.035) 1px, transparent 1px) 0 0 / 18px 18px,
+    linear-gradient(90deg, rgba(161, 203, 206, 0.035) 1px, transparent 1px) 0 0 / 18px 18px,
+    rgba(24, 34, 37, 0.08);
+  color: rgba(91, 125, 129, 0.34);
+  font: 700 1.8rem/1 'Space Grotesk', sans-serif;
+}

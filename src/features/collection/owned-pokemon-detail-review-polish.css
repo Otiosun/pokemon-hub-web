@@ -1,0 +1,30 @@
+.owned-detail-data:has(#owned-panel-history) {
+  padding-bottom: 24px;
+}
+
+.owned-detail-tab-panel:has(> .owned-detail-history-row) {
+  padding-top: 16px;
+}
+
+.owned-detail-history-row {
+  padding-bottom: 10px;
+}
+
+.owned-detail-history-row + .owned-detail-history-empty {
+  margin: 0;
+  padding: 0 16px 13px;
+  border-left: 4px solid var(--owned-red);
+  color: #9aa6a8;
+  background: #202a2d;
+  font-size: 0.68rem;
+}
+
+@media (max-width: 520px) {
+  .owned-detail-data:has(#owned-panel-history) {
+    padding-bottom: 20px;
+  }
+
+  .owned-detail-tab-panel:has(> .owned-detail-history-row) {
+    padding-top: 14px;
+  }
+}

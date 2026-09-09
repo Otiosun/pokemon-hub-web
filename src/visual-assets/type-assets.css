@@ -1,0 +1,39 @@
+.pokemon-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  padding: 4px 9px 4px 5px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  color: inherit;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.pokemon-type-badge.is-compact {
+  min-height: 24px;
+  gap: 6px;
+  padding: 3px 8px 3px 4px;
+  font-size: 0.57rem;
+}
+
+.pokemon-type-icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  display: block;
+  object-fit: contain;
+}
+
+.pokemon-type-badge.is-compact .pokemon-type-icon {
+  width: 17px;
+  height: 17px;
+}
+
+.pokemon-type-icon-fallback {
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24);
+}

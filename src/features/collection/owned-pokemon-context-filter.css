@@ -1,0 +1,70 @@
+.owned-pokemon-context-filter {
+  width: min(1240px, 100%);
+  min-height: 58px;
+  margin: 14px auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 9px 12px;
+  border: 1px solid rgba(101, 216, 232, 0.2);
+  background: rgba(101, 216, 232, 0.045);
+}
+
+.owned-pokemon-context-filter > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.owned-pokemon-context-filter span,
+.owned-pokemon-context-filter button {
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 0.07em;
+}
+
+.owned-pokemon-context-filter span {
+  color: #698185;
+  font-size: 0.43rem;
+}
+
+.owned-pokemon-context-filter strong {
+  overflow: hidden;
+  color: #dbecec;
+  font: 700 0.82rem 'Space Grotesk', sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.owned-pokemon-context-filter button {
+  min-height: 40px;
+  flex: none;
+  padding: 0 10px;
+  border: 1px solid rgba(101, 216, 232, 0.22);
+  background: rgba(101, 216, 232, 0.04);
+  color: #9fdde4;
+  font-size: 0.43rem;
+  cursor: pointer;
+}
+
+.owned-pokemon-context-filter button:hover,
+.owned-pokemon-context-filter button:focus-visible {
+  border-color: rgba(101, 216, 232, 0.5);
+  background: rgba(101, 216, 232, 0.09);
+}
+
+.owned-pokemon-context-filter button:focus-visible {
+  outline: 2px solid rgba(101, 216, 232, 0.7);
+  outline-offset: 2px;
+}
+
+@media (max-width: 520px) {
+  .owned-pokemon-context-filter {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .owned-pokemon-context-filter button {
+    width: 100%;
+  }
+}
