@@ -1,4 +1,6 @@
 const PLAYER_PORTAL_API_BASE_URL = 'PLAYER_PORTAL_API_BASE_URL';
+const VERCEL_ENV = 'VERCEL_ENV';
+const STAGING_PLAYER_API_URL = 'https://pokemon-rpg-player-api-staging-staging.up.railway.app';
 
 export function readPlayerPortalApiBaseUrl(): string | null {
   const runtimeProcess = Reflect.get(globalThis, 'process');
@@ -7,7 +9,14 @@ export function readPlayerPortalApiBaseUrl(): string | null {
   const runtimeEnvironment = Reflect.get(runtimeProcess, 'env');
   if (typeof runtimeEnvironment !== 'object' || runtimeEnvironment === null) return null;
 
-  const value = Reflect.get(runtimeEnvironment, PLAYER_PORTAL_API_BASE_URL);
-  if (typeof value !== 'string' || value.trim() === '') return null;
-  return value.trim();
+  const explicitValue = Reflect.get(runtimeEnvironment, PLAYER_PORTAL_API_BASE_URL);
+  if (typeof explicitValue === 'string' && explicitValue.trim() !== '') {
+    return explicitValue.trim();
+  }
+
+  if (Reflect.get(runtimeEnvironment, VERCEL_ENV) === 'preview') {
+    return STAGING_PLAYER_API_URL;
+  }
+
+  return null;
 }
