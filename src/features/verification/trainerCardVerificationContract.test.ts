@@ -8,10 +8,10 @@ import {
 const VALID_PUBLIC_ID = 'tcv_0123456789ABCDEFGHIJKLMN';
 
 describe('trainer card public verification contract', () => {
-  it('keeps the game Trainer ID separate from the signed public verification ID', () => {
+  it('keeps the game Trainer ID separate from the signed public verification ID without fabricating either', () => {
     const profile = getJourneyProfilePreview();
 
-    expect(profile.trainerId).toBe('KNT-028419');
+    expect(profile.trainerId).toBe('—');
     expect(profile.publicVerificationId).toBeNull();
   });
 
@@ -35,7 +35,9 @@ describe('trainer card public verification contract', () => {
     expect(parseTrainerCardVerificationPath(`/verificar/treinador/${VALID_PUBLIC_ID}`)).toBe(
       VALID_PUBLIC_ID,
     );
-    expect(parseTrainerCardVerificationPath(`/verificar/treinador/${VALID_PUBLIC_ID}/extra`)).toBeNull();
+    expect(
+      parseTrainerCardVerificationPath(`/verificar/treinador/${VALID_PUBLIC_ID}/extra`),
+    ).toBeNull();
     expect(parseTrainerCardVerificationPath(`/jornada/${VALID_PUBLIC_ID}`)).toBeNull();
   });
 });

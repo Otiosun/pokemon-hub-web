@@ -57,3 +57,7 @@ export function createJourneyProfileView(
     },
   };
 }
+
+export function getJourneyProfilePreview(): JourneyProfilePreview {
+  return createJourneyProfileView(null);
+}
