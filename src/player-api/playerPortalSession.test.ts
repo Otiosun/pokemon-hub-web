@@ -8,6 +8,7 @@ const profile = {
   playerStatus: 'ACTIVE',
   trainerName: 'Natan',
   originRegionId: '22222222-2222-4222-8222-222222222222',
+  originRegionName: 'Kanto',
   locale: 'pt-BR',
   trainerLevel: 7,
   progressionPoints: '1234',
