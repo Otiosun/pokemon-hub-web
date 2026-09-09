@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { HubModuleHeader } from '../../components/HubModuleHeader';
 import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import {
@@ -6,6 +6,13 @@ import {
   type JourneyBadgePreview,
 } from './journeyProfilePreview';
 import { ShareTrainerCardV2 } from './ShareTrainerCardV2';
+import {
+  getTrainerCardActionLabel,
+  getTrainerCardEmissionReadiness,
+  hasTrainerCardBeenEmitted,
+  TRAINER_CARD_EMITTED_EVENT,
+  type TrainerCardMissingField,
+} from './trainerCardEmissionState';
 import './journey-page.css';
 import './journey-page-review-fixes.css';
 
@@ -74,6 +81,18 @@ function displayValue(value: string | number | null, fallback: string) {
   return String(value);
 }
 
+function missingTrainerCardLabel(field: TrainerCardMissingField) {
+  const labels: Record<TrainerCardMissingField, string> = {
+    name: 'nome',
+    title: 'título',
+    feat: 'Feat',
+    partner: 'parceiro',
+    idNo: 'ID',
+    photo: 'foto',
+  };
+  return labels[field];
+}
+
 function TrainerAvatar({ avatarUrl }: { avatarUrl: string | null }) {
   return (
     <div
@@ -111,12 +130,42 @@ function BadgeStrip({ badges }: { badges: JourneyBadgePreview[] }) {
 }
 
 export function JourneyPageV2() {
-  const profile = getJourneyProfilePreview();
+  const profile = useMemo(() => getJourneyProfilePreview(), []);
   const cover = useImagePreview('cover');
   const avatar = useImagePreview('avatar');
   const [editing, setEditing] = useState(false);
   const [showShareCard, setShowShareCard] = useState(false);
+  const isZhoulia = profile.originRegion.trim().toLowerCase() === 'zhoulia';
+  const [hasEmittedTrainerCard, setHasEmittedTrainerCard] = useState(() => (
+    isZhoulia ? hasTrainerCardBeenEmitted(profile.trainerId) : false
+  ));
+  const [trainerCardError, setTrainerCardError] = useState<string | null>(null);
   const imageError = cover.error ?? avatar.error;
+  const trainerCardReadiness = isZhoulia
+    ? getTrainerCardEmissionReadiness(profile, avatar.url)
+    : { ready: true, missing: [] as TrainerCardMissingField[] };
+  const trainerCardActionLabel = getTrainerCardActionLabel({ isZhoulia, hasEmitted: hasEmittedTrainerCard });
+
+  useEffect(() => {
+    if (!isZhoulia) return;
+    const onEmitted = (event: Event) => {
+      const detail = (event as CustomEvent<{ trainerId?: string }>).detail;
+      if (detail?.trainerId === profile.trainerId) setHasEmittedTrainerCard(true);
+    };
+    window.addEventListener(TRAINER_CARD_EMITTED_EVENT, onEmitted);
+    return () => window.removeEventListener(TRAINER_CARD_EMITTED_EVENT, onEmitted);
+  }, [isZhoulia, profile.trainerId]);
+
+  const openTrainerCard = () => {
+    setTrainerCardError(null);
+    if (isZhoulia && !trainerCardReadiness.ready) {
+      const missing = trainerCardReadiness.missing.map(missingTrainerCardLabel).join(', ');
+      setTrainerCardError(`Complete o registro antes de emitir: ${missing}.`);
+      if (trainerCardReadiness.missing.includes('photo')) setEditing(true);
+      return;
+    }
+    setShowShareCard(true);
+  };
 
   return (
     <main className="journey-page">
@@ -234,14 +283,16 @@ export function JourneyPageV2() {
             <BadgeStrip badges={profile.badges} />
           </section>
 
-          <button className="journey-share-action" type="button" onClick={() => setShowShareCard(true)}>
+          <button className="journey-share-action" type="button" onClick={openTrainerCard}>
             <span className="journey-share-action-icon"><CardIcon /></span>
             <span className="journey-share-action-copy">
-              <strong>VER TRAINER CARD</strong>
-              <small>Artefato horizontal para compartilhar</small>
+              <strong>{trainerCardActionLabel}</strong>
+              <small>{isZhoulia ? 'Documento horizontal da Liga de Zhoulia' : 'Artefato horizontal para compartilhar'}</small>
             </span>
             <span className="journey-share-action-chevron"><ChevronIcon /></span>
           </button>
+
+          {trainerCardError ? <p className="journey-image-error" role="alert">{trainerCardError}</p> : null}
 
           <div className="journey-license-footer">
             <span>ISSUED BY {profile.originRegion.toUpperCase()} LEAGUE</span>
