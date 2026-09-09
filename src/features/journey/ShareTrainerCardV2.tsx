@@ -145,9 +145,19 @@ export function ShareTrainerCardV2({
 
   const region = profile.originRegion.toUpperCase();
   const isZhoulia = profile.originRegion.trim().toLowerCase() === 'zhoulia';
+  const forceZhouliaTheme =
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('trainerCardTheme') === 'zhoulia';
 
-  if (isZhoulia) {
-    return <ShareTrainerCardZhoulia profile={profile} avatarUrl={avatarUrl} onClose={onClose} />;
+  if (isZhoulia || forceZhouliaTheme) {
+    return (
+      <ShareTrainerCardZhoulia
+        profile={profile}
+        avatarUrl={avatarUrl}
+        onClose={onClose}
+        displayRegion={forceZhouliaTheme ? 'Zhoulia' : profile.originRegion}
+        visualPreview={forceZhouliaTheme && !isZhoulia}
+      />
+    );
   }
 
   return (
