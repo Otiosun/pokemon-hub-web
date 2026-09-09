@@ -3,6 +3,8 @@ import type { JourneyProfilePreview } from './journeyProfilePreview';
 import {
   getTrainerCardActionLabel,
   getTrainerCardEmissionReadiness,
+  getTrainerCardEmissionStorageKey,
+  hasTrainerCardBeenEmitted,
   mapProfileToZhouliaTrainerCardFields,
 } from './trainerCardEmissionState';
 
@@ -75,5 +77,10 @@ describe('Trainer Card emission readiness', () => {
     expect(getTrainerCardActionLabel({ isZhoulia: true, hasEmitted: false })).toBe('EMITIR TRAINER CARD');
     expect(getTrainerCardActionLabel({ isZhoulia: true, hasEmitted: true })).toBe('VER TRAINER CARD');
     expect(getTrainerCardActionLabel({ isZhoulia: false, hasEmitted: false })).toBe('VER TRAINER CARD');
+  });
+
+  it('keeps the issuance flag namespaced by trainer id and is SSR-safe', () => {
+    expect(getTrainerCardEmissionStorageKey(' ZHO/028419 ')).toBe('pokemon-hub:trainer-card:zhoulia:emitted:ZHO-028419');
+    if (typeof window === 'undefined') expect(hasTrainerCardBeenEmitted('ZHO-028419')).toBe(false);
   });
 });
