@@ -1,5 +1,6 @@
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DIGITS_PATTERN = /^\d+$/;
+const HUB_LOGIN_TICKET_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 
 const ONBOARDING_STATES = new Set([
   'NEW',
@@ -43,6 +44,15 @@ export type PlayerPortalSelfResult =
   | { status: 'authenticated'; profile: PlayerPortalProfile }
   | { status: 'unauthenticated' };
 
+export type PlayerPortalExchangeResult =
+  | {
+      status: 'authenticated';
+      profile: PlayerPortalProfile;
+      sessionExpiresAt: string;
+    }
+  | { status: 'invalid_ticket' }
+  | { status: 'ineligible' };
+
 export type PlayerPortalFetcher = (
   input: RequestInfo | URL,
   init?: RequestInit,
@@ -60,18 +70,56 @@ export async function getPlayerPortalSelf(
   if (response.status === 401) return { status: 'unauthenticated' };
   if (!response.ok) throw new Error(`Player portal request failed (${response.status})`);
 
-  let body: unknown;
-  try {
-    body = await response.json();
-  } catch {
-    throw new Error('Invalid player portal response');
-  }
-
+  const body = await readJsonBody(response);
   if (!isRecord(body) || !isPlayerPortalProfile(body.profile)) {
     throw new Error('Invalid player portal response');
   }
 
   return { status: 'authenticated', profile: body.profile };
+}
+
+export async function exchangePlayerPortalTicket(
+  ticket: string,
+  fetcher: PlayerPortalFetcher = fetch,
+): Promise<PlayerPortalExchangeResult> {
+  if (!HUB_LOGIN_TICKET_PATTERN.test(ticket)) return { status: 'invalid_ticket' };
+
+  const response = await fetcher('/api/hub/auth/exchange', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ ticket }),
+  });
+
+  if (response.status === 400 || response.status === 401) return { status: 'invalid_ticket' };
+  if (response.status === 403) return { status: 'ineligible' };
+  if (!response.ok) throw new Error(`Player portal login failed (${response.status})`);
+
+  const body = await readJsonBody(response);
+  if (
+    !isRecord(body) ||
+    !isPlayerPortalProfile(body.profile) ||
+    !isIsoTimestamp(body.sessionExpiresAt)
+  ) {
+    throw new Error('Invalid player portal response');
+  }
+
+  return {
+    status: 'authenticated',
+    profile: body.profile,
+    sessionExpiresAt: body.sessionExpiresAt,
+  };
+}
+
+async function readJsonBody(response: Response): Promise<unknown> {
+  try {
+    return await response.json();
+  } catch {
+    throw new Error('Invalid player portal response');
+  }
 }
 
 function isPlayerPortalProfile(value: unknown): value is PlayerPortalProfile {
@@ -136,4 +184,8 @@ function isNullableString(value: unknown): value is string | null {
 
 function isNonNegativeInteger(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value >= 0;
+}
+
+function isIsoTimestamp(value: unknown): value is string {
+  return typeof value === 'string' && value.endsWith('Z') && Number.isFinite(Date.parse(value));
 }

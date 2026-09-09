@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { getPlayerPortalSelf } from './playerPortalClient';
+import { exchangePlayerPortalTicket, getPlayerPortalSelf } from './playerPortalClient';
 
+const ticket = 'A'.repeat(43);
+const sessionExpiresAt = '2026-09-10T00:00:00.000Z';
 const profile = {
   playerId: '11111111-1111-4111-8111-111111111111',
   playerStatus: 'ACTIVE',
@@ -64,6 +66,79 @@ describe('getPlayerPortalSelf', () => {
 
     await expect(getPlayerPortalSelf(fetcher)).rejects.toThrow(
       'Player portal request failed (503)',
+    );
+  });
+});
+
+describe('exchangePlayerPortalTicket', () => {
+  it('exchanges a valid one-shot ticket through the same-origin BFF', async () => {
+    const fetcher = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ profile, sessionExpiresAt }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+    );
+
+    await expect(exchangePlayerPortalTicket(ticket, fetcher)).resolves.toEqual({
+      status: 'authenticated',
+      profile,
+      sessionExpiresAt,
+    });
+    expect(fetcher).toHaveBeenCalledWith('/api/hub/auth/exchange', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        accept: 'application/json',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ ticket }),
+    });
+  });
+
+  it('rejects malformed tickets before contacting the BFF', async () => {
+    const fetcher = vi.fn(async () => new Response(null, { status: 500 }));
+
+    await expect(exchangePlayerPortalTicket('not-a-ticket', fetcher)).resolves.toEqual({
+      status: 'invalid_ticket',
+    });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it('maps expired or already-used tickets to an explicit invalid state', async () => {
+    const fetcher = vi.fn(async () => new Response('{"error":"UNAUTHENTICATED"}', { status: 401 }));
+
+    await expect(exchangePlayerPortalTicket(ticket, fetcher)).resolves.toEqual({
+      status: 'invalid_ticket',
+    });
+  });
+
+  it('keeps ineligible players distinct from invalid tickets', async () => {
+    const fetcher = vi.fn(
+      async () => new Response('{"error":"PLAYER_INELIGIBLE"}', { status: 403 }),
+    );
+
+    await expect(exchangePlayerPortalTicket(ticket, fetcher)).resolves.toEqual({
+      status: 'ineligible',
+    });
+  });
+
+  it('rejects malformed successful exchange payloads', async () => {
+    const fetcher = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ profile, sessionExpiresAt: 'not-a-date' }), { status: 200 }),
+    );
+
+    await expect(exchangePlayerPortalTicket(ticket, fetcher)).rejects.toThrow(
+      'Invalid player portal response',
+    );
+  });
+
+  it('rejects unexpected exchange failures as login errors', async () => {
+    const fetcher = vi.fn(async () => new Response('{"error":"INTERNAL_ERROR"}', { status: 503 }));
+
+    await expect(exchangePlayerPortalTicket(ticket, fetcher)).rejects.toThrow(
+      'Player portal login failed (503)',
     );
   });
 });
