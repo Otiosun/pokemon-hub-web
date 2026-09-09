@@ -1,0 +1,33 @@
+name: Trainer Card validation
+
+on:
+  push:
+    branches:
+      - feat/zhoulia-trainer-card-emission-v1
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+      - run: corepack enable
+      - run: corepack prepare pnpm@11.23.0 --activate
+      - run: pnpm install --ignore-scripts --no-frozen-lockfile
+      - name: Lint
+        run: pnpm check
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Unit tests
+        run: pnpm test:run --reporter=verbose
+      - name: Vite production build
+        run: pnpm exec vite build
