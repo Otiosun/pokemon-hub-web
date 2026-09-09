@@ -6,6 +6,7 @@ import {
   createJourneyProfileView,
   type JourneyBadgePreview,
 } from './journeyProfilePreview';
+import { JourneyWorldPanel } from './JourneyWorldPanel';
 import { ShareTrainerCardV2 } from './ShareTrainerCardV2';
 import './journey-page.css';
 import './journey-page-review-fixes.css';
@@ -263,10 +264,14 @@ export function JourneyPageV2({
               <strong>{profile.originRegion}</strong>
             </div>
             <div>
-              <span>LOCALIZAÇÃO ATUAL</span>
-              <strong>{profile.currentLocation}</strong>
+              <span>STATUS DE CAMPO</span>
+              <strong>
+                {playerPortalSession.status === 'authenticated' ? 'SINCRONIZADO' : 'NÃO CONECTADO'}
+              </strong>
             </div>
           </div>
+
+          <JourneyWorldPanel enabled={playerPortalSession.status === 'authenticated'} />
 
           {profile.leadPokemon ? (
             <a
@@ -384,10 +389,6 @@ export function JourneyPageV2({
               <div>
                 <dt>Região de origem</dt>
                 <dd>{profile.originRegion}</dd>
-              </div>
-              <div>
-                <dt>Localização atual</dt>
-                <dd>{profile.currentLocation}</dd>
               </div>
               <div>
                 <dt>Time ativo</dt>
