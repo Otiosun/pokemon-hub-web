@@ -5,7 +5,7 @@ import {
   mapProfileToZhouliaTrainerCardFields,
 } from './trainerCardEmissionState';
 
-const profile = {
+const profile: JourneyProfilePreview = {
   trainerName: 'Enzo',
   trainerTitle: 'Explorador de Fronteiras',
   trainerId: 'ZHO-028419',
@@ -16,14 +16,21 @@ const profile = {
   leadPokemon: {
     instanceId: 'brasa-1',
     dex: 58,
+    species: 'Growlithe',
     nickname: 'Brasa',
     level: 12,
+    types: ['Fogo'],
+    sex: 'M',
+    favorite: true,
+    shiny: false,
+    box: 'Parceiros',
+    teamSlot: 1,
   },
   badges: [],
   ownedPokemonCount: 1,
   registeredSpeciesCount: 1,
   personal: { age: null, height: null, appearance: null, bio: null },
-} as JourneyProfilePreview;
+};
 
 describe('Trainer Card emission readiness', () => {
   it('maps only the five canonical card fields', () => {
