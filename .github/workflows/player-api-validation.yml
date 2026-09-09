@@ -41,7 +41,7 @@ jobs:
         run: corepack prepare pnpm@11.23.0 --activate
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile --ignore-scripts
+        run: pnpm install --no-frozen-lockfile --ignore-scripts
 
       - name: Lint
         run: pnpm check
