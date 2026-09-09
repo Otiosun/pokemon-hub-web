@@ -71,10 +71,14 @@ export function ShareTrainerCardZhoulia({
   profile,
   avatarUrl,
   onClose,
+  displayRegion = profile.originRegion,
+  visualPreview = false,
 }: {
   profile: JourneyProfilePreview;
   avatarUrl: string | null;
   onClose: () => void;
+  displayRegion?: string;
+  visualPreview?: boolean;
 }) {
   const rows = [
     ['NOME', profile.trainerName],
@@ -90,13 +94,17 @@ export function ShareTrainerCardZhoulia({
         className="journey-zhoulia-card-dialog"
         role="dialog"
         aria-modal="true"
-        aria-label={`Trainer Card de ${profile.originRegion}`}
+        aria-label={`Trainer Card de ${displayRegion}`}
       >
         <button className="journey-zhoulia-card-close" type="button" onClick={onClose} aria-label="Fechar Trainer Card">
           <CloseIcon />
         </button>
 
-        <article className="journey-zhoulia-card" aria-label={`Trainer Card de ${profile.trainerName}`}>
+        <article
+          className="journey-zhoulia-card"
+          aria-label={`Trainer Card de ${profile.trainerName}`}
+          data-visual-preview={visualPreview ? 'true' : undefined}
+        >
           <img
             className="journey-zhoulia-card-base"
             src="/assets/journey/zhoulia-trainer-card-ai-base-v1.webp"
@@ -108,7 +116,7 @@ export function ShareTrainerCardZhoulia({
           <div className="journey-zhoulia-card-title">TRAINER CARD</div>
 
           <div className="journey-zhoulia-card-region">
-            <strong>{profile.originRegion.toUpperCase()}</strong>
+            <strong>{displayRegion.toUpperCase()}</strong>
             <span aria-hidden="true" />
             <ZhouliaEPrimeMark className="journey-zhoulia-card-region-mark" />
           </div>
