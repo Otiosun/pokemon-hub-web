@@ -1,5 +1,6 @@
 import { getPokemonSpeciesVisualAssets } from '../../visual-assets/pokemonVisualRegistry';
 import type { JourneyProfilePreview } from './journeyProfilePreview';
+import { readExifOrientation, type ExifOrientation } from './trainerCardExifOrientation';
 import {
   buildZhouliaTrainerCardSvg,
   ZHOULIA_CARD_BASE_HREF,
@@ -21,6 +22,13 @@ type FaceDetectorConstructor = new (options?: {
   fastMode?: boolean;
   maxDetectedFaces?: number;
 }) => FaceDetectorLike;
+
+type NormalizedTrainerPhoto = {
+  href: string;
+  width: number;
+  height: number;
+  sourceOrientation: ExifOrientation;
+};
 
 export type EmittedTrainerCard = {
   pngBlob: Blob;
@@ -48,11 +56,56 @@ function blobToDataUrl(blob: Blob) {
   });
 }
 
+async function fetchAsBlob(src: string) {
+  const response = src.startsWith('http://') || src.startsWith('https://')
+    ? await fetch(src, { cache: 'force-cache', mode: 'cors' })
+    : await fetch(src);
+  if (!response.ok) throw new Error(`trainer-card-asset-http-${response.status}`);
+  return response.blob();
+}
+
 async function fetchAsDataUrl(src: string) {
   if (src.startsWith('data:')) return src;
-  const response = await fetch(src, { cache: 'force-cache', mode: 'cors' });
-  if (!response.ok) throw new Error(`trainer-card-asset-http-${response.status}`);
-  return blobToDataUrl(await response.blob());
+  return blobToDataUrl(await fetchAsBlob(src));
+}
+
+function canvasToPngDataUrl(source: CanvasImageSource, width: number, height: number) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('trainer-card-photo-normalization-canvas-unavailable');
+  context.drawImage(source, 0, 0, width, height);
+  return canvas.toDataURL('image/png');
+}
+
+async function normalizeTrainerPhotoSource(src: string): Promise<NormalizedTrainerPhoto> {
+  const blob = await fetchAsBlob(src);
+  const sourceOrientation = readExifOrientation(await blob.arrayBuffer());
+
+  if (typeof createImageBitmap === 'function') {
+    try {
+      const bitmap = await createImageBitmap(blob, { imageOrientation: 'from-image' });
+      const normalized = {
+        href: canvasToPngDataUrl(bitmap, bitmap.width, bitmap.height),
+        width: bitmap.width,
+        height: bitmap.height,
+        sourceOrientation,
+      };
+      bitmap.close();
+      return normalized;
+    } catch {
+      // HTMLImageElement fallback below also honors from-image orientation in modern browsers.
+    }
+  }
+
+  const image = await loadImage(await blobToDataUrl(blob));
+  return {
+    href: canvasToPngDataUrl(image, image.naturalWidth, image.naturalHeight),
+    width: image.naturalWidth,
+    height: image.naturalHeight,
+    sourceOrientation,
+  };
 }
 
 function getFaceDetectorConstructor(): FaceDetectorConstructor | null {
@@ -152,15 +205,15 @@ function analyzeSubjectSignal(image: HTMLImageElement) {
 }
 
 async function prepareTrainerPhoto(src: string): Promise<ZhouliaTrainerCardPhoto> {
-  const href = await fetchAsDataUrl(src);
-  const image = await loadImage(href);
+  const normalized = await normalizeTrainerPhotoSource(src);
+  const image = await loadImage(normalized.href);
   const faces = await detectFaces(image);
   const subject = faces.length === 0 ? analyzeSubjectSignal(image) : null;
 
   return {
-    href,
-    width: image.naturalWidth,
-    height: image.naturalHeight,
+    href: normalized.href,
+    width: normalized.width,
+    height: normalized.height,
     faces,
     subjectBox: subject?.subjectBox ?? null,
     subjectCenter: subject?.subjectCenter ?? null,
