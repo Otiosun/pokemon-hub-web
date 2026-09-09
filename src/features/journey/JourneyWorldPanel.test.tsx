@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import journeyPageSource from './JourneyPageV2.tsx?raw';
 import { JourneyWorldPanel } from './JourneyWorldPanel';
 
 describe('JourneyWorldPanel', () => {
@@ -21,9 +21,9 @@ describe('JourneyWorldPanel', () => {
   });
 
   it('is composed inside Jornada rather than added as a fourth global Hub destination', () => {
-    const source = readFileSync(new URL('./JourneyPageV2.tsx', import.meta.url), 'utf8');
-
-    expect(source).toContain("import { JourneyWorldPanel } from './JourneyWorldPanel';");
-    expect(source).toContain('<JourneyWorldPanel enabled={playerPortalSession.status === \'authenticated\'} />');
+    expect(journeyPageSource).toContain("import { JourneyWorldPanel } from './JourneyWorldPanel';");
+    expect(journeyPageSource).toContain(
+      "<JourneyWorldPanel enabled={playerPortalSession.status === 'authenticated'} />",
+    );
   });
 });
