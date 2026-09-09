@@ -46,7 +46,20 @@ jobs:
         run: pnpm install --no-frozen-lockfile --ignore-scripts
 
       - name: Lint
-        run: pnpm check
+        id: lint
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm check 2>&1 | tee /tmp/player-api-lint.log
+
+      - name: Upload lint diagnostics
+        if: always() && steps.lint.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: player-api-lint-diagnostics
+          path: /tmp/player-api-lint.log
+          if-no-files-found: error
+          retention-days: 3
 
       - name: Format check
         id: format_check
