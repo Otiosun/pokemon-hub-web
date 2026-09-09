@@ -7,6 +7,7 @@ const realProfile: PlayerPortalProfile = {
   playerStatus: 'ACTIVE',
   trainerName: 'Natan',
   originRegionId: '22222222-2222-4222-8222-222222222222',
+  originRegionName: 'Kanto',
   locale: 'pt-BR',
   trainerLevel: 7,
   progressionPoints: '1234',
@@ -18,6 +19,9 @@ const realProfile: PlayerPortalProfile = {
     {
       pokemonInstanceId: '66666666-6666-4666-8666-666666666666',
       formId: '77777777-7777-4777-8777-777777777777',
+      displayName: 'Charmander',
+      nationalDex: 4,
+      typeNames: ['Fire'],
       level: 12,
       currentHp: 31,
       slotNo: 1,
@@ -25,6 +29,9 @@ const realProfile: PlayerPortalProfile = {
     {
       pokemonInstanceId: '88888888-8888-4888-8888-888888888888',
       formId: '99999999-9999-4999-8999-999999999999',
+      displayName: 'Pidgey',
+      nationalDex: 16,
+      typeNames: ['Normal', 'Flying'],
       level: 9,
       currentHp: 24,
       slotNo: 2,
@@ -33,16 +40,22 @@ const realProfile: PlayerPortalProfile = {
 };
 
 describe('createJourneyProfileView', () => {
-  it('uses authoritative trainer/progression data without inventing unsupported world data', () => {
+  it('uses authoritative trainer and catalog presentation without inventing unsupported world data', () => {
     const profile = createJourneyProfileView(realProfile);
 
     expect(profile).toMatchObject({
       trainerName: 'Natan',
       trainerTitle: 'Treinador · Nv. 7',
       trainerId: '—',
-      originRegion: 'Não disponível',
+      originRegion: 'Kanto',
       currentLocation: 'Não disponível',
-      leadPokemon: null,
+      leadPokemon: {
+        instanceId: '66666666-6666-4666-8666-666666666666',
+        dex: 4,
+        displayName: 'Charmander',
+        level: 12,
+        types: ['Fire'],
+      },
       badges: [],
       ownedPokemonCount: null,
       registeredSpeciesCount: null,
@@ -50,8 +63,24 @@ describe('createJourneyProfileView', () => {
       progressionPoints: '1234',
     });
     expect(JSON.stringify(profile)).not.toContain('Whatever');
-    expect(JSON.stringify(profile)).not.toContain('Kanto');
     expect(JSON.stringify(profile)).not.toContain('Route 1');
+    expect(JSON.stringify(profile)).not.toContain('Brasa');
+  });
+
+  it('does not invent a partner when the catalog presentation is unresolved', () => {
+    const profile = createJourneyProfileView({
+      ...realProfile,
+      team: [
+        {
+          ...realProfile.team[0],
+          displayName: null,
+          nationalDex: null,
+          typeNames: [],
+        },
+      ],
+    });
+
+    expect(profile.leadPokemon).toBeNull();
   });
 
   it('renders an honest disconnected shell instead of falling back to preview trainer data', () => {

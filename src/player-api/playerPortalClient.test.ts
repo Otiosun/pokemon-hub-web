@@ -1,13 +1,18 @@
 import { describe, expect, it, vi } from 'vitest';
-import { exchangePlayerPortalTicket, getPlayerPortalSelf } from './playerPortalClient';
+import {
+  exchangePlayerPortalTicket,
+  getPlayerPortalSelf,
+  type PlayerPortalProfile,
+} from './playerPortalClient';
 
 const ticket = 'A'.repeat(43);
 const sessionExpiresAt = '2026-09-10T00:00:00.000Z';
-const profile = {
+const profile: PlayerPortalProfile = {
   playerId: '11111111-1111-4111-8111-111111111111',
   playerStatus: 'ACTIVE',
   trainerName: 'Natan',
   originRegionId: '22222222-2222-4222-8222-222222222222',
+  originRegionName: 'Kanto',
   locale: 'pt-BR',
   trainerLevel: 7,
   progressionPoints: '1234',
@@ -19,6 +24,9 @@ const profile = {
     {
       pokemonInstanceId: '66666666-6666-4666-8666-666666666666',
       formId: '77777777-7777-4777-8777-777777777777',
+      displayName: 'Charmander',
+      nationalDex: 4,
+      typeNames: ['Fire'],
       level: 12,
       currentHp: 31,
       slotNo: 1,
@@ -56,6 +64,15 @@ describe('getPlayerPortalSelf', () => {
     const fetcher = vi.fn(
       async () =>
         new Response(JSON.stringify({ profile: { trainerName: 'Whatever' } }), { status: 200 }),
+    );
+
+    await expect(getPlayerPortalSelf(fetcher)).rejects.toThrow('Invalid player portal response');
+  });
+
+  it('rejects malformed catalog presentation instead of accepting untrusted display metadata', async () => {
+    const malformedProfile = { ...profile, originRegionName: 42 };
+    const fetcher = vi.fn(
+      async () => new Response(JSON.stringify({ profile: malformedProfile }), { status: 200 }),
     );
 
     await expect(getPlayerPortalSelf(fetcher)).rejects.toThrow('Invalid player portal response');
