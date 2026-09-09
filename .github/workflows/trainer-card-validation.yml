@@ -26,7 +26,18 @@ jobs:
       - name: Lint
         run: pnpm check
       - name: Typecheck
-        run: pnpm typecheck
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm typecheck 2>&1 | tee /tmp/trainer-card-typecheck.log
+      - name: Upload typecheck diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trainer-card-typecheck-diagnostics
+          path: /tmp/trainer-card-typecheck.log
+          if-no-files-found: error
+          retention-days: 2
       - name: Unit tests
         run: pnpm test:run --reporter=verbose
       - name: Vite production build
