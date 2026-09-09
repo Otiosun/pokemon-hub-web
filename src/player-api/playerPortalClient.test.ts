@@ -43,11 +43,16 @@ describe('getPlayerPortalSelf', () => {
     expect(result).toEqual({ status: 'authenticated', profile });
   });
 
-  it('returns an explicit unauthenticated state for 401 without fabricating profile data', async () => {
-    const fetcher = vi.fn(async () => new Response('{"error":"UNAUTHENTICATED"}', { status: 401 }));
+  it(
+    'returns an explicit unauthenticated state for 401 without fabricating profile data',
+    async () => {
+      const fetcher = vi.fn(
+        async () => new Response('{"error":"UNAUTHENTICATED"}', { status: 401 }),
+      );
 
-    await expect(getPlayerPortalSelf(fetcher)).resolves.toEqual({ status: 'unauthenticated' });
-  });
+      await expect(getPlayerPortalSelf(fetcher)).resolves.toEqual({ status: 'unauthenticated' });
+    },
+  );
 
   it('rejects malformed successful payloads instead of trusting arbitrary JSON', async () => {
     const fetcher = vi.fn(async () =>
@@ -60,6 +65,8 @@ describe('getPlayerPortalSelf', () => {
   it('rejects non-authentication HTTP failures as API errors', async () => {
     const fetcher = vi.fn(async () => new Response('{"error":"INTERNAL_ERROR"}', { status: 503 }));
 
-    await expect(getPlayerPortalSelf(fetcher)).rejects.toThrow('Player portal request failed (503)');
+    await expect(getPlayerPortalSelf(fetcher)).rejects.toThrow(
+      'Player portal request failed (503)',
+    );
   });
 });
