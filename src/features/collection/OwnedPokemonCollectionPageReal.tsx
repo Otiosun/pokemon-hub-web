@@ -45,15 +45,21 @@ function sexSymbol(pokemon: OwnedPokemonView) {
   return { glyph: '—', label: 'Sem sexo registrado' };
 }
 
-function PokemonVisual({ pokemon, role }: { pokemon: OwnedPokemonView; role: 'portrait' | 'official-artwork' }) {
+function PokemonVisual({
+  pokemon,
+  assetRole,
+}: {
+  pokemon: OwnedPokemonView;
+  assetRole: 'portrait' | 'official-artwork';
+}) {
   if (pokemon.dex === null) return <strong aria-hidden="true">?</strong>;
   return (
     <PokemonAssetImage
       dex={pokemon.dex}
-      assetRole={role}
+      assetRole={assetRole}
       alt=""
       aria-hidden="true"
-      loading={role === 'portrait' ? 'eager' : 'lazy'}
+      loading={assetRole === 'portrait' ? 'eager' : 'lazy'}
       decoding="async"
       fallbackLabel="?"
     />
@@ -71,7 +77,7 @@ function TeamCard({ pokemon }: { pokemon: OwnedPokemonView }) {
         SLOT {String(pokemon.teamSlot ?? 0).padStart(2, '0')}
       </span>
       <div className="owned-pokemon-team-portrait">
-        <PokemonVisual pokemon={pokemon} role="portrait" />
+        <PokemonVisual pokemon={pokemon} assetRole="portrait" />
       </div>
       <div className="owned-pokemon-team-copy">
         <strong>{pokemon.nickname}</strong>
@@ -97,7 +103,7 @@ function PokemonCard({ pokemon }: { pokemon: OwnedPokemonView }) {
         <div>{pokemon.teamSlot && <strong>TIME · {pokemon.teamSlot}</strong>}</div>
       </div>
       <div className="owned-pokemon-visual">
-        <PokemonVisual pokemon={pokemon} role="official-artwork" />
+        <PokemonVisual pokemon={pokemon} assetRole="official-artwork" />
       </div>
       <div className="owned-pokemon-copy">
         <div className="owned-pokemon-name-row">
