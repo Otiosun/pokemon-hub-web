@@ -24,7 +24,18 @@ jobs:
       - run: corepack prepare pnpm@11.23.0 --activate
       - run: pnpm install --ignore-scripts --no-frozen-lockfile
       - name: Lint
-        run: pnpm check
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm check 2>&1 | tee /tmp/trainer-card-lint.log
+      - name: Upload lint diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trainer-card-lint-diagnostics
+          path: /tmp/trainer-card-lint.log
+          if-no-files-found: error
+          retention-days: 2
       - name: Typecheck
         shell: bash
         run: |
