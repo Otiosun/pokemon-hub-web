@@ -80,7 +80,10 @@ function isPlayerPortalProfile(value: unknown): value is PlayerPortalProfile {
   if (!isNullableString(value.trainerName)) return false;
   if (!isNullableUuid(value.originRegionId) || !isNullableString(value.locale)) return false;
   if (!isNonNegativeInteger(value.trainerLevel)) return false;
-  if (typeof value.progressionPoints !== 'string' || !DIGITS_PATTERN.test(value.progressionPoints)) {
+  if (
+    typeof value.progressionPoints !== 'string' ||
+    !DIGITS_PATTERN.test(value.progressionPoints)
+  ) {
     return false;
   }
   if (typeof value.onboardingState !== 'string' || !ONBOARDING_STATES.has(value.onboardingState)) {
