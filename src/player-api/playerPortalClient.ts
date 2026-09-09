@@ -14,6 +14,9 @@ const ONBOARDING_STATES = new Set([
 export type PlayerPortalTeamSlot = {
   pokemonInstanceId: string;
   formId: string;
+  displayName: string | null;
+  nationalDex: number | null;
+  typeNames: string[];
   level: number;
   currentHp: number;
   slotNo: number;
@@ -24,6 +27,7 @@ export type PlayerPortalProfile = {
   playerStatus: 'ACTIVE';
   trainerName: string | null;
   originRegionId: string | null;
+  originRegionName: string | null;
   locale: string | null;
   trainerLevel: number;
   progressionPoints: string;
@@ -126,7 +130,13 @@ function isPlayerPortalProfile(value: unknown): value is PlayerPortalProfile {
   if (!isRecord(value)) return false;
   if (!isUuid(value.playerId) || value.playerStatus !== 'ACTIVE') return false;
   if (!isNullableString(value.trainerName)) return false;
-  if (!isNullableUuid(value.originRegionId) || !isNullableString(value.locale)) return false;
+  if (
+    !isNullableUuid(value.originRegionId) ||
+    !isNullableDisplayString(value.originRegionName) ||
+    !isNullableString(value.locale)
+  ) {
+    return false;
+  }
   if (!isNonNegativeInteger(value.trainerLevel)) return false;
   if (
     typeof value.progressionPoints !== 'string' ||
@@ -152,17 +162,40 @@ function isPlayerPortalProfile(value: unknown): value is PlayerPortalProfile {
 
 function isPlayerPortalTeamSlot(value: unknown): value is PlayerPortalTeamSlot {
   if (!isRecord(value)) return false;
+  if (
+    !isUuid(value.pokemonInstanceId) ||
+    !isUuid(value.formId) ||
+    !isCatalogPresentation(value) ||
+    typeof value.level !== 'number' ||
+    !Number.isInteger(value.level) ||
+    value.level < 1 ||
+    !isNonNegativeInteger(value.currentHp) ||
+    typeof value.slotNo !== 'number' ||
+    !Number.isInteger(value.slotNo) ||
+    value.slotNo < 1 ||
+    value.slotNo > 6
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+function isCatalogPresentation(value: Record<string, unknown>): boolean {
+  if (!Array.isArray(value.typeNames) || value.typeNames.length > 2) return false;
+  if (!value.typeNames.every(isDisplayString)) return false;
+  if (new Set(value.typeNames).size !== value.typeNames.length) return false;
+
+  const unresolved =
+    value.displayName === null && value.nationalDex === null && value.typeNames.length === 0;
+  if (unresolved) return true;
+
   return (
-    isUuid(value.pokemonInstanceId) &&
-    isUuid(value.formId) &&
-    typeof value.level === 'number' &&
-    Number.isInteger(value.level) &&
-    value.level >= 1 &&
-    isNonNegativeInteger(value.currentHp) &&
-    typeof value.slotNo === 'number' &&
-    Number.isInteger(value.slotNo) &&
-    value.slotNo >= 1 &&
-    value.slotNo <= 6
+    isDisplayString(value.displayName) &&
+    typeof value.nationalDex === 'number' &&
+    Number.isInteger(value.nationalDex) &&
+    value.nationalDex >= 1 &&
+    value.typeNames.length >= 1
   );
 }
 
@@ -180,6 +213,14 @@ function isNullableUuid(value: unknown): value is string | null {
 
 function isNullableString(value: unknown): value is string | null {
   return value === null || typeof value === 'string';
+}
+
+function isDisplayString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function isNullableDisplayString(value: unknown): value is string | null {
+  return value === null || isDisplayString(value);
 }
 
 function isNonNegativeInteger(value: unknown): value is number {
