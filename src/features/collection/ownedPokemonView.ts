@@ -25,8 +25,11 @@ export function createOwnedPokemonView(
   return pokemon.map((item) => {
     const catalogResolved =
       item.displayName !== null && item.nationalDex !== null && item.typeNames.length > 0;
-    const species = catalogResolved ? item.displayName : UNAVAILABLE;
-    const nickname = catalogResolved ? item.nickname?.trim() || species : UNAVAILABLE;
+    const species = catalogResolved && item.displayName !== null ? item.displayName : UNAVAILABLE;
+    const nickname =
+      catalogResolved && item.displayName !== null
+        ? item.nickname?.trim() || item.displayName
+        : UNAVAILABLE;
 
     return {
       instanceId: item.pokemonInstanceId,
