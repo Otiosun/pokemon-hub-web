@@ -124,14 +124,16 @@ function choosePrimaryFace(faces: TrainerPhotoFace[], sourceWidth: number) {
 function faceAwareCrop(width: number, height: number, faces: TrainerPhotoFace[]) {
   const primary = choosePrimaryFace(faces, width);
   const primaryBox = faces[primary];
+  if (!primaryBox) throw new Error('Trainer photo face selection failed');
   const meaningful = [primary];
 
   for (let index = 0; index < faces.length; index += 1) {
-    if (index !== primary && area(faces[index]) >= area(primaryBox) * 0.42) meaningful.push(index);
+    const face = faces[index];
+    if (face && index !== primary && area(face) >= area(primaryBox) * 0.42) meaningful.push(index);
   }
 
   if (meaningful.length > 1) {
-    const selected = meaningful.map((index) => faces[index]);
+    const selected = meaningful.map((index) => faces[index]).filter((face): face is TrainerPhotoFace => Boolean(face));
     const unionX0 = Math.min(...selected.map((face) => face.x));
     const unionY0 = Math.min(...selected.map((face) => face.y));
     const unionX1 = Math.max(...selected.map((face) => face.x + face.w));
@@ -151,8 +153,10 @@ function faceAwareCrop(width: number, height: number, faces: TrainerPhotoFace[])
     );
 
     const safe = meaningful.every((index) => {
-      const normalizedX = (centerX(faces[index]) - tentative.x) / tentative.w;
-      const normalizedY = (centerY(faces[index]) - tentative.y) / tentative.h;
+      const face = faces[index];
+      if (!face) return false;
+      const normalizedX = (centerX(face) - tentative.x) / tentative.w;
+      const normalizedY = (centerY(face) - tentative.y) / tentative.h;
       return normalizedX >= 0.18 && normalizedX <= 0.82 && normalizedY >= 0.12 && normalizedY <= 0.62;
     });
 
