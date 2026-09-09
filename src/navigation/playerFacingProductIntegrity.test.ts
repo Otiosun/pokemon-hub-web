@@ -3,7 +3,7 @@ import hubModuleHeaderSource from '../components/HubModuleHeader.tsx?raw';
 import hubNavigationSource from '../components/HubNavigation.tsx?raw';
 import viewerSource from '../features/asset-lab/GenerationsPokemonViewer.tsx?raw';
 import collectionPageSource from '../features/collection/OwnedPokemonCollectionPage.tsx?raw';
-import ownedDetailSource from '../features/collection/OwnedPokemonDetailPage.tsx?raw';
+import ownedDetailSource from '../features/collection/OwnedPokemonDetailPageReal.tsx?raw';
 import teamPageSource from '../features/team/TeamPage.tsx?raw';
 
 const teamModules = import.meta.glob('../features/team/*');
