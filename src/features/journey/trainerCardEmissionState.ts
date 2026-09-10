@@ -10,6 +10,10 @@ export type TrainerCardEmissionReadiness = {
   missing: TrainerCardMissingField[];
 };
 
+export type TrainerCardProfile = JourneyProfilePreview & {
+  featuredFeat?: string | null;
+};
+
 function normalized(value: string | null | undefined) {
   return value?.trim() ?? '';
 }
@@ -18,7 +22,7 @@ function safeKeyPart(value: string) {
   return value.trim().replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'unknown';
 }
 
-export function mapProfileToZhouliaTrainerCardFields(profile: JourneyProfilePreview): ZhouliaTrainerCardFields {
+export function mapProfileToZhouliaTrainerCardFields(profile: TrainerCardProfile): ZhouliaTrainerCardFields {
   return {
     name: normalized(profile.trainerName),
     title: normalized(profile.trainerTitle),
@@ -29,7 +33,7 @@ export function mapProfileToZhouliaTrainerCardFields(profile: JourneyProfilePrev
 }
 
 export function getTrainerCardEmissionReadiness(
-  profile: JourneyProfilePreview,
+  profile: TrainerCardProfile,
   photoUrl: string | null | undefined,
 ): TrainerCardEmissionReadiness {
   const fields = mapProfileToZhouliaTrainerCardFields(profile);
