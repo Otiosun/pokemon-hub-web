@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { HubModuleHeader } from '../../components/HubModuleHeader';
 import { rememberHubDestination } from '../../navigation/hubNavigationSession';
+import { movePlayerPortalPokemon } from '../../player-api/playerPortalRosterClient';
 import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import { TypeBadge } from '../../visual-assets/TypeBadge';
 import { typeAccent } from '../pokemon-detail/fieldDexSpecies';
@@ -120,7 +121,10 @@ function PokemonCard({ pokemon }: { pokemon: OwnedPokemonView }) {
         </div>
         <div className="owned-pokemon-card-foot">
           <span>
-            {pokemon.box} · <span role="img" aria-label={sex.label}>{sex.glyph}</span>
+            {pokemon.box} ·{' '}
+            <span role="img" aria-label={sex.label}>
+              {sex.glyph}
+            </span>
           </span>
           {pokemon.shiny && <strong>SHINY</strong>}
         </div>
@@ -137,13 +141,25 @@ export function OwnedPokemonCollectionPage() {
     [collection],
   );
   const team = useMemo(
-    () => pokemon.filter((item) => item.teamSlot !== null).sort((a, b) => (a.teamSlot ?? 99) - (b.teamSlot ?? 99)),
+    () =>
+      pokemon
+        .filter((item) => item.teamSlot !== null)
+        .sort((a, b) => (a.teamSlot ?? 99) - (b.teamSlot ?? 99)),
     [pokemon],
   );
-  const [mode, setMode] = useState<CollectionMode>(initial.mode === 'favorites' ? 'all' : initial.mode);
+  const [mode, setMode] = useState<CollectionMode>(
+    initial.mode === 'favorites' ? 'all' : initial.mode,
+  );
   const [query, setQuery] = useState(initial.query);
   const [filters, setFilters] = useState<CollectionFilterState>(initial.filters);
   const [speciesContextDex, setSpeciesContextDex] = useState(readSpeciesContextFilter);
+  const [organizerPokemonId, setOrganizerPokemonId] = useState('');
+  const [organizerKind, setOrganizerKind] = useState<'TEAM' | 'BOX'>('TEAM');
+  const [organizerTeamSlot, setOrganizerTeamSlot] = useState(1);
+  const [organizerBoxNo, setOrganizerBoxNo] = useState(1);
+  const [organizerBoxSlot, setOrganizerBoxSlot] = useState(1);
+  const [organizerStatus, setOrganizerStatus] = useState<'idle' | 'saving' | 'error'>('idle');
+  const [organizerMessage, setOrganizerMessage] = useState('');
   const restoredScroll = useRef(false);
 
   useEffect(() => {
@@ -182,19 +198,57 @@ export function OwnedPokemonCollectionPage() {
   }, [visible]);
 
   const contextualSpecies = speciesContextDex
-    ? pokemon.find((item) => item.dex === speciesContextDex)?.species ?? `#${String(speciesContextDex).padStart(3, '0')}`
+    ? (pokemon.find((item) => item.dex === speciesContextDex)?.species ??
+      `#${String(speciesContextDex).padStart(3, '0')}`)
     : null;
 
   const clearSpeciesContext = () => {
     setSpeciesContextDex(null);
     const url = new URL(window.location.href);
     url.searchParams.delete('species');
-    window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+    window.history.replaceState(
+      window.history.state,
+      '',
+      `${url.pathname}${url.search}${url.hash}`,
+    );
     rememberHubDestination('/pokemon');
   };
 
   const patchFilters = (patch: Partial<CollectionFilterState>) => {
     setFilters((current) => ({ ...current, ...patch }));
+  };
+
+  const persistOrganizerMove = async () => {
+    if (!organizerPokemonId || organizerStatus === 'saving') return;
+    setOrganizerStatus('saving');
+    setOrganizerMessage('Salvando posição oficial…');
+
+    try {
+      const target =
+        organizerKind === 'TEAM'
+          ? { placementKind: 'TEAM' as const, boxNo: null, slotNo: organizerTeamSlot }
+          : {
+              placementKind: 'BOX' as const,
+              boxNo: organizerBoxNo,
+              slotNo: organizerBoxSlot,
+            };
+      const result = await movePlayerPortalPokemon({
+        pokemonInstanceId: organizerPokemonId,
+        target,
+      });
+
+      if (result.status === 'unauthenticated') {
+        setOrganizerStatus('error');
+        setOrganizerMessage('Sua sessão expirou. Abra o Hub novamente pelo acesso oficial.');
+        return;
+      }
+
+      setOrganizerMessage('Posição salva. Sincronizando coleção…');
+      window.location.reload();
+    } catch {
+      setOrganizerStatus('error');
+      setOrganizerMessage('Não foi possível salvar a posição agora. Nada foi alterado na tela.');
+    }
   };
 
   const metaValue =
@@ -225,16 +279,23 @@ export function OwnedPokemonCollectionPage() {
 
         {collection.status === 'authenticated' ? (
           <>
-            <section className="owned-pokemon-team-section" aria-labelledby="owned-current-team-title">
+            <section
+              className="owned-pokemon-team-section"
+              aria-labelledby="owned-current-team-title"
+            >
               <header className="owned-pokemon-team-head">
                 <div>
                   <span>TIME ATUAL · {team.length}/6</span>
                   <h2 id="owned-current-team-title">Seus parceiros ativos</h2>
                 </div>
-                <a href="/team">VER TIME <span aria-hidden="true">→</span></a>
+                <a href="/team">
+                  VER TIME <span aria-hidden="true">→</span>
+                </a>
               </header>
               <div className="owned-pokemon-team-grid">
-                {team.map((item) => <TeamCard key={item.instanceId} pokemon={item} />)}
+                {team.map((item) => (
+                  <TeamCard key={item.instanceId} pokemon={item} />
+                ))}
               </div>
             </section>
 
@@ -247,22 +308,117 @@ export function OwnedPokemonCollectionPage() {
                 <p>{pokemon.length} registros oficiais</p>
               </header>
 
+              <section className="owned-pokemon-filter-shell" aria-label="Organizar coleção">
+                <div className="owned-pokemon-filter-strip">
+                  <label>
+                    <span>ORGANIZAR</span>
+                    <select
+                      value={organizerPokemonId}
+                      onChange={(event) => {
+                        setOrganizerPokemonId(event.target.value);
+                        setOrganizerStatus('idle');
+                        setOrganizerMessage('');
+                      }}
+                    >
+                      <option value="">Escolha um Pokémon</option>
+                      {pokemon.map((item) => (
+                        <option key={item.instanceId} value={item.instanceId}>
+                          {item.nickname} · {item.box}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    <span>DESTINO</span>
+                    <select
+                      value={organizerKind}
+                      onChange={(event) =>
+                        setOrganizerKind(event.target.value === 'BOX' ? 'BOX' : 'TEAM')
+                      }
+                    >
+                      <option value="TEAM">Time</option>
+                      <option value="BOX">Box</option>
+                    </select>
+                  </label>
+                  {organizerKind === 'TEAM' ? (
+                    <label>
+                      <span>SLOT DO TIME</span>
+                      <select
+                        value={organizerTeamSlot}
+                        onChange={(event) => setOrganizerTeamSlot(Number(event.target.value))}
+                      >
+                        {[1, 2, 3, 4, 5, 6].map((slot) => (
+                          <option key={slot} value={slot}>
+                            Slot {slot}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : (
+                    <>
+                      <label>
+                        <span>BOX Nº</span>
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          value={organizerBoxNo}
+                          onChange={(event) =>
+                            setOrganizerBoxNo(Math.max(1, Number(event.target.value) || 1))
+                          }
+                        />
+                      </label>
+                      <label>
+                        <span>SLOT</span>
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          value={organizerBoxSlot}
+                          onChange={(event) =>
+                            setOrganizerBoxSlot(Math.max(1, Number(event.target.value) || 1))
+                          }
+                        />
+                      </label>
+                    </>
+                  )}
+                  <button
+                    type="button"
+                    disabled={!organizerPokemonId || organizerStatus === 'saving'}
+                    onClick={() => void persistOrganizerMove()}
+                  >
+                    {organizerStatus === 'saving' ? 'SALVANDO…' : 'SALVAR POSIÇÃO'}
+                  </button>
+                </div>
+                {organizerMessage && (
+                  <div className="owned-pokemon-runtime-note" role="status">
+                    <span aria-hidden="true" /> {organizerMessage}
+                  </div>
+                )}
+              </section>
+
               {speciesContextDex && (
                 <div className="owned-pokemon-context-filter">
                   <div>
                     <span>VINDO DA POKÉDEX</span>
-                    <strong>{contextualSpecies} · #{String(speciesContextDex).padStart(3, '0')}</strong>
+                    <strong>
+                      {contextualSpecies} · #{String(speciesContextDex).padStart(3, '0')}
+                    </strong>
                   </div>
-                  <button type="button" onClick={clearSpeciesContext}>VER TODA A COLEÇÃO</button>
+                  <button type="button" onClick={clearSpeciesContext}>
+                    VER TODA A COLEÇÃO
+                  </button>
                 </div>
               )}
 
               <section className="owned-pokemon-toolbar" aria-label="Ferramentas da coleção">
                 <fieldset className="owned-pokemon-modes" aria-label="Modo da coleção">
-                  {([
-                    ['all', 'TODOS'],
-                    ['boxes', 'BOXES'],
-                  ] as const).map(([id, label]) => (
+                  {(
+                    [
+                      ['all', 'TODOS'],
+                      ['boxes', 'BOXES'],
+                    ] as const
+                  ).map(([id, label]) => (
                     <button
                       key={id}
                       type="button"
@@ -291,7 +447,9 @@ export function OwnedPokemonCollectionPage() {
                     <span>LOCAL</span>
                     <select
                       value={filters.presence}
-                      onChange={(event) => patchFilters({ presence: event.target.value as CollectionPresenceFilter })}
+                      onChange={(event) =>
+                        patchFilters({ presence: event.target.value as CollectionPresenceFilter })
+                      }
                     >
                       <option value="all">Todos</option>
                       <option value="team">No Time</option>
@@ -302,7 +460,9 @@ export function OwnedPokemonCollectionPage() {
                     <span>SHINY</span>
                     <select
                       value={filters.shiny}
-                      onChange={(event) => patchFilters({ shiny: event.target.value as CollectionShinyFilter })}
+                      onChange={(event) =>
+                        patchFilters({ shiny: event.target.value as CollectionShinyFilter })
+                      }
                     >
                       <option value="all">Todos</option>
                       <option value="shiny">Somente shiny</option>
@@ -313,7 +473,9 @@ export function OwnedPokemonCollectionPage() {
                     <span>ORDENAR</span>
                     <select
                       value={filters.sort}
-                      onChange={(event) => patchFilters({ sort: event.target.value as CollectionSort })}
+                      onChange={(event) =>
+                        patchFilters({ sort: event.target.value as CollectionSort })
+                      }
                     >
                       <option value="dex">Nº da Pokédex</option>
                       <option value="name">Nome A—Z</option>
@@ -321,30 +483,41 @@ export function OwnedPokemonCollectionPage() {
                       <option value="level-asc">Nível ↑</option>
                     </select>
                   </label>
-                  <button type="button" onClick={() => setFilters({ ...DEFAULT_COLLECTION_FILTERS })}>
+                  <button
+                    type="button"
+                    onClick={() => setFilters({ ...DEFAULT_COLLECTION_FILTERS })}
+                  >
                     LIMPAR FILTROS
                   </button>
                 </div>
               </section>
 
               <div className="owned-pokemon-runtime-note">
-                <span aria-hidden="true" /> {visible.length} RESULTADO{visible.length === 1 ? '' : 'S'} · DADOS AUTORITATIVOS
+                <span aria-hidden="true" /> {visible.length} RESULTADO
+                {visible.length === 1 ? '' : 'S'} · DADOS AUTORITATIVOS
               </div>
 
               {mode === 'boxes' ? (
                 <div className="owned-pokemon-boxes">
                   {boxes.map(([box, items]) => (
                     <section className="owned-pokemon-box" key={box}>
-                      <header><strong>{box}</strong><span>{items.length} REGISTROS</span></header>
+                      <header>
+                        <strong>{box}</strong>
+                        <span>{items.length} REGISTROS</span>
+                      </header>
                       <div className="owned-pokemon-grid">
-                        {items.map((item) => <PokemonCard key={item.instanceId} pokemon={item} />)}
+                        {items.map((item) => (
+                          <PokemonCard key={item.instanceId} pokemon={item} />
+                        ))}
                       </div>
                     </section>
                   ))}
                 </div>
               ) : (
                 <div className="owned-pokemon-grid">
-                  {visible.map((item) => <PokemonCard key={item.instanceId} pokemon={item} />)}
+                  {visible.map((item) => (
+                    <PokemonCard key={item.instanceId} pokemon={item} />
+                  ))}
                 </div>
               )}
 
@@ -358,7 +531,9 @@ export function OwnedPokemonCollectionPage() {
           </>
         ) : (
           <div className="owned-pokemon-empty">
-            <strong>{collection.status === 'loading' ? 'Sincronizando Box…' : 'Box indisponível.'}</strong>
+            <strong>
+              {collection.status === 'loading' ? 'Sincronizando Box…' : 'Box indisponível.'}
+            </strong>
             <span>
               {collection.status === 'unauthenticated'
                 ? 'Abra o Hub pelo acesso oficial do seu treinador.'
