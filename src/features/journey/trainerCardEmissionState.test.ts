@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { JourneyProfilePreview } from './journeyProfilePreview';
 import {
   getTrainerCardActionLabel,
   getTrainerCardEmissionReadiness,
@@ -7,9 +6,10 @@ import {
   hasTrainerCardBeenEmitted,
   mapProfileToZhouliaTrainerCardFields,
   markTrainerCardEmitted,
+  type TrainerCardProfile,
 } from './trainerCardEmissionState';
 
-const profile: JourneyProfilePreview = {
+const profile: TrainerCardProfile = {
   trainerName: 'Enzo',
   trainerTitle: 'Explorador de Fronteiras',
   trainerId: 'ZHO-028419',
