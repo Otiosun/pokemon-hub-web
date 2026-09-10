@@ -230,7 +230,7 @@ export function JourneyPageV2() {
 
             <div className="journey-identity-copy">
               <h1 id="journey-trainer-name">{profile.trainerName}</h1>
-              <span className="journey-trainer-title">— {profile.trainerTitle}</span>
+              {profile.trainerTitle ? <span className="journey-trainer-title">— {profile.trainerTitle}</span> : null}
             </div>
 
             <div className="journey-league-seal" aria-hidden="true">
