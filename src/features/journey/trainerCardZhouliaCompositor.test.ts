@@ -78,6 +78,12 @@ describe('Zhoulia Trainer Card SVG compositor', () => {
     expect(svg).toContain('font-family="Zhoulia Card Narrow, sans-serif"');
   });
 
+  it('keeps the canonical Feat sample at 38px because its measured font width fits the field', () => {
+    const svg = buildZhouliaTrainerCardSvg(input);
+
+    expect(svg).toContain('data-bind="feat" x="284" y="498" font-family="Zhoulia Card Narrow, sans-serif" font-size="38"');
+  });
+
   it('uses the exact canonical photo polygon and a single source-image placement', () => {
     const svg = buildZhouliaTrainerCardSvg(input);
 
