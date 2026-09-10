@@ -28,6 +28,7 @@ const PARTNER_SAFE_BOX = Object.freeze({ x: 1234.95, y: 494.92, width: 164.97, h
 const HEADER_RASTER_PATCH = Object.freeze({ x: 1238, y: 78, width: 170, height: 126 });
 const CARD_FONT_STACK = `${ZHOULIA_CARD_FONT_FAMILY}, sans-serif`;
 const MEASURED_FONT_WIDTH_SCALE = 0.86;
+const FIELD_VALUE_MAX_WIDTH = 500;
 
 const FIELD_ROWS = [
   { key: 'name', label: 'Name', labelY: 288, valueY: 290, valueSize: 44 },
@@ -69,6 +70,22 @@ function escapeXml(value: string) {
     .replaceAll("'", '&apos;');
 }
 
+function sanitizeXmlText(value: string) {
+  let sanitized = '';
+  for (const char of value) {
+    const codePoint = char.codePointAt(0) ?? 0;
+    const valid =
+      codePoint === 0x09 ||
+      codePoint === 0x0a ||
+      codePoint === 0x0d ||
+      (codePoint >= 0x20 && codePoint <= 0xd7ff) ||
+      (codePoint >= 0xe000 && codePoint <= 0xfffd) ||
+      (codePoint >= 0x10000 && codePoint <= 0x10ffff);
+    if (valid) sanitized += char;
+  }
+  return sanitized;
+}
+
 function polygonPoints() {
   return PHOTO_CLIP_POLYGON_MASTER.map(([x, y]) => `${x},${y}`).join(' ');
 }
@@ -84,17 +101,37 @@ function estimateTextWidth(value: string, fontSize: number) {
   return units * fontSize * MEASURED_FONT_WIDTH_SCALE;
 }
 
-function fittedFontSize(value: string, baseSize: number, minSize: number, maxWidth = 500) {
+function fittedFontSize(value: string, baseSize: number, minSize: number, maxWidth = FIELD_VALUE_MAX_WIDTH) {
   const estimated = estimateTextWidth(value, baseSize);
   if (estimated <= maxWidth) return baseSize;
   return Math.max(minSize, Math.floor((baseSize * maxWidth) / estimated));
 }
 
+function ellipsizeToWidth(value: string, fontSize: number, maxWidth = FIELD_VALUE_MAX_WIDTH) {
+  if (estimateTextWidth(value, fontSize) <= maxWidth) return value;
+
+  const characters = Array.from(value);
+  const ellipsis = '…';
+  let low = 0;
+  let high = characters.length;
+
+  while (low < high) {
+    const middle = Math.ceil((low + high) / 2);
+    const candidate = `${characters.slice(0, middle).join('')}${ellipsis}`;
+    if (estimateTextWidth(candidate, fontSize) <= maxWidth) low = middle;
+    else high = middle - 1;
+  }
+
+  return `${characters.slice(0, low).join('')}${ellipsis}`;
+}
+
 function buildFields(fields: ZhouliaTrainerCardFields) {
   return FIELD_ROWS.map((row) => {
-    const value = fields[row.key];
-    const valueSize = fittedFontSize(value, row.valueSize, row.key === 'feat' ? 22 : 28);
-    return `<text data-bind="label-${row.key}" x="95" y="${row.labelY}" font-family="${CARD_FONT_STACK}" font-size="38" font-weight="700" fill="#315F8B">${row.label}</text><text data-bind="${row.key}" x="284" y="${row.valueY}" font-family="${CARD_FONT_STACK}" font-size="${valueSize}" font-weight="700" fill="#102A4C">${escapeXml(value)}</text>`;
+    const value = sanitizeXmlText(fields[row.key]);
+    const minimumSize = row.key === 'feat' ? 22 : 28;
+    const valueSize = fittedFontSize(value, row.valueSize, minimumSize);
+    const fittedValue = ellipsizeToWidth(value, valueSize);
+    return `<text data-bind="label-${row.key}" x="95" y="${row.labelY}" font-family="${CARD_FONT_STACK}" font-size="38" font-weight="700" fill="#315F8B">${row.label}</text><text data-bind="${row.key}" x="284" y="${row.valueY}" font-family="${CARD_FONT_STACK}" font-size="${valueSize}" font-weight="700" fill="#102A4C">${escapeXml(fittedValue)}</text>`;
   }).join('');
 }
 
