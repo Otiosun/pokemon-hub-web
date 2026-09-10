@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   exchangePlayerPortalTicket,
   getPlayerPortalSelf,
+  movePlayerPortalPokemon,
   type PlayerPortalProfile,
 } from './playerPortalClient';
 
@@ -84,6 +85,48 @@ describe('getPlayerPortalSelf', () => {
     await expect(getPlayerPortalSelf(fetcher)).rejects.toThrow(
       'Player portal request failed (503)',
     );
+  });
+});
+
+describe('movePlayerPortalPokemon', () => {
+  it('persists a roster placement through the same-origin BFF and returns the authoritative collection', async () => {
+    const fetcher = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ pokemon: [] }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+    );
+    const input = {
+      pokemonInstanceId: '66666666-6666-4666-8666-666666666666',
+      target: { placementKind: 'TEAM' as const, boxNo: null, slotNo: 2 },
+    };
+
+    await expect(movePlayerPortalPokemon(input, fetcher)).resolves.toEqual({
+      status: 'authenticated',
+      pokemon: [],
+    });
+    expect(fetcher).toHaveBeenCalledWith('/api/hub/player/roster', {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {
+        accept: 'application/json',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(input),
+    });
+  });
+
+  it('does not pretend a roster move succeeded after session expiry', async () => {
+    const fetcher = vi.fn(async () => new Response('{"error":"UNAUTHENTICATED"}', { status: 401 }));
+    const input = {
+      pokemonInstanceId: '66666666-6666-4666-8666-666666666666',
+      target: { placementKind: 'BOX' as const, boxNo: 1, slotNo: 3 },
+    };
+
+    await expect(movePlayerPortalPokemon(input, fetcher)).resolves.toEqual({
+      status: 'unauthenticated',
+    });
   });
 });
 
