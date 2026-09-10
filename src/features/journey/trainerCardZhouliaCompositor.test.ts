@@ -60,11 +60,11 @@ describe('Zhoulia Trainer Card SVG compositor', () => {
     expect(svg).not.toContain('<path');
   });
 
-  it('overlays the canonical Zhoulia header as approved raster art only', () => {
+  it('patches only the divider and E with approved raster art', () => {
     const svg = buildZhouliaTrainerCardSvg(input);
 
     expect(svg).toContain('data-slot="fixed-header-raster"');
-    expect(svg).toContain('data-slot="fixed-header-raster" x="940" y="78" width="468" height="126"');
+    expect(svg).toContain('data-slot="fixed-header-raster" x="1238" y="78" width="170" height="126"');
     expect(svg).toContain('data:image/png;base64,');
     expect(svg).not.toContain('data-bind="region-name"');
     expect(svg).not.toContain('data-bind="region-emblem"');
