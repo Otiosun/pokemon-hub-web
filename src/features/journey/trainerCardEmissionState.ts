@@ -36,8 +36,6 @@ export function getTrainerCardEmissionReadiness(
   const missing: TrainerCardMissingField[] = [];
 
   if (!fields.name) missing.push('name');
-  if (!fields.title) missing.push('title');
-  if (!fields.feat) missing.push('feat');
   if (!fields.partner) missing.push('partner');
   if (!fields.idNo) missing.push('idNo');
   if (!normalized(photoUrl)) missing.push('photo');
