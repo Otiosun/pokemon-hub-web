@@ -6,6 +6,7 @@ import {
   type TrainerPhotoFace,
   type TrainerPhotoOverride,
 } from './trainerCardPhotoCrop';
+import { ZHOULIA_HEADER_RASTER_DATA_URI } from './trainerCardZhouliaHeaderRaster';
 
 export const ZHOULIA_CARD_NATIVE_SIZE = Object.freeze({ width: 1448, height: 1086 });
 export const ZHOULIA_CARD_BASE_HREF = '/assets/journey/zhoulia-trainer-card-surgical-v3-base.png';
@@ -23,6 +24,7 @@ export const ZHOULIA_BADGE_CENTERS = [
 
 const BADGE_SLOT = Object.freeze({ width: 109.35, height: 124.44 });
 const PARTNER_SAFE_BOX = Object.freeze({ x: 1234.95, y: 494.92, width: 164.97, height: 259.25 });
+const HEADER_RASTER_PATCH = Object.freeze({ x: 1238, y: 78, width: 170, height: 126 });
 
 const FIELD_ROWS = [
   { key: 'name', label: 'Name', labelY: 288, valueY: 290, valueSize: 44 },
@@ -108,6 +110,10 @@ function buildBadges(badgeHrefs: readonly (string | null | undefined)[]) {
   }).join('');
 }
 
+function buildHeaderRasterPatch() {
+  return `<image data-slot="fixed-header-raster" x="${HEADER_RASTER_PATCH.x}" y="${HEADER_RASTER_PATCH.y}" width="${HEADER_RASTER_PATCH.width}" height="${HEADER_RASTER_PATCH.height}" href="${ZHOULIA_HEADER_RASTER_DATA_URI}" preserveAspectRatio="none"/>`;
+}
+
 export function buildZhouliaTrainerCardSvg(input: ZhouliaTrainerCardCompositorInput) {
   const cropInput: TrainerPhotoCropInput = {
     width: input.photo.width,
@@ -123,5 +129,5 @@ export function buildZhouliaTrainerCardSvg(input: ZhouliaTrainerCardCompositorIn
   const placement = cropToTrainerPhotoPlacement(input.photo.width, input.photo.height, crop.crop);
   const baseHref = escapeXml(input.baseHref ?? ZHOULIA_CARD_BASE_HREF);
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${ZHOULIA_CARD_NATIVE_SIZE.width} ${ZHOULIA_CARD_NATIVE_SIZE.height}" width="${ZHOULIA_CARD_NATIVE_SIZE.width}" height="${ZHOULIA_CARD_NATIVE_SIZE.height}"><metadata>${escapeXml(JSON.stringify({ templateId: 'zhoulia-trainer-card-runtime-v1', photoMethod: crop.method, photoCrop: crop.crop }))}</metadata><image data-slot="fixed-raster-art" x="0" y="0" width="1448" height="1086" href="${baseHref}" preserveAspectRatio="none"/><defs><clipPath id="trainer-photo-clip"><polygon points="${polygonPoints()}"/></clipPath></defs><image data-slot="trainer-photo" x="${placement.x}" y="${placement.y}" width="${placement.width}" height="${placement.height}" href="${escapeXml(input.photo.href)}" clip-path="${placement.clipPath}" preserveAspectRatio="${placement.preserveAspectRatio}"/>${buildPartner(input.partnerHref)}${buildBadges(input.badgeHrefs ?? [])}<g data-slot="dynamic-fields">${buildFields(input.fields)}</g></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${ZHOULIA_CARD_NATIVE_SIZE.width} ${ZHOULIA_CARD_NATIVE_SIZE.height}" width="${ZHOULIA_CARD_NATIVE_SIZE.width}" height="${ZHOULIA_CARD_NATIVE_SIZE.height}"><metadata>${escapeXml(JSON.stringify({ templateId: 'zhoulia-trainer-card-runtime-v1', photoMethod: crop.method, photoCrop: crop.crop }))}</metadata><image data-slot="fixed-raster-art" x="0" y="0" width="1448" height="1086" href="${baseHref}" preserveAspectRatio="none"/>${buildHeaderRasterPatch()}<defs><clipPath id="trainer-photo-clip"><polygon points="${polygonPoints()}"/></clipPath></defs><image data-slot="trainer-photo" x="${placement.x}" y="${placement.y}" width="${placement.width}" height="${placement.height}" href="${escapeXml(input.photo.href)}" clip-path="${placement.clipPath}" preserveAspectRatio="${placement.preserveAspectRatio}"/>${buildPartner(input.partnerHref)}${buildBadges(input.badgeHrefs ?? [])}<g data-slot="dynamic-fields">${buildFields(input.fields)}</g></svg>`;
 }
