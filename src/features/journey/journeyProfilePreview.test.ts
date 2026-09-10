@@ -19,10 +19,10 @@ describe('journey profile preview', () => {
     });
   });
 
-  it('starts with basic trainer identity and no progression title or feat', () => {
+  it('keeps Trainer Card feat data out of the global Journey preview contract', () => {
     const profile = getJourneyProfilePreview();
     expect(profile.trainerTitle).toBe('');
-    expect(profile.featuredFeat).toBeNull();
+    expect(profile).not.toHaveProperty('featuredFeat');
     expect(profile.trainerId).toBe('KNT-028419');
     expect(profile.badges).toHaveLength(8);
     expect(profile.badges.every((badge) => badge.earned === false)).toBe(true);
