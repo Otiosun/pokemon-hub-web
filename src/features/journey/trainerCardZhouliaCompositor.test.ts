@@ -33,6 +33,45 @@ describe('Zhoulia Trainer Card SVG compositor', () => {
     expect(svg).toContain('Enzo &amp; Cia');
   });
 
+  it('keeps Title and Feat rows genuinely blank for a fresh trainer instead of inventing progression', () => {
+    const svg = buildZhouliaTrainerCardSvg({
+      ...input,
+      fields: { ...input.fields, title: '', feat: '' },
+    });
+
+    expect(svg).toContain('data-bind="title"');
+    expect(svg).toContain('data-bind="feat"');
+    expect(svg).not.toContain('Treinador iniciante');
+    expect(svg).not.toContain('Sem título');
+    expect(svg).not.toContain('Sem feito');
+  });
+
+  it('removes XML-invalid control characters from player-controlled text', () => {
+    const svg = buildZhouliaTrainerCardSvg({
+      ...input,
+      fields: {
+        ...input.fields,
+        name: 'Ana\u0000 & <Lívia>\u0007',
+      },
+    });
+
+    expect(svg).not.toContain('\u0000');
+    expect(svg).not.toContain('\u0007');
+    expect(svg).toContain('Ana &amp; &lt;Lívia&gt;');
+  });
+
+  it('ellipsizes pathological long text after reaching the typography floor instead of overflowing the field', () => {
+    const hostileName = 'W'.repeat(300);
+    const svg = buildZhouliaTrainerCardSvg({
+      ...input,
+      fields: { ...input.fields, name: hostileName },
+    });
+
+    expect(svg).not.toContain(hostileName);
+    expect(svg).toContain('…');
+    expect(svg).toContain('data-bind="name" x="284" y="290" font-family="Zhoulia Card Narrow, sans-serif" font-size="28"');
+  });
+
   it('locks the approved V4 badge centers without reverting to the old rail', () => {
     expect(ZHOULIA_BADGE_CENTERS).toEqual([
       [154.5, 881.5],
