@@ -38,6 +38,16 @@ export type PlayerPortalPokemon = {
   slotNo: number;
 };
 
+export type PlayerPortalPokedexSpecies = {
+  nationalDex: number;
+  seenCount: string;
+  caughtCount: string;
+  firstSeenAt: string | null;
+  lastSeenAt: string | null;
+  firstCaughtAt: string | null;
+  lastCaughtAt: string | null;
+};
+
 export type PlayerPortalProfile = {
   playerId: string;
   playerStatus: 'ACTIVE';
@@ -105,6 +115,10 @@ export type PlayerPortalPokemonResult =
   | { status: 'authenticated'; pokemon: PlayerPortalPokemon[] }
   | { status: 'unauthenticated' };
 
+export type PlayerPortalPokedexResult =
+  | { status: 'authenticated'; pokedex: PlayerPortalPokedexSpecies[] }
+  | { status: 'unauthenticated' };
+
 export type PlayerPortalWorldLocationResult =
   | { status: 'authenticated'; location: PlayerPortalWorldLocation }
   | { status: 'unauthenticated' };
@@ -169,6 +183,31 @@ export async function getPlayerPortalPokemon(
   }
 
   return { status: 'authenticated', pokemon: body.pokemon };
+}
+
+export async function getPlayerPortalPokedex(
+  fetcher: PlayerPortalFetcher = fetch,
+): Promise<PlayerPortalPokedexResult> {
+  const response = await fetcher('/api/hub/player/pokedex', {
+    method: 'GET',
+    credentials: 'include',
+    headers: { accept: 'application/json' },
+  });
+
+  if (response.status === 401) return { status: 'unauthenticated' };
+  if (!response.ok) throw new Error(`Player portal request failed (${response.status})`);
+
+  const body = await readJsonBody(response);
+  if (
+    !isRecord(body) ||
+    !Array.isArray(body.pokedex) ||
+    !body.pokedex.every(isPlayerPortalPokedexSpecies) ||
+    new Set(body.pokedex.map((entry) => entry.nationalDex)).size !== body.pokedex.length
+  ) {
+    throw new Error('Invalid player portal response');
+  }
+
+  return { status: 'authenticated', pokedex: body.pokedex };
 }
 
 export async function getPlayerPortalWorldLocation(
@@ -354,6 +393,27 @@ function isPlayerPortalPokemon(value: unknown): value is PlayerPortalPokemon {
   return false;
 }
 
+function isPlayerPortalPokedexSpecies(value: unknown): value is PlayerPortalPokedexSpecies {
+  if (!isRecord(value)) return false;
+  if (!isPositiveInteger(value.nationalDex)) return false;
+  if (
+    typeof value.seenCount !== 'string' ||
+    !DIGITS_PATTERN.test(value.seenCount) ||
+    typeof value.caughtCount !== 'string' ||
+    !DIGITS_PATTERN.test(value.caughtCount)
+  ) {
+    return false;
+  }
+  if (BigInt(value.caughtCount) > BigInt(value.seenCount)) return false;
+
+  return (
+    isNullableIsoTimestamp(value.firstSeenAt) &&
+    isNullableIsoTimestamp(value.lastSeenAt) &&
+    isNullableIsoTimestamp(value.firstCaughtAt) &&
+    isNullableIsoTimestamp(value.lastCaughtAt)
+  );
+}
+
 function isPlayerPortalWorldTravelInput(value: unknown): value is PlayerPortalWorldTravelInput {
   if (!isRecord(value)) return false;
   return (
@@ -469,4 +529,8 @@ function isPositiveInteger(value: unknown): value is number {
 
 function isIsoTimestamp(value: unknown): value is string {
   return typeof value === 'string' && value.endsWith('Z') && Number.isFinite(Date.parse(value));
+}
+
+function isNullableIsoTimestamp(value: unknown): value is string | null {
+  return value === null || isIsoTimestamp(value);
 }
