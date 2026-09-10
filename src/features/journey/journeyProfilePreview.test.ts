@@ -19,9 +19,10 @@ describe('journey profile preview', () => {
     });
   });
 
-  it('exposes trainer-license identity without fabricating badge progress', () => {
+  it('starts with basic trainer identity and no progression title or feat', () => {
     const profile = getJourneyProfilePreview();
-    expect(profile.trainerTitle).toBe('Treinador iniciante');
+    expect(profile.trainerTitle).toBe('');
+    expect(profile.featuredFeat).toBeNull();
     expect(profile.trainerId).toBe('KNT-028419');
     expect(profile.badges).toHaveLength(8);
     expect(profile.badges.every((badge) => badge.earned === false)).toBe(true);
