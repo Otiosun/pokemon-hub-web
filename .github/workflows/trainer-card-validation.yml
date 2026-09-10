@@ -83,7 +83,7 @@ jobs:
             --no-sandbox \
             --disable-gpu \
             --hide-scrollbars \
-            --virtual-time-budget=20000 \
+            --virtual-time-budget=25000 \
             --dump-dom \
             http://127.0.0.1:4173/scripts/trainer-card-visual-uat.html \
             > /tmp/trainer-card-uat-dom.html
@@ -93,6 +93,10 @@ jobs:
             cat /tmp/trainer-card-vite.log
             exit 1
           }
+          grep -q 'data-uat-fresh="true"' /tmp/trainer-card-uat-dom.html || {
+            cat /tmp/trainer-card-uat-dom.html
+            exit 1
+          }
 
           "$BROWSER" \
             --headless=new \
@@ -100,9 +104,43 @@ jobs:
             --disable-gpu \
             --hide-scrollbars \
             --window-size=1536,1250 \
-            --virtual-time-budget=20000 \
+            --virtual-time-budget=25000 \
             --screenshot=/tmp/trainer-card-browser-uat.png \
             http://127.0.0.1:4173/scripts/trainer-card-visual-uat.html
+
+          for VIEWPORT in 360,800 390,844; do
+            LABEL="${VIEWPORT/,/x}"
+            "$BROWSER" \
+              --headless=new \
+              --no-sandbox \
+              --disable-gpu \
+              --hide-scrollbars \
+              --window-size="$VIEWPORT" \
+              --virtual-time-budget=25000 \
+              --dump-dom \
+              http://127.0.0.1:4173/scripts/trainer-card-modal-uat.html \
+              > "/tmp/trainer-card-modal-${LABEL}.html"
+
+            grep -q 'data-modal-ready="true"' "/tmp/trainer-card-modal-${LABEL}.html" || {
+              cat "/tmp/trainer-card-modal-${LABEL}.html"
+              cat /tmp/trainer-card-vite.log
+              exit 1
+            }
+            grep -q 'data-modal-fresh="true"' "/tmp/trainer-card-modal-${LABEL}.html" || {
+              cat "/tmp/trainer-card-modal-${LABEL}.html"
+              exit 1
+            }
+
+            "$BROWSER" \
+              --headless=new \
+              --no-sandbox \
+              --disable-gpu \
+              --hide-scrollbars \
+              --window-size="$VIEWPORT" \
+              --virtual-time-budget=25000 \
+              --screenshot="/tmp/trainer-card-modal-${LABEL}.png" \
+              http://127.0.0.1:4173/scripts/trainer-card-modal-uat.html
+          done
       - name: Upload browser visual UAT
         if: always()
         uses: actions/upload-artifact@v4
@@ -111,6 +149,10 @@ jobs:
           path: |
             /tmp/trainer-card-browser-uat.png
             /tmp/trainer-card-uat-dom.html
+            /tmp/trainer-card-modal-360x800.png
+            /tmp/trainer-card-modal-360x800.html
+            /tmp/trainer-card-modal-390x844.png
+            /tmp/trainer-card-modal-390x844.html
             /tmp/trainer-card-vite.log
           if-no-files-found: warn
           retention-days: 2
