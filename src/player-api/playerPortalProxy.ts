@@ -3,7 +3,7 @@ import type { PlayerPortalFetcher } from './playerPortalClient';
 type PlayerPortalProxyOptions = {
   baseUrl: string | null;
   upstreamPath: `/v1/hub/${string}`;
-  allowedMethod: 'GET' | 'POST';
+  allowedMethod: 'GET' | 'POST' | 'PUT';
   fetcher?: PlayerPortalFetcher;
 };
 
@@ -28,7 +28,7 @@ export async function proxyPlayerPortalRequest(
     method: request.method,
     headers,
   };
-  if (request.method === 'POST') {
+  if (request.method === 'POST' || request.method === 'PUT') {
     init.body = await request.text();
   }
 
