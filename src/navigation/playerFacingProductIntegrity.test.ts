@@ -4,6 +4,8 @@ import hubNavigationSource from '../components/HubNavigation.tsx?raw';
 import viewerSource from '../features/asset-lab/GenerationsPokemonViewer.tsx?raw';
 import collectionPageSource from '../features/collection/OwnedPokemonCollectionPage.tsx?raw';
 import ownedDetailSource from '../features/collection/OwnedPokemonDetailPageReal.tsx?raw';
+import pokedexIndexSource from '../features/pokedex/PokedexIndexPage.tsx?raw';
+import pokedexSpeciesSource from '../features/pokedex/PokedexSpeciesPage.tsx?raw';
 import teamPageSource from '../features/team/TeamPage.tsx?raw';
 
 const teamModules = import.meta.glob('../features/team/*');
@@ -43,6 +45,14 @@ describe('player-facing product integrity', () => {
 
   it('does not promise Team editing from Box before mutation is real', () => {
     expect(collectionPageSource).not.toContain('EDITAR TIME');
+  });
+
+  it('does not let preview-only Pokedex state reach player-facing surfaces', () => {
+    const pokedexSource = [pokedexIndexSource, pokedexSpeciesSource].join('\n');
+
+    expect(pokedexSource).not.toContain('speciesPlayerStatePreview');
+    expect(pokedexSource).not.toContain('researchLevel');
+    expect(pokedexSource).not.toContain('shinySeen');
   });
 
   it('paints the loaded 3D model before announcing the viewer as ready', () => {
