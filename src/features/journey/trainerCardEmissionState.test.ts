@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { JourneyProfilePreview } from './journeyProfilePreview';
 import {
   getTrainerCardActionLabel,
@@ -6,6 +6,7 @@ import {
   getTrainerCardEmissionStorageKey,
   hasTrainerCardBeenEmitted,
   mapProfileToZhouliaTrainerCardFields,
+  markTrainerCardEmitted,
 } from './trainerCardEmissionState';
 
 const profile: JourneyProfilePreview = {
@@ -34,6 +35,10 @@ const profile: JourneyProfilePreview = {
   registeredSpeciesCount: 1,
   personal: { age: null, height: null, appearance: null, bio: null },
 };
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe('Trainer Card emission readiness', () => {
   it('maps only the five canonical card fields', () => {
@@ -82,5 +87,37 @@ describe('Trainer Card emission readiness', () => {
   it('keeps the issuance flag namespaced by trainer id and is SSR-safe', () => {
     expect(getTrainerCardEmissionStorageKey(' ZHO/028419 ')).toBe('pokemon-hub:trainer-card:zhoulia:emitted:ZHO-028419');
     if (typeof window === 'undefined') expect(hasTrainerCardBeenEmitted('ZHO-028419')).toBe(false);
+  });
+
+  it('treats blocked localStorage reads as not emitted instead of crashing the Journey', () => {
+    vi.stubGlobal('window', {
+      localStorage: {
+        getItem: () => { throw new Error('storage blocked'); },
+      },
+    });
+
+    expect(() => hasTrainerCardBeenEmitted('ZHO-028419')).not.toThrow();
+    expect(hasTrainerCardBeenEmitted('ZHO-028419')).toBe(false);
+  });
+
+  it('keeps a successful emission successful when localStorage writes are blocked', () => {
+    const dispatchEvent = vi.fn();
+    vi.stubGlobal('CustomEvent', class TestCustomEvent {
+      type: string;
+      detail: unknown;
+      constructor(type: string, init?: { detail?: unknown }) {
+        this.type = type;
+        this.detail = init?.detail;
+      }
+    });
+    vi.stubGlobal('window', {
+      localStorage: {
+        setItem: () => { throw new Error('storage blocked'); },
+      },
+      dispatchEvent,
+    });
+
+    expect(() => markTrainerCardEmitted('ZHO-028419')).not.toThrow();
+    expect(dispatchEvent).toHaveBeenCalledOnce();
   });
 });
