@@ -264,6 +264,10 @@ export function getPartnerArtworkCandidates(dex: number) {
   return [visual.artworkOfficial, visual.artworkHome];
 }
 
+export function getZhouliaBadgeArtworkCandidates(_slotIndex: number, _assetUrl: string | null | undefined) {
+  return [] as string[];
+}
+
 async function resolvePartnerArtwork(dex: number) {
   for (const candidate of getPartnerArtworkCandidates(dex)) {
     try {
