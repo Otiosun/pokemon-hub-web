@@ -87,9 +87,16 @@ try {
     throw new Error(`uat-invalid-output-size-${size.width}x${size.height}`);
   }
 
+  const rasterizedBadgeSlots = result.svgString.match(/data-slot="badge-[1-8]"/g) ?? [];
+  const uniqueBadgeSlots = new Set(rasterizedBadgeSlots);
+  if (rasterizedBadgeSlots.length !== 8 || uniqueBadgeSlots.size !== 8) {
+    throw new Error(`uat-missing-canonical-badges-${uniqueBadgeSlots.size}-of-8`);
+  }
+
   card.src = result.pngUrl;
-  status.textContent = `READY ${size.width}x${size.height}`;
+  status.textContent = `READY ${size.width}x${size.height} BADGES 8/8`;
   document.documentElement.dataset.uatReady = 'true';
+  document.documentElement.dataset.uatBadges = '8';
   document.documentElement.dataset.uatDownloadName = result.downloadName;
   void card.decode().catch(() => undefined);
 } catch (error) {
