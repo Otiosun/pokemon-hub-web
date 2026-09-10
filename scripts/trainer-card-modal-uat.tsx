@@ -58,6 +58,10 @@ const profile: JourneyProfilePreview = {
   personal: { age: null, height: null, appearance: null, bio: null },
 };
 
+const query = new URLSearchParams(window.location.search);
+const expectedWidth = Number(query.get('expectedWidth') || 0);
+const expectedHeight = Number(query.get('expectedHeight') || 0);
+
 function fail(message: string) {
   document.documentElement.dataset.modalError = message;
   console.error(message);
@@ -71,6 +75,13 @@ function assertMobileLayout() {
   const dialog = document.querySelector<HTMLElement>('.journey-zhoulia-card-dialog');
   const actions = document.querySelector<HTMLElement>('.journey-zhoulia-card-actions');
   if (!image || !download || !dismiss || !close || !dialog || !actions || !image.complete) return false;
+
+  if (expectedWidth > 0 && window.innerWidth !== expectedWidth) {
+    throw new Error(`modal-uat-wrong-viewport-width-${window.innerWidth}-expected-${expectedWidth}`);
+  }
+  if (expectedHeight > 0 && window.innerHeight !== expectedHeight) {
+    throw new Error(`modal-uat-wrong-viewport-height-${window.innerHeight}-expected-${expectedHeight}`);
+  }
 
   const viewportWidth = window.innerWidth;
   const horizontalTargets = [image, download, dismiss, close, dialog];
