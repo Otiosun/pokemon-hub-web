@@ -23,30 +23,6 @@ function buildPortraitDataUrl() {
   return canvas.toDataURL('image/png');
 }
 
-function buildBadgeDataUrl(index) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 180;
-  canvas.height = 180;
-  const context = canvas.getContext('2d');
-  if (!context) throw new Error('uat-badge-canvas-unavailable');
-
-  context.clearRect(0, 0, canvas.width, canvas.height);
-  context.fillStyle = '#f4f7fb';
-  context.strokeStyle = '#274d6c';
-  context.lineWidth = 12;
-  context.beginPath();
-  context.arc(90, 90, 62, 0, Math.PI * 2);
-  context.fill();
-  context.stroke();
-  context.fillStyle = '#274d6c';
-  context.font = '700 52px system-ui';
-  context.textAlign = 'center';
-  context.textBaseline = 'middle';
-  context.fillText(String(index + 1), 90, 93);
-
-  return canvas.toDataURL('image/png');
-}
-
 async function readPngSize(blob) {
   const header = new Uint8Array(await blob.slice(0, 24).arrayBuffer());
   const pngSignature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
@@ -85,7 +61,7 @@ const profile = {
     key: `uat-${index + 1}`,
     name: `UAT Badge ${index + 1}`,
     earned: true,
-    assetUrl: buildBadgeDataUrl(index),
+    assetUrl: null,
   })),
   ownedPokemonCount: 1,
   registeredSpeciesCount: 1,
