@@ -70,6 +70,14 @@ describe('Zhoulia Trainer Card SVG compositor', () => {
     expect(svg).not.toContain('data-bind="region-emblem"');
   });
 
+  it('embeds the measured narrow-bold runtime font so PNG typography does not depend on the device', () => {
+    const svg = buildZhouliaTrainerCardSvg(input);
+
+    expect(svg).toContain("font-family:'Zhoulia Card Narrow'");
+    expect(svg).toContain('data:font/woff2;base64,');
+    expect(svg).toContain('font-family="Zhoulia Card Narrow, sans-serif"');
+  });
+
   it('uses the exact canonical photo polygon and a single source-image placement', () => {
     const svg = buildZhouliaTrainerCardSvg(input);
 
