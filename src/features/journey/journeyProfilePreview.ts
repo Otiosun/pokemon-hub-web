@@ -56,7 +56,7 @@ export function countRegisteredSpeciesPreview() {
 export function getJourneyProfilePreview(): JourneyProfilePreview {
   return {
     trainerName: 'Whatever',
-    trainerTitle: 'Treinador iniciante',
+    trainerTitle: '',
     trainerId: 'KNT-028419',
     publicVerificationId: null,
     originRegion: 'Kanto',
