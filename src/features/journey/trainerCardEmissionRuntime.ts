@@ -40,6 +40,7 @@ export type EmittedTrainerCard = {
 const ZHOULIA_BADGE_ASSET_ROOT = '/assets/journey/badges';
 const ZHOULIA_BADGE_COUNT = 8;
 const POKEAPI_CLASSIC_SPRITES_ROOT = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
+const TRAINER_CARD_PARTNER_ASSET_BUDGET_MS = 4_500;
 
 function loadImage(src: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
@@ -60,17 +61,18 @@ function blobToDataUrl(blob: Blob) {
   });
 }
 
-async function fetchAsBlob(src: string) {
-  const response = src.startsWith('http://') || src.startsWith('https://')
-    ? await fetch(src, { cache: 'force-cache', mode: 'cors' })
-    : await fetch(src);
+async function fetchAsBlob(src: string, signal?: AbortSignal) {
+  const external = src.startsWith('http://') || src.startsWith('https://');
+  const response = external
+    ? await fetch(src, { cache: 'force-cache', mode: 'cors', ...(signal ? { signal } : {}) })
+    : await fetch(src, signal ? { signal } : undefined);
   if (!response.ok) throw new Error(`trainer-card-asset-http-${response.status}`);
   return response.blob();
 }
 
-async function fetchAsDataUrl(src: string) {
+async function fetchAsDataUrl(src: string, signal?: AbortSignal) {
   if (src.startsWith('data:')) return src;
-  return blobToDataUrl(await fetchAsBlob(src));
+  return blobToDataUrl(await fetchAsBlob(src, signal));
 }
 
 function canvasToPngDataUrl(source: CanvasImageSource, width: number, height: number) {
@@ -225,8 +227,8 @@ async function prepareTrainerPhoto(src: string): Promise<ZhouliaTrainerCardPhoto
   };
 }
 
-async function trimTransparentArtwork(src: string) {
-  const href = await fetchAsDataUrl(src);
+async function trimTransparentArtwork(src: string, signal?: AbortSignal) {
+  const href = await fetchAsDataUrl(src, signal);
   const image = await loadImage(href);
   const canvas = document.createElement('canvas');
   canvas.width = image.naturalWidth;
@@ -284,14 +286,24 @@ export function getZhouliaBadgeArtworkCandidates(slotIndex: number, assetUrl: st
 }
 
 async function resolvePartnerArtwork(dex: number) {
-  for (const candidate of getPartnerArtworkCandidates(dex)) {
-    try {
-      return await trimTransparentArtwork(candidate);
-    } catch {
-      // Fall through to the next canonical artwork source.
+  const controller = typeof AbortController === 'function' ? new AbortController() : null;
+  const timeoutId = controller
+    ? globalThis.setTimeout(() => controller.abort(), TRAINER_CARD_PARTNER_ASSET_BUDGET_MS)
+    : null;
+
+  try {
+    for (const candidate of getPartnerArtworkCandidates(dex)) {
+      try {
+        return await trimTransparentArtwork(candidate, controller?.signal);
+      } catch {
+        if (controller?.signal.aborted) return null;
+        // Fall through to the next canonical artwork source.
+      }
     }
+    return null;
+  } finally {
+    if (timeoutId !== null) globalThis.clearTimeout(timeoutId);
   }
-  return null;
 }
 
 async function resolveBadgeHrefs(profile: JourneyProfilePreview) {
