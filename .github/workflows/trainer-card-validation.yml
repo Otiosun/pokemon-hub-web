@@ -112,25 +112,29 @@ jobs:
             WIDTH="${VIEWPORT%,*}"
             HEIGHT="${VIEWPORT#*,}"
             LABEL="${WIDTH}x${HEIGHT}"
-            UAT_URL="http://127.0.0.1:4173/scripts/trainer-card-modal-uat.html?expectedWidth=${WIDTH}&expectedHeight=${HEIGHT}"
+            UAT_URL="http://127.0.0.1:4173/scripts/trainer-card-mobile-viewport-uat.html?width=${WIDTH}&height=${HEIGHT}"
 
             "$BROWSER" \
               --headless=new \
               --no-sandbox \
               --disable-gpu \
               --hide-scrollbars \
-              --window-size="$VIEWPORT" \
-              --virtual-time-budget=25000 \
+              --window-size=900,1000 \
+              --virtual-time-budget=35000 \
               --dump-dom \
               "$UAT_URL" \
               > "/tmp/trainer-card-modal-${LABEL}.html"
 
-            grep -q 'data-modal-ready="true"' "/tmp/trainer-card-modal-${LABEL}.html" || {
+            grep -q 'data-viewport-ready="true"' "/tmp/trainer-card-modal-${LABEL}.html" || {
               cat "/tmp/trainer-card-modal-${LABEL}.html"
               cat /tmp/trainer-card-vite.log
               exit 1
             }
-            grep -q 'data-modal-fresh="true"' "/tmp/trainer-card-modal-${LABEL}.html" || {
+            grep -q 'data-viewport-fresh="true"' "/tmp/trainer-card-modal-${LABEL}.html" || {
+              cat "/tmp/trainer-card-modal-${LABEL}.html"
+              exit 1
+            }
+            grep -q "data-viewport-child=\"${WIDTH}x${HEIGHT}\"" "/tmp/trainer-card-modal-${LABEL}.html" || {
               cat "/tmp/trainer-card-modal-${LABEL}.html"
               exit 1
             }
@@ -140,8 +144,8 @@ jobs:
               --no-sandbox \
               --disable-gpu \
               --hide-scrollbars \
-              --window-size="$VIEWPORT" \
-              --virtual-time-budget=25000 \
+              --window-size=900,1000 \
+              --virtual-time-budget=35000 \
               --screenshot="/tmp/trainer-card-modal-${LABEL}.png" \
               "$UAT_URL"
           done
