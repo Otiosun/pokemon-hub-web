@@ -26,7 +26,6 @@ export type JourneyProfilePreview = {
   publicVerificationId: string | null;
   originRegion: string;
   currentLocation: string;
-  featuredFeat: string | null;
   leadPokemon: OwnedPokemonPreview | null;
   badges: JourneyBadgePreview[];
   ownedPokemonCount: number;
@@ -61,7 +60,6 @@ export function getJourneyProfilePreview(): JourneyProfilePreview {
     publicVerificationId: null,
     originRegion: 'Kanto',
     currentLocation: 'Route 1',
-    featuredFeat: null,
     leadPokemon: getTeamPreview()[0] ?? null,
     badges: KANTO_BADGE_PREVIEW.map((badge) => ({ ...badge })),
     ownedPokemonCount: OWNED_POKEMON_PREVIEW.length,
