@@ -37,6 +37,9 @@ export type EmittedTrainerCard = {
   downloadName: string;
 };
 
+const ZHOULIA_BADGE_ASSET_ROOT = '/assets/journey/badges';
+const ZHOULIA_BADGE_COUNT = 8;
+
 function loadImage(src: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
@@ -264,8 +267,15 @@ export function getPartnerArtworkCandidates(dex: number) {
   return [visual.artworkOfficial, visual.artworkHome];
 }
 
-export function getZhouliaBadgeArtworkCandidates(_slotIndex: number, _assetUrl: string | null | undefined) {
-  return [] as string[];
+export function getZhouliaBadgeArtworkCandidates(slotIndex: number, assetUrl: string | null | undefined) {
+  const explicitAsset = assetUrl?.trim() || null;
+  const fallbackAsset = slotIndex >= 0 && slotIndex < ZHOULIA_BADGE_COUNT
+    ? `${ZHOULIA_BADGE_ASSET_ROOT}/zhoulia-badge-${String(slotIndex + 1).padStart(2, '0')}.png`
+    : null;
+
+  return [explicitAsset, fallbackAsset].filter((candidate, index, all): candidate is string => (
+    Boolean(candidate) && all.indexOf(candidate) === index
+  ));
 }
 
 async function resolvePartnerArtwork(dex: number) {
@@ -280,13 +290,16 @@ async function resolvePartnerArtwork(dex: number) {
 }
 
 async function resolveBadgeHrefs(profile: JourneyProfilePreview) {
-  return Promise.all(profile.badges.slice(0, 8).map(async (badge) => {
-    if (!badge.earned || !badge.assetUrl) return null;
-    try {
-      return await fetchAsDataUrl(badge.assetUrl);
-    } catch {
-      return null;
+  return Promise.all(profile.badges.slice(0, ZHOULIA_BADGE_COUNT).map(async (badge, slotIndex) => {
+    if (!badge.earned) return null;
+    for (const candidate of getZhouliaBadgeArtworkCandidates(slotIndex, badge.assetUrl)) {
+      try {
+        return await fetchAsDataUrl(candidate);
+      } catch {
+        // Try the approved local fallback if a profile-specific asset is unavailable.
+      }
     }
+    return null;
   }));
 }
 
