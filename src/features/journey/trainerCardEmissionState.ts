@@ -62,11 +62,19 @@ export function getTrainerCardEmissionStorageKey(trainerId: string) {
 
 export function hasTrainerCardBeenEmitted(trainerId: string) {
   if (typeof window === 'undefined') return false;
-  return window.localStorage.getItem(getTrainerCardEmissionStorageKey(trainerId)) === '1';
+  try {
+    return window.localStorage.getItem(getTrainerCardEmissionStorageKey(trainerId)) === '1';
+  } catch {
+    return false;
+  }
 }
 
 export function markTrainerCardEmitted(trainerId: string) {
   if (typeof window === 'undefined') return;
-  window.localStorage.setItem(getTrainerCardEmissionStorageKey(trainerId), '1');
+  try {
+    window.localStorage.setItem(getTrainerCardEmissionStorageKey(trainerId), '1');
+  } catch {
+    // Persistence is best-effort; a generated PNG remains a successful emission.
+  }
   window.dispatchEvent(new CustomEvent(TRAINER_CARD_EMITTED_EVENT, { detail: { trainerId } }));
 }
