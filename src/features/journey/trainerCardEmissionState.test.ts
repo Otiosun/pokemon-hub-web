@@ -58,20 +58,32 @@ describe('Trainer Card emission readiness', () => {
     });
   });
 
-  it('requires authoritative Feat data and does not substitute current location', () => {
-    const withoutFeat = { ...profile, featuredFeat: null };
-    const state = getTrainerCardEmissionReadiness(withoutFeat, 'blob:avatar');
-    expect(state.ready).toBe(false);
-    expect(state.missing).toContain('feat');
+  it('allows a fresh trainer to emit with Title and Feat still unconquered', () => {
+    const freshTrainer = {
+      ...profile,
+      trainerTitle: '',
+      featuredFeat: null,
+    };
+    const state = getTrainerCardEmissionReadiness(freshTrainer, 'blob:avatar');
+
+    expect(state).toEqual({ ready: true, missing: [] });
+    expect(mapProfileToZhouliaTrainerCardFields(freshTrainer)).toMatchObject({
+      title: '',
+      feat: '',
+    });
+  });
+
+  it('does not substitute current location into an empty Feat', () => {
+    const withoutFeat = { ...profile, featuredFeat: null, currentLocation: 'Route 1' };
     expect(mapProfileToZhouliaTrainerCardFields(withoutFeat).feat).toBe('');
   });
 
-  it('requires a registered partner because Partner is canonical', () => {
+  it('requires a registered partner because Partner is basic Trainer Card data', () => {
     const withoutPartner = { ...profile, leadPokemon: null };
     expect(getTrainerCardEmissionReadiness(withoutPartner, 'blob:avatar').missing).toContain('partner');
   });
 
-  it('becomes ready only when all canonical runtime data exists', () => {
+  it('becomes ready when all mandatory basic runtime data exists', () => {
     expect(getTrainerCardEmissionReadiness(profile, 'blob:avatar')).toEqual({
       ready: true,
       missing: [],
