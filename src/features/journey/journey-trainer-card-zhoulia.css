@@ -116,7 +116,7 @@
   }
 
   .journey-zhoulia-card-stage {
-    min-height: 46vh;
+    min-height: 0;
   }
 
   .journey-zhoulia-card-close {
