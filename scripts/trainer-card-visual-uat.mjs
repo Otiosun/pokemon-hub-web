@@ -36,6 +36,19 @@ async function readPngSize(blob) {
   };
 }
 
+function assertNativePng(size, scenario) {
+  if (size.width !== 1448 || size.height !== 1086) {
+    throw new Error(`uat-${scenario}-invalid-output-size-${size.width}x${size.height}`);
+  }
+}
+
+function parseSvg(svgString) {
+  const documentNode = new DOMParser().parseFromString(svgString, 'image/svg+xml');
+  const parserError = documentNode.querySelector('parsererror');
+  if (parserError) throw new Error('uat-svg-parser-error');
+  return documentNode;
+}
+
 const profile = {
   trainerName: 'Enzo',
   trainerTitle: 'Explorador de Fronteiras',
@@ -75,28 +88,51 @@ const profile = {
 
 const status = document.querySelector('#status');
 const card = document.querySelector('#card');
+const avatarUrl = buildPortraitDataUrl();
 
 try {
-  const result = await emitZhouliaTrainerCard({
-    profile,
-    avatarUrl: buildPortraitDataUrl(),
-  });
+  const result = await emitZhouliaTrainerCard({ profile, avatarUrl });
   const size = await readPngSize(result.pngBlob);
+  assertNativePng(size, 'full');
 
-  if (size.width !== 1448 || size.height !== 1086) {
-    throw new Error(`uat-invalid-output-size-${size.width}x${size.height}`);
+  const fullSvg = parseSvg(result.svgString);
+  const rasterizedBadgeSlots = fullSvg.querySelectorAll('[data-slot^="badge-"]');
+  if (rasterizedBadgeSlots.length !== 8) {
+    throw new Error(`uat-missing-canonical-badges-${rasterizedBadgeSlots.length}-of-8`);
   }
 
-  const rasterizedBadgeSlots = result.svgString.match(/data-slot="badge-[1-8]"/g) ?? [];
-  const uniqueBadgeSlots = new Set(rasterizedBadgeSlots);
-  if (rasterizedBadgeSlots.length !== 8 || uniqueBadgeSlots.size !== 8) {
-    throw new Error(`uat-missing-canonical-badges-${uniqueBadgeSlots.size}-of-8`);
+  const freshProfile = {
+    ...profile,
+    trainerName: 'Ana Clara',
+    trainerTitle: '',
+    trainerId: 'ZHO-NEW-001',
+    featuredFeat: null,
+    badges: [],
+  };
+  const freshResult = await emitZhouliaTrainerCard({ profile: freshProfile, avatarUrl });
+  try {
+    const freshSize = await readPngSize(freshResult.pngBlob);
+    assertNativePng(freshSize, 'fresh');
+
+    const freshSvg = parseSvg(freshResult.svgString);
+    if ((freshSvg.querySelector('[data-bind="title"]')?.textContent ?? '') !== '') {
+      throw new Error('uat-fresh-title-not-blank');
+    }
+    if ((freshSvg.querySelector('[data-bind="feat"]')?.textContent ?? '') !== '') {
+      throw new Error('uat-fresh-feat-not-blank');
+    }
+    if (freshSvg.querySelectorAll('[data-slot^="badge-"]').length !== 0) {
+      throw new Error('uat-fresh-badges-not-empty');
+    }
+  } finally {
+    URL.revokeObjectURL(freshResult.pngUrl);
   }
 
   card.src = result.pngUrl;
-  status.textContent = `READY ${size.width}x${size.height} BADGES 8/8`;
+  status.textContent = `READY ${size.width}x${size.height} BADGES 8/8 FRESH OK`;
   document.documentElement.dataset.uatReady = 'true';
   document.documentElement.dataset.uatBadges = '8';
+  document.documentElement.dataset.uatFresh = 'true';
   document.documentElement.dataset.uatDownloadName = result.downloadName;
   void card.decode().catch(() => undefined);
 } catch (error) {
