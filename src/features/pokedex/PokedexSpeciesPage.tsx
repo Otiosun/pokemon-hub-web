@@ -294,10 +294,6 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
     mode: 'model',
   });
 
-  if (pokedexState.status !== 'authenticated') {
-    return <PortalStateMessage status={pokedexState.status} />;
-  }
-
   const activeRecord = record.dex === validDex ? record : initialRecord(validDex, review, playerState);
   const artworkReady = artworkReadyDex === validDex;
   const visualMode = visualModeState.dex === validDex ? visualModeState.mode : 'model';
@@ -345,6 +341,10 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
     void loadRecord();
     return () => controller.abort();
   }, [discovered, playerState, review, validDex]);
+
+  if (pokedexState.status !== 'authenticated') {
+    return <PortalStateMessage status={pokedexState.status} />;
+  }
 
   const previousDex = validDex > 1 ? validDex - 1 : null;
   const nextDex = validDex < TOTAL ? validDex + 1 : null;
