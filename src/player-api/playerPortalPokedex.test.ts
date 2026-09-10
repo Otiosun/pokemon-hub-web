@@ -15,11 +15,12 @@ const validPokedex = [
 
 describe('getPlayerPortalPokedex', () => {
   it('reads the authenticated player Pokedex through the same-origin BFF', async () => {
-    const fetcher: PlayerPortalFetcher = vi.fn(async () =>
-      new Response(JSON.stringify({ pokedex: validPokedex }), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      }),
+    const fetcher: PlayerPortalFetcher = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ pokedex: validPokedex }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
     );
 
     await expect(getPlayerPortalPokedex(fetcher)).resolves.toEqual({
@@ -48,13 +49,16 @@ describe('getPlayerPortalPokedex', () => {
     ];
 
     for (const entry of malformed) {
-      const fetcher: PlayerPortalFetcher = vi.fn(async () =>
-        new Response(JSON.stringify({ pokedex: [entry] }), {
-          status: 200,
-          headers: { 'content-type': 'application/json' },
-        }),
+      const fetcher: PlayerPortalFetcher = vi.fn(
+        async () =>
+          new Response(JSON.stringify({ pokedex: [entry] }), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          }),
       );
-      await expect(getPlayerPortalPokedex(fetcher)).rejects.toThrow('Invalid player portal response');
+      await expect(getPlayerPortalPokedex(fetcher)).rejects.toThrow(
+        'Invalid player portal response',
+      );
     }
   });
 });
