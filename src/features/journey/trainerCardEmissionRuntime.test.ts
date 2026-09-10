@@ -6,10 +6,11 @@ import {
 } from './trainerCardEmissionRuntime';
 
 describe('Trainer Card emission runtime helpers', () => {
-  it('prefers official artwork before HOME for the partner slot', () => {
+  it('prefers official artwork, then HOME, then classic front-default for the partner slot', () => {
     expect(getPartnerArtworkCandidates(58)).toEqual([
       'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/58.png',
       'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/58.png',
+      'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/58.png',
     ]);
   });
 
