@@ -39,6 +39,7 @@ export type EmittedTrainerCard = {
 
 const ZHOULIA_BADGE_ASSET_ROOT = '/assets/journey/badges';
 const ZHOULIA_BADGE_COUNT = 8;
+const POKEAPI_CLASSIC_SPRITES_ROOT = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
 
 function loadImage(src: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
@@ -264,7 +265,11 @@ async function trimTransparentArtwork(src: string) {
 
 export function getPartnerArtworkCandidates(dex: number) {
   const visual = getPokemonSpeciesVisualAssets(dex);
-  return [visual.artworkOfficial, visual.artworkHome];
+  return [
+    visual.artworkOfficial,
+    visual.artworkHome,
+    `${POKEAPI_CLASSIC_SPRITES_ROOT}/${dex}.png`,
+  ];
 }
 
 export function getZhouliaBadgeArtworkCandidates(slotIndex: number, assetUrl: string | null | undefined) {
