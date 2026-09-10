@@ -2,9 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   exchangePlayerPortalTicket,
   getPlayerPortalSelf,
-  movePlayerPortalPokemon,
   type PlayerPortalProfile,
 } from './playerPortalClient';
+import { movePlayerPortalPokemon } from './playerPortalRosterClient';
 
 const ticket = 'A'.repeat(43);
 const sessionExpiresAt = '2026-09-10T00:00:00.000Z';
