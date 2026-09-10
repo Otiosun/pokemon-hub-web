@@ -69,7 +69,8 @@ function assertMobileLayout() {
   const dismiss = document.querySelector<HTMLButtonElement>('.journey-zhoulia-card-dismiss');
   const close = document.querySelector<HTMLButtonElement>('.journey-zhoulia-card-close');
   const dialog = document.querySelector<HTMLElement>('.journey-zhoulia-card-dialog');
-  if (!image || !download || !dismiss || !close || !dialog || !image.complete) return false;
+  const actions = document.querySelector<HTMLElement>('.journey-zhoulia-card-actions');
+  if (!image || !download || !dismiss || !close || !dialog || !actions || !image.complete) return false;
 
   const viewportWidth = window.innerWidth;
   const horizontalTargets = [image, download, dismiss, close, dialog];
@@ -90,9 +91,15 @@ function assertMobileLayout() {
     throw new Error('modal-uat-close-target-too-small');
   }
 
+  const contentGap = actions.getBoundingClientRect().top - image.getBoundingClientRect().bottom;
+  if (contentGap > 24) {
+    throw new Error(`modal-uat-card-actions-gap-${Math.round(contentGap)}`);
+  }
+
   document.documentElement.dataset.modalReady = 'true';
   document.documentElement.dataset.modalViewport = `${window.innerWidth}x${window.innerHeight}`;
   document.documentElement.dataset.modalFresh = 'true';
+  document.documentElement.dataset.modalActionsGap = String(Math.round(contentGap));
   return true;
 }
 
