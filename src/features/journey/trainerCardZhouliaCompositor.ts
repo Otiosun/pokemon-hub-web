@@ -27,6 +27,7 @@ const BADGE_SLOT = Object.freeze({ width: 109.35, height: 124.44 });
 const PARTNER_SAFE_BOX = Object.freeze({ x: 1234.95, y: 494.92, width: 164.97, height: 259.25 });
 const HEADER_RASTER_PATCH = Object.freeze({ x: 1238, y: 78, width: 170, height: 126 });
 const CARD_FONT_STACK = `${ZHOULIA_CARD_FONT_FAMILY}, sans-serif`;
+const MEASURED_FONT_WIDTH_SCALE = 0.86;
 
 const FIELD_ROWS = [
   { key: 'name', label: 'Name', labelY: 288, valueY: 290, valueSize: 44 },
@@ -80,7 +81,7 @@ function estimateTextWidth(value: string, fontSize: number) {
     else if (char === ' ') units += 0.33;
     else units += 0.56;
   }
-  return units * fontSize;
+  return units * fontSize * MEASURED_FONT_WIDTH_SCALE;
 }
 
 function fittedFontSize(value: string, baseSize: number, minSize: number, maxWidth = 500) {
