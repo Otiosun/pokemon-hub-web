@@ -1,0 +1,49 @@
+name: Cloudflare UAT Hub Smoke
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/player-api/cloudflareUatWorker.ts"
+      - "src/player-api/cloudflareUatWorker.test.ts"
+      - "wrangler.jsonc"
+      - ".github/workflows/cloudflare-uat-smoke.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-uat-hub-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Wait for public UAT Hub proxy
+        shell: bash
+        env:
+          UAT_URL: https://feat-player-api-v1-pokemon-hub-web.natanaelgames19.workers.dev
+        run: |
+          set -euo pipefail
+
+          for _ in {1..72}; do
+            body="$(mktemp)"
+            status="$(curl -sS --connect-timeout 5 --max-time 10 -o "$body" -w '%{http_code}' "$UAT_URL/api/hub/player/self" || true)"
+
+            if [[ "$status" == "401" ]] && grep -Fq '"error":"UNAUTHENTICATED"' "$body"; then
+              echo "Cloudflare UAT Hub boundary is live: $status"
+              rm -f "$body"
+              exit 0
+            fi
+
+            echo "Waiting for Cloudflare UAT deployment: status=${status:-curl-error}"
+            cat "$body" || true
+            rm -f "$body"
+            sleep 5
+          done
+
+          echo "Cloudflare UAT Hub boundary did not become ready in time"
+          exit 1
