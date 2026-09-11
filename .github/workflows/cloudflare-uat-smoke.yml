@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - name: Wait for public UAT Hub proxy
+      - name: Prove public UAT Hub boundary
         shell: bash
         env:
           UAT_URL: https://feat-player-api-v1-pokemon-hub-web.natanaelgames19.workers.dev
@@ -34,9 +34,9 @@ jobs:
             status="$(curl -sS --connect-timeout 5 --max-time 10 -o "$body" -w '%{http_code}' "$UAT_URL/api/hub/player/self" || true)"
 
             if [[ "$status" == "401" ]] && grep -Fq '"error":"UNAUTHENTICATED"' "$body"; then
-              echo "Cloudflare UAT Hub boundary is live: $status"
+              echo "Cloudflare UAT Hub boundary is live: GET /api/hub/player/self -> $status"
               rm -f "$body"
-              exit 0
+              break
             fi
 
             echo "Waiting for Cloudflare UAT deployment: status=${status:-curl-error}"
@@ -45,5 +45,44 @@ jobs:
             sleep 5
           done
 
-          echo "Cloudflare UAT Hub boundary did not become ready in time"
-          exit 1
+          body="$(mktemp)"
+          status="$(curl -sS --connect-timeout 5 --max-time 10 -o "$body" -w '%{http_code}' "$UAT_URL/api/hub/player/self")"
+          test "$status" = "401"
+          grep -Fq '"error":"UNAUTHENTICATED"' "$body"
+          rm -f "$body"
+
+          body="$(mktemp)"
+          status="$(curl -sS --connect-timeout 5 --max-time 10 -o "$body" -w '%{http_code}' "$UAT_URL/")"
+          test "$status" = "200"
+          grep -Fq 'Pokémon Hub' "$body"
+          rm -f "$body"
+          echo "Static Hub shell is public: GET / -> 200"
+
+          body="$(mktemp)"
+          status="$(curl -sS --connect-timeout 5 --max-time 10 -o "$body" -w '%{http_code}' \
+            -X POST \
+            -H 'content-type: application/json' \
+            --data '{"ticket":"bad"}' \
+            "$UAT_URL/api/hub/auth/exchange")"
+          test "$status" = "400"
+          grep -Fq '"error":"VALIDATION_FAILED"' "$body"
+          rm -f "$body"
+          echo "Auth exchange reaches Player API: POST /api/hub/auth/exchange -> 400 validation"
+
+          body="$(mktemp)"
+          status="$(curl -sS --connect-timeout 5 --max-time 10 -o "$body" -w '%{http_code}' \
+            -X PUT \
+            -H 'content-type: application/json' \
+            --data '{}' \
+            "$UAT_URL/api/hub/player/roster")"
+          test "$status" = "401"
+          grep -Fq '"error":"UNAUTHENTICATED"' "$body"
+          rm -f "$body"
+          echo "Roster mutation reaches Player API auth boundary: PUT /api/hub/player/roster -> 401"
+
+          body="$(mktemp)"
+          status="$(curl -sS --connect-timeout 5 --max-time 10 -o "$body" -w '%{http_code}' "$UAT_URL/api/hub/unknown")"
+          test "$status" = "404"
+          grep -Fq '"error":"NOT_FOUND"' "$body"
+          rm -f "$body"
+          echo "Unknown Hub API path fails closed: GET /api/hub/unknown -> 404"
