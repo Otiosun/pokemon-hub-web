@@ -113,6 +113,53 @@
   .owned-pokemon-filter-strip label {
     flex: 0 0 138px;
   }
+
+  /* The first filter shell is the roster organizer, not a passive filter strip.
+     Keep the full action visible instead of hiding SAVE POSITION off-canvas. */
+  .owned-pokemon-storage-section > .owned-pokemon-filter-shell:first-of-type .owned-pokemon-filter-strip {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+    gap: 1px;
+  }
+
+  .owned-pokemon-storage-section > .owned-pokemon-filter-shell:first-of-type .owned-pokemon-filter-strip label {
+    min-width: 0;
+    width: auto;
+    flex: initial;
+  }
+
+  .owned-pokemon-storage-section > .owned-pokemon-filter-shell:first-of-type .owned-pokemon-filter-strip label:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .owned-pokemon-storage-section > .owned-pokemon-filter-shell:first-of-type .owned-pokemon-filter-strip input {
+    width: 100%;
+    min-width: 0;
+    height: 30px;
+    border: 0;
+    border-bottom: 1px solid rgba(23, 32, 36, 0.2);
+    background: transparent;
+    color: #172024;
+    font: 600 0.72rem 'IBM Plex Sans', sans-serif;
+  }
+
+  .owned-pokemon-storage-section > .owned-pokemon-filter-shell:first-of-type .owned-pokemon-filter-strip > button {
+    grid-column: 1 / -1;
+    min-height: 46px;
+    border: 0;
+    border-top: 1px solid rgba(23, 32, 36, 0.12);
+    background: #172024;
+    color: #f4f7f6;
+    font: 700 0.7rem 'IBM Plex Mono', monospace;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+
+  .owned-pokemon-storage-section > .owned-pokemon-filter-shell:first-of-type .owned-pokemon-filter-strip > button:disabled {
+    cursor: not-allowed;
+    opacity: 0.42;
+  }
 }
 
 @media (max-width: 480px) {
@@ -126,5 +173,14 @@
 
   .owned-pokemon-filter-strip select {
     font-size: 0.64rem;
+  }
+
+  .owned-pokemon-storage-section > .owned-pokemon-filter-shell:first-of-type .owned-pokemon-filter-strip label {
+    min-height: 56px;
+    padding: 7px 8px;
+  }
+
+  .owned-pokemon-storage-section > .owned-pokemon-filter-shell:first-of-type .owned-pokemon-filter-strip select {
+    font-size: 0.7rem;
   }
 }
