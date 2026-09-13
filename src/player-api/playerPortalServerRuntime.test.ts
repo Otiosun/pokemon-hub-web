@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { readPlayerPortalApiBaseUrl } from './playerPortalServerRuntime';
 
-const STAGING_PLAYER_API_URL = 'https://pokemon-rpg-player-api-staging-staging.up.railway.app';
+const STAGING_PLAYER_API_URL = 'https://stadium-mathematics-disks-honolulu.trycloudflare.com';
 
 function runtimeEnvironment(): Record<string, unknown> {
   const runtimeProcess = Reflect.get(globalThis, 'process');
@@ -36,7 +36,7 @@ afterEach(() => {
 });
 
 describe('readPlayerPortalApiBaseUrl', () => {
-  it('uses the Railway staging Player API only for Vercel previews when no explicit base URL exists', () => {
+  it('uses the active UAT Player API tunnel for Vercel previews when no explicit base URL exists', () => {
     const environment = runtimeEnvironment();
     Reflect.deleteProperty(environment, 'PLAYER_PORTAL_API_BASE_URL');
     Reflect.set(environment, 'VERCEL_ENV', 'preview');
