@@ -192,24 +192,12 @@ export function HubNavigation({ active, destinations, children }: HubNavigationP
           <button
             ref={triggerRef}
             type="button"
-            className="hub-menu-trigger"
+            className="hub-menu-trigger hub-pokedex-menu-trigger"
             aria-haspopup="dialog"
             aria-expanded={open}
             aria-controls="hub-global-menu"
             aria-label="Abrir menu principal"
             onClick={openMenu}
-            style={{
-              position: 'fixed',
-              zIndex: 95,
-              right: 'max(14px, env(safe-area-inset-right))',
-              bottom: 'max(16px, env(safe-area-inset-bottom))',
-              width: 54,
-              minWidth: 54,
-              height: 54,
-              minHeight: 54,
-              padding: 0,
-              borderRadius: 16,
-            }}
           >
             <span className="hub-menu-trigger-grid" aria-hidden="true">
               <i />
@@ -217,7 +205,7 @@ export function HubNavigation({ active, destinations, children }: HubNavigationP
               <i />
               <i />
             </span>
-            <span style={{ display: 'none' }}>MENU</span>
+            <span>MENU</span>
           </button>
         ) : null}
 
