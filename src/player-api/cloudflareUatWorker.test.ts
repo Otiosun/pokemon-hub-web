@@ -14,7 +14,7 @@ describe('Cloudflare UAT Hub worker', () => {
     const assets = assetsFetcher();
     const upstream = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       expect(String(input)).toBe(
-        'https://pokemon-rpg-player-api-staging-staging.up.railway.app/v1/hub/player/self',
+        'https://stadium-mathematics-disks-honolulu.trycloudflare.com/v1/hub/player/self',
       );
       expect(init?.method).toBe('GET');
       return new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), {
