@@ -332,7 +332,7 @@ export function PokedexIndexPage() {
         {pokedexState.status === 'unauthenticated' ? (
           <div className="pokedex-index-empty">
             <strong>ABRA SEU HUB PELO WHATSAPP</strong>
-            <span>Use $hub para carregar o seu registro de treinador.</span>
+            <span>Use /hub para carregar o seu registro de treinador.</span>
           </div>
         ) : pokedexState.status === 'unavailable' ? (
           <div className="pokedex-index-empty">
