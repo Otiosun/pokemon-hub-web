@@ -188,6 +188,39 @@ export function HubNavigation({ active, destinations, children }: HubNavigationP
       <div className="hub-with-navigation">
         <div className="hub-navigation-content">{children}</div>
 
+        {active === 'pokedex' ? (
+          <button
+            ref={triggerRef}
+            type="button"
+            className="hub-menu-trigger"
+            aria-haspopup="dialog"
+            aria-expanded={open}
+            aria-controls="hub-global-menu"
+            aria-label="Abrir menu principal"
+            onClick={openMenu}
+            style={{
+              position: 'fixed',
+              zIndex: 95,
+              right: 'max(14px, env(safe-area-inset-right))',
+              bottom: 'max(16px, env(safe-area-inset-bottom))',
+              width: 54,
+              minWidth: 54,
+              height: 54,
+              minHeight: 54,
+              padding: 0,
+              borderRadius: 16,
+            }}
+          >
+            <span className="hub-menu-trigger-grid" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+              <i />
+            </span>
+            <span style={{ display: 'none' }}>MENU</span>
+          </button>
+        ) : null}
+
         {open ? (
           <div
             className="hub-menu-backdrop"
