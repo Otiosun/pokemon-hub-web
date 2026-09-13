@@ -1,6 +1,6 @@
 const PLAYER_PORTAL_API_BASE_URL = 'PLAYER_PORTAL_API_BASE_URL';
 const VERCEL_ENV = 'VERCEL_ENV';
-const STAGING_PLAYER_API_URL = 'https://pokemon-rpg-player-api-staging-staging.up.railway.app';
+const STAGING_PLAYER_API_URL = 'https://stadium-mathematics-disks-honolulu.trycloudflare.com';
 
 export function readPlayerPortalApiBaseUrl(): string | null {
   const runtimeProcess = Reflect.get(globalThis, 'process');
