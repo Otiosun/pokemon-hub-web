@@ -244,7 +244,7 @@ function PortalStateMessage({ status }: { status: 'loading' | 'unauthenticated' 
       ? 'ABRA SEU HUB PELO WHATSAPP'
       : 'NÃO FOI POSSÍVEL CARREGAR SEU REGISTRO';
   const detail = status === 'unauthenticated'
-    ? 'Use $hub para acessar a Pokédex vinculada ao seu treinador.'
+    ? 'Use /hub para acessar a Pokédex vinculada ao seu treinador.'
     : status === 'unavailable'
       ? 'Tente novamente em instantes.'
       : 'Sincronizando sua Pokédex.';
