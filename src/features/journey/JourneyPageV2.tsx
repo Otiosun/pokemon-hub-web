@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { HubModuleHeader } from '../../components/HubModuleHeader';
 import type { PlayerPortalBrowserSessionState } from '../../player-api/playerPortalBrowserSession';
+import { isAdvancedShowcaseActive } from '../../showcase/advancedShowcase';
 import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import {
   createJourneyProfileView,
@@ -165,7 +166,7 @@ export function JourneyPageV2({
   const [editing, setEditing] = useState(false);
   const [showShareCard, setShowShareCard] = useState(false);
   const imageError = cover.error ?? avatar.error;
-  const canEditProfileImages = false;
+  const canEditProfileImages = isAdvancedShowcaseActive();
 
   return (
     <main className="journey-page">
