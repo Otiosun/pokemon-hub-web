@@ -7,6 +7,7 @@ import type {
 
 const SHOWCASE_QUERY_KEY = 'showcase';
 const SHOWCASE_QUERY_VALUE = 'advanced';
+const SHOWCASE_SESSION_KEY = 'pokemon-beyond:showcase';
 const SHOWCASE_TIMESTAMP = '2026-09-01T12:00:00.000Z';
 
 function demoUuid(seed: number) {
@@ -38,6 +39,11 @@ type AdvancedShowcaseJourney = {
     name: string;
     earned: boolean;
   }>;
+};
+
+type AdvancedShowcaseResolvedState = {
+  active: boolean;
+  rememberedValue: string | null;
 };
 
 const SHOWCASE_SPECIES: readonly ShowcaseSpecies[] = [
@@ -114,8 +120,46 @@ export function isAdvancedShowcaseUrl(url: URL) {
   return url.searchParams.get(SHOWCASE_QUERY_KEY) === SHOWCASE_QUERY_VALUE;
 }
 
+export function resolveAdvancedShowcaseState(
+  url: URL,
+  rememberedValue: string | null,
+): AdvancedShowcaseResolvedState {
+  const explicitValue = url.searchParams.get(SHOWCASE_QUERY_KEY);
+  if (explicitValue === SHOWCASE_QUERY_VALUE) {
+    return { active: true, rememberedValue: SHOWCASE_QUERY_VALUE };
+  }
+  if (explicitValue !== null) {
+    return { active: false, rememberedValue: null };
+  }
+  return {
+    active: rememberedValue === SHOWCASE_QUERY_VALUE,
+    rememberedValue: rememberedValue === SHOWCASE_QUERY_VALUE ? SHOWCASE_QUERY_VALUE : null,
+  };
+}
+
 export function isAdvancedShowcaseActive() {
-  return typeof window !== 'undefined' && isAdvancedShowcaseUrl(new URL(window.location.href));
+  if (typeof window === 'undefined') return false;
+
+  let rememberedValue: string | null = null;
+  try {
+    rememberedValue = window.sessionStorage.getItem(SHOWCASE_SESSION_KEY);
+  } catch {
+    rememberedValue = null;
+  }
+
+  const resolved = resolveAdvancedShowcaseState(new URL(window.location.href), rememberedValue);
+
+  try {
+    if (resolved.rememberedValue) {
+      window.sessionStorage.setItem(SHOWCASE_SESSION_KEY, resolved.rememberedValue);
+    } else {
+      window.sessionStorage.removeItem(SHOWCASE_SESSION_KEY);
+    }
+  } catch {
+    // The showcase can still work for the current URL when storage is unavailable.
+  }
+
+  return resolved.active;
 }
 
 export function createAdvancedShowcasePokemon(): PlayerPortalPokemon[] {
