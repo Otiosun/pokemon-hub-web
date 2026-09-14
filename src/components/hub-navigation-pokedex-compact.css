@@ -1,0 +1,48 @@
+/* UAT fix: keep the Pokédex global-menu affordance compact and inside the header rhythm.
+   This intentionally wins over the legacy responsive rules in hub-navigation.css. */
+.hub-pokedex-menu-trigger {
+  top: max(11px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  width: 44px;
+  min-width: 44px;
+  max-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  gap: 0;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.32);
+  border-radius: 12px;
+  background: rgba(69, 18, 24, 0.48);
+  color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(5px);
+}
+
+.hub-pokedex-menu-trigger > span:last-child {
+  display: none;
+}
+
+.hub-pokedex-menu-trigger .hub-menu-trigger-grid {
+  width: 18px;
+  height: 18px;
+}
+
+.hub-navigation-content .pokedex-index-header .pokedex-index-counter {
+  margin-right: 56px;
+}
+
+@media (max-width: 420px) {
+  .hub-pokedex-menu-trigger {
+    width: 42px;
+    min-width: 42px;
+    max-width: 42px;
+    height: 42px;
+    min-height: 42px;
+    border-radius: 11px;
+  }
+
+  .hub-navigation-content .pokedex-index-header .pokedex-index-counter {
+    margin-right: 52px;
+  }
+}
