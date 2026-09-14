@@ -3,6 +3,7 @@ import {
   createAdvancedShowcasePokemon,
   getAdvancedShowcaseSession,
   isAdvancedShowcaseUrl,
+  resolveAdvancedShowcaseState,
 } from './advancedShowcase';
 import { describe, expect, it } from 'vitest';
 
@@ -15,6 +16,32 @@ describe('advanced showcase', () => {
       isAdvancedShowcaseUrl(new URL('https://example.test/jornada?showcase=basic')),
     ).toBe(false);
     expect(isAdvancedShowcaseUrl(new URL('https://example.test/jornada'))).toBe(false);
+  });
+
+  it('keeps the advanced showcase active while navigating inside the same tab', () => {
+    expect(
+      resolveAdvancedShowcaseState(
+        new URL('https://example.test/jornada?showcase=advanced'),
+        null,
+      ),
+    ).toEqual({ active: true, rememberedValue: 'advanced' });
+
+    expect(
+      resolveAdvancedShowcaseState(new URL('https://example.test/pokedex'), 'advanced'),
+    ).toEqual({ active: true, rememberedValue: 'advanced' });
+
+    expect(
+      resolveAdvancedShowcaseState(new URL('https://example.test/pokemon'), 'advanced'),
+    ).toEqual({ active: true, rememberedValue: 'advanced' });
+  });
+
+  it('lets an explicit non-advanced showcase value turn the remembered showcase off', () => {
+    expect(
+      resolveAdvancedShowcaseState(
+        new URL('https://example.test/jornada?showcase=off'),
+        'advanced',
+      ),
+    ).toEqual({ active: false, rememberedValue: null });
   });
 
   it('represents a completed Gen I-III Pokédex without duplicate dex entries', () => {
