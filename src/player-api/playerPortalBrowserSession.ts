@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { getAdvancedShowcaseSession, isAdvancedShowcaseActive } from '../showcase/advancedShowcase';
 import {
   bootstrapPlayerPortalSession,
   type PlayerPortalSessionBootstrap,
@@ -42,10 +43,20 @@ function bootstrapBrowserSession(): Promise<PlayerPortalSessionBootstrap> {
 }
 
 export function usePlayerPortalBrowserSession(): PlayerPortalBrowserSessionState {
-  const [state, setState] = useState<PlayerPortalBrowserSessionState>({ status: 'loading' });
+  const showcase = isAdvancedShowcaseActive();
+  const [state, setState] = useState<PlayerPortalBrowserSessionState>(() =>
+    showcase ? getAdvancedShowcaseSession() : { status: 'loading' },
+  );
 
   useEffect(() => {
     let cancelled = false;
+
+    if (showcase) {
+      setState(getAdvancedShowcaseSession());
+      return () => {
+        cancelled = true;
+      };
+    }
 
     bootstrapBrowserSession()
       .then((next) => {
@@ -58,7 +69,7 @@ export function usePlayerPortalBrowserSession(): PlayerPortalBrowserSessionState
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [showcase]);
 
   return state;
 }
