@@ -1,0 +1,173 @@
+/* Final unauthenticated visual pass for Pokémon Beyond Player Portal.
+   This is intentionally presentational: no gameplay, API or auth behavior changes. */
+
+/* JOURNEY --------------------------------------------------------------- */
+.journey-license:not(:has(.journey-share-action)) .journey-license-footer::before {
+  min-height: 48px;
+  padding: 8px 12px;
+  border-style: solid;
+  border-color: rgba(157, 67, 53, 0.22);
+  background:
+    linear-gradient(90deg, rgba(168, 45, 40, 0.045), transparent 62%),
+    rgba(255, 255, 255, 0.08);
+  color: rgba(96, 75, 62, 0.66);
+  letter-spacing: 0.055em;
+}
+
+.journey-league-seal {
+  color: rgba(92, 68, 43, 0.27);
+}
+
+/* BOX ------------------------------------------------------------------- */
+.owned-pokemon-page-v2:not(:has(.owned-pokemon-team-section)) .owned-pokemon-header-v2 p {
+  display: none;
+}
+
+.owned-pokemon-page-v2:not(:has(.owned-pokemon-team-section)) .owned-pokemon-header-v2 {
+  padding-bottom: 8px;
+}
+
+.owned-pokemon-page-v2:not(:has(.owned-pokemon-team-section)) .owned-pokemon-empty {
+  position: relative;
+  min-height: 172px;
+  margin-top: 12px;
+  overflow: hidden;
+  padding: 34px 24px 24px;
+  border: 1px solid rgba(193, 225, 227, 0.12);
+  border-right: 4px solid rgba(212, 58, 70, 0.62);
+  border-bottom: 1px solid rgba(193, 225, 227, 0.12);
+  background:
+    linear-gradient(rgba(192, 229, 231, 0.028) 1px, transparent 1px) 0 0 / 30px 30px,
+    linear-gradient(90deg, rgba(192, 229, 231, 0.028) 1px, transparent 1px) 0 0 / 30px 30px,
+    radial-gradient(circle at 88% 50%, rgba(135, 225, 231, 0.07), transparent 12rem),
+    #12191b;
+  text-align: left;
+  place-content: center start;
+}
+
+.owned-pokemon-page-v2:not(:has(.owned-pokemon-team-section)) .owned-pokemon-empty::before {
+  position: absolute;
+  top: 14px;
+  left: 18px;
+  color: #ef6a73;
+  content: 'POKÉMON STORAGE / BEYOND';
+  font: 700 0.48rem/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.11em;
+}
+
+.owned-pokemon-page-v2:not(:has(.owned-pokemon-team-section)) .owned-pokemon-empty strong {
+  color: #edf5f5;
+  font: 700 clamp(1.2rem, 4vw, 1.65rem)/1.05 'Space Grotesk', sans-serif;
+  letter-spacing: -0.025em;
+}
+
+.owned-pokemon-page-v2:not(:has(.owned-pokemon-team-section)) .owned-pokemon-empty span {
+  max-width: 470px;
+  color: transparent;
+  font-size: 0;
+}
+
+.owned-pokemon-page-v2:not(:has(.owned-pokemon-team-section)) .owned-pokemon-empty span::after {
+  display: block;
+  margin-top: 8px;
+  color: #849598;
+  content: 'Abra o Pokémon Beyond pelo acesso do seu treinador ou tente novamente em instantes.';
+  font: 500 0.82rem/1.5 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+/* POKÉDEX --------------------------------------------------------------- */
+.pokedex-index-filter-trigger {
+  border-bottom: 2px solid rgba(195, 77, 80, 0.45);
+  background: linear-gradient(180deg, #182022, #14191a);
+}
+
+.pokedex-index-filter-trigger:not(:disabled):hover {
+  border-color: rgba(190, 226, 228, 0.2);
+  border-bottom-color: rgba(195, 77, 80, 0.72);
+  background: #1b2325;
+}
+
+.pokedex-index-page:has(.pokedex-index-search input:disabled) .pokedex-index-progress-line > * {
+  display: none;
+}
+
+.pokedex-index-page:has(.pokedex-index-search input:disabled) .pokedex-index-progress-line::after {
+  color: #879597;
+  content: 'AGUARDANDO REGISTRO';
+  font: 650 0.64rem/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+}
+
+.pokedex-index-page:has(.pokedex-index-search input:disabled) .pokedex-index-empty,
+.pokedex-species-page .pokedex-index-empty {
+  position: relative;
+  min-height: 176px;
+  overflow: hidden;
+  padding: 34px 24px 24px;
+  border: 1px solid rgba(190, 226, 228, 0.1);
+  border-left: 3px solid rgba(195, 77, 80, 0.5);
+  border-bottom: 1px solid rgba(190, 226, 228, 0.1);
+  background:
+    linear-gradient(rgba(191, 224, 225, 0.022) 1px, transparent 1px) 0 0 / 30px 30px,
+    linear-gradient(90deg, rgba(191, 224, 225, 0.022) 1px, transparent 1px) 0 0 / 30px 30px,
+    radial-gradient(circle at 86% 44%, rgba(120, 169, 173, 0.08), transparent 11rem),
+    #111719;
+  text-align: left;
+  place-items: start;
+  align-content: center;
+}
+
+.pokedex-index-page:has(.pokedex-index-search input:disabled) .pokedex-index-empty::before,
+.pokedex-species-page .pokedex-index-empty::before {
+  position: absolute;
+  top: 14px;
+  left: 20px;
+  color: #78898b;
+  content: 'FIELD DEX / TRAINER LINK';
+  font: 650 0.48rem/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.11em;
+}
+
+.pokedex-index-page:has(.pokedex-index-search input:disabled) .pokedex-index-empty strong,
+.pokedex-species-page .pokedex-index-empty strong {
+  color: transparent;
+  font-size: 0;
+}
+
+.pokedex-index-page:has(.pokedex-index-search input:disabled) .pokedex-index-empty strong::after,
+.pokedex-species-page .pokedex-index-empty strong::after {
+  display: block;
+  color: #c8d3d4;
+  content: 'REGISTRO DO TREINADOR NÃO CONECTADO';
+  font: 680 clamp(0.82rem, 2.6vw, 1rem)/1.25 'IBM Plex Mono', monospace;
+  letter-spacing: 0.055em;
+}
+
+.pokedex-index-page:has(.pokedex-index-search input:disabled) .pokedex-index-empty span,
+.pokedex-species-page .pokedex-index-empty span {
+  color: transparent;
+  font-size: 0;
+}
+
+.pokedex-index-page:has(.pokedex-index-search input:disabled) .pokedex-index-empty span::after,
+.pokedex-species-page .pokedex-index-empty span::after {
+  display: block;
+  margin-top: 8px;
+  max-width: 520px;
+  color: #78898b;
+  content: 'Abra o Pokémon Beyond pelo acesso enviado pelo Rotom para carregar seus registros.';
+  font: 500 0.8rem/1.5 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+@media (max-width: 700px) {
+  .owned-pokemon-page-v2:not(:has(.owned-pokemon-team-section)) .owned-pokemon-empty,
+  .pokedex-index-page:has(.pokedex-index-search input:disabled) .pokedex-index-empty,
+  .pokedex-species-page .pokedex-index-empty {
+    min-height: 152px;
+    padding: 34px 18px 20px;
+  }
+
+  .pokedex-index-filter-trigger {
+    min-width: 96px;
+  }
+}
