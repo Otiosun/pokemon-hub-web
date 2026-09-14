@@ -9,6 +9,7 @@ import {
 import { ShareTrainerCardV2 } from './ShareTrainerCardV2';
 import './journey-page.css';
 import './journey-page-review-fixes.css';
+import './journey-uat-polish.css';
 
 const MAX_PROFILE_IMAGE_BYTES = 8 * 1024 * 1024;
 type ProfileImageSlot = 'cover' | 'avatar';
@@ -127,7 +128,7 @@ function sessionPresentation(session: PlayerPortalBrowserSessionState) {
       return {
         metaLabel: 'ACESSO',
         metaValue: 'NÃO CONECTADO',
-        subtitle: 'Abra seu link do Hub enviado pelo Rotom',
+        subtitle: 'Abra seu link do Beyond enviado pelo Rotom',
       };
     case 'invalid_ticket':
       return {
@@ -139,13 +140,13 @@ function sessionPresentation(session: PlayerPortalBrowserSessionState) {
       return {
         metaLabel: 'ACESSO',
         metaValue: 'INDISPONÍVEL',
-        subtitle: 'Seu registro ainda não pode acessar o Hub',
+        subtitle: 'Seu registro ainda não pode acessar o Beyond',
       };
     case 'unavailable':
       return {
         metaLabel: 'STATUS',
         metaValue: 'INDISPONÍVEL',
-        subtitle: 'O Hub não conseguiu carregar seu registro agora',
+        subtitle: 'O Beyond não conseguiu carregar seu registro agora',
       };
   }
 }
@@ -312,8 +313,8 @@ export function JourneyPageV2({
                 <CardIcon />
               </span>
               <span className="journey-share-action-copy">
-                <strong>VER TRAINER CARD</strong>
-                <small>Artefato horizontal para compartilhar</small>
+                <strong>EMITIR TRAINER CARD</strong>
+                <small>Gerar a versão oficial para compartilhar</small>
               </span>
               <span className="journey-share-action-chevron">
                 <ChevronIcon />
