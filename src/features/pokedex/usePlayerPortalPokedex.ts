@@ -5,6 +5,7 @@ import {
   type PlayerPortalPokedexSpecies,
 } from '../../player-api/playerPortalClient';
 import { usePlayerPortalBrowserSession } from '../../player-api/playerPortalBrowserSession';
+import { createAdvancedShowcasePokedex, isAdvancedShowcaseActive } from '../../showcase/advancedShowcase';
 
 export type PokedexDiscoveryState = 'unknown' | 'seen' | 'caught';
 
@@ -81,12 +82,24 @@ function loadPokedex(playerId: string): Promise<PlayerPortalPokedexResult> {
 }
 
 export function usePlayerPortalPokedex(): PlayerPortalPokedexState {
+  const showcase = isAdvancedShowcaseActive();
   const session = usePlayerPortalBrowserSession();
   const playerId = session.status === 'authenticated' ? session.profile.playerId : null;
-  const [state, setState] = useState<PlayerPortalPokedexState>({ status: 'loading' });
+  const [state, setState] = useState<PlayerPortalPokedexState>(() =>
+    showcase
+      ? { status: 'authenticated', pokedex: createAdvancedShowcasePokedex() }
+      : { status: 'loading' },
+  );
 
   useEffect(() => {
     let cancelled = false;
+
+    if (showcase) {
+      setState({ status: 'authenticated', pokedex: createAdvancedShowcasePokedex() });
+      return () => {
+        cancelled = true;
+      };
+    }
 
     if (session.status === 'loading') {
       setState({ status: 'loading' });
@@ -127,7 +140,7 @@ export function usePlayerPortalPokedex(): PlayerPortalPokedexState {
     return () => {
       cancelled = true;
     };
-  }, [playerId, session.status]);
+  }, [playerId, session.status, showcase]);
 
   return state;
 }
