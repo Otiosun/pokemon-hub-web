@@ -2,7 +2,7 @@
    Deliberately layered after the canonical Journey styles so the review can stay surgical. */
 
 .journey-identity {
-  grid-template-columns: 94px minmax(0, 1fr) 82px;
+  grid-template-columns: 94px minmax(0, 1fr) 78px;
   gap: 14px;
   align-items: center;
   min-height: 128px;
@@ -34,10 +34,145 @@
   line-height: 1.35;
 }
 
+/* The rail should read as part of the printed license, not as another Poké Ball icon. */
+.journey-license-rail::before {
+  top: 23px;
+  left: 50%;
+  width: 12px;
+  height: 31px;
+  border: 0;
+  border-radius: 0;
+  background: repeating-linear-gradient(
+    180deg,
+    currentColor 0 1px,
+    transparent 1px 5px
+  );
+  opacity: 0.52;
+  transform: translateX(-50%);
+}
+
+.journey-license-rail::after {
+  top: 27px;
+  left: 6px;
+  right: 6px;
+  height: 23px;
+  background:
+    linear-gradient(currentColor, currentColor) left top / 6px 1px no-repeat,
+    linear-gradient(currentColor, currentColor) right top / 6px 1px no-repeat,
+    linear-gradient(currentColor, currentColor) left bottom / 6px 1px no-repeat,
+    linear-gradient(currentColor, currentColor) right bottom / 6px 1px no-repeat;
+  opacity: 0.58;
+}
+
+.journey-license-rail span {
+  top: 96px;
+}
+
+/* Cover telemetry: deliberately asymmetric and technical instead of a translucent circle. */
+.journey-cover-mark {
+  right: 16px;
+  bottom: 16px;
+  width: 112px;
+  height: 38px;
+  border: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.28);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.26) 0 1px,
+      transparent 1px 10px
+    ) left bottom / 100% 5px no-repeat;
+  opacity: 0.72;
+}
+
+.journey-cover-mark::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: auto;
+  width: auto;
+  height: auto;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: rgba(255, 255, 255, 0.62);
+  content: 'REGISTRY / ZH-01';
+  font: 650 0.48rem/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.12em;
+  transform: none;
+}
+
+.journey-cover-mark::after {
+  position: absolute;
+  top: 16px;
+  right: 0;
+  left: auto;
+  width: 68px;
+  height: 1px;
+  border: 0;
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.32);
+  box-shadow: 0 5px 0 rgba(255, 255, 255, 0.16);
+  content: '';
+  transform: none;
+}
+
+/* A real registry crest beside the trainer name: shield geometry, not another circular overlay. */
 .journey-league-seal {
   align-self: center;
   justify-self: center;
+  width: 70px;
+  aspect-ratio: 0.82;
+  padding: 5px 3px;
+  border: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(currentColor, currentColor) center 15px / 72% 1px no-repeat,
+    linear-gradient(currentColor, currentColor) center calc(100% - 15px) / 72% 1px no-repeat;
+  color: rgba(92, 68, 43, 0.19);
   transform: none;
+}
+
+.journey-league-seal span,
+.journey-league-seal small {
+  font-size: 0.42rem;
+  letter-spacing: 0.11em;
+}
+
+.journey-league-seal i {
+  position: relative;
+  width: 31px;
+  height: 36px;
+  border: 1px solid currentColor;
+  border-radius: 2px 2px 48% 48%;
+  background: linear-gradient(180deg, transparent 0 55%, currentColor 55% 57%, transparent 57%);
+  clip-path: polygon(50% 0, 92% 16%, 84% 72%, 50% 100%, 16% 72%, 8% 16%);
+}
+
+.journey-league-seal i::before {
+  top: 50%;
+  left: 50%;
+  right: auto;
+  width: 10px;
+  height: 10px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  transform: translate(-50%, -50%);
+}
+
+.journey-league-seal i::after {
+  position: absolute;
+  top: 7px;
+  bottom: 7px;
+  left: 50%;
+  width: 1px;
+  background: currentColor;
+  content: '';
+  opacity: 0.72;
+  transform: translateX(-50%);
 }
 
 .journey-share-action {
@@ -57,6 +192,30 @@
   margin-top: 3px;
 }
 
+/* Preserve the issue action in the disconnected preview as an intentional locked state. */
+.journey-license:not(:has(.journey-share-action)) .journey-license-footer {
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.journey-license:not(:has(.journey-share-action)) .journey-license-footer::before {
+  flex: 1 0 100%;
+  box-sizing: border-box;
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 2px;
+  padding: 10px 14px;
+  border: 1px dashed rgba(157, 67, 53, 0.32);
+  background:
+    linear-gradient(90deg, rgba(168, 45, 40, 0.035), transparent 72%),
+    rgba(255, 255, 255, 0.09);
+  color: rgba(96, 75, 62, 0.7);
+  content: 'EMITIR TRAINER CARD  ·  CONECTE SEU REGISTRO';
+  font: 720 0.66rem/1.35 'IBM Plex Mono', monospace;
+  letter-spacing: 0.065em;
+}
+
 @media (max-width: 700px) {
   .journey-page .hub-module-brand strong {
     font-size: 0.78rem;
@@ -64,7 +223,7 @@
   }
 
   .journey-identity {
-    grid-template-columns: 80px minmax(0, 1fr) 64px;
+    grid-template-columns: 80px minmax(0, 1fr) 58px;
     gap: 10px;
     min-height: 116px;
     padding: 13px 0;
@@ -85,13 +244,17 @@
   }
 
   .journey-league-seal {
-    max-width: 58px;
+    width: 54px;
+  }
+
+  .journey-cover-mark {
+    width: 98px;
   }
 }
 
 @media (max-width: 390px) {
   .journey-identity {
-    grid-template-columns: 68px minmax(0, 1fr) 50px;
+    grid-template-columns: 68px minmax(0, 1fr) 46px;
     gap: 8px;
   }
 
@@ -101,7 +264,20 @@
   }
 
   .journey-league-seal {
-    transform: scale(0.86);
-    transform-origin: center;
+    width: 46px;
+  }
+
+  .journey-league-seal span,
+  .journey-league-seal small {
+    font-size: 0.34rem;
+  }
+
+  .journey-cover-mark {
+    right: 12px;
+    width: 88px;
+  }
+
+  .journey-license:not(:has(.journey-share-action)) .journey-license-footer::before {
+    font-size: 0.58rem;
   }
 }
