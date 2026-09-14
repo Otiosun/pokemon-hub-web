@@ -1,3 +1,4 @@
+import { isAdvancedShowcaseActive } from '../showcase/advancedShowcase';
 import type {
   PlayerPortalFetcher,
   PlayerPortalPokemon,
@@ -18,9 +19,14 @@ export type PlayerPortalRosterMoveInput = {
 export async function movePlayerPortalPokemon(
   input: PlayerPortalRosterMoveInput,
   fetcher: PlayerPortalFetcher = fetch,
+  showcaseActive: boolean = isAdvancedShowcaseActive(),
 ): Promise<PlayerPortalPokemonResult> {
   if (!isRosterMoveInput(input)) {
     throw new Error('Invalid player portal roster request');
+  }
+
+  if (showcaseActive) {
+    throw new Error('Advanced showcase roster writes are disabled');
   }
 
   const response = await fetcher('/api/hub/player/roster', {
