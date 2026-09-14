@@ -1,4 +1,5 @@
 import type { PlayerPortalProfile } from '../../player-api/playerPortalClient';
+import { ADVANCED_SHOWCASE_JOURNEY, isAdvancedShowcaseActive } from '../../showcase/advancedShowcase';
 
 export type JourneyPersonalProfile = {
   age: number | null;
@@ -59,7 +60,7 @@ function resolveLeadPokemon(playerProfile: PlayerPortalProfile | null): JourneyL
 export function createJourneyProfileView(
   playerProfile: PlayerPortalProfile | null,
 ): JourneyProfilePreview {
-  return {
+  const baseProfile: JourneyProfilePreview = {
     trainerName: playerProfile?.trainerName?.trim() || 'Treinador',
     trainerTitle: playerProfile
       ? `Treinador · Nv. ${playerProfile.trainerLevel}`
@@ -80,6 +81,19 @@ export function createJourneyProfileView(
       appearance: null,
       bio: null,
     },
+  };
+
+  if (!isAdvancedShowcaseActive()) return baseProfile;
+
+  return {
+    ...baseProfile,
+    trainerId: ADVANCED_SHOWCASE_JOURNEY.trainerId,
+    publicVerificationId: ADVANCED_SHOWCASE_JOURNEY.publicVerificationId,
+    currentLocation: ADVANCED_SHOWCASE_JOURNEY.currentLocation,
+    badges: ADVANCED_SHOWCASE_JOURNEY.badges.map((badge) => ({ ...badge })),
+    ownedPokemonCount: ADVANCED_SHOWCASE_JOURNEY.ownedPokemonCount,
+    registeredSpeciesCount: ADVANCED_SHOWCASE_JOURNEY.registeredSpeciesCount,
+    personal: { ...ADVANCED_SHOWCASE_JOURNEY.personal },
   };
 }
 
