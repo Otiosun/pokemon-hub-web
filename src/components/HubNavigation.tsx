@@ -11,6 +11,7 @@ import {
 import type { HubDestinations, HubSection } from '../navigation/hubNavigationSession';
 import { preloadProductRoute } from '../navigation/productRoutePreload';
 import './hub-navigation.css';
+import './hub-navigation-pokedex-compact.css';
 
 export type { HubSection } from '../navigation/hubNavigationSession';
 
@@ -222,7 +223,7 @@ export function HubNavigation({ active, destinations, children }: HubNavigationP
               className="hub-menu-panel"
               role="dialog"
               aria-modal="true"
-              aria-label="Navegação principal do Pokémon Hub"
+              aria-label="Navegação principal do Pokémon Beyond"
               onKeyDown={onMenuKeyDown}
             >
               <header className="hub-menu-header">
@@ -231,7 +232,7 @@ export function HubNavigation({ active, destinations, children }: HubNavigationP
                     <img src={HUB_BRAND_ASSET} alt="" decoding="async" />
                   </span>
                   <div>
-                    <strong>POKÉMON HUB</strong>
+                    <strong>POKÉMON BEYOND</strong>
                     <span>JORNADA · POKÉDEX · BOX</span>
                   </div>
                 </div>
