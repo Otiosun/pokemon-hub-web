@@ -2,7 +2,7 @@
    Deliberately layered after the canonical Journey styles so the review can stay surgical. */
 
 .journey-identity {
-  grid-template-columns: 94px minmax(0, 1fr) 62px;
+  grid-template-columns: 94px minmax(0, 1fr);
   gap: 14px;
   align-items: center;
   min-height: 128px;
@@ -34,7 +34,7 @@
   line-height: 1.35;
 }
 
-/* The red rail is already a strong visual anchor. Extra ornament here looked pasted-on. */
+/* Keep the rail clean, but restore the PKM registry text the user liked. */
 .journey-license-rail::before,
 .journey-license-rail::after {
   content: none;
@@ -42,11 +42,16 @@
 }
 
 .journey-license-rail span {
+  display: block;
   top: 50%;
-  transform: translateY(-50%) rotate(-90deg);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  opacity: 0.92;
+  transform: translate(-50%, -50%) rotate(-90deg);
 }
 
-/* Keep the banner telemetry, but reduce it to a quiet printed-data cue. */
+/* Keep the banner telemetry, but only as a quiet printed-data cue. */
 .journey-cover-mark {
   right: 16px;
   bottom: 16px;
@@ -97,57 +102,8 @@
   transform: none;
 }
 
-/* The identity mark now behaves like printed registration data, not a detached crest. */
+/* Removed after UAT feedback: the right-hand registry ornament did not belong to the composition. */
 .journey-league-seal {
-  align-self: center;
-  justify-self: end;
-  width: 54px;
-  min-height: 48px;
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 5px;
-  padding: 3px 0 3px 8px;
-  border: 0;
-  border-left: 1px solid rgba(92, 68, 43, 0.16);
-  border-radius: 0;
-  background: none;
-  color: rgba(92, 68, 43, 0.28);
-  transform: none;
-}
-
-.journey-league-seal span,
-.journey-league-seal small {
-  width: 100%;
-  text-align: left;
-  font: 650 0.34rem/1.1 'IBM Plex Mono', monospace;
-  letter-spacing: 0.08em;
-}
-
-.journey-league-seal i {
-  position: relative;
-  width: 100%;
-  height: 1px;
-  border: 0;
-  border-radius: 0;
-  background: currentColor;
-  clip-path: none;
-}
-
-.journey-league-seal i::before {
-  top: 50%;
-  left: 0;
-  width: 4px;
-  height: 4px;
-  border: 0;
-  border-radius: 0;
-  background: currentColor;
-  content: '';
-  transform: translate(-50%, -50%) rotate(45deg);
-}
-
-.journey-league-seal i::after {
-  content: none;
   display: none;
 }
 
@@ -168,7 +124,6 @@
   margin-top: 3px;
 }
 
-/* Keep the disconnected issue action visible, but make it read as a compact locked command. */
 .journey-license:not(:has(.journey-share-action)) .journey-license-footer {
   flex-wrap: wrap;
   margin-top: 8px;
@@ -200,7 +155,7 @@
   }
 
   .journey-identity {
-    grid-template-columns: 80px minmax(0, 1fr) 48px;
+    grid-template-columns: 80px minmax(0, 1fr);
     gap: 10px;
     min-height: 116px;
     padding: 13px 0;
@@ -220,13 +175,6 @@
     letter-spacing: 0.025em;
   }
 
-  .journey-league-seal {
-    width: 44px;
-    min-height: 44px;
-    padding-left: 6px;
-    color: rgba(92, 68, 43, 0.3);
-  }
-
   .journey-cover-mark {
     width: 76px;
   }
@@ -234,24 +182,13 @@
 
 @media (max-width: 390px) {
   .journey-identity {
-    grid-template-columns: 68px minmax(0, 1fr) 40px;
+    grid-template-columns: 68px minmax(0, 1fr);
     gap: 8px;
   }
 
   .journey-avatar-wrap {
     width: 64px;
     height: 64px;
-  }
-
-  .journey-league-seal {
-    width: 36px;
-    min-height: 40px;
-    padding-left: 5px;
-  }
-
-  .journey-league-seal span,
-  .journey-league-seal small {
-    font-size: 0.29rem;
   }
 
   .journey-cover-mark {
