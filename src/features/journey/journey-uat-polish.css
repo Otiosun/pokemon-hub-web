@@ -1,0 +1,107 @@
+/* Human UAT polish for the Pokémon Beyond Journey license.
+   Deliberately layered after the canonical Journey styles so the review can stay surgical. */
+
+.journey-identity {
+  grid-template-columns: 94px minmax(0, 1fr) 82px;
+  gap: 14px;
+  align-items: center;
+  min-height: 128px;
+  padding: 14px 0;
+}
+
+.journey-avatar-wrap {
+  width: 86px;
+  height: 86px;
+  margin-top: 0;
+  align-self: center;
+  justify-self: center;
+}
+
+.journey-identity-copy {
+  min-width: 0;
+  align-self: center;
+}
+
+.journey-identity-copy h1 {
+  margin: 0;
+  line-height: 0.96;
+  text-wrap: balance;
+}
+
+.journey-trainer-title {
+  display: block;
+  margin-top: 8px;
+  line-height: 1.35;
+}
+
+.journey-league-seal {
+  align-self: center;
+  justify-self: center;
+  transform: none;
+}
+
+.journey-share-action {
+  min-height: 72px;
+  margin-top: 10px;
+  padding: 0 8px;
+  border-top-color: rgba(157, 67, 53, 0.42);
+  border-bottom-color: rgba(111, 92, 70, 0.24);
+  background: linear-gradient(90deg, rgba(168, 45, 40, 0.025), rgba(168, 45, 40, 0));
+}
+
+.journey-share-action-copy strong {
+  letter-spacing: 0.045em;
+}
+
+.journey-share-action-copy small {
+  margin-top: 3px;
+}
+
+@media (max-width: 700px) {
+  .journey-page .hub-module-brand strong {
+    font-size: 0.78rem;
+    letter-spacing: 0.035em;
+  }
+
+  .journey-identity {
+    grid-template-columns: 80px minmax(0, 1fr) 64px;
+    gap: 10px;
+    min-height: 116px;
+    padding: 13px 0;
+  }
+
+  .journey-avatar-wrap {
+    width: 74px;
+    height: 74px;
+  }
+
+  .journey-identity-copy h1 {
+    font-size: clamp(1.8rem, 8vw, 2.35rem);
+  }
+
+  .journey-trainer-title {
+    font-size: 0.72rem;
+    letter-spacing: 0.025em;
+  }
+
+  .journey-league-seal {
+    max-width: 58px;
+  }
+}
+
+@media (max-width: 390px) {
+  .journey-identity {
+    grid-template-columns: 68px minmax(0, 1fr) 50px;
+    gap: 8px;
+  }
+
+  .journey-avatar-wrap {
+    width: 64px;
+    height: 64px;
+  }
+
+  .journey-league-seal {
+    transform: scale(0.86);
+    transform-origin: center;
+  }
+}
