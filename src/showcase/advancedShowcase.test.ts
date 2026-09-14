@@ -1,15 +1,19 @@
-import { describe, expect, it } from 'vitest';
 import {
   createAdvancedShowcasePokedex,
   createAdvancedShowcasePokemon,
   getAdvancedShowcaseSession,
   isAdvancedShowcaseUrl,
 } from './advancedShowcase';
+import { describe, expect, it } from 'vitest';
 
 describe('advanced showcase', () => {
   it('activates only for the explicit advanced showcase query value', () => {
-    expect(isAdvancedShowcaseUrl(new URL('https://example.test/jornada?showcase=advanced'))).toBe(true);
-    expect(isAdvancedShowcaseUrl(new URL('https://example.test/jornada?showcase=basic'))).toBe(false);
+    expect(
+      isAdvancedShowcaseUrl(new URL('https://example.test/jornada?showcase=advanced')),
+    ).toBe(true);
+    expect(
+      isAdvancedShowcaseUrl(new URL('https://example.test/jornada?showcase=basic')),
+    ).toBe(false);
     expect(isAdvancedShowcaseUrl(new URL('https://example.test/jornada'))).toBe(false);
   });
 
