@@ -2,7 +2,7 @@
    Deliberately layered after the canonical Journey styles so the review can stay surgical. */
 
 .journey-identity {
-  grid-template-columns: 94px minmax(0, 1fr) 78px;
+  grid-template-columns: 94px minmax(0, 1fr) 62px;
   gap: 14px;
   align-items: center;
   min-height: 128px;
@@ -34,57 +34,35 @@
   line-height: 1.35;
 }
 
-/* The rail should read as part of the printed license, not as another Poké Ball icon. */
-.journey-license-rail::before {
-  top: 23px;
-  left: 50%;
-  width: 12px;
-  height: 31px;
-  border: 0;
-  border-radius: 0;
-  background: repeating-linear-gradient(
-    180deg,
-    currentColor 0 1px,
-    transparent 1px 5px
-  );
-  opacity: 0.52;
-  transform: translateX(-50%);
-}
-
+/* The red rail is already a strong visual anchor. Extra ornament here looked pasted-on. */
+.journey-license-rail::before,
 .journey-license-rail::after {
-  top: 27px;
-  left: 6px;
-  right: 6px;
-  height: 23px;
-  background:
-    linear-gradient(currentColor, currentColor) left top / 6px 1px no-repeat,
-    linear-gradient(currentColor, currentColor) right top / 6px 1px no-repeat,
-    linear-gradient(currentColor, currentColor) left bottom / 6px 1px no-repeat,
-    linear-gradient(currentColor, currentColor) right bottom / 6px 1px no-repeat;
-  opacity: 0.58;
+  content: none;
+  display: none;
 }
 
 .journey-license-rail span {
-  top: 96px;
+  top: 50%;
+  transform: translateY(-50%) rotate(-90deg);
 }
 
-/* Cover telemetry: deliberately asymmetric and technical instead of a translucent circle. */
+/* Keep the banner telemetry, but reduce it to a quiet printed-data cue. */
 .journey-cover-mark {
   right: 16px;
   bottom: 16px;
-  width: 112px;
-  height: 38px;
+  width: 86px;
+  height: 28px;
   border: 0;
-  border-right: 1px solid rgba(255, 255, 255, 0.28);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+  border-right: 1px solid rgba(255, 255, 255, 0.22);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 0;
   background:
     repeating-linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0.26) 0 1px,
-      transparent 1px 10px
-    ) left bottom / 100% 5px no-repeat;
-  opacity: 0.72;
+      rgba(255, 255, 255, 0.22) 0 1px,
+      transparent 1px 12px
+    ) left bottom / 100% 4px no-repeat;
+  opacity: 0.58;
 }
 
 .journey-cover-mark::before {
@@ -97,82 +75,80 @@
   border: 0;
   border-radius: 0;
   background: none;
-  color: rgba(255, 255, 255, 0.62);
-  content: 'REGISTRY / ZH-01';
-  font: 650 0.48rem/1 'IBM Plex Mono', monospace;
-  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.54);
+  content: 'REGISTRY / 01';
+  font: 650 0.43rem/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.11em;
   transform: none;
 }
 
 .journey-cover-mark::after {
   position: absolute;
-  top: 16px;
+  top: 13px;
   right: 0;
   left: auto;
-  width: 68px;
+  width: 46px;
   height: 1px;
   border: 0;
   border-radius: 0;
-  background: rgba(255, 255, 255, 0.32);
-  box-shadow: 0 5px 0 rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.26);
+  box-shadow: 0 4px 0 rgba(255, 255, 255, 0.12);
   content: '';
   transform: none;
 }
 
-/* A real registry crest beside the trainer name: shield geometry, not another circular overlay. */
+/* The identity mark now behaves like printed registration data, not a detached crest. */
 .journey-league-seal {
   align-self: center;
-  justify-self: center;
-  width: 70px;
-  aspect-ratio: 0.82;
-  padding: 5px 3px;
+  justify-self: end;
+  width: 54px;
+  min-height: 48px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 5px;
+  padding: 3px 0 3px 8px;
   border: 0;
+  border-left: 1px solid rgba(92, 68, 43, 0.16);
   border-radius: 0;
-  background:
-    linear-gradient(currentColor, currentColor) center 15px / 72% 1px no-repeat,
-    linear-gradient(currentColor, currentColor) center calc(100% - 15px) / 72% 1px no-repeat;
+  background: none;
   color: rgba(92, 68, 43, 0.28);
   transform: none;
 }
 
 .journey-league-seal span,
 .journey-league-seal small {
-  font-size: 0.42rem;
-  letter-spacing: 0.11em;
+  width: 100%;
+  text-align: left;
+  font: 650 0.34rem/1.1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
 }
 
 .journey-league-seal i {
   position: relative;
-  width: 31px;
-  height: 36px;
-  border: 1px solid currentColor;
-  border-radius: 2px 2px 48% 48%;
-  background: linear-gradient(180deg, transparent 0 55%, currentColor 55% 57%, transparent 57%);
-  clip-path: polygon(50% 0, 92% 16%, 84% 72%, 50% 100%, 16% 72%, 8% 16%);
+  width: 100%;
+  height: 1px;
+  border: 0;
+  border-radius: 0;
+  background: currentColor;
+  clip-path: none;
 }
 
 .journey-league-seal i::before {
   top: 50%;
-  left: 50%;
-  right: auto;
-  width: 10px;
-  height: 10px;
-  border: 1px solid currentColor;
-  border-radius: 50%;
-  background: transparent;
-  transform: translate(-50%, -50%);
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border: 0;
+  border-radius: 0;
+  background: currentColor;
+  content: '';
+  transform: translate(-50%, -50%) rotate(45deg);
 }
 
 .journey-league-seal i::after {
-  position: absolute;
-  top: 7px;
-  bottom: 7px;
-  left: 50%;
-  width: 1px;
-  background: currentColor;
-  content: '';
-  opacity: 0.72;
-  transform: translateX(-50%);
+  content: none;
+  display: none;
 }
 
 .journey-share-action {
@@ -224,7 +200,7 @@
   }
 
   .journey-identity {
-    grid-template-columns: 80px minmax(0, 1fr) 58px;
+    grid-template-columns: 80px minmax(0, 1fr) 48px;
     gap: 10px;
     min-height: 116px;
     padding: 13px 0;
@@ -245,18 +221,20 @@
   }
 
   .journey-league-seal {
-    width: 54px;
-    color: rgba(92, 68, 43, 0.31);
+    width: 44px;
+    min-height: 44px;
+    padding-left: 6px;
+    color: rgba(92, 68, 43, 0.3);
   }
 
   .journey-cover-mark {
-    width: 98px;
+    width: 76px;
   }
 }
 
 @media (max-width: 390px) {
   .journey-identity {
-    grid-template-columns: 68px minmax(0, 1fr) 46px;
+    grid-template-columns: 68px minmax(0, 1fr) 40px;
     gap: 8px;
   }
 
@@ -266,17 +244,19 @@
   }
 
   .journey-league-seal {
-    width: 46px;
+    width: 36px;
+    min-height: 40px;
+    padding-left: 5px;
   }
 
   .journey-league-seal span,
   .journey-league-seal small {
-    font-size: 0.34rem;
+    font-size: 0.29rem;
   }
 
   .journey-cover-mark {
     right: 12px;
-    width: 88px;
+    width: 68px;
   }
 
   .journey-license:not(:has(.journey-share-action)) .journey-license-footer::before {
