@@ -1,9 +1,9 @@
+import type { PlayerPortalSessionBootstrap } from '../player-api/playerPortalSession';
 import type {
   PlayerPortalPokedexSpecies,
   PlayerPortalPokemon,
   PlayerPortalProfile,
 } from '../player-api/playerPortalClient';
-import type { PlayerPortalSessionBootstrap } from '../player-api/playerPortalSession';
 
 const SHOWCASE_QUERY_KEY = 'showcase';
 const SHOWCASE_QUERY_VALUE = 'advanced';
@@ -75,7 +75,8 @@ export const ADVANCED_SHOWCASE_JOURNEY = {
   personal: {
     age: 24,
     height: '1,81 m',
-    appearance: 'Jaqueta de campo vermelha, mochila técnica e insígnia da Liga no ombro.',
+    appearance:
+      'Jaqueta de campo vermelha, mochila técnica e insígnia da Liga no ombro.',
     bio: 'Treinador veterano com registros completos de Kanto, Johto e Hoenn.',
   },
   badges: [
@@ -102,7 +103,7 @@ export function createAdvancedShowcasePokemon(): PlayerPortalPokemon[] {
   return SHOWCASE_SPECIES.map((species, index) => {
     const inTeam = index < 6;
     const boxIndex = Math.floor(Math.max(index - 6, 0) / 12) + 1;
-    const boxSlot = ((Math.max(index - 6, 0) % 12) + 1);
+    const boxSlot = (Math.max(index - 6, 0) % 12) + 1;
 
     return {
       pokemonInstanceId: demoUuid(1000 + species.dex),
