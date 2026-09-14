@@ -21,6 +21,25 @@ type ShowcaseSpecies = {
   shiny?: boolean;
 };
 
+type AdvancedShowcaseJourney = {
+  trainerId: string;
+  publicVerificationId: string;
+  currentLocation: string;
+  ownedPokemonCount: number;
+  registeredSpeciesCount: number;
+  personal: {
+    age: number;
+    height: string;
+    appearance: string;
+    bio: string;
+  };
+  badges: Array<{
+    key: string;
+    name: string;
+    earned: boolean;
+  }>;
+};
+
 const SHOWCASE_SPECIES: readonly ShowcaseSpecies[] = [
   { dex: 6, name: 'Charizard', types: ['Fogo', 'Voador'], level: 78 },
   { dex: 9, name: 'Blastoise', types: ['Água'], level: 76 },
@@ -66,7 +85,7 @@ const SHOWCASE_SPECIES: readonly ShowcaseSpecies[] = [
   { dex: 386, name: 'Deoxys', types: ['Psíquico'], level: 79 },
 ];
 
-export const ADVANCED_SHOWCASE_JOURNEY = {
+export const ADVANCED_SHOWCASE_JOURNEY: AdvancedShowcaseJourney = {
   trainerId: 'KNT-073-0386',
   publicVerificationId: 'PB-KANTO-ASTER-073',
   currentLocation: 'Indigo Plateau',
@@ -89,7 +108,7 @@ export const ADVANCED_SHOWCASE_JOURNEY = {
     ['volcano', 'Vulcão'],
     ['earth', 'Terra'],
   ].map(([key, name]) => ({ key, name, earned: true })),
-} as const;
+};
 
 export function isAdvancedShowcaseUrl(url: URL) {
   return url.searchParams.get(SHOWCASE_QUERY_KEY) === SHOWCASE_QUERY_VALUE;
