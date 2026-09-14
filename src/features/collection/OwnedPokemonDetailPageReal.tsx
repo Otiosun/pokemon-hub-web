@@ -5,6 +5,10 @@ import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import { TypeBadge } from '../../visual-assets/TypeBadge';
 import { GenerationsPokemonViewer } from '../asset-lab/GenerationsPokemonViewer';
 import { typeAccent } from '../pokemon-detail/fieldDexSpecies';
+import {
+  readPokemonVisualPreference,
+  rememberPokemonVisualPreference,
+} from '../pokemon-detail/pokemonVisualPreference';
 import { createOwnedPokemonView, findOwnedPokemonView, type OwnedPokemonSex } from './ownedPokemonView';
 import { useOwnedPokemonCollection } from './useOwnedPokemonCollection';
 import './owned-pokemon-detail.css';
@@ -73,7 +77,9 @@ export function OwnedPokemonDetailPage({
   instanceId: string;
   returnHref?: string;
 }) {
-  const [visualMode, setVisualMode] = useState<OwnedVisualMode>('2d');
+  const [visualMode, setVisualMode] = useState<OwnedVisualMode>(() =>
+    readPokemonVisualPreference('2d'),
+  );
   const [viewerReady, setViewerReady] = useState(false);
   const collection = useOwnedPokemonCollection();
   const pokemon = useMemo(
@@ -85,6 +91,12 @@ export function OwnedPokemonDetailPage({
   );
   const record = findOwnedPokemonView(pokemon, instanceId);
   const resolvedReturnHref = resolveOwnedReturnHref(returnHref);
+
+  const chooseVisualMode = (mode: OwnedVisualMode) => {
+    if (mode === '3d') setViewerReady(false);
+    setVisualMode(mode);
+    rememberPokemonVisualPreference(mode);
+  };
 
   if (collection.status === 'loading') {
     return <RecordUnavailable returnHref={resolvedReturnHref} message="Sincronizando registro oficial…" />;
@@ -124,17 +136,14 @@ export function OwnedPokemonDetailPage({
 
           <div className="owned-detail-stage-actions">
             <fieldset className="owned-detail-view-switch" aria-label="Visual do Pokémon">
-              <button type="button" aria-pressed={visualMode === '2d'} onClick={() => setVisualMode('2d')}>
+              <button type="button" aria-pressed={visualMode === '2d'} onClick={() => chooseVisualMode('2d')}>
                 2D
               </button>
               <button
                 type="button"
                 disabled={!speciesSlug}
                 aria-pressed={visualMode === '3d'}
-                onClick={() => {
-                  setViewerReady(false);
-                  setVisualMode('3d');
-                }}
+                onClick={() => chooseVisualMode('3d')}
               >
                 3D
               </button>
