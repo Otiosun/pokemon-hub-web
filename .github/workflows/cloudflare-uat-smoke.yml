@@ -54,9 +54,9 @@ jobs:
           body="$(mktemp)"
           status="$(curl -sS --connect-timeout 5 --max-time 10 -o "$body" -w '%{http_code}' "$UAT_URL/")"
           test "$status" = "200"
-          grep -Fq 'Pokémon Hub' "$body"
+          grep -Fq 'Pokémon Beyond' "$body"
           rm -f "$body"
-          echo "Static Hub shell is public: GET / -> 200"
+          echo "Static Pokémon Beyond shell is public: GET / -> 200"
 
           body="$(mktemp)"
           status="$(curl -sS --connect-timeout 5 --max-time 10 -o "$body" -w '%{http_code}' \
