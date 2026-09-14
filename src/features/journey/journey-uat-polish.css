@@ -131,7 +131,7 @@
   background:
     linear-gradient(currentColor, currentColor) center 15px / 72% 1px no-repeat,
     linear-gradient(currentColor, currentColor) center calc(100% - 15px) / 72% 1px no-repeat;
-  color: rgba(92, 68, 43, 0.19);
+  color: rgba(92, 68, 43, 0.28);
   transform: none;
 }
 
@@ -192,28 +192,29 @@
   margin-top: 3px;
 }
 
-/* Preserve the issue action in the disconnected preview as an intentional locked state. */
+/* Keep the disconnected issue action visible, but make it read as a compact locked command. */
 .journey-license:not(:has(.journey-share-action)) .journey-license-footer {
   flex-wrap: wrap;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .journey-license:not(:has(.journey-share-action)) .journey-license-footer::before {
   flex: 1 0 100%;
   box-sizing: border-box;
-  min-height: 58px;
+  min-height: 44px;
   display: flex;
   align-items: center;
-  margin-bottom: 2px;
-  padding: 10px 14px;
-  border: 1px dashed rgba(157, 67, 53, 0.32);
+  margin-bottom: 1px;
+  padding: 8px 12px;
+  border: 1px solid rgba(157, 67, 53, 0.2);
+  border-left: 3px solid rgba(157, 67, 53, 0.45);
   background:
-    linear-gradient(90deg, rgba(168, 45, 40, 0.035), transparent 72%),
-    rgba(255, 255, 255, 0.09);
-  color: rgba(96, 75, 62, 0.7);
-  content: 'EMITIR TRAINER CARD  ·  CONECTE SEU REGISTRO';
-  font: 720 0.66rem/1.35 'IBM Plex Mono', monospace;
-  letter-spacing: 0.065em;
+    linear-gradient(90deg, rgba(168, 45, 40, 0.04), transparent 68%),
+    rgba(255, 255, 255, 0.07);
+  color: rgba(96, 75, 62, 0.72);
+  content: 'TRAINER CARD BLOQUEADO  ·  CONECTE SEU REGISTRO';
+  font: 720 0.59rem/1.3 'IBM Plex Mono', monospace;
+  letter-spacing: 0.055em;
 }
 
 @media (max-width: 700px) {
@@ -245,6 +246,7 @@
 
   .journey-league-seal {
     width: 54px;
+    color: rgba(92, 68, 43, 0.31);
   }
 
   .journey-cover-mark {
@@ -278,6 +280,8 @@
   }
 
   .journey-license:not(:has(.journey-share-action)) .journey-license-footer::before {
-    font-size: 0.58rem;
+    min-height: 40px;
+    padding: 7px 10px;
+    font-size: 0.52rem;
   }
 }
