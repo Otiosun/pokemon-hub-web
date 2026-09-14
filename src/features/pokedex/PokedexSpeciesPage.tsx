@@ -9,6 +9,10 @@ import {
   typeAccent,
   type FieldDexSpecies,
 } from '../pokemon-detail/fieldDexSpecies';
+import {
+  readPokemonVisualPreference,
+  rememberPokemonVisualPreference,
+} from '../pokemon-detail/pokemonVisualPreference';
 import { formatNationalDexName, getCachedNationalDexName } from './nationalDexRuntime';
 import {
   getCachedPokedexSpeciesRuntime,
@@ -133,7 +137,11 @@ function initialRecord(
     dex,
     slug: cached?.slug ?? review?.slug ?? '',
     status: cached ? 'ready' : 'loading',
-    name: cached?.name ?? review?.name ?? getCachedNationalDexName(dex) ?? `Nº ${String(dex).padStart(3, '0')}`,
+    name:
+      cached?.name ??
+      review?.name ??
+      getCachedNationalDexName(dex) ??
+      `Nº ${String(dex).padStart(3, '0')}`,
     height: formatMetric(cached?.height ?? null, 'm'),
     weight: formatMetric(cached?.weight ?? null, 'kg'),
     types: cached?.typeSlugs.map(translateType) ?? review?.types ?? [],
@@ -195,8 +203,15 @@ function EvolutionTree({ stages }: { stages: EvolutionSpecies[][] }) {
   return (
     <div className="pokedex-species-evolution-tree">
       {stages.map((stage, stageIndex) => (
-        <div className="pokedex-species-evolution-stage" key={stage.map((species) => species.dex).join('-')}>
-          {stageIndex > 0 && <span className="pokedex-species-evolution-arrow" aria-hidden="true">→</span>}
+        <div
+          className="pokedex-species-evolution-stage"
+          key={stage.map((species) => species.dex).join('-')}
+        >
+          {stageIndex > 0 && (
+            <span className="pokedex-species-evolution-arrow" aria-hidden="true">
+              →
+            </span>
+          )}
           <div>
             {stage.map((species) => (
               <a href={neighbourHref(species.dex)} key={species.dex}>
@@ -238,16 +253,18 @@ function ResearchRow({
 }
 
 function PortalStateMessage({ status }: { status: 'loading' | 'unauthenticated' | 'unavailable' }) {
-  const title = status === 'loading'
-    ? 'CARREGANDO SEU REGISTRO'
-    : status === 'unauthenticated'
-      ? 'ABRA SEU HUB PELO WHATSAPP'
-      : 'NÃO FOI POSSÍVEL CARREGAR SEU REGISTRO';
-  const detail = status === 'unauthenticated'
-    ? 'Use /hub para acessar a Pokédex vinculada ao seu treinador.'
-    : status === 'unavailable'
-      ? 'Tente novamente em instantes.'
-      : 'Sincronizando sua Pokédex.';
+  const title =
+    status === 'loading'
+      ? 'CARREGANDO SEU REGISTRO'
+      : status === 'unauthenticated'
+        ? 'ABRA SEU HUB PELO WHATSAPP'
+        : 'NÃO FOI POSSÍVEL CARREGAR SEU REGISTRO';
+  const detail =
+    status === 'unauthenticated'
+      ? 'Use /hub para acessar a Pokédex vinculada ao seu treinador.'
+      : status === 'unavailable'
+        ? 'Tente novamente em instantes.'
+        : 'Sincronizando sua Pokédex.';
 
   return (
     <main className="pokedex-species-page">
@@ -287,23 +304,28 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
     if (ownedPokemonState.status !== 'authenticated') return null;
     return ownedPokemonState.pokemon.filter((pokemon) => pokemon.nationalDex === validDex).length;
   }, [ownedPokemonState, validDex]);
-  const [record, setRecord] = useState<RecordState>(() => initialRecord(validDex, review, playerState));
+  const [record, setRecord] = useState<RecordState>(() =>
+    initialRecord(validDex, review, playerState),
+  );
   const [artworkReadyDex, setArtworkReadyDex] = useState<number | null>(null);
-  const [visualModeState, setVisualModeState] = useState<{ dex: number; mode: VisualMode }>({
-    dex: validDex,
-    mode: 'model',
-  });
+  const [visualMode, setVisualMode] = useState<VisualMode>(() =>
+    readPokemonVisualPreference('3d') === '3d' ? 'model' : 'artwork',
+  );
 
-  const activeRecord = record.dex === validDex ? record : initialRecord(validDex, review, playerState);
+  const activeRecord =
+    record.dex === validDex ? record : initialRecord(validDex, review, playerState);
   const artworkReady = artworkReadyDex === validDex;
-  const visualMode = visualModeState.dex === validDex ? visualModeState.mode : 'model';
-  const setVisualMode = (mode: VisualMode) => setVisualModeState({ dex: validDex, mode });
   const discovered = playerState.discovery !== 'unknown';
   const wants3d = discovered && visualMode === 'model';
   const canShow3d = discovered && Boolean(activeRecord.slug);
   const showing3d = wants3d && canShow3d;
   const waitingFor3d = wants3d && !canShow3d && activeRecord.status === 'loading';
   const modelUnavailable = wants3d && !canShow3d && activeRecord.status === 'failed';
+
+  const chooseVisualMode = (mode: VisualMode) => {
+    setVisualMode(mode);
+    rememberPokemonVisualPreference(mode === 'model' ? '3d' : '2d');
+  };
 
   useEffect(() => {
     if (discovered && activeRecord.slug) void warmSpecies3d(activeRecord.slug);
@@ -334,7 +356,9 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
       } catch (error) {
         if (controller.signal.aborted) return;
         console.warn(`National Dex record ${validDex} unavailable`, error);
-        setRecord((current) => current.dex === validDex ? { ...current, status: 'failed' } : current);
+        setRecord((current) =>
+          current.dex === validDex ? { ...current, status: 'failed' } : current,
+        );
       }
     }
 
@@ -355,16 +379,18 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
     : review?.description
       ? review.description
       : 'Identificação confirmada na sua Pokédex.';
-  const varietiesValue = activeRecord.status === 'loading'
-    ? 'Carregando'
-    : activeRecord.varieties.length > 0
-      ? `${activeRecord.varieties.length} registro${activeRecord.varieties.length === 1 ? '' : 's'}`
-      : 'Forma base';
-  const evolutionValue = activeRecord.status === 'loading'
-    ? 'Carregando'
-    : activeRecord.evolutionStages.length > 0
-      ? 'Disponível'
-      : 'Sem evolução catalogada';
+  const varietiesValue =
+    activeRecord.status === 'loading'
+      ? 'Carregando'
+      : activeRecord.varieties.length > 0
+        ? `${activeRecord.varieties.length} registro${activeRecord.varieties.length === 1 ? '' : 's'}`
+        : 'Forma base';
+  const evolutionValue =
+    activeRecord.status === 'loading'
+      ? 'Carregando'
+      : activeRecord.evolutionStages.length > 0
+        ? 'Disponível'
+        : 'Sem evolução catalogada';
 
   return (
     <main className={`pokedex-species-page is-${playerState.discovery}`}>
@@ -391,12 +417,16 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
         <section className="pokedex-species-stage" aria-label={`Registro visual de ${displayName}`}>
           <div className="pokedex-species-visual-area">
             {discovered && (
-              <fieldset className="pokedex-species-view-modes" style={FIELDSET_RESET} aria-label="Modo de visualização da espécie">
+              <fieldset
+                className="pokedex-species-view-modes"
+                style={FIELDSET_RESET}
+                aria-label="Modo de visualização da espécie"
+              >
                 <button
                   type="button"
                   className={visualMode === 'artwork' ? 'is-active' : undefined}
                   aria-pressed={visualMode === 'artwork'}
-                  onClick={() => setVisualMode('artwork')}
+                  onClick={() => chooseVisualMode('artwork')}
                 >
                   2D
                 </button>
@@ -405,7 +435,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
                   className={visualMode === 'model' ? 'is-active' : undefined}
                   aria-pressed={visualMode === 'model'}
                   disabled={modelUnavailable}
-                  onClick={() => setVisualMode('model')}
+                  onClick={() => chooseVisualMode('model')}
                 >
                   3D
                 </button>
@@ -444,7 +474,9 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
               <div className="pokedex-species-model-loading" role="status">
                 <span>{modelUnavailable ? 'MODELO 3D INDISPONÍVEL' : 'PREPARANDO MODELO 3D'}</span>
                 {modelUnavailable && (
-                  <button type="button" onClick={() => setVisualMode('artwork')}>VER 2D</button>
+                  <button type="button" onClick={() => setVisualMode('artwork')}>
+                    VER 2D
+                  </button>
                 )}
               </div>
             )}
@@ -464,7 +496,9 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
                 >
                   <SideArrow direction="left" />
                 </a>
-              ) : <span className="is-placeholder" aria-hidden="true" />}
+              ) : (
+                <span className="is-placeholder" aria-hidden="true" />
+              )}
               {nextDex ? (
                 <a
                   className="is-next"
@@ -473,7 +507,9 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
                 >
                   <SideArrow direction="right" />
                 </a>
-              ) : <span className="is-placeholder" aria-hidden="true" />}
+              ) : (
+                <span className="is-placeholder" aria-hidden="true" />
+              )}
             </nav>
           </div>
 
@@ -492,9 +528,15 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
 
         <section className="pokedex-species-data" aria-label="Dados do registro">
           <div className="pokedex-species-player-state">
-            <strong className={`is-${playerState.discovery}`}>{DISCOVERY_LABELS[playerState.discovery]}</strong>
-            <span>{playerState.seenCount} avistamento{playerState.seenCount === '1' ? '' : 's'}</span>
-            <span>{playerState.caughtCount} captura{playerState.caughtCount === '1' ? '' : 's'}</span>
+            <strong className={`is-${playerState.discovery}`}>
+              {DISCOVERY_LABELS[playerState.discovery]}
+            </strong>
+            <span>
+              {playerState.seenCount} avistamento{playerState.seenCount === '1' ? '' : 's'}
+            </span>
+            <span>
+              {playerState.caughtCount} captura{playerState.caughtCount === '1' ? '' : 's'}
+            </span>
           </div>
 
           <p className="pokedex-species-description">{description}</p>
@@ -557,9 +599,11 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
           {discovered && (
             <section className="pokedex-species-evolution" aria-label="Linha evolutiva">
               <header>LINHA EVOLUTIVA</header>
-              {activeRecord.evolutionStages.length > 0
-                ? <EvolutionTree stages={activeRecord.evolutionStages} />
-                : <p>Sem evolução catalogada.</p>}
+              {activeRecord.evolutionStages.length > 0 ? (
+                <EvolutionTree stages={activeRecord.evolutionStages} />
+              ) : (
+                <p>Sem evolução catalogada.</p>
+              )}
             </section>
           )}
         </section>
