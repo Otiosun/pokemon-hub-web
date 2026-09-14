@@ -158,7 +158,7 @@ export function JourneyPageV2({
   playerPortalSession: PlayerPortalBrowserSessionState;
 }) {
   const authoritativeProfile =
-    playerPortalSession.status === 'authenticated' ? playerPortalSession.profile : null;
+    playerPortalSession.status === 'authenticated' ? playerPortalSession.profile : undefined;
   const profile = createJourneyProfileView(authoritativeProfile);
   const presentation = sessionPresentation(playerPortalSession);
   const cover = useImagePreview('cover');
