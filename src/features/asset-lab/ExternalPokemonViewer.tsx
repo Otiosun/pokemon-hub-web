@@ -13,6 +13,7 @@ import type { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import type { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { useEffect, useRef, useState } from 'react';
 import { getExternalPokemon3dModelUrl } from '../../visual-assets/pokemon3dExternal';
+import { getPokemonSpeciesVisualAssets } from '../../visual-assets/pokemonVisualRegistry';
 
 type ThreeModule = typeof import('three');
 type ViewerState = 'loading' | 'ready' | 'failed';
@@ -30,10 +31,15 @@ type Runtime = {
 };
 
 type Props = {
-  dex: number;
+  species: string;
   name: string;
   onReadyChange?: (ready: boolean) => void;
-  onFailed?: () => void;
+  onDisplayedSpeciesChange?: (species: string) => void;
+  onFailedSpeciesChange?: (species: string) => void;
+};
+
+type PokemonIdentity = {
+  id: number;
 };
 
 function disposeMaterial(material: Material) {
@@ -68,6 +74,21 @@ function disposeModel(runtime: Runtime) {
   runtime.model = null;
 }
 
+function disposeDetached(model: Group) {
+  const disposedMaterials = new Set<Material>();
+  model.traverse((object) => {
+    const mesh = object as Mesh;
+    if (!mesh.isMesh) return;
+    mesh.geometry?.dispose();
+    const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (const material of materials) {
+      if (!material || disposedMaterials.has(material)) continue;
+      disposedMaterials.add(material);
+      disposeMaterial(material);
+    }
+  });
+}
+
 function frameModel(runtime: Runtime, model: Group) {
   const { THREE, camera, controls } = runtime;
   model.updateMatrixWorld(true);
@@ -95,13 +116,48 @@ function frameModel(runtime: Runtime, model: Group) {
   controls.update();
 }
 
-export function ExternalPokemonViewer({ dex, name, onReadyChange, onFailed }: Props) {
+async function resolveNationalDex(species: string, signal: AbortSignal) {
+  const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${encodeURIComponent(species)}`, {
+    signal,
+    cache: 'force-cache',
+  });
+  if (!response.ok) throw new Error(`PokéAPI HTTP ${response.status}`);
+  const payload = (await response.json()) as PokemonIdentity;
+  if (!Number.isInteger(payload.id)) throw new Error('PokéAPI retornou um National Dex inválido');
+  return payload.id;
+}
+
+function preloadArtwork(dex: number) {
+  const artwork = getPokemonSpeciesVisualAssets(dex).artworkOfficial;
+  const image = new Image();
+  image.decoding = 'async';
+  image.src = artwork;
+}
+
+export function ExternalPokemonViewer({
+  species,
+  name,
+  onReadyChange,
+  onDisplayedSpeciesChange,
+  onFailedSpeciesChange,
+}: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const runtimeRef = useRef<Runtime | null>(null);
   const loadVersionRef = useRef(0);
+  const displayedSpeciesCallbackRef = useRef(onDisplayedSpeciesChange);
+  const failedSpeciesCallbackRef = useRef(onFailedSpeciesChange);
   const [engineReady, setEngineReady] = useState(false);
   const [viewerState, setViewerState] = useState<ViewerState>('loading');
+  const [displayedName, setDisplayedName] = useState('');
   const [errorDetail, setErrorDetail] = useState('');
+
+  useEffect(() => {
+    displayedSpeciesCallbackRef.current = onDisplayedSpeciesChange;
+  }, [onDisplayedSpeciesChange]);
+
+  useEffect(() => {
+    failedSpeciesCallbackRef.current = onFailedSpeciesChange;
+  }, [onFailedSpeciesChange]);
 
   useEffect(() => {
     onReadyChange?.(viewerState === 'ready');
@@ -117,6 +173,7 @@ export function ExternalPokemonViewer({ dex, name, onReadyChange, onFailed }: Pr
     let inViewport = true;
     let resizeObserver: ResizeObserver | undefined;
     let intersectionObserver: IntersectionObserver | undefined;
+    let removeVisibilityListener: (() => void) | undefined;
 
     async function initialise(mount: HTMLDivElement) {
       try {
@@ -161,6 +218,8 @@ export function ExternalPokemonViewer({ dex, name, onReadyChange, onFailed }: Pr
         controls.enablePan = false;
         controls.rotateSpeed = isTouch ? 0.55 : 0.7;
         controls.zoomSpeed = 0.62;
+        controls.minPolarAngle = THREE.MathUtils.degToRad(55);
+        controls.maxPolarAngle = THREE.MathUtils.degToRad(120);
 
         const runtime: Runtime = {
           THREE,
@@ -201,6 +260,7 @@ export function ExternalPokemonViewer({ dex, name, onReadyChange, onFailed }: Pr
 
         const onVisibilityChange = () => syncLoop();
         document.addEventListener('visibilitychange', onVisibilityChange);
+        removeVisibilityListener = () => document.removeEventListener('visibilitychange', onVisibilityChange);
 
         intersectionObserver = new IntersectionObserver(
           ([entry]) => {
@@ -224,22 +284,17 @@ export function ExternalPokemonViewer({ dex, name, onReadyChange, onFailed }: Pr
         resize();
         syncLoop();
         setEngineReady(true);
-
-        return () => document.removeEventListener('visibilitychange', onVisibilityChange);
       } catch (error) {
         console.error('External Pokemon renderer initialisation failed', error);
         if (!disposed) {
           setErrorDetail(error instanceof Error ? error.message : String(error));
           setViewerState('failed');
-          onFailed?.();
+          failedSpeciesCallbackRef.current?.(species);
         }
       }
     }
 
-    let removeVisibilityListener: (() => void) | undefined;
-    void initialise(host).then((cleanup) => {
-      removeVisibilityListener = cleanup;
-    });
+    void initialise(host);
 
     return () => {
       disposed = true;
@@ -259,52 +314,67 @@ export function ExternalPokemonViewer({ dex, name, onReadyChange, onFailed }: Pr
         runtimeRef.current = null;
       }
     };
-  }, [onFailed]);
+  }, [species]);
 
   useEffect(() => {
     const runtime = runtimeRef.current;
     if (!engineReady || !runtime) return;
 
-    const modelUrl = getExternalPokemon3dModelUrl(dex);
+    const controller = new AbortController();
     const loadVersion = ++loadVersionRef.current;
     let cancelled = false;
     setViewerState('loading');
     setErrorDetail('');
 
     async function loadModel(activeRuntime: Runtime) {
+      let pendingModel: Group | null = null;
       try {
-        if (!modelUrl) throw new Error(`National Dex ${dex} fora do catálogo 3D`);
+        const dex = await resolveNationalDex(species, controller.signal);
+        preloadArtwork(dex);
+        const modelUrl = getExternalPokemon3dModelUrl(dex);
+        if (!modelUrl) throw new Error(`National Dex ${dex} fora do catálogo 3D Gen I–III`);
+
         const gltf = await activeRuntime.gltfLoader.loadAsync(modelUrl);
-        if (cancelled || loadVersion !== loadVersionRef.current) return;
+        pendingModel = gltf.scene;
+        if (cancelled || loadVersion !== loadVersionRef.current) {
+          disposeDetached(pendingModel);
+          return;
+        }
 
         disposeModel(activeRuntime);
-        const model = gltf.scene;
+        const model = pendingModel;
         activeRuntime.scene.add(model);
         activeRuntime.model = model;
+        pendingModel = null;
 
-        if (gltf.animations.length > 0) {
+        const animation = gltf.animations[0];
+        if (animation) {
           const mixer = new activeRuntime.THREE.AnimationMixer(model);
-          mixer.clipAction(gltf.animations[0]).play();
+          mixer.clipAction(animation).play();
           activeRuntime.mixer = mixer;
         }
 
         frameModel(activeRuntime, model);
         activeRuntime.renderer.render(activeRuntime.scene, activeRuntime.camera);
+        setDisplayedName(name);
+        displayedSpeciesCallbackRef.current?.(species);
         setViewerState('ready');
       } catch (error) {
-        if (cancelled || loadVersion !== loadVersionRef.current) return;
-        console.warn(`External 3D model unavailable for #${dex}`, error);
+        if (pendingModel) disposeDetached(pendingModel);
+        if (controller.signal.aborted || cancelled || loadVersion !== loadVersionRef.current) return;
+        console.warn(`3D model unavailable for ${species}`, error);
         setErrorDetail(error instanceof Error ? error.message : String(error));
         setViewerState('failed');
-        onFailed?.();
+        failedSpeciesCallbackRef.current?.(species);
       }
     }
 
     void loadModel(runtime);
     return () => {
       cancelled = true;
+      controller.abort();
     };
-  }, [dex, engineReady, onFailed]);
+  }, [engineReady, name, species]);
 
   return (
     <div className="generations-demo">
@@ -313,21 +383,25 @@ export function ExternalPokemonViewer({ dex, name, onReadyChange, onFailed }: Pr
           ref={hostRef}
           className="generations-host"
           role="region"
-          aria-label={`${name} em 3D. Arraste para girar e use roda ou pinça para zoom.`}
+          aria-label={`${displayedName || name} em 3D. Arraste para girar e use roda ou pinça para zoom.`}
         />
-        {viewerState === 'loading' && <div className="generations-loading">carregando {name}…</div>}
+        {viewerState === 'loading' && !displayedName && (
+          <div className="generations-loading">carregando {name}…</div>
+        )}
         {viewerState === 'failed' && (
           <div className="generations-error">
             <strong>Modelo 3D indisponível.</strong>
             {errorDetail && <code>{errorDetail}</code>}
           </div>
         )}
-        {viewerState === 'ready' && (
-          <div className="generations-status" aria-live="polite">
-            <strong>{name}</strong>
-            <span>arraste = girar · roda ou pinça = zoom</span>
-          </div>
-        )}
+        <div className="generations-status" aria-live="polite">
+          <strong>{displayedName || name}</strong>
+          <span>
+            {viewerState === 'loading' && displayedName
+              ? `${name} carregando · arraste = girar`
+              : 'arraste = girar · roda ou pinça = zoom'}
+          </span>
+        </div>
       </div>
     </div>
   );
