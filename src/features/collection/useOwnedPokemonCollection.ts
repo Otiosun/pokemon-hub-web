@@ -5,6 +5,7 @@ import {
   type PlayerPortalPokemonResult,
 } from '../../player-api/playerPortalClient';
 import { usePlayerPortalBrowserSession } from '../../player-api/playerPortalBrowserSession';
+import { createAdvancedShowcasePokemon, isAdvancedShowcaseActive } from '../../showcase/advancedShowcase';
 
 export type OwnedPokemonCollectionState =
   | { status: 'loading' }
@@ -29,12 +30,24 @@ function loadPokemon(playerId: string): Promise<PlayerPortalPokemonResult> {
 }
 
 export function useOwnedPokemonCollection(): OwnedPokemonCollectionState {
+  const showcase = isAdvancedShowcaseActive();
   const session = usePlayerPortalBrowserSession();
   const playerId = session.status === 'authenticated' ? session.profile.playerId : null;
-  const [state, setState] = useState<OwnedPokemonCollectionState>({ status: 'loading' });
+  const [state, setState] = useState<OwnedPokemonCollectionState>(() =>
+    showcase
+      ? { status: 'authenticated', pokemon: createAdvancedShowcasePokemon() }
+      : { status: 'loading' },
+  );
 
   useEffect(() => {
     let cancelled = false;
+
+    if (showcase) {
+      setState({ status: 'authenticated', pokemon: createAdvancedShowcasePokemon() });
+      return () => {
+        cancelled = true;
+      };
+    }
 
     if (session.status === 'loading') {
       setState({ status: 'loading' });
@@ -75,7 +88,7 @@ export function useOwnedPokemonCollection(): OwnedPokemonCollectionState {
     return () => {
       cancelled = true;
     };
-  }, [playerId, session.status]);
+  }, [playerId, session.status, showcase]);
 
   return state;
 }
