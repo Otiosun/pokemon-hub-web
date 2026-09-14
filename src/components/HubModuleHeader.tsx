@@ -23,7 +23,7 @@ export function HubModuleHeader({ module, metaLabel, metaValue }: HubModuleHeade
       <a className="hub-module-brand" href={meta.href} aria-label={meta.ariaLabel ?? `Abrir ${meta.label}`}>
         <span className="hub-module-lens" aria-hidden="true" />
         <span>
-          <strong>POKÉMON HUB</strong>
+          <strong>POKÉMON BEYOND</strong>
           <small>{meta.label}</small>
         </span>
       </a>
