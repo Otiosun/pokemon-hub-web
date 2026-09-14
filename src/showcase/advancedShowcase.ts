@@ -211,6 +211,7 @@ const SHOWCASE_TEAM = SHOWCASE_POKEMON.slice(0, 6).map((pokemon, index) => ({
   displayName: pokemon.displayName,
   nationalDex: pokemon.nationalDex,
   typeNames: [...pokemon.typeNames],
+  nickname: pokemon.nickname,
   level: pokemon.level,
   currentHp: pokemon.currentHp,
   slotNo: index + 1,
