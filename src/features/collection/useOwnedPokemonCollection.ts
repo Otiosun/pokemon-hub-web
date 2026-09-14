@@ -5,7 +5,10 @@ import {
   type PlayerPortalPokemonResult,
 } from '../../player-api/playerPortalClient';
 import { usePlayerPortalBrowserSession } from '../../player-api/playerPortalBrowserSession';
-import { createAdvancedShowcasePokemon, isAdvancedShowcaseActive } from '../../showcase/advancedShowcase';
+import {
+  createAdvancedShowcasePokemon,
+  isAdvancedShowcaseActive,
+} from '../../showcase/advancedShowcase';
 
 export type OwnedPokemonCollectionState =
   | { status: 'loading' }
