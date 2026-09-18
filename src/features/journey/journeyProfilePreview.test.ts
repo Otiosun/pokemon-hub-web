@@ -116,9 +116,9 @@ describe('createJourneyProfileView', () => {
     expect(profile).toMatchObject({
       trainerName: 'Treinador',
       trainerTitle: 'Registro não conectado',
-      trainerId: '—',
+      trainerId: null,
       originRegion: null,
-      currentLocation: 'Não disponível',
+      currentLocation: null,
       leadPokemon: null,
       badges: [],
       teamSize: null,
