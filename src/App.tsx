@@ -1,4 +1,4 @@
-import { lazy, startTransition, Suspense, type ReactNode, useEffect, useState } from 'react';
+import { lazy, startTransition, Suspense, type ReactNode, type SyntheticEvent, useEffect, useState } from 'react';
 import { HubNavigation } from './components/HubNavigation';
 import { HubModuleHeader } from './components/HubModuleHeader';
 import { rememberPokedexIndexScroll } from './features/pokedex/pokedexIndexSession';
@@ -189,7 +189,7 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
   },
 ];
 
-function hideMissingStoreArt(event: React.SyntheticEvent<HTMLImageElement>) {
+function hideMissingStoreArt(event: SyntheticEvent<HTMLImageElement>) {
   event.currentTarget.hidden = true;
 }
 
