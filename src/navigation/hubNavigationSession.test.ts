@@ -15,6 +15,7 @@ describe('hub navigation session', () => {
     expect(hubSectionForPath('/pokemon/pkm-charmander-a1')).toBe('box');
     expect(hubSectionForPath('/team')).toBe('box');
     expect(hubSectionForPath('/team/edit?slot=2')).toBe('box');
+    expect(hubSectionForPath('/champion-store')).toBe('store');
     expect(hubSectionForPath('/pokemon/demo-charmander')).toBeNull();
   });
 
@@ -23,6 +24,7 @@ describe('hub navigation session', () => {
       journey: '/jornada',
       pokedex: '/pokedex',
       box: '/pokemon',
+      store: '/champion-store',
     });
   });
 
