@@ -46,9 +46,9 @@ describe('createJourneyProfileView', () => {
     expect(profile).toMatchObject({
       trainerName: 'Natan',
       trainerTitle: 'Treinador · Nv. 7',
-      trainerId: '—',
+      trainerId: null,
       originRegion: 'Kanto',
-      currentLocation: 'Não disponível',
+      currentLocation: null,
       leadPokemon: {
         instanceId: '66666666-6666-4666-8666-666666666666',
         dex: 4,
@@ -65,6 +65,29 @@ describe('createJourneyProfileView', () => {
     expect(JSON.stringify(profile)).not.toContain('Whatever');
     expect(JSON.stringify(profile)).not.toContain('Route 1');
     expect(JSON.stringify(profile)).not.toContain('Brasa');
+  });
+
+  it('projects authoritative journey reads without inventing unsupported profile fields', () => {
+    const profile = createJourneyProfileView(realProfile, {
+      currentLocation: 'Vila dos Arrozais · Zhoulia',
+      ownedPokemonCount: 14,
+      registeredSpeciesCount: 9,
+    });
+
+    expect(profile).toMatchObject({
+      trainerId: null,
+      publicVerificationId: null,
+      currentLocation: 'Vila dos Arrozais · Zhoulia',
+      ownedPokemonCount: 14,
+      registeredSpeciesCount: 9,
+      badges: [],
+      personal: {
+        age: null,
+        height: null,
+        appearance: null,
+        bio: null,
+      },
+    });
   });
 
   it('does not invent a partner when the catalog presentation is unresolved', () => {
@@ -94,7 +117,7 @@ describe('createJourneyProfileView', () => {
       trainerName: 'Treinador',
       trainerTitle: 'Registro não conectado',
       trainerId: '—',
-      originRegion: 'Não disponível',
+      originRegion: null,
       currentLocation: 'Não disponível',
       leadPokemon: null,
       badges: [],
