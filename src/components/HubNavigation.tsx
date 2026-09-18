@@ -62,6 +62,12 @@ const NAV_ITEMS: NavItem[] = [
     description: 'Time, coleção e organização',
     asset: `${POKESPRITE_ITEMS}/storage/pokemon-box.png`,
   },
+  {
+    id: 'store',
+    label: 'CHAMPION STORE',
+    description: 'Gamepasses e benefícios especiais',
+    asset: `${POKESPRITE_ITEMS}/key-item/coin-case.png`,
+  },
 ];
 
 function warmProductPath(path: string) {
@@ -233,7 +239,7 @@ export function HubNavigation({ active, destinations, children }: HubNavigationP
                   </span>
                   <div>
                     <strong>POKÉMON BEYOND</strong>
-                    <span>JORNADA · POKÉDEX · BOX</span>
+                    <span>JORNADA · POKÉDEX · BOX · STORE</span>
                   </div>
                 </div>
                 <button type="button" className="hub-menu-close" onClick={closeMenu} aria-label="Fechar menu">
