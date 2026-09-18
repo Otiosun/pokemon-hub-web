@@ -222,7 +222,7 @@
 .hub-menu-tile.is-journey { --tile-accent: #a9d482; }
 .hub-menu-tile.is-pokedex { --tile-accent: #ed535b; }
 .hub-menu-tile.is-box { --tile-accent: #62c4d0; }
-.hub-menu-tile.is-store { --tile-accent: #d8ae57; }
+.hub-menu-tile.is-store { --tile-accent: #b026ff; }
 
 .hub-menu-tile::after {
   content: '';
