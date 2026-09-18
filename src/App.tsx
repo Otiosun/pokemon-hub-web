@@ -86,7 +86,7 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
   {
     code: 'LUCK',
     title: 'Benção da Sorte',
-    price: 'R$60,00',
+    price: 'R$ 60,00',
     category: 'JORNADA',
     artSrc: '/champion-store/blessing-luck.jpg',
     artAlt: 'Arte de Benção da Sorte do catálogo Pokémon Beyond',
@@ -97,7 +97,7 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
   {
     code: 'SAVE+',
     title: 'Save Premium',
-    price: 'R$45,00',
+    price: 'R$ 45,00',
     category: 'JORNADA',
     artSrc: '/champion-store/save-premium.jpg',
     artAlt: 'Arte de Save Premium do catálogo Pokémon Beyond',
@@ -109,7 +109,7 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
   {
     code: 'GEN',
     title: 'Pokémon Gênesis',
-    price: '60,00$',
+    price: '60,00 $',
     category: 'CRIAÇÃO',
     artSrc: '/champion-store/pokemon-genesis.gif',
     artAlt: 'Arte animada de Pokémon Gênesis do catálogo Pokémon Beyond',
@@ -126,7 +126,7 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
   {
     code: 'GYM',
     title: 'Insígnia de Ginásio',
-    price: 'R$100,00',
+    price: 'R$ 100,00',
     category: 'FUNÇÃO',
     artSrc: '/champion-store/gym-badge.jpg',
     artAlt: 'Arte de Insígnia de Ginásio do catálogo Pokémon Beyond',
@@ -137,7 +137,7 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
   {
     code: 'RED',
     title: 'Save Red',
-    price: 'R$60,00',
+    price: 'R$ 60,00',
     category: 'SAVE',
     artSrc: '/champion-store/save-red.jpg',
     artAlt: 'Arte de Save Red do catálogo Pokémon Beyond',
@@ -155,7 +155,7 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
   {
     code: 'EGG',
     title: 'Ovo Pokémon',
-    price: 'A partir de R$20',
+    price: 'A partir de R$ 20',
     category: 'POKÉMON',
     artSrc: '/champion-store/pokemon-egg.jpg',
     artAlt: 'Arte de Ovo Pokémon do catálogo Pokémon Beyond',
@@ -165,19 +165,19 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
     variants: [
       {
         label: 'Ovo Comum',
-        price: 'R$20',
+        price: 'R$ 20',
         description:
           'Pokémon encontrados com maior frequência, ideal para quem quer adicionar uma nova descoberta a sua equipe sem gastar muito.',
       },
       {
         label: 'Ovo Raro',
-        price: 'R$30',
+        price: 'R$ 30',
         description:
           'Possibilidades mais incomuns e Pokémon de maior raridade, uma opção para quem quer correr um risco maior em busca de uma recompensa melhor.',
       },
       {
         label: 'Ovo Especial',
-        price: 'R$45',
+        price: 'R$ 45',
         description:
           'A categoria mais exclusiva disponível. Possui acesso a possibilidades que não aparecem nos ovos comuns e raros, tornando cada eclosão muito mais valiosa.',
       },
@@ -186,7 +186,7 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
   {
     code: '2XP',
     title: 'XP em Dobro',
-    price: 'R$40,00',
+    price: 'R$ 40,00',
     category: 'PROGRESSÃO',
     artSrc: '/champion-store/double-xp.jpg',
     artAlt: 'Arte de XP em Dobro do catálogo Pokémon Beyond',
@@ -301,8 +301,10 @@ function ChampionStorePage() {
                 </div>
               ) : null}
 
+              {offer.duration ? <span className="champion-store-duration">{offer.duration}</span> : null}
+
               <footer className="champion-store-price">
-                <span>{offer.duration ?? 'PREÇO'}</span>
+                <span>PREÇO</span>
                 <strong>{offer.price}</strong>
               </footer>
             </div>
