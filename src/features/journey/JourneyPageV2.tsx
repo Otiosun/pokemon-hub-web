@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { HubModuleHeader } from '../../components/HubModuleHeader';
+import type { PlayerPortalLocation } from '../../player-api/playerPortalClient';
 import type { PlayerPortalBrowserSessionState } from '../../player-api/playerPortalBrowserSession';
+import { useOwnedPokemonCollection } from '../collection/useOwnedPokemonCollection';
+import { usePlayerPortalPokedex } from '../pokedex/usePlayerPortalPokedex';
 import { isAdvancedShowcaseActive } from '../../showcase/advancedShowcase';
 import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import {
@@ -8,6 +11,7 @@ import {
   type JourneyBadgePreview,
 } from './journeyProfilePreview';
 import { ShareTrainerCardV2 } from './ShareTrainerCardV2';
+import { usePlayerPortalLocation } from './usePlayerPortalLocation';
 import './journey-page.css';
 import './journey-page-review-fixes.css';
 import './journey-uat-polish.css';
@@ -75,6 +79,20 @@ function useImagePreview(slot: ProfileImageSlot) {
 function displayValue(value: string | number | null, fallback: string) {
   if (value === null || value === '') return fallback;
   return String(value);
+}
+
+function locationLabel(location: PlayerPortalLocation) {
+  return location.areaDisplayName === location.regionDisplayName
+    ? location.areaDisplayName
+    : `${location.areaDisplayName} · ${location.regionDisplayName}`;
+}
+
+function hasPokedexRecord(seenCount: string, caughtCount: string) {
+  try {
+    return BigInt(seenCount) > 0n || BigInt(caughtCount) > 0n;
+  } catch {
+    return false;
+  }
 }
 
 function TrainerAvatar({ avatarUrl }: { avatarUrl: string | null }) {
@@ -159,14 +177,43 @@ export function JourneyPageV2({
 }) {
   const authoritativeProfile =
     playerPortalSession.status === 'authenticated' ? playerPortalSession.profile : null;
-  const profile = createJourneyProfileView(authoritativeProfile);
+  const showcase = isAdvancedShowcaseActive();
+  const locationState = usePlayerPortalLocation();
+  const ownedPokemonState = useOwnedPokemonCollection();
+  const pokedexState = usePlayerPortalPokedex();
+  const profile = createJourneyProfileView(
+    authoritativeProfile,
+    showcase
+      ? undefined
+      : {
+          currentLocation:
+            locationState.status === 'authenticated' ? locationLabel(locationState.location) : null,
+          ownedPokemonCount:
+            ownedPokemonState.status === 'authenticated' ? ownedPokemonState.pokemon.length : null,
+          registeredSpeciesCount:
+            pokedexState.status === 'authenticated'
+              ? pokedexState.pokedex.filter((entry) =>
+                  hasPokedexRecord(entry.seenCount, entry.caughtCount),
+                ).length
+              : null,
+        },
+  );
   const presentation = sessionPresentation(playerPortalSession);
   const cover = useImagePreview('cover');
   const avatar = useImagePreview('avatar');
   const [editing, setEditing] = useState(false);
   const [showShareCard, setShowShareCard] = useState(false);
   const imageError = cover.error ?? avatar.error;
-  const canEditProfileImages = isAdvancedShowcaseActive();
+  const canEditProfileImages = showcase;
+  const hasPersonalDetails =
+    profile.personal.age !== null ||
+    profile.personal.height !== null ||
+    profile.personal.appearance !== null ||
+    profile.personal.bio !== null;
+  const currentLocationDisplay =
+    locationState.status === 'loading' && playerPortalSession.status === 'authenticated'
+      ? 'Carregando…'
+      : displayValue(profile.currentLocation, 'Não disponível');
 
   return (
     <main className="journey-page">
@@ -187,7 +234,9 @@ export function JourneyPageV2({
               <strong>POKÉMON LEAGUE</strong>
               <small>TRAINER REGISTRATION LICENSE</small>
             </div>
-            <div className="journey-license-id">ID PÚBLICO {profile.trainerId}</div>
+            {profile.trainerId ? (
+              <div className="journey-license-id">ID PÚBLICO {profile.trainerId}</div>
+            ) : null}
             {canEditProfileImages ? (
               <button
                 className="journey-edit-toggle"
@@ -262,11 +311,11 @@ export function JourneyPageV2({
           <div className="journey-location-grid">
             <div>
               <span>REGIÃO DE ORIGEM</span>
-              <strong>{profile.originRegion}</strong>
+              <strong>{displayValue(profile.originRegion, 'Não disponível')}</strong>
             </div>
             <div>
               <span>LOCALIZAÇÃO ATUAL</span>
-              <strong>{profile.currentLocation}</strong>
+              <strong>{currentLocationDisplay}</strong>
             </div>
           </div>
 
@@ -325,7 +374,7 @@ export function JourneyPageV2({
 
           <div className="journey-license-footer">
             <span>POKÉMON TRAINER REGISTRY</span>
-            <span>{profile.trainerId}</span>
+            <span>{profile.trainerId ?? (playerPortalSession.status === 'authenticated' ? 'REGISTRO AUTENTICADO' : 'SEM SESSÃO')}</span>
           </div>
         </section>
 
@@ -335,41 +384,44 @@ export function JourneyPageV2({
           </p>
         ) : null}
 
-        <details className="journey-profile-details">
-          <summary>
-            <span className="journey-details-copy">
-              <strong>Sobre o treinador</strong>
-              <small>Identidade pessoal</small>
-            </span>
-            <span className="journey-details-chevron">
-              <ChevronIcon />
-            </span>
-          </summary>
-          <div className="journey-details-body">
-            <dl className="journey-about-grid">
-              <div>
-                <dt>Idade</dt>
-                <dd>
-                  {profile.personal.age === null ? 'Não informada' : `${profile.personal.age} anos`}
-                </dd>
-              </div>
-              <div>
-                <dt>Altura</dt>
-                <dd>{displayValue(profile.personal.height, 'Não informada')}</dd>
-              </div>
-              <div className="journey-about-wide">
-                <dt>Aparência atual</dt>
-                <dd>
-                  {displayValue(profile.personal.appearance, 'Nenhuma aparência descrita ainda.')}
-                </dd>
-              </div>
-              <div className="journey-about-wide">
-                <dt>Descrição</dt>
-                <dd>{displayValue(profile.personal.bio, 'Nenhuma descrição adicionada ainda.')}</dd>
-              </div>
-            </dl>
-          </div>
-        </details>
+        {hasPersonalDetails ? (
+          <details className="journey-profile-details">
+            <summary>
+              <span className="journey-details-copy">
+                <strong>Sobre o treinador</strong>
+                <small>Identidade pessoal</small>
+              </span>
+              <span className="journey-details-chevron">
+                <ChevronIcon />
+              </span>
+            </summary>
+            <div className="journey-details-body">
+              <dl className="journey-about-grid">
+                <div>
+                  <dt>Idade</dt>
+                  <dd>
+                    {profile.personal.age === null ? 'Não informada' : `${profile.personal.age} anos`}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Altura</dt>
+                  <dd>{displayValue(profile.personal.height, 'Não informada')}</dd>
+                </div>
+                <div className="journey-about-wide">
+                  <dt>Aparência atual</dt>
+                  <dd>
+                    {displayValue(profile.personal.appearance, 'Nenhuma aparência descrita ainda.')}
+                  </dd>
+                </div>
+                <div className="journey-about-wide">
+                  <dt>Descrição</dt>
+                  <dd>{displayValue(profile.personal.bio, 'Nenhuma descrição adicionada ainda.')}</dd>
+                </div>
+              </dl>
+            </div>
+          </details>
+        ) : null}
+
 
         <details className="journey-profile-details">
           <summary>
@@ -385,16 +437,28 @@ export function JourneyPageV2({
             <dl className="journey-register-list">
               <div>
                 <dt>Região de origem</dt>
-                <dd>{profile.originRegion}</dd>
+                <dd>{displayValue(profile.originRegion, 'Não disponível')}</dd>
               </div>
               <div>
                 <dt>Localização atual</dt>
-                <dd>{profile.currentLocation}</dd>
+                <dd>{currentLocationDisplay}</dd>
               </div>
               <div>
                 <dt>Time ativo</dt>
                 <dd>{profile.teamSize ?? '—'}</dd>
               </div>
+              {profile.ownedPokemonCount !== null ? (
+                <div>
+                  <dt>Pokémon possuídos</dt>
+                  <dd>{profile.ownedPokemonCount}</dd>
+                </div>
+              ) : null}
+              {profile.registeredSpeciesCount !== null ? (
+                <div>
+                  <dt>Espécies registradas</dt>
+                  <dd>{profile.registeredSpeciesCount}</dd>
+                </div>
+              ) : null}
               <div>
                 <dt>Pontos de progressão</dt>
                 <dd>{profile.progressionPoints ?? '—'}</dd>
