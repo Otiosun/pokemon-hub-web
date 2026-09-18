@@ -481,4 +481,9 @@
   .champion-store-price {
     align-items: flex-end;
   }
+
+  .champion-store-price strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
 }
