@@ -18,6 +18,7 @@
 
 .hub-module-header.is-pokemon { --module-accent: #187c8d; }
 .hub-module-header.is-team { --module-accent: #9a7621; }
+.hub-module-header.is-store { --module-accent: #a67824; }
 
 .hub-module-brand {
   min-width: 0;
