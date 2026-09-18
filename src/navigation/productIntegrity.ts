@@ -38,7 +38,8 @@ export function resolveProductRoute(path: string): ProductRouteResolution {
     normalized === '/jornada' ||
     normalized === '/pokedex' ||
     normalized === '/pokemon' ||
-    normalized === '/team'
+    normalized === '/team' ||
+    normalized === '/champion-store'
   ) {
     return { kind: 'route' };
   }

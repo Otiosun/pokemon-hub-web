@@ -18,6 +18,14 @@
 
 .hub-module-header.is-pokemon { --module-accent: #187c8d; }
 .hub-module-header.is-team { --module-accent: #9a7621; }
+.hub-module-header.is-store {
+  --module-accent: #9b2cff;
+  border-bottom-color: #5a0b8c;
+  background: linear-gradient(90deg, #6b18b6, #a51fff 58%, #7b16c9);
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.16),
+    0 0 28px rgba(176, 38, 255, 0.12);
+}
 
 .hub-module-brand {
   min-width: 0;
@@ -121,10 +129,10 @@
   .hub-module-actions { gap: 8px; }
 
   .hub-module-header .hub-menu-trigger {
-    width: 42px;
-    min-width: 42px;
-    height: 42px;
-    min-height: 42px;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
     gap: 0;
     padding: 0;
     border-radius: 12px;
@@ -169,9 +177,9 @@
   }
 
   .hub-module-header .hub-menu-trigger {
-    width: 40px;
-    min-width: 40px;
-    height: 40px;
-    min-height: 40px;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
   }
 }

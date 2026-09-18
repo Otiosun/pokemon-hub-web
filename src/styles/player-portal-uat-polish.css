@@ -1,0 +1,487 @@
+/* Final unauthenticated visual pass for Pokémon Beyond Player Portal.
+   This is intentionally presentational: no gameplay, API or auth behavior changes. */
+
+/* JOURNEY --------------------------------------------------------------- */
+.journey-license:not(:has(.journey-share-action)) .journey-license-footer::before {
+  min-height: 48px;
+  padding: 8px 12px;
+  border-style: solid;
+  border-color: rgba(157, 67, 53, 0.22);
+  background:
+    linear-gradient(90deg, rgba(168, 45, 40, 0.045), transparent 62%),
+    rgba(255, 255, 255, 0.08);
+  color: rgba(96, 75, 62, 0.66);
+  letter-spacing: 0.055em;
+}
+
+.journey-league-seal {
+  color: rgba(92, 68, 43, 0.27);
+}
+
+/* BOX ------------------------------------------------------------------- */
+.owned-pokemon-page-v2:not(:has(.owned-pokemon-team-section)) .owned-pokemon-header-v2 p {
+  display: none;
+}
+
+.owned-pokemon-page-v2:not(:has(.owned-pokemon-team-section)) .owned-pokemon-header-v2 {
+  padding-bottom: 8px;
+}
+
+.owned-pokemon-page-v2:not(:has(.owned-pokemon-team-section)) .owned-pokemon-empty {
+  position: relative;
+  min-height: 172px;
+  margin-top: 12px;
+  overflow: hidden;
+  padding: 34px 24px 24px;
+  border: 1px solid rgba(193, 225, 227, 0.12);
+  border-right: 4px solid rgba(212, 58, 70, 0.62);
+  border-bottom: 1px solid rgba(193, 225, 227, 0.12);
+  background:
+    linear-gradient(rgba(192, 229, 231, 0.028) 1px, transparent 1px) 0 0 / 30px 30px,
+    linear-gradient(90deg, rgba(192, 229, 231, 0.028) 1px, transparent 1px) 0 0 / 30px 30px,
+    radial-gradient(circle at 88% 50%, rgba(135, 225, 231, 0.07), transparent 12rem),
+    #12191b;
+  text-align: left;
+  place-content: center start;
+}
+
+.owned-pokemon-page-v2:not(:has(.owned-pokemon-team-section)) .owned-pokemon-empty::before {
+  position: absolute;
+  top: 14px;
+  left: 18px;
+  color: #ef6a73;
+  content: 'POKÉMON STORAGE / BEYOND';
+  font: 700 0.48rem/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.11em;
+}
+
+.owned-pokemon-page-v2:not(:has(.owned-pokemon-team-section)) .owned-pokemon-empty strong {
+  color: #edf5f5;
+  font: 700 clamp(1.2rem, 4vw, 1.65rem)/1.05 'Space Grotesk', sans-serif;
+  letter-spacing: -0.025em;
+}
+
+.owned-pokemon-page-v2:not(:has(.owned-pokemon-team-section)) .owned-pokemon-empty span {
+  max-width: 470px;
+  color: transparent;
+  font-size: 0;
+}
+
+.owned-pokemon-page-v2:not(:has(.owned-pokemon-team-section)) .owned-pokemon-empty span::after {
+  display: block;
+  margin-top: 8px;
+  color: #849598;
+  content: 'Abra o Pokémon Beyond pelo acesso do seu treinador ou tente novamente em instantes.';
+  font: 500 0.82rem/1.5 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+/* POKÉDEX --------------------------------------------------------------- */
+.pokedex-index-filter-trigger {
+  border-bottom: 2px solid rgba(195, 77, 80, 0.45);
+  background: linear-gradient(180deg, #182022, #14191a);
+}
+
+.pokedex-index-filter-trigger:not(:disabled):hover {
+  border-color: rgba(190, 226, 228, 0.2);
+  border-bottom-color: rgba(195, 77, 80, 0.72);
+  background: #1b2325;
+}
+
+.pokedex-index-page:has(.pokedex-index-search input:disabled) .pokedex-index-progress-line > * {
+  display: none;
+}
+
+.pokedex-index-page:has(.pokedex-index-search input:disabled) .pokedex-index-progress-line::after {
+  color: #879597;
+  content: 'AGUARDANDO REGISTRO';
+  font: 650 0.64rem/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+}
+
+.pokedex-index-page:has(.pokedex-index-search input:disabled) .pokedex-index-empty,
+.pokedex-species-page .pokedex-index-empty {
+  position: relative;
+  min-height: 176px;
+  overflow: hidden;
+  padding: 34px 24px 24px;
+  border: 1px solid rgba(190, 226, 228, 0.1);
+  border-left: 3px solid rgba(195, 77, 80, 0.5);
+  border-bottom: 1px solid rgba(190, 226, 228, 0.1);
+  background:
+    linear-gradient(rgba(191, 224, 225, 0.022) 1px, transparent 1px) 0 0 / 30px 30px,
+    linear-gradient(90deg, rgba(191, 224, 225, 0.022) 1px, transparent 1px) 0 0 / 30px 30px,
+    radial-gradient(circle at 86% 44%, rgba(120, 169, 173, 0.08), transparent 11rem),
+    #111719;
+  text-align: left;
+  place-items: start;
+  align-content: center;
+}
+
+.pokedex-index-page:has(.pokedex-index-search input:disabled) .pokedex-index-empty::before,
+.pokedex-species-page .pokedex-index-empty::before {
+  position: absolute;
+  top: 14px;
+  left: 20px;
+  color: #78898b;
+  content: 'FIELD DEX / TRAINER LINK';
+  font: 650 0.48rem/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.11em;
+}
+
+.pokedex-index-page:has(.pokedex-index-search input:disabled) .pokedex-index-empty strong,
+.pokedex-species-page .pokedex-index-empty strong {
+  color: transparent;
+  font-size: 0;
+}
+
+.pokedex-index-page:has(.pokedex-index-search input:disabled) .pokedex-index-empty strong::after,
+.pokedex-species-page .pokedex-index-empty strong::after {
+  display: block;
+  color: #c8d3d4;
+  content: 'REGISTRO DO TREINADOR NÃO CONECTADO';
+  font: 680 clamp(0.82rem, 2.6vw, 1rem)/1.25 'IBM Plex Mono', monospace;
+  letter-spacing: 0.055em;
+}
+
+.pokedex-index-page:has(.pokedex-index-search input:disabled) .pokedex-index-empty span,
+.pokedex-species-page .pokedex-index-empty span {
+  color: transparent;
+  font-size: 0;
+}
+
+.pokedex-index-page:has(.pokedex-index-search input:disabled) .pokedex-index-empty span::after,
+.pokedex-species-page .pokedex-index-empty span::after {
+  display: block;
+  margin-top: 8px;
+  max-width: 520px;
+  color: #78898b;
+  content: 'Abra o Pokémon Beyond pelo acesso enviado pelo Rotom para carregar seus registros.';
+  font: 500 0.8rem/1.5 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+@media (max-width: 700px) {
+  .owned-pokemon-page-v2:not(:has(.owned-pokemon-team-section)) .owned-pokemon-empty,
+  .pokedex-index-page:has(.pokedex-index-search input:disabled) .pokedex-index-empty,
+  .pokedex-species-page .pokedex-index-empty {
+    min-height: 152px;
+    padding: 34px 18px 20px;
+  }
+
+  .pokedex-index-filter-trigger {
+    min-width: 96px;
+  }
+}
+
+
+/* CHAMPION STORE -------------------------------------------------------- */
+.champion-store-page {
+  --store-neon: #b026ff;
+  --store-neon-bright: #c94cff;
+  --store-neon-soft: #e0b1ff;
+  --store-neon-deep: #51107a;
+  min-height: 100svh;
+  background:
+    radial-gradient(circle at 85% 4%, rgba(176, 38, 255, 0.16), transparent 30rem),
+    radial-gradient(circle at 8% 34%, rgba(127, 28, 196, 0.1), transparent 25rem),
+    #0b0d10;
+  color: #eef5f5;
+}
+
+.champion-store-intro {
+  max-width: 1120px;
+  display: grid;
+  justify-items: center;
+  gap: 24px;
+  margin: 0 auto;
+  padding: clamp(38px, 7vw, 78px) clamp(16px, 4vw, 42px) 52px;
+}
+
+.champion-store-title-block {
+  width: min(100%, 900px);
+  text-align: center;
+}
+
+.champion-store-kicker {
+  color: var(--store-neon-soft);
+  font: 700 0.65rem/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.16em;
+}
+
+.champion-store-title-block h1 {
+  margin: 11px 0 0;
+  font: 760 clamp(2.25rem, 7vw, 5rem)/0.94 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: -0.045em;
+}
+
+.champion-store-intro-art {
+  width: min(100%, 900px);
+  max-height: 620px;
+  display: block;
+  object-fit: contain;
+  border: 1px solid rgba(176, 38, 255, 0.34);
+  border-radius: 20px;
+  background: #111319;
+  box-shadow:
+    0 22px 56px rgba(0, 0, 0, 0.3),
+    0 0 34px rgba(176, 38, 255, 0.08);
+}
+
+.champion-store-intro-copy {
+  width: min(100%, 790px);
+  display: grid;
+  gap: 14px;
+  padding: 6px 0 14px;
+}
+
+.champion-store-intro-copy p {
+  margin: 0;
+  color: #adb8bb;
+  font: 500 clamp(0.98rem, 2.25vw, 1.08rem)/1.7 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+.champion-store-how-title {
+  width: min(100%, 790px);
+  margin: 18px 0 0;
+  color: var(--store-neon-soft);
+  font: 720 clamp(1.6rem, 4vw, 2.55rem)/1 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: -0.025em;
+}
+
+.champion-store-intro-copy.is-how {
+  padding-top: 0;
+}
+
+.champion-store-grid {
+  max-width: 1180px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin: 0 auto;
+  padding: 6px clamp(16px, 4vw, 42px) 68px;
+}
+
+.champion-store-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(176, 38, 255, 0.22);
+  border-bottom: 2px solid rgba(176, 38, 255, 0.56);
+  border-radius: 18px;
+  background:
+    linear-gradient(145deg, rgba(176, 38, 255, 0.055), transparent 44%),
+    #111419;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.16);
+}
+
+.champion-store-card-header {
+  min-height: 92px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 18px clamp(18px, 3vw, 26px);
+  border-bottom: 1px solid rgba(176, 38, 255, 0.15);
+}
+
+.champion-store-card-header > div {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.champion-store-card-header small {
+  color: #8f9d9f;
+  font: 700 0.52rem/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.12em;
+}
+
+.champion-store-code {
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(176, 38, 255, 0.48);
+  border-radius: 14px;
+  background: rgba(176, 38, 255, 0.1);
+  color: var(--store-neon-soft);
+  font: 760 0.68rem/1 'IBM Plex Mono', monospace;
+  letter-spacing: -0.035em;
+  box-shadow: inset 0 0 22px rgba(176, 38, 255, 0.06);
+}
+
+.champion-store-card h2 {
+  margin: 0;
+  color: #f4eff8;
+  font: 730 clamp(1.25rem, 3vw, 1.72rem)/1.05 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: -0.025em;
+}
+
+.champion-store-card-art {
+  width: 100%;
+  max-height: 440px;
+  display: block;
+  object-fit: contain;
+  border-bottom: 1px solid rgba(176, 38, 255, 0.14);
+  background: #0d1014;
+}
+
+.champion-store-card-art[hidden],
+.champion-store-intro-art[hidden] {
+  display: none;
+}
+
+.champion-store-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: clamp(18px, 3.5vw, 26px);
+}
+
+.champion-store-copy {
+  display: grid;
+  gap: 11px;
+}
+
+.champion-store-copy p {
+  margin: 0;
+  color: #aab5b8;
+  font: 500 0.88rem/1.62 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+.champion-store-card-body > ul {
+  display: grid;
+  gap: 8px;
+  margin: -2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.champion-store-card-body > ul li {
+  color: #c1c9cb;
+  font: 550 0.78rem/1.45 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+.champion-store-card-body > ul li::before {
+  margin-right: 8px;
+  color: var(--store-neon-bright);
+  content: '◇';
+}
+
+.champion-store-variants {
+  display: grid;
+  gap: 9px;
+}
+
+.champion-store-variants > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 5px 12px;
+  align-items: center;
+  padding: 12px 13px;
+  border: 1px solid rgba(176, 38, 255, 0.2);
+  border-radius: 11px;
+  background: rgba(176, 38, 255, 0.045);
+}
+
+.champion-store-variants span {
+  color: #e7edf0;
+  font: 700 0.8rem/1.2 'Space Grotesk', system-ui, sans-serif;
+}
+
+.champion-store-variants strong {
+  min-width: 72px;
+  padding: 6px 8px;
+  border: 1px solid rgba(176, 38, 255, 0.34);
+  border-radius: 8px;
+  background: rgba(176, 38, 255, 0.08);
+  color: var(--store-neon-soft);
+  font: 760 0.78rem/1 'IBM Plex Mono', monospace;
+  text-align: center;
+}
+
+.champion-store-variants small {
+  grid-column: 1 / -1;
+  color: #829093;
+  font: 500 0.7rem/1.46 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+.champion-store-duration {
+  width: fit-content;
+  padding: 6px 9px;
+  border: 1px solid rgba(176, 38, 255, 0.26);
+  border-radius: 999px;
+  background: rgba(176, 38, 255, 0.055);
+  color: #bda6ca;
+  font: 700 0.54rem/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.12em;
+}
+
+.champion-store-price {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: auto;
+  padding: 14px 15px;
+  border: 1px solid rgba(176, 38, 255, 0.34);
+  border-radius: 12px;
+  background:
+    linear-gradient(90deg, rgba(176, 38, 255, 0.11), rgba(176, 38, 255, 0.035));
+  box-shadow: inset 0 0 26px rgba(176, 38, 255, 0.045);
+}
+
+.champion-store-price span {
+  color: #9c8ca8;
+  font: 700 0.54rem/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.13em;
+}
+
+.champion-store-price strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--store-neon-soft);
+  font: 760 clamp(1rem, 2.2vw, 1.18rem)/1 'IBM Plex Mono', monospace;
+  letter-spacing: -0.02em;
+  text-align: right;
+}
+
+@media (max-width: 760px) {
+  .champion-store-intro {
+    gap: 20px;
+    padding-top: 30px;
+  }
+
+  .champion-store-title-block {
+    text-align: left;
+  }
+
+  .champion-store-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .champion-store-card {
+    border-radius: 14px;
+  }
+
+  .champion-store-card-art {
+    max-height: none;
+  }
+}
+
+@media (max-width: 430px) {
+  .champion-store-card-header,
+  .champion-store-card-body {
+    padding-inline: 18px;
+  }
+
+  .champion-store-code {
+    width: 50px;
+    height: 50px;
+    flex-basis: 50px;
+  }
+
+  .champion-store-price {
+    align-items: flex-end;
+  }
+
+}

@@ -42,14 +42,36 @@
 @media (max-width: 520px) {
   .owned-detail-stage-actions {
     top: 16px;
-    right: 14px;
+    right: 66px;
     gap: 7px;
   }
 
   .owned-detail-stage-actions .hub-menu-trigger {
+    position: fixed;
+    z-index: 96;
+    top: max(10px, env(safe-area-inset-top));
+    right: max(10px, env(safe-area-inset-right));
     width: 44px;
     min-width: 44px;
     height: 44px;
     min-height: 44px;
+    background: rgba(9, 15, 17, 0.9);
+  }
+
+  .owned-detail-stage-back {
+    position: fixed;
+    z-index: 96;
+    top: max(10px, env(safe-area-inset-top));
+    left: max(10px, env(safe-area-inset-left));
+    min-width: 78px;
+    min-height: 44px;
+    padding-inline: 10px 12px;
+    border-color: rgba(210, 235, 236, 0.24);
+    background: rgba(9, 15, 17, 0.9);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.24);
+  }
+
+  .owned-detail-stage-back span {
+    display: inline;
   }
 }

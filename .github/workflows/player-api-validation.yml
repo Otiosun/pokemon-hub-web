@@ -1,0 +1,97 @@
+name: Player API validation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/player-api/**"
+      - "src/features/journey/**"
+      - "src/features/team/**"
+      - "src/vite-env.d.ts"
+      - "api/**"
+      - "tsconfig.json"
+      - "vercel.json"
+      - ".github/workflows/player-api-validation.yml"
+
+concurrency:
+  group: player-api-validation-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install pnpm
+        run: corepack prepare pnpm@11.23.0 --activate
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile --ignore-scripts
+
+      - name: Lint
+        id: lint
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm check 2>&1 | tee /tmp/player-api-lint.log
+
+      - name: Upload lint diagnostics
+        if: always() && steps.lint.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: player-api-lint-diagnostics
+          path: /tmp/player-api-lint.log
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Format check
+        id: format_check
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm exec biome format src/player-api src/vite-env.d.ts api tsconfig.json vercel.json 2>&1 | tee /tmp/player-api-format.log
+
+      - name: Upload format diagnostics
+        if: always() && steps.format_check.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: player-api-format-diagnostics
+          path: /tmp/player-api-format.log
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Typecheck
+        id: typecheck
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm typecheck 2>&1 | tee /tmp/player-api-typecheck.log
+
+      - name: Upload typecheck diagnostics
+        if: always() && steps.typecheck.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: player-api-typecheck-diagnostics
+          path: /tmp/player-api-typecheck.log
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Unit tests
+        run: pnpm test:run

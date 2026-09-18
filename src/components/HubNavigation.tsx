@@ -11,6 +11,7 @@ import {
 import type { HubDestinations, HubSection } from '../navigation/hubNavigationSession';
 import { preloadProductRoute } from '../navigation/productRoutePreload';
 import './hub-navigation.css';
+import './hub-navigation-pokedex-compact.css';
 
 export type { HubSection } from '../navigation/hubNavigationSession';
 
@@ -60,6 +61,12 @@ const NAV_ITEMS: NavItem[] = [
     label: 'BOX',
     description: 'Time, coleção e organização',
     asset: `${POKESPRITE_ITEMS}/storage/pokemon-box.png`,
+  },
+  {
+    id: 'store',
+    label: 'CHAMPION STORE',
+    description: 'Gamepasses e benefícios especiais',
+    asset: `${POKESPRITE_ITEMS}/key-item/coin-case.png`,
   },
 ];
 
@@ -188,6 +195,27 @@ export function HubNavigation({ active, destinations, children }: HubNavigationP
       <div className="hub-with-navigation">
         <div className="hub-navigation-content">{children}</div>
 
+        {active === 'pokedex' ? (
+          <button
+            ref={triggerRef}
+            type="button"
+            className="hub-menu-trigger hub-pokedex-menu-trigger"
+            aria-haspopup="dialog"
+            aria-expanded={open}
+            aria-controls="hub-global-menu"
+            aria-label="Abrir menu principal"
+            onClick={openMenu}
+          >
+            <span className="hub-menu-trigger-grid" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+              <i />
+            </span>
+            <span>MENU</span>
+          </button>
+        ) : null}
+
         {open ? (
           <div
             className="hub-menu-backdrop"
@@ -201,7 +229,7 @@ export function HubNavigation({ active, destinations, children }: HubNavigationP
               className="hub-menu-panel"
               role="dialog"
               aria-modal="true"
-              aria-label="Navegação principal do Pokémon Hub"
+              aria-label="Navegação principal do Pokémon Beyond"
               onKeyDown={onMenuKeyDown}
             >
               <header className="hub-menu-header">
@@ -210,8 +238,8 @@ export function HubNavigation({ active, destinations, children }: HubNavigationP
                     <img src={HUB_BRAND_ASSET} alt="" decoding="async" />
                   </span>
                   <div>
-                    <strong>POKÉMON HUB</strong>
-                    <span>JORNADA · POKÉDEX · BOX</span>
+                    <strong>POKÉMON BEYOND</strong>
+                    <span>JORNADA · POKÉDEX · BOX · STORE</span>
                   </div>
                 </div>
                 <button type="button" className="hub-menu-close" onClick={closeMenu} aria-label="Fechar menu">

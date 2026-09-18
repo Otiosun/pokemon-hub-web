@@ -1,0 +1,78 @@
+/* UAT fix: force the Pokédex global-menu affordance to behave like a compact header control.
+   High specificity + explicit box constraints avoid legacy button sizing winning during CSS chunk ordering. */
+.hub-with-navigation > .hub-pokedex-menu-trigger.hub-menu-trigger {
+  all: unset;
+  position: fixed !important;
+  z-index: 95 !important;
+  top: max(12px, env(safe-area-inset-top)) !important;
+  right: max(12px, env(safe-area-inset-right)) !important;
+  box-sizing: border-box !important;
+  width: 42px !important;
+  min-width: 42px !important;
+  max-width: 42px !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  display: grid !important;
+  place-items: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.24) !important;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.34) !important;
+  border-radius: 11px !important;
+  background: rgba(88, 24, 31, 0.56) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.14) !important;
+  cursor: pointer !important;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.hub-with-navigation > .hub-pokedex-menu-trigger.hub-menu-trigger > span:last-child {
+  display: none !important;
+}
+
+.hub-with-navigation > .hub-pokedex-menu-trigger.hub-menu-trigger .hub-menu-trigger-grid {
+  width: 18px !important;
+  height: 18px !important;
+  display: grid !important;
+  grid-template-columns: repeat(2, 6px) !important;
+  grid-template-rows: repeat(2, 6px) !important;
+  place-content: center !important;
+  gap: 3px !important;
+}
+
+.hub-with-navigation > .hub-pokedex-menu-trigger.hub-menu-trigger .hub-menu-trigger-grid i {
+  display: block !important;
+  width: 6px !important;
+  height: 6px !important;
+  box-sizing: border-box !important;
+  border: 1px solid currentColor !important;
+  border-radius: 2px !important;
+  background: transparent !important;
+}
+
+.hub-with-navigation > .hub-pokedex-menu-trigger.hub-menu-trigger:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.82) !important;
+  outline-offset: 2px !important;
+}
+
+.hub-navigation-content .pokedex-index-header .pokedex-index-counter {
+  margin-right: 54px !important;
+}
+
+@media (max-width: 390px) {
+  .hub-with-navigation > .hub-pokedex-menu-trigger.hub-menu-trigger {
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    border-radius: 10px !important;
+  }
+
+  .hub-navigation-content .pokedex-index-header .pokedex-index-counter {
+    margin-right: 50px !important;
+  }
+}

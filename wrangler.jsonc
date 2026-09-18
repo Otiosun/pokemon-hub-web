@@ -1,9 +1,12 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "pokemon-hub-web",
+  "main": "./src/player-api/cloudflareUatWorker.ts",
   "compatibility_date": "2026-08-26",
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "single-page-application"
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/hub/*"]
   }
 }

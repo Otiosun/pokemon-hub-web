@@ -64,12 +64,13 @@ export function ShareTrainerCardZhoulia({
   avatarUrl: string | null;
   onClose: () => void;
 }) {
+  const originRegion = profile.originRegion ?? 'Não disponível';
   const rows = [
     ['NOME', profile.trainerName],
     ['TÍTULO', profile.trainerTitle],
-    ['LOCAL', profile.currentLocation],
+    ['LOCAL', profile.currentLocation ?? 'Não disponível'],
     ['PARCEIRO', profile.leadPokemon?.nickname ?? '—'],
-    ['ID', profile.trainerId],
+    ['ID', profile.trainerId ?? '—'],
   ] as const;
 
   return (
@@ -78,7 +79,7 @@ export function ShareTrainerCardZhoulia({
         className="journey-zhoulia-card-dialog"
         role="dialog"
         aria-modal="true"
-        aria-label={`Trainer Card de ${profile.originRegion}`}
+        aria-label={`Trainer Card de ${originRegion}`}
       >
         <button className="journey-zhoulia-card-close" type="button" onClick={onClose} aria-label="Fechar Trainer Card">
           <CloseIcon />
@@ -96,7 +97,7 @@ export function ShareTrainerCardZhoulia({
           <div className="journey-zhoulia-card-title">TRAINER CARD</div>
 
           <div className="journey-zhoulia-card-region">
-            <strong>{profile.originRegion.toUpperCase()}</strong>
+            <strong>{originRegion.toUpperCase()}</strong>
             <span aria-hidden="true" />
             <ZhouliaEPrimeMark className="journey-zhoulia-card-region-mark" />
           </div>

@@ -1,4 +1,4 @@
-export type HubSection = 'journey' | 'pokedex' | 'box';
+export type HubSection = 'journey' | 'pokedex' | 'box' | 'store';
 
 export type HubDestinations = Record<HubSection, string>;
 
@@ -9,6 +9,7 @@ const DEFAULT_DESTINATIONS: HubDestinations = {
   journey: '/jornada',
   pokedex: '/pokedex',
   box: '/pokemon',
+  store: '/champion-store',
 };
 
 function pathnameOf(location: string) {
@@ -23,6 +24,7 @@ export function hubSectionForPath(location: string): HubSection | null {
   const path = pathnameOf(location);
   if (path === '/jornada' || path === '/jornada/' || path.startsWith('/jornada/')) return 'journey';
   if (path === '/pokedex' || path === '/pokedex/' || path.startsWith('/pokedex/')) return 'pokedex';
+  if (path === '/champion-store' || path === '/champion-store/' || path.startsWith('/champion-store/')) return 'store';
   if (path === '/team' || path === '/team/' || path.startsWith('/team/')) return 'box';
   if (
     path === '/pokemon' ||
@@ -82,6 +84,7 @@ export function readHubDestinations(): HubDestinations {
       journey: isDestinationValid('journey', parsed.journey) ? parsed.journey : DEFAULT_DESTINATIONS.journey,
       pokedex: isDestinationValid('pokedex', parsed.pokedex) ? parsed.pokedex : DEFAULT_DESTINATIONS.pokedex,
       box: isDestinationValid('box', parsed.box) ? parsed.box : readLegacyBoxDestination(),
+      store: isDestinationValid('store', parsed.store) ? parsed.store : DEFAULT_DESTINATIONS.store,
     };
   } catch {
     return {

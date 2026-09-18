@@ -1,9 +1,8 @@
-import type { OwnedPokemonPreview, OwnedPokemonSex } from './ownedPokemonPreview';
-
 export type CollectionLevelFilter = 'all' | '1-10' | '11-20' | '21-30' | '31+';
 export type CollectionPresenceFilter = 'all' | 'team' | 'storage';
 export type CollectionShinyFilter = 'all' | 'shiny' | 'regular';
-export type CollectionSexFilter = 'all' | OwnedPokemonSex;
+export type CollectionSex = 'M' | 'F' | '—';
+export type CollectionSexFilter = 'all' | CollectionSex;
 export type CollectionSort = 'dex' | 'name' | 'level-desc' | 'level-asc';
 
 export type CollectionFilterState = {
@@ -13,6 +12,16 @@ export type CollectionFilterState = {
   shiny: CollectionShinyFilter;
   sex: CollectionSexFilter;
   sort: CollectionSort;
+};
+
+export type CollectionFilterItem = {
+  dex: number | null;
+  nickname: string;
+  level: number;
+  types: readonly string[];
+  sex: CollectionSex;
+  shiny: boolean;
+  teamSlot: number | null;
 };
 
 export const DEFAULT_COLLECTION_FILTERS: CollectionFilterState = {
@@ -32,10 +41,14 @@ function matchesLevel(level: number, filter: CollectionLevelFilter) {
   return level >= 31;
 }
 
-export function applyCollectionFilters(
-  pokemon: readonly OwnedPokemonPreview[],
+function sortDex(value: number | null) {
+  return value ?? Number.MAX_SAFE_INTEGER;
+}
+
+export function applyCollectionFilters<T extends CollectionFilterItem>(
+  pokemon: readonly T[],
   filters: CollectionFilterState,
-) {
+): T[] {
   const filtered = pokemon.filter((item) => {
     if (filters.type && !item.types.includes(filters.type)) return false;
     if (!matchesLevel(item.level, filters.level)) return false;
@@ -51,9 +64,12 @@ export function applyCollectionFilters(
     if (filters.sort === 'name') {
       return a.nickname.localeCompare(b.nickname, 'pt-BR', { sensitivity: 'base' });
     }
-    if (filters.sort === 'level-desc') return b.level - a.level || a.dex - b.dex;
-    if (filters.sort === 'level-asc') return a.level - b.level || a.dex - b.dex;
-    return a.dex - b.dex || a.nickname.localeCompare(b.nickname, 'pt-BR', { sensitivity: 'base' });
+    if (filters.sort === 'level-desc') return b.level - a.level || sortDex(a.dex) - sortDex(b.dex);
+    if (filters.sort === 'level-asc') return a.level - b.level || sortDex(a.dex) - sortDex(b.dex);
+    return (
+      sortDex(a.dex) - sortDex(b.dex) ||
+      a.nickname.localeCompare(b.nickname, 'pt-BR', { sensitivity: 'base' })
+    );
   });
 }
 
