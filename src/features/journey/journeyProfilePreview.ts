@@ -28,10 +28,10 @@ export type JourneyLeadPokemonView = {
 export type JourneyProfilePreview = {
   trainerName: string;
   trainerTitle: string;
-  trainerId: string;
+  trainerId: string | null;
   publicVerificationId: string | null;
-  originRegion: string;
-  currentLocation: string;
+  originRegion: string | null;
+  currentLocation: string | null;
   leadPokemon: JourneyLeadPokemonView | null;
   badges: JourneyBadgePreview[];
   ownedPokemonCount: number | null;
@@ -39,6 +39,12 @@ export type JourneyProfilePreview = {
   teamSize: number | null;
   progressionPoints: string | null;
   personal: JourneyPersonalProfile;
+};
+
+export type JourneyAuthoritativeSnapshot = {
+  currentLocation: string | null;
+  ownedPokemonCount: number | null;
+  registeredSpeciesCount: number | null;
 };
 
 function resolveLeadPokemon(playerProfile: PlayerPortalProfile | null): JourneyLeadPokemonView | null {
@@ -59,16 +65,21 @@ function resolveLeadPokemon(playerProfile: PlayerPortalProfile | null): JourneyL
 
 export function createJourneyProfileView(
   playerProfile: PlayerPortalProfile | null,
+  authoritative: JourneyAuthoritativeSnapshot = {
+    currentLocation: null,
+    ownedPokemonCount: authoritative.ownedPokemonCount,
+    registeredSpeciesCount: authoritative.registeredSpeciesCount,
+  },
 ): JourneyProfilePreview {
   const baseProfile: JourneyProfilePreview = {
     trainerName: playerProfile?.trainerName?.trim() || 'Treinador',
     trainerTitle: playerProfile
       ? `Treinador · Nv. ${playerProfile.trainerLevel}`
       : 'Registro não conectado',
-    trainerId: '—',
+    trainerId: null,
     publicVerificationId: null,
-    originRegion: playerProfile?.originRegionName ?? 'Não disponível',
-    currentLocation: 'Não disponível',
+    originRegion: playerProfile?.originRegionName ?? null,
+    currentLocation: authoritative.currentLocation,
     leadPokemon: resolveLeadPokemon(playerProfile),
     badges: [],
     ownedPokemonCount: null,
