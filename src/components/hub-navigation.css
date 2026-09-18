@@ -359,10 +359,10 @@
   .hub-pokedex-menu-trigger {
     top: max(13px, env(safe-area-inset-top));
     right: max(12px, env(safe-area-inset-right));
-    width: 42px;
-    min-width: 42px;
-    height: 42px;
-    min-height: 42px;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
     gap: 0;
     padding: 0;
     border-radius: 12px;
