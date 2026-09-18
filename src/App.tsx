@@ -201,7 +201,7 @@ function ChampionStorePage() {
           </div>
         </div>
 
-        <div className="champion-store-hero-gallery" aria-label="Artes do catálogo original">
+        <div className="champion-store-hero-gallery" role="group" aria-label="Artes do catálogo original">
           <span
             className="champion-store-art champion-store-hero-art is-primary"
             role="img"
