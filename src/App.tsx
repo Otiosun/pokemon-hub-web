@@ -1,6 +1,7 @@
 import { lazy, startTransition, Suspense, type ReactNode, useEffect, useState } from 'react';
 import { HubNavigation } from './components/HubNavigation';
 import { HubModuleHeader } from './components/HubModuleHeader';
+import championStoreSpriteBase64 from './features/store/champion-store-sprite.b64?raw';
 import { rememberPokedexIndexScroll } from './features/pokedex/pokedexIndexSession';
 import {
   hubSectionForPath,
@@ -41,102 +42,141 @@ type ChampionStoreOffer = {
   price: string;
   category: string;
   summary: string;
+  artPosition: string;
   bullets?: readonly string[];
   variants?: readonly { label: string; price: string; description: string }[];
   duration?: string;
 };
 
+const CHAMPION_STORE_SPRITE =
+  'data:image/webp;base64,' + championStoreSpriteBase64.trim();
+
 const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
   {
     code: 'TERA',
     title: 'Terastalização',
-    price: '50,00 \u0024',
+    price: '50,00 $',
     category: 'MECÂNICA',
+    artPosition: '100% 0%',
     summary:
-      'Acesso à Terastalização: transformação temporária cristalizada com um Tera Type que pode reforçar ou alterar o tipo do Pokémon.',
+      'Transformação temporária em que o Pokémon assume uma forma cristalizada e manifesta um Tera Type, que pode ser igual a um de seus tipos originais ou completamente diferente.',
   },
   {
     code: 'Z',
     title: 'Movimento Z',
-    price: '40,00 \u0024',
+    price: '40,00 $',
     category: 'MECÂNICA',
+    artPosition: '0% 33.333%',
     summary:
-      'Acesso a Z-Moves oficiais em batalhas elegíveis ou ao desenvolvimento de um Z-Move original sujeito à análise e balanceamento da equipe.',
-    bullets: ['Conceito e nome próprios', 'Aparência e funcionamento', 'Parâmetros finais definidos pela equipe'],
+      'Permite utilizar Z-Moves oficiais em batalhas elegíveis ou desenvolver um Z-Move original criado especialmente para o seu Pokémon.',
+    bullets: [
+      'Conceito, nome, aparência e funcionamento próprios',
+      'Z-Moves oficiais dos jogos e do anime também podem ser utilizados',
+      'Propostas originais passam por análise e balanceamento da equipe',
+    ],
   },
   {
     code: 'GMAX',
     title: 'Gigantamax',
     price: '60,00',
     category: 'MECÂNICA',
+    artPosition: '50% 33.333%',
     summary:
-      'Acesso permanente do personagem à mecânica de Gigantamax para um Pokémon elegível durante batalhas e encontros.',
+      'Acesso permanente do personagem à mecânica de Gigantamax para um Pokémon, permitindo sua forma Gigantamax em batalhas e encontros elegíveis.',
   },
   {
     code: 'LUCK',
     title: 'Benção da Sorte',
-    price: 'R\u0024 60,00',
+    price: 'R$ 60,00',
     category: 'JORNADA',
+    artPosition: '100% 33.333%',
     summary:
-      'Bônus permanente de 2× nas chances de captura em encontros selvagens elegíveis, aplicado automaticamente pelo sistema.',
+      'Bônus permanente de 2× nas chances de captura de Pokémon durante encontros selvagens elegíveis, aplicado automaticamente pelo sistema.',
   },
   {
     code: 'SAVE+',
     title: 'Save Premium',
-    price: 'R\u0024 45,00',
+    price: 'R$ 45,00',
     category: 'JORNADA',
+    artPosition: '0% 66.667%',
     summary:
-      'Preserva progresso elegível da jornada para uso futuro, incluindo conteúdos que possam permanecer associados ao Save.',
+      'Permite preservar progresso elegível da jornada para retorno futuro, incluindo Pokémon, itens e outros conteúdos que possam permanecer vinculados ao Save.',
   },
   {
     code: 'GEN',
     title: 'Pokémon Gênesis',
-    price: '60,00 \u0024',
+    price: '60,00 $',
     category: 'CRIAÇÃO',
+    artPosition: '50% 66.667%',
     summary:
-      'Direito de desenvolver uma espécie Pokémon original para Pokémon Beyond, com linha evolutiva de até três estágios.',
-    bullets: ['Nome e aparência', 'Tipos e habilidades', 'Personalidade e conceito', 'Linha evolutiva'],
+      'Direito de desenvolver uma espécie Pokémon completamente original para fazer parte de Pokémon Beyond, com linha evolutiva de até três estágios.',
+    bullets: [
+      'Nome · Aparência · Tipos · Habilidades',
+      'Personalidade · Características · Conceito',
+      'Linha evolutiva de até 3 estágios',
+    ],
   },
   {
     code: 'GYM',
     title: 'Insígnia de Ginásio',
-    price: 'R\u0024 100,00',
+    price: 'R$ 100,00',
     category: 'FUNÇÃO',
+    artPosition: '100% 66.667%',
     summary:
-      'Direito de assumir, mediante aprovação, o cargo de Líder de Ginásio e participar da construção de sua identidade e desafios.',
-    bullets: ['Equipe de cinco Pokémon', 'Tipo do Ginásio', 'Identidade e desafios', 'Sujeito às regras administrativas do RPG'],
+      'Concede ao portador o direito de assumir, mediante aprovação da equipe, o cargo de Líder de Ginásio em Pokémon Beyond.',
+    bullets: [
+      'Equipe de cinco Pokémon',
+      'Escolha do tipo do Ginásio',
+      'Construção da identidade e dos desafios',
+      'Cargo sujeito às regras administrativas do RPG',
+    ],
   },
   {
     code: 'RED',
     title: 'Save Red',
-    price: 'R\u0024 60,00',
+    price: 'R$ 60,00',
     category: 'SAVE',
+    artPosition: '0% 100%',
     summary:
-      'Pacote inspirado na trajetória de Red com Pokémon da jornada em nível inicial, conteúdos exclusivos e recursos para o início da aventura.',
+      'Pacote inspirado na trajetória de Red, reunindo Pokémon e itens selecionados para iniciar a jornada carregando parte de seu legado.',
+    bullets: [
+      'Pokémon da jornada de Red em nível inicial para desbloquear',
+      'Conteúdos exclusivos do Save',
+      'Recursos destinados ao início da jornada',
+    ],
   },
   {
     code: 'EGG',
     title: 'Ovo Pokémon',
-    price: 'A partir de R\u0024 20',
+    price: 'A partir de R$ 20',
     category: 'POKÉMON',
+    artPosition: '50% 100%',
     summary:
-      'Receba um Ovo Pokémon misterioso. A espécie nasce após os requisitos de eclosão e depende da categoria adquirida.',
+      'Receba um Ovo Pokémon misterioso e percorra a distância necessária para sua eclosão. As possibilidades e raridades dependem da categoria adquirida.',
     variants: [
-      { label: 'Comum', price: 'R\u0024 20', description: 'Possibilidades mais frequentes.' },
-      { label: 'Raro', price: 'R\u0024 30', description: 'Possibilidades mais incomuns e raridades maiores.' },
-      { label: 'Especial', price: 'R\u0024 45', description: 'Categoria mais exclusiva, com possibilidades próprias.' },
+      { label: 'Comum', price: 'R$ 20', description: 'Pokémon encontrados com maior frequência.' },
+      { label: 'Raro', price: 'R$ 30', description: 'Possibilidades mais incomuns e Pokémon de maior raridade.' },
+      { label: 'Especial', price: 'R$ 45', description: 'Categoria mais exclusiva, com possibilidades próprias.' },
     ],
   },
   {
     code: '2XP',
     title: 'XP em Dobro',
-    price: 'R\u0024 40,00',
+    price: 'R$ 40,00',
     category: 'PROGRESSÃO',
+    artPosition: '100% 100%',
     duration: '7 DIAS',
     summary:
-      '2× a experiência recebida em atividades elegíveis durante o período ativo da Gamepass.',
+      'Receba 2× a experiência obtida em atividades elegíveis durante sete dias, acelerando o desenvolvimento do personagem.',
   },
 ];
+
+function championStoreArtStyle(backgroundPosition: string) {
+  return {
+    backgroundImage: 'url("' + CHAMPION_STORE_SPRITE + '")',
+    backgroundPosition,
+  };
+}
 
 function ChampionStorePage() {
   return (
@@ -144,17 +184,43 @@ function ChampionStorePage() {
       <HubModuleHeader module="store" metaLabel="STATUS" metaValue="CATÁLOGO" />
 
       <section className="champion-store-hero">
-        <div className="champion-store-kicker">POKÉMON BEYOND · GAMEPASSES</div>
-        <h1>Champion Store</h1>
-        <p>
-          Benefícios especiais, conteúdos e acessos para sua jornada. Consulte o catálogo antes
-          de solicitar uma aquisição.
-        </p>
+        <div className="champion-store-hero-copy">
+          <div className="champion-store-kicker">POKÉMON BEYOND · GAMEPASSES</div>
+          <h1>Champion Store</h1>
+          <p>
+            Gamepasses são pacotes especiais com conteúdos, recursos e benefícios exclusivos
+            para a jornada no Pokémon Beyond.
+          </p>
+
+          <div className="champion-store-how">
+            <strong>COMO FUNCIONA</strong>
+            <p>
+              Esta versão da Champion Store é um catálogo ilustrativo. Aquisição, confirmação e
+              concessão são tratadas manualmente pela equipe; o Hub não processa pagamentos.
+            </p>
+          </div>
+        </div>
+
+        <div className="champion-store-hero-gallery" aria-label="Artes do catálogo original">
+          <span
+            className="champion-store-art champion-store-hero-art is-primary"
+            role="img"
+            aria-label="Arte de abertura do catálogo Pokémon Beyond"
+            style={championStoreArtStyle('0% 0%')}
+          />
+          <span
+            className="champion-store-art champion-store-hero-art is-secondary"
+            role="img"
+            aria-label="Arte adicional de abertura do catálogo Pokémon Beyond"
+            style={championStoreArtStyle('50% 0%')}
+          />
+        </div>
+
         <div className="champion-store-notice">
           <strong>CATÁLOGO TEMPORÁRIO</strong>
           <span>
-            Valores e regras seguem o documento atual. Aquisições são confirmadas pela equipe e
-            os conteúdos geralmente são entregues em até 64 horas após a confirmação do pagamento.
+            Valores e benefícios seguem o documento atual. O documento informa que conteúdos
+            adquiridos geralmente são entregues em até 64 horas após o pagamento.
           </span>
         </div>
       </section>
@@ -162,50 +228,59 @@ function ChampionStorePage() {
       <section className="champion-store-grid" aria-label="Gamepasses disponíveis">
         {CHAMPION_STORE_OFFERS.map((offer) => (
           <article className="champion-store-card" key={offer.code}>
-            <header>
-              <span className="champion-store-code" aria-hidden="true">{offer.code}</span>
-              <div>
-                <small>{offer.category}</small>
-                <h2>{offer.title}</h2>
-              </div>
-            </header>
+            <div
+              className="champion-store-art champion-store-card-art"
+              role="img"
+              aria-label={'Arte original de ' + offer.title + ' no catálogo'}
+              style={championStoreArtStyle(offer.artPosition)}
+            />
 
-            <p>{offer.summary}</p>
+            <div className="champion-store-card-body">
+              <header>
+                <span className="champion-store-code" aria-hidden="true">{offer.code}</span>
+                <div>
+                  <small>{offer.category}</small>
+                  <h2>{offer.title}</h2>
+                </div>
+              </header>
 
-            {offer.bullets ? (
-              <ul>
-                {offer.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}
-              </ul>
-            ) : null}
+              <p>{offer.summary}</p>
 
-            {offer.variants ? (
-              <div className="champion-store-variants">
-                {offer.variants.map((variant) => (
-                  <div key={variant.label}>
-                    <span>{variant.label}</span>
-                    <strong>{variant.price}</strong>
-                    <small>{variant.description}</small>
-                  </div>
-                ))}
-              </div>
-            ) : null}
+              {offer.bullets ? (
+                <ul>
+                  {offer.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}
+                </ul>
+              ) : null}
 
-            <footer>
-              <div>
-                {offer.duration ? <small>{offer.duration}</small> : <small>VALOR</small>}
-                <strong>{offer.price}</strong>
-              </div>
-              <span>CONSULTA</span>
-            </footer>
+              {offer.variants ? (
+                <div className="champion-store-variants">
+                  {offer.variants.map((variant) => (
+                    <div key={variant.label}>
+                      <span>{variant.label}</span>
+                      <strong>{variant.price}</strong>
+                      <small>{variant.description}</small>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              <footer>
+                <div>
+                  {offer.duration ? <small>{offer.duration}</small> : <small>VALOR</small>}
+                  <strong>{offer.price}</strong>
+                </div>
+                <span>CATÁLOGO</span>
+              </footer>
+            </div>
           </article>
         ))}
       </section>
 
       <section className="champion-store-boundary">
-        <strong>AQUISIÇÃO</strong>
+        <strong>VERSÃO ATUAL</strong>
         <p>
-          Esta tela apresenta o catálogo. O Pokémon Beyond ainda não processa pagamento nem
-          concede Gamepass automaticamente pelo Hub.
+          A Champion Store é apenas informativa. Não há checkout, pedido ou concessão automática
+          de Gamepass pelo site.
         </p>
       </section>
     </main>
