@@ -48,6 +48,18 @@ export type PlayerPortalPokedexSpecies = {
   lastCaughtAt: string | null;
 };
 
+
+export type PlayerPortalLocation = {
+  areaId: string;
+  areaSlug: string;
+  areaDisplayName: string;
+  regionId: string;
+  regionSlug: string;
+  regionDisplayName: string;
+  safePoint: boolean;
+  enteredAt: string;
+};
+
 export type PlayerPortalProfile = {
   playerId: string;
   playerStatus: 'ACTIVE';
@@ -118,6 +130,12 @@ export type PlayerPortalPokemonResult =
 export type PlayerPortalPokedexResult =
   | { status: 'authenticated'; pokedex: PlayerPortalPokedexSpecies[] }
   | { status: 'unauthenticated' };
+
+
+export type PlayerPortalLocationResult =
+  | { status: 'authenticated'; location: PlayerPortalLocation }
+  | { status: 'unauthenticated' }
+  | { status: 'unavailable' };
 
 export type PlayerPortalWorldLocationResult =
   | { status: 'authenticated'; location: PlayerPortalWorldLocation }
@@ -208,6 +226,27 @@ export async function getPlayerPortalPokedex(
   }
 
   return { status: 'authenticated', pokedex: body.pokedex };
+}
+
+export async function getPlayerPortalLocation(
+  fetcher: PlayerPortalFetcher = fetch,
+): Promise<PlayerPortalLocationResult> {
+  const response = await fetcher('/api/hub/player/location', {
+    method: 'GET',
+    credentials: 'include',
+    headers: { accept: 'application/json' },
+  });
+
+  if (response.status === 401) return { status: 'unauthenticated' };
+  if (response.status === 404) return { status: 'unavailable' };
+  if (!response.ok) throw new Error(`Player portal request failed (${response.status})`);
+
+  const body = await readJsonBody(response);
+  if (!isRecord(body) || !isPlayerPortalLocation(body.location)) {
+    throw new Error('Invalid player portal response');
+  }
+
+  return { status: 'authenticated', location: body.location };
 }
 
 export async function getPlayerPortalWorldLocation(
@@ -411,6 +450,20 @@ function isPlayerPortalPokedexSpecies(value: unknown): value is PlayerPortalPoke
     isNullableIsoTimestamp(value.lastSeenAt) &&
     isNullableIsoTimestamp(value.firstCaughtAt) &&
     isNullableIsoTimestamp(value.lastCaughtAt)
+  );
+}
+
+function isPlayerPortalLocation(value: unknown): value is PlayerPortalLocation {
+  if (!isRecord(value)) return false;
+  return (
+    isUuid(value.areaId) &&
+    isDisplayString(value.areaSlug) &&
+    isDisplayString(value.areaDisplayName) &&
+    isUuid(value.regionId) &&
+    isDisplayString(value.regionSlug) &&
+    isDisplayString(value.regionDisplayName) &&
+    typeof value.safePoint === 'boolean' &&
+    isIsoTimestamp(value.enteredAt)
   );
 }
 
