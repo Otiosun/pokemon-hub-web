@@ -81,43 +81,6 @@ export type PlayerPortalProfile = {
   team: PlayerPortalTeamSlot[];
 };
 
-export type PlayerPortalWorldConnection = {
-  connectionId: string;
-  connectionKey: string;
-  destinationAreaId: string;
-  destinationSlug: string;
-  destinationDisplayName: string;
-  available: boolean;
-  missingUnlockKeys: string[];
-};
-
-export type PlayerPortalWorldLocation = {
-  areaId: string;
-  areaSlug: string;
-  areaDisplayName: string;
-  regionId: string;
-  regionSlug: string;
-  regionDisplayName: string;
-  safePoint: boolean;
-  revision: string;
-  enteredAt: string;
-  requiresRelocation: boolean;
-  relocationAreaId: string | null;
-  connections: PlayerPortalWorldConnection[];
-};
-
-export type PlayerPortalWorldTravelInput = {
-  destinationAreaId: string;
-  expectedRevision: string;
-  idempotencyKey: string;
-};
-
-export type PlayerPortalWorldTravel = {
-  from: PlayerPortalWorldLocation;
-  to: PlayerPortalWorldLocation;
-  replayed: boolean;
-};
-
 export type PlayerPortalSelfResult =
   | { status: 'authenticated'; profile: PlayerPortalProfile }
   | { status: 'unauthenticated' };
@@ -134,14 +97,6 @@ export type PlayerPortalLocationResult =
   | { status: 'authenticated'; location: PlayerPortalLocation }
   | { status: 'unauthenticated' }
   | { status: 'unavailable' };
-
-export type PlayerPortalWorldLocationResult =
-  | { status: 'authenticated'; location: PlayerPortalWorldLocation }
-  | { status: 'unauthenticated' };
-
-export type PlayerPortalWorldTravelResult =
-  | { status: 'authenticated'; travel: PlayerPortalWorldTravel }
-  | { status: 'unauthenticated' };
 
 export type PlayerPortalExchangeResult =
   | {
@@ -245,59 +200,6 @@ export async function getPlayerPortalLocation(
   }
 
   return { status: 'authenticated', location: body.location };
-}
-
-export async function getPlayerPortalWorldLocation(
-  fetcher: PlayerPortalFetcher = fetch,
-): Promise<PlayerPortalWorldLocationResult> {
-  const response = await fetcher('/api/hub/world/location', {
-    method: 'GET',
-    credentials: 'include',
-    headers: { accept: 'application/json' },
-  });
-
-  if (response.status === 401) return { status: 'unauthenticated' };
-  if (!response.ok) throw new Error(`Player portal request failed (${response.status})`);
-
-  const body = await readJsonBody(response);
-  if (!isRecord(body) || !isPlayerPortalWorldLocation(body.location)) {
-    throw new Error('Invalid player portal response');
-  }
-
-  return { status: 'authenticated', location: body.location };
-}
-
-export async function travelPlayerPortalWorld(
-  input: PlayerPortalWorldTravelInput,
-  fetcher: PlayerPortalFetcher = fetch,
-): Promise<PlayerPortalWorldTravelResult> {
-  if (!isPlayerPortalWorldTravelInput(input)) {
-    throw new Error('Invalid player portal world request');
-  }
-
-  const response = await fetcher('/api/hub/world/travel', {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      accept: 'application/json',
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      destinationAreaId: input.destinationAreaId,
-      expectedRevision: input.expectedRevision,
-      idempotencyKey: input.idempotencyKey,
-    }),
-  });
-
-  if (response.status === 401) return { status: 'unauthenticated' };
-  if (!response.ok) throw new Error(`Player portal request failed (${response.status})`);
-
-  const body = await readJsonBody(response);
-  if (!isRecord(body) || !isPlayerPortalWorldTravel(body.travel)) {
-    throw new Error('Invalid player portal response');
-  }
-
-  return { status: 'authenticated', travel: body.travel };
 }
 
 export async function exchangePlayerPortalTicket(
@@ -463,69 +365,6 @@ function isPlayerPortalLocation(value: unknown): value is PlayerPortalLocation {
     typeof value.safePoint === 'boolean' &&
     isIsoTimestamp(value.enteredAt)
   );
-}
-
-function isPlayerPortalWorldTravelInput(value: unknown): value is PlayerPortalWorldTravelInput {
-  if (!isRecord(value)) return false;
-  return (
-    isUuid(value.destinationAreaId) &&
-    typeof value.expectedRevision === 'string' &&
-    DIGITS_PATTERN.test(value.expectedRevision) &&
-    typeof value.idempotencyKey === 'string' &&
-    value.idempotencyKey.trim().length > 0 &&
-    value.idempotencyKey.length <= 512
-  );
-}
-
-function isPlayerPortalWorldTravel(value: unknown): value is PlayerPortalWorldTravel {
-  return (
-    isRecord(value) &&
-    isPlayerPortalWorldLocation(value.from) &&
-    isPlayerPortalWorldLocation(value.to) &&
-    typeof value.replayed === 'boolean'
-  );
-}
-
-function isPlayerPortalWorldLocation(value: unknown): value is PlayerPortalWorldLocation {
-  if (!isRecord(value)) return false;
-  if (
-    !isUuid(value.areaId) ||
-    !isDisplayString(value.areaSlug) ||
-    !isDisplayString(value.areaDisplayName) ||
-    !isUuid(value.regionId) ||
-    !isDisplayString(value.regionSlug) ||
-    !isDisplayString(value.regionDisplayName) ||
-    typeof value.safePoint !== 'boolean' ||
-    typeof value.revision !== 'string' ||
-    !DIGITS_PATTERN.test(value.revision) ||
-    !isIsoTimestamp(value.enteredAt) ||
-    typeof value.requiresRelocation !== 'boolean' ||
-    !isNullableUuid(value.relocationAreaId) ||
-    !Array.isArray(value.connections) ||
-    !value.connections.every(isPlayerPortalWorldConnection)
-  ) {
-    return false;
-  }
-
-  return true;
-}
-
-function isPlayerPortalWorldConnection(value: unknown): value is PlayerPortalWorldConnection {
-  if (!isRecord(value)) return false;
-  if (
-    !isUuid(value.connectionId) ||
-    !isDisplayString(value.connectionKey) ||
-    !isUuid(value.destinationAreaId) ||
-    !isDisplayString(value.destinationSlug) ||
-    !isDisplayString(value.destinationDisplayName) ||
-    typeof value.available !== 'boolean' ||
-    !Array.isArray(value.missingUnlockKeys) ||
-    !value.missingUnlockKeys.every(isDisplayString)
-  ) {
-    return false;
-  }
-
-  return new Set(value.missingUnlockKeys).size === value.missingUnlockKeys.length;
 }
 
 function isCatalogPresentation(value: Record<string, unknown>): boolean {
