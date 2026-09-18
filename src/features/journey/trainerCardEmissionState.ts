@@ -63,10 +63,10 @@ export function getTrainerCardEmissionStorageKey(trainerId: string) {
 }
 
 export function hasTrainerCardBeenEmitted(trainerId: string | null | undefined) {
-  if (!normalized(trainerId)) return false;
-  if (typeof window === 'undefined') return false;
+  const normalizedTrainerId = normalized(trainerId);
+  if (!normalizedTrainerId || typeof window === 'undefined') return false;
   try {
-    return window.localStorage.getItem(getTrainerCardEmissionStorageKey(trainerId)) === '1';
+    return window.localStorage.getItem(getTrainerCardEmissionStorageKey(normalizedTrainerId)) === '1';
   } catch {
     return false;
   }
