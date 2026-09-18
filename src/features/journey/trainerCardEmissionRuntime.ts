@@ -353,6 +353,7 @@ export async function emitZhouliaTrainerCard({
   profile: JourneyProfilePreview;
   avatarUrl: string;
 }): Promise<EmittedTrainerCard> {
+  if (!profile.trainerId?.trim()) throw new Error('trainer-card-id-missing');
   if (!profile.leadPokemon) throw new Error('trainer-card-partner-missing');
 
   const [baseHref, photo, partnerHref, badgeHrefs] = await Promise.all([
@@ -374,6 +375,6 @@ export async function emitZhouliaTrainerCard({
     pngBlob,
     pngUrl: URL.createObjectURL(pngBlob),
     svgString,
-    downloadName: buildTrainerCardDownloadName(profile.trainerId),
+    downloadName: buildTrainerCardDownloadName(profile.trainerId ?? ''),
   };
 }
