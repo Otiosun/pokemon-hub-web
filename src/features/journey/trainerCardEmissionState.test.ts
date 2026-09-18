@@ -13,26 +13,23 @@ const profile: TrainerCardProfile = {
   trainerName: 'Enzo',
   trainerTitle: 'Explorador de Fronteiras',
   trainerId: 'ZHO-028419',
-  publicVerificationId: null,
+  publicVerificationId: 'tcv_0123456789ABCDEFGHIJKLMN',
   originRegion: 'Zhoulia',
-  currentLocation: '—',
+  currentLocation: 'Vila dos Arrozais · Zhoulia',
   featuredFeat: 'Campeão — Copa da Primavera',
   leadPokemon: {
     instanceId: 'brasa-1',
     dex: 58,
-    species: 'Growlithe',
+    displayName: 'Growlithe',
     nickname: 'Brasa',
     level: 12,
     types: ['Fogo'],
-    sex: 'M',
-    favorite: true,
-    shiny: false,
-    box: 'Parceiros',
-    teamSlot: 1,
   },
   badges: [],
   ownedPokemonCount: 1,
   registeredSpeciesCount: 1,
+  teamSize: 1,
+  progressionPoints: '0',
   personal: { age: null, height: null, appearance: null, bio: null },
 };
 
@@ -80,7 +77,15 @@ describe('Trainer Card emission readiness', () => {
 
   it('requires a registered partner because Partner is basic Trainer Card data', () => {
     const withoutPartner = { ...profile, leadPokemon: null };
-    expect(getTrainerCardEmissionReadiness(withoutPartner, 'blob:avatar').missing).toContain('partner');
+    expect(getTrainerCardEmissionReadiness(withoutPartner, 'blob:avatar').missing).toContain(
+      'partner',
+    );
+  });
+
+  it('requires a real Trainer ID instead of fabricating one', () => {
+    const withoutId = { ...profile, trainerId: null };
+    expect(getTrainerCardEmissionReadiness(withoutId, 'blob:avatar').missing).toContain('idNo');
+    expect(hasTrainerCardBeenEmitted(null)).toBe(false);
   });
 
   it('becomes ready when all mandatory basic runtime data exists', () => {
@@ -91,20 +96,30 @@ describe('Trainer Card emission readiness', () => {
   });
 
   it('uses Emitir only before the first Zhoulia issuance and Ver afterwards', () => {
-    expect(getTrainerCardActionLabel({ isZhoulia: true, hasEmitted: false })).toBe('EMITIR TRAINER CARD');
-    expect(getTrainerCardActionLabel({ isZhoulia: true, hasEmitted: true })).toBe('VER TRAINER CARD');
-    expect(getTrainerCardActionLabel({ isZhoulia: false, hasEmitted: false })).toBe('VER TRAINER CARD');
+    expect(getTrainerCardActionLabel({ isZhoulia: true, hasEmitted: false })).toBe(
+      'EMITIR TRAINER CARD',
+    );
+    expect(getTrainerCardActionLabel({ isZhoulia: true, hasEmitted: true })).toBe(
+      'VER TRAINER CARD',
+    );
+    expect(getTrainerCardActionLabel({ isZhoulia: false, hasEmitted: false })).toBe(
+      'VER TRAINER CARD',
+    );
   });
 
   it('keeps the issuance flag namespaced by trainer id and is SSR-safe', () => {
-    expect(getTrainerCardEmissionStorageKey(' ZHO/028419 ')).toBe('pokemon-hub:trainer-card:zhoulia:emitted:ZHO-028419');
+    expect(getTrainerCardEmissionStorageKey(' ZHO/028419 ')).toBe(
+      'pokemon-hub:trainer-card:zhoulia:emitted:ZHO-028419',
+    );
     if (typeof window === 'undefined') expect(hasTrainerCardBeenEmitted('ZHO-028419')).toBe(false);
   });
 
   it('treats blocked localStorage reads as not emitted instead of crashing the Journey', () => {
     vi.stubGlobal('window', {
       localStorage: {
-        getItem: () => { throw new Error('storage blocked'); },
+        getItem: () => {
+          throw new Error('storage blocked');
+        },
       },
     });
 
@@ -114,17 +129,22 @@ describe('Trainer Card emission readiness', () => {
 
   it('keeps a successful emission successful when localStorage writes are blocked', () => {
     const dispatchEvent = vi.fn();
-    vi.stubGlobal('CustomEvent', class TestCustomEvent {
-      type: string;
-      detail: unknown;
-      constructor(type: string, init?: { detail?: unknown }) {
-        this.type = type;
-        this.detail = init?.detail;
-      }
-    });
+    vi.stubGlobal(
+      'CustomEvent',
+      class TestCustomEvent {
+        type: string;
+        detail: unknown;
+        constructor(type: string, init?: { detail?: unknown }) {
+          this.type = type;
+          this.detail = init?.detail;
+        }
+      },
+    );
     vi.stubGlobal('window', {
       localStorage: {
-        setItem: () => { throw new Error('storage blocked'); },
+        setItem: () => {
+          throw new Error('storage blocked');
+        },
       },
       dispatchEvent,
     });
