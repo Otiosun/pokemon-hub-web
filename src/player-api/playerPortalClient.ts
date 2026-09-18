@@ -48,7 +48,6 @@ export type PlayerPortalPokedexSpecies = {
   lastCaughtAt: string | null;
 };
 
-
 export type PlayerPortalLocation = {
   areaId: string;
   areaSlug: string;
@@ -130,7 +129,6 @@ export type PlayerPortalPokemonResult =
 export type PlayerPortalPokedexResult =
   | { status: 'authenticated'; pokedex: PlayerPortalPokedexSpecies[] }
   | { status: 'unauthenticated' };
-
 
 export type PlayerPortalLocationResult =
   | { status: 'authenticated'; location: PlayerPortalLocation }
