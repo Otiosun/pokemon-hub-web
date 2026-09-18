@@ -34,6 +34,10 @@ const HUB_UAT_ROUTES: Readonly<Record<string, HubUatRoute>> = {
     upstreamPath: '/v1/hub/player/pokedex',
     allowedMethod: 'GET',
   },
+  '/api/hub/player/location': {
+    upstreamPath: '/v1/hub/player/location',
+    allowedMethod: 'GET',
+  },
   '/api/hub/player/roster': {
     upstreamPath: '/v1/hub/player/roster',
     allowedMethod: 'PUT',
