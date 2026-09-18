@@ -104,7 +104,7 @@ export const ADVANCED_SHOWCASE_JOURNEY: AdvancedShowcaseJourney = {
       'Jaqueta de campo vermelha, mochila técnica e insígnia da Liga no ombro.',
     bio: 'Treinador veterano com registros completos de Kanto, Johto e Hoenn.',
   },
-  badges: [
+  badges: ([
     ['boulder', 'Pedra'],
     ['cascade', 'Cascata'],
     ['thunder', 'Trovão'],
@@ -113,7 +113,7 @@ export const ADVANCED_SHOWCASE_JOURNEY: AdvancedShowcaseJourney = {
     ['marsh', 'Pântano'],
     ['volcano', 'Vulcão'],
     ['earth', 'Terra'],
-  ].map(([key, name]) => ({ key, name, earned: true })),
+  ] as const).map(([key, name]) => ({ key, name, earned: true })),
 };
 
 export function isAdvancedShowcaseUrl(url: URL) {
