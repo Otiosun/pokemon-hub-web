@@ -62,7 +62,8 @@ export function getTrainerCardEmissionStorageKey(trainerId: string) {
   return `pokemon-hub:trainer-card:zhoulia:emitted:${safeKeyPart(trainerId)}`;
 }
 
-export function hasTrainerCardBeenEmitted(trainerId: string) {
+export function hasTrainerCardBeenEmitted(trainerId: string | null | undefined) {
+  if (!normalized(trainerId)) return false;
   if (typeof window === 'undefined') return false;
   try {
     return window.localStorage.getItem(getTrainerCardEmissionStorageKey(trainerId)) === '1';
@@ -71,12 +72,13 @@ export function hasTrainerCardBeenEmitted(trainerId: string) {
   }
 }
 
-export function markTrainerCardEmitted(trainerId: string) {
-  if (typeof window === 'undefined') return;
+export function markTrainerCardEmitted(trainerId: string | null | undefined) {
+  const normalizedTrainerId = normalized(trainerId);
+  if (!normalizedTrainerId || typeof window === 'undefined') return;
   try {
-    window.localStorage.setItem(getTrainerCardEmissionStorageKey(trainerId), '1');
+    window.localStorage.setItem(getTrainerCardEmissionStorageKey(normalizedTrainerId), '1');
   } catch {
     // Persistence is best-effort; a generated PNG remains a successful emission.
   }
-  window.dispatchEvent(new CustomEvent(TRAINER_CARD_EMITTED_EVENT, { detail: { trainerId } }));
+  window.dispatchEvent(new CustomEvent(TRAINER_CARD_EMITTED_EVENT, { detail: { trainerId: normalizedTrainerId } }));
 }
