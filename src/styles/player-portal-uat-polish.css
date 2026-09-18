@@ -436,6 +436,8 @@
 }
 
 .champion-store-price strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: var(--store-neon-soft);
   font: 760 clamp(1rem, 2.2vw, 1.18rem)/1 'IBM Plex Mono', monospace;
   letter-spacing: -0.02em;
@@ -482,8 +484,4 @@
     align-items: flex-end;
   }
 
-  .champion-store-price strong {
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
 }
