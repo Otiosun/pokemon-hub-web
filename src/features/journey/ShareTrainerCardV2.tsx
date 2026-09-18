@@ -143,8 +143,11 @@ export function ShareTrainerCardV2({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
 
-  const region = profile.originRegion.toUpperCase();
-  const isZhoulia = profile.originRegion.trim().toLowerCase() === 'zhoulia';
+  const originRegion = profile.originRegion ?? 'Não disponível';
+  const currentLocation = profile.currentLocation ?? 'Não disponível';
+  const trainerId = profile.trainerId ?? '—';
+  const region = originRegion.toUpperCase();
+  const isZhoulia = originRegion.trim().toLowerCase() === 'zhoulia';
 
   if (isZhoulia) {
     return <ShareTrainerCardZhoulia profile={profile} avatarUrl={avatarUrl} onClose={onClose} />;
@@ -156,7 +159,7 @@ export function ShareTrainerCardV2({
         className="journey-card-v2-dialog"
         role="dialog"
         aria-modal="true"
-        aria-label={`Trainer Card de ${profile.originRegion}`}
+        aria-label={`Trainer Card de ${originRegion}`}
       >
         <button className="journey-card-v2-close" type="button" onClick={onClose} aria-label="Fechar Trainer Card">
           <CloseIcon />
@@ -185,7 +188,7 @@ export function ShareTrainerCardV2({
 
             <div className="journey-card-v2-id">
               <span>TRAINER ID</span>
-              <strong>{profile.trainerId}</strong>
+              <strong>{trainerId}</strong>
               <i aria-hidden="true" />
             </div>
           </header>
@@ -200,8 +203,8 @@ export function ShareTrainerCardV2({
               <div className="journey-card-v2-location">
                 <LocationIcon />
                 <span>
-                  <strong>{profile.currentLocation}</strong>
-                  <small>{profile.originRegion}</small>
+                  <strong>{currentLocation}</strong>
+                  <small>{originRegion}</small>
                 </span>
               </div>
             </div>
@@ -222,7 +225,7 @@ export function ShareTrainerCardV2({
             </aside>
           ) : null}
 
-          <section className="journey-card-v2-badges" aria-label={`Insígnias de ${profile.originRegion}`}>
+          <section className="journey-card-v2-badges" aria-label={`Insígnias de ${originRegion}`}>
             <span className="journey-card-v2-badge-label">INSÍGNIAS</span>
             <span className="journey-card-v2-badge-rule" aria-hidden="true" />
             <BadgeStrip badges={profile.badges} />
