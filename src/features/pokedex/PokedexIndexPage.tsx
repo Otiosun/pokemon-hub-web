@@ -421,7 +421,7 @@ export function PokedexIndexPage() {
                   <div className="pokedex-index-card-top">
                     <span>#{paddedDex}</span>
                     <span className="pokedex-index-state-group">
-                      {hasShiny ? <i className="pokedex-index-shiny-mark" aria-label="Shiny na coleção">✦</i> : null}
+                      {hasShiny ? <span className="pokedex-index-shiny-mark" role="img" aria-label="Shiny na coleção">✦</span> : null}
                       <strong className="pokedex-index-discovery-state">{discoveryLabel(playerState.discovery)}</strong>
                     </span>
                   </div>
