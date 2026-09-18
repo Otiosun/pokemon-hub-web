@@ -67,8 +67,8 @@ export function createJourneyProfileView(
   playerProfile: PlayerPortalProfile | null,
   authoritative: JourneyAuthoritativeSnapshot = {
     currentLocation: null,
-    ownedPokemonCount: authoritative.ownedPokemonCount,
-    registeredSpeciesCount: authoritative.registeredSpeciesCount,
+    ownedPokemonCount: null,
+    registeredSpeciesCount: null,
   },
 ): JourneyProfilePreview {
   const baseProfile: JourneyProfilePreview = {
@@ -82,8 +82,8 @@ export function createJourneyProfileView(
     currentLocation: authoritative.currentLocation,
     leadPokemon: resolveLeadPokemon(playerProfile),
     badges: [],
-    ownedPokemonCount: null,
-    registeredSpeciesCount: null,
+    ownedPokemonCount: authoritative.ownedPokemonCount,
+    registeredSpeciesCount: authoritative.registeredSpeciesCount,
     teamSize: playerProfile?.team.length ?? null,
     progressionPoints: playerProfile?.progressionPoints ?? null,
     personal: {
