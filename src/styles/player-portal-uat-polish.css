@@ -404,6 +404,17 @@
   font: 500 0.7rem/1.46 'IBM Plex Sans', system-ui, sans-serif;
 }
 
+.champion-store-duration {
+  width: fit-content;
+  padding: 6px 9px;
+  border: 1px solid rgba(176, 38, 255, 0.26);
+  border-radius: 999px;
+  background: rgba(176, 38, 255, 0.055);
+  color: #bda6ca;
+  font: 700 0.54rem/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.12em;
+}
+
 .champion-store-price {
   display: flex;
   align-items: center;
