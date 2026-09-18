@@ -11,7 +11,7 @@ describe('trainer card public verification contract', () => {
   it('keeps the game Trainer ID separate from the signed public verification ID without fabricating either', () => {
     const profile = getJourneyProfilePreview();
 
-    expect(profile.trainerId).toBe('—');
+    expect(profile.trainerId).toBeNull();
     expect(profile.publicVerificationId).toBeNull();
   });
 
