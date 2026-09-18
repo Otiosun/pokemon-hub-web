@@ -34,6 +34,29 @@ describe('Cloudflare UAT Hub worker', () => {
     expect(assets.fetch).not.toHaveBeenCalled();
   });
 
+  it('proxies the read-only Journey location without exposing gameplay actions', async () => {
+    const assets = assetsFetcher();
+    const upstream = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      expect(String(input)).toBe(
+        'https://stadium-mathematics-disks-honolulu.trycloudflare.com/v1/hub/player/location',
+      );
+      expect(init?.method).toBe('GET');
+      return new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), {
+        status: 401,
+        headers: { 'content-type': 'application/json' },
+      });
+    });
+
+    const response = await handleCloudflareUatRequest(
+      new Request(`https://${UAT_HOST}/api/hub/player/location`),
+      { ASSETS: assets },
+      upstream,
+    );
+
+    expect(response.status).toBe(401);
+    expect(assets.fetch).not.toHaveBeenCalled();
+  });
+
   it('never exposes staging Hub API from non-UAT hosts', async () => {
     const assets = assetsFetcher();
     const upstream = vi.fn(async () => new Response('unexpected'));
