@@ -3,7 +3,7 @@ name: Trainer Card validation
 on:
   push:
     branches:
-      - feat/zhoulia-trainer-card-emission-v1
+      - feat/zhoulia-trainer-card-emission-v2
   pull_request:
     branches:
       - main
