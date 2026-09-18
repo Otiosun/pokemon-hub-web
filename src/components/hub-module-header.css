@@ -18,7 +18,14 @@
 
 .hub-module-header.is-pokemon { --module-accent: #187c8d; }
 .hub-module-header.is-team { --module-accent: #9a7621; }
-.hub-module-header.is-store { --module-accent: #a67824; }
+.hub-module-header.is-store {
+  --module-accent: #9b2cff;
+  border-bottom-color: #5a0b8c;
+  background: linear-gradient(90deg, #6b18b6, #a51fff 58%, #7b16c9);
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.16),
+    0 0 28px rgba(176, 38, 255, 0.12);
+}
 
 .hub-module-brand {
   min-width: 0;
