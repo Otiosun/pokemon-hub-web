@@ -29,6 +29,10 @@ describe('product integrity routing', () => {
     expect(resolveProductRoute('/pokedex/abc')).toEqual({ kind: 'not-found' });
   });
 
+  it('keeps Champion Store as a player-facing product route', () => {
+    expect(resolveProductRoute('/champion-store')).toEqual({ kind: 'route' });
+  });
+
   it('keeps legitimate owned-Pokémon instance routes available', () => {
     expect(resolveProductRoute('/pokemon/owned-charmander-01')).toEqual({ kind: 'route' });
   });
