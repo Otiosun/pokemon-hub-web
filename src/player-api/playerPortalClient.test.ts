@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   exchangePlayerPortalTicket,
+  getPlayerPortalLocation,
   getPlayerPortalSelf,
   type PlayerPortalProfile,
 } from './playerPortalClient';
@@ -85,6 +86,46 @@ describe('getPlayerPortalSelf', () => {
     await expect(getPlayerPortalSelf(fetcher)).rejects.toThrow(
       'Player portal request failed (503)',
     );
+  });
+});
+
+describe('getPlayerPortalLocation', () => {
+  it('reads a minimal read-only location through the same-origin BFF', async () => {
+    const location = {
+      areaId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      areaSlug: 'vila-dos-arrozais',
+      areaDisplayName: 'Vila dos Arrozais',
+      regionId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+      regionSlug: 'zhoulia',
+      regionDisplayName: 'Zhoulia',
+      safePoint: true,
+      enteredAt: '2026-09-10T00:00:00.000Z',
+    };
+    const fetcher = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ location }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+    );
+
+    await expect(getPlayerPortalLocation(fetcher)).resolves.toEqual({
+      status: 'authenticated',
+      location,
+    });
+    expect(fetcher).toHaveBeenCalledWith('/api/hub/player/location', {
+      method: 'GET',
+      credentials: 'include',
+      headers: { accept: 'application/json' },
+    });
+  });
+
+  it('keeps a missing world location distinct from session expiry', async () => {
+    const missing = vi.fn(async () => new Response('{"error":"NOT_FOUND"}', { status: 404 }));
+    const expired = vi.fn(async () => new Response('{"error":"UNAUTHENTICATED"}', { status: 401 }));
+
+    await expect(getPlayerPortalLocation(missing)).resolves.toEqual({ status: 'unavailable' });
+    await expect(getPlayerPortalLocation(expired)).resolves.toEqual({ status: 'unauthenticated' });
   });
 });
 
