@@ -1,59 +1,11 @@
 import { useEffect, useState } from 'react';
-import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import type { JourneyProfilePreview } from './journeyProfilePreview';
-import { resolveTrainerPhotoFocalPoint, type TrainerPhotoFocalPoint } from './trainerCardPhotoFocal';
-import { ZhouliaEPrimeMark } from './zhouliaLeagueVisualKit';
+import {
+  emitZhouliaTrainerCard,
+  type EmittedTrainerCard,
+} from './trainerCardEmissionRuntime';
+import { markTrainerCardEmitted } from './trainerCardEmissionState';
 import './journey-trainer-card-zhoulia.css';
-
-const DEFAULT_FOCAL: TrainerPhotoFocalPoint = {
-  x: 0.5,
-  y: 0.5,
-  source: 'orientation-fallback',
-};
-
-function CloseIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="m6 6 12 12M18 6 6 18" />
-    </svg>
-  );
-}
-
-function TrainerPhoto({ src }: { src: string | null }) {
-  const [focal, setFocal] = useState<TrainerPhotoFocalPoint>(DEFAULT_FOCAL);
-
-  useEffect(() => {
-    let cancelled = false;
-    setFocal(DEFAULT_FOCAL);
-    if (!src) return () => {
-      cancelled = true;
-    };
-
-    resolveTrainerPhotoFocalPoint(src)
-      .then((next) => {
-        if (!cancelled) setFocal(next);
-      })
-      .catch(() => {
-        if (!cancelled) setFocal(DEFAULT_FOCAL);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [src]);
-
-  if (!src) return null;
-
-  return (
-    <div className="journey-zhoulia-card-photo" data-focal-source={focal.source}>
-      <img
-        src={src}
-        alt="Foto do treinador"
-        style={{ objectPosition: `${focal.x * 100}% ${focal.y * 100}%` }}
-      />
-    </div>
-  );
-}
 
 export function ShareTrainerCardZhoulia({
   profile,
@@ -64,14 +16,68 @@ export function ShareTrainerCardZhoulia({
   avatarUrl: string | null;
   onClose: () => void;
 }) {
-  const originRegion = profile.originRegion ?? 'Não disponível';
-  const rows = [
-    ['NOME', profile.trainerName],
-    ['TÍTULO', profile.trainerTitle],
-    ['LOCAL', profile.currentLocation ?? 'Não disponível'],
-    ['PARCEIRO', profile.leadPokemon?.nickname ?? '—'],
-    ['ID', profile.trainerId ?? '—'],
-  ] as const;
+  const [result, setResult] = useState<EmittedTrainerCard | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
+  const originRegion = profile.originRegion ?? 'Zhoulia';
+  const trainerId = profile.trainerId?.trim() || null;
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [onClose]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let generatedUrl: string | null = null;
+    const attempt = retryKey + 1;
+
+    setResult(null);
+    setError(null);
+
+    if (!trainerId) {
+      setError('O registro ainda não possui um Trainer ID válido para emissão.');
+      return () => undefined;
+    }
+
+    if (!avatarUrl) {
+      setError('Adicione uma foto de treinador antes de emitir o card.');
+      return () => undefined;
+    }
+
+    void emitZhouliaTrainerCard({ profile, avatarUrl })
+      .then((next) => {
+        generatedUrl = next.pngUrl;
+        if (cancelled) {
+          URL.revokeObjectURL(next.pngUrl);
+          return;
+        }
+        setResult(next);
+        markTrainerCardEmitted(trainerId);
+      })
+      .catch((cause) => {
+        console.error(`Zhoulia Trainer Card emission attempt ${attempt} failed`, cause);
+        if (!cancelled) setError('Não foi possível emitir o Trainer Card. Tente novamente.');
+      });
+
+    return () => {
+      cancelled = true;
+      if (generatedUrl) URL.revokeObjectURL(generatedUrl);
+    };
+  }, [avatarUrl, profile, retryKey, trainerId]);
+
+  const download = () => {
+    if (!result) return;
+    const anchor = document.createElement('a');
+    anchor.href = result.pngUrl;
+    anchor.download = result.downloadName;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+  };
 
   return (
     <div className="journey-card-v2-backdrop">
@@ -81,65 +87,55 @@ export function ShareTrainerCardZhoulia({
         aria-modal="true"
         aria-label={`Trainer Card de ${originRegion}`}
       >
-        <button className="journey-zhoulia-card-close" type="button" onClick={onClose} aria-label="Fechar Trainer Card">
-          <CloseIcon />
+        <button
+          className="journey-zhoulia-card-close"
+          type="button"
+          onClick={onClose}
+          aria-label="Fechar Trainer Card"
+        >
+          ×
         </button>
 
-        <article className="journey-zhoulia-card" aria-label={`Trainer Card de ${profile.trainerName}`}>
-          <img
-            className="journey-zhoulia-card-base"
-            src="/assets/journey/zhoulia-trainer-card-ai-base-v1.webp"
-            alt=""
-            aria-hidden="true"
-            draggable={false}
-          />
-
-          <div className="journey-zhoulia-card-title">TRAINER CARD</div>
-
-          <div className="journey-zhoulia-card-region">
-            <strong>{originRegion.toUpperCase()}</strong>
-            <span aria-hidden="true" />
-            <ZhouliaEPrimeMark className="journey-zhoulia-card-region-mark" />
-          </div>
-
-          <div className="journey-zhoulia-card-fields">
-            {rows.map(([label, value], index) => (
-              <div className="journey-zhoulia-card-field" key={label} data-row={index + 1}>
-                <span>{label}</span>
-                <strong title={value}>{value}</strong>
-              </div>
-            ))}
-          </div>
-
-          <TrainerPhoto src={avatarUrl} />
-
-          {profile.leadPokemon ? (
-            <div className="journey-zhoulia-card-partner">
-              <PokemonAssetImage
-                dex={profile.leadPokemon.dex}
-                assetRole="home-artwork"
-                alt={profile.leadPokemon.nickname}
-                loading="eager"
-                decoding="async"
-                fallbackLabel="?"
-              />
+        <div className="journey-zhoulia-card-stage" aria-live="polite">
+          {!result && !error ? (
+            <div className="journey-zhoulia-card-status">
+              <strong>REGISTRO VALIDADO — LIGA DE ZHOULIA</strong>
+              <span>Emitindo Trainer Card...</span>
             </div>
           ) : null}
 
-          <div className="journey-zhoulia-card-badges">
-            {profile.badges.slice(0, 8).map((badge) => (
-              <span
-                className={`journey-zhoulia-card-badge${badge.earned ? ' is-earned' : ''}`}
-                key={badge.key}
-                role="img"
-                aria-label={`${badge.name}: ${badge.earned ? 'conquistada' : 'não conquistada'}`}
-                title={badge.name}
-              >
-                {badge.earned && badge.assetUrl ? <img src={badge.assetUrl} alt="" aria-hidden="true" /> : <i aria-hidden="true" />}
-              </span>
-            ))}
+          {error ? (
+            <div className="journey-zhoulia-card-status is-error" role="alert">
+              <strong>EMISSÃO INTERROMPIDA</strong>
+              <span>{error}</span>
+              <button type="button" onClick={() => setRetryKey((value) => value + 1)}>
+                TENTAR NOVAMENTE
+              </button>
+            </div>
+          ) : null}
+
+          {result ? (
+            <img
+              className="journey-zhoulia-card-png"
+              src={result.pngUrl}
+              alt={`Trainer Card de ${profile.trainerName}`}
+              width="1448"
+              height="1086"
+              draggable={false}
+            />
+          ) : null}
+        </div>
+
+        {result ? (
+          <div className="journey-zhoulia-card-actions">
+            <button className="journey-zhoulia-card-download" type="button" onClick={download}>
+              BAIXAR PNG
+            </button>
+            <button className="journey-zhoulia-card-dismiss" type="button" onClick={onClose}>
+              FECHAR
+            </button>
           </div>
-        </article>
+        ) : null}
       </section>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { HubModuleHeader } from '../../components/HubModuleHeader';
 import type { PlayerPortalLocation } from '../../player-api/playerPortalClient';
 import type { PlayerPortalBrowserSessionState } from '../../player-api/playerPortalBrowserSession';
@@ -11,6 +11,13 @@ import {
   type JourneyBadgePreview,
 } from './journeyProfilePreview';
 import { ShareTrainerCardV2 } from './ShareTrainerCardV2';
+import {
+  getTrainerCardActionLabel,
+  getTrainerCardEmissionReadiness,
+  hasTrainerCardBeenEmitted,
+  TRAINER_CARD_EMITTED_EVENT,
+  type TrainerCardMissingField,
+} from './trainerCardEmissionState';
 import { usePlayerPortalLocation } from './usePlayerPortalLocation';
 import './journey-page.css';
 import './journey-page-review-fixes.css';
@@ -79,6 +86,18 @@ function useImagePreview(slot: ProfileImageSlot) {
 function displayValue(value: string | number | null, fallback: string) {
   if (value === null || value === '') return fallback;
   return String(value);
+}
+
+function missingTrainerCardLabel(field: TrainerCardMissingField) {
+  const labels: Record<TrainerCardMissingField, string> = {
+    name: 'nome',
+    title: 'título',
+    feat: 'Feat',
+    partner: 'parceiro',
+    idNo: 'ID',
+    photo: 'foto',
+  };
+  return labels[field];
 }
 
 function locationLabel(location: PlayerPortalLocation) {
@@ -203,8 +222,22 @@ export function JourneyPageV2({
   const avatar = useImagePreview('avatar');
   const [editing, setEditing] = useState(false);
   const [showShareCard, setShowShareCard] = useState(false);
+  const isZhoulia = profile.originRegion?.trim().toLowerCase() === 'zhoulia';
+  const [hasEmittedTrainerCard, setHasEmittedTrainerCard] = useState(() =>
+    isZhoulia ? hasTrainerCardBeenEmitted(profile.trainerId) : false,
+  );
+  const [trainerCardError, setTrainerCardError] = useState<string | null>(null);
   const imageError = cover.error ?? avatar.error;
-  const canEditProfileImages = showcase;
+  const canEditCover = showcase;
+  const canEditAvatar = showcase || (isZhoulia && Boolean(profile.publicVerificationId));
+  const canEditProfileImages = canEditCover || canEditAvatar;
+  const trainerCardReadiness = isZhoulia
+    ? getTrainerCardEmissionReadiness(profile, avatar.url)
+    : { ready: true, missing: [] as TrainerCardMissingField[] };
+  const trainerCardActionLabel = getTrainerCardActionLabel({
+    isZhoulia,
+    hasEmitted: hasEmittedTrainerCard,
+  });
   const hasPersonalDetails =
     profile.personal.age !== null ||
     profile.personal.height !== null ||
@@ -214,6 +247,27 @@ export function JourneyPageV2({
     locationState.status === 'loading' && playerPortalSession.status === 'authenticated'
       ? 'Carregando…'
       : displayValue(profile.currentLocation, 'Não disponível');
+
+  useEffect(() => {
+    if (!isZhoulia || !profile.trainerId) return;
+    const onEmitted = (event: Event) => {
+      const detail = (event as CustomEvent<{ trainerId?: string }>).detail;
+      if (detail?.trainerId === profile.trainerId) setHasEmittedTrainerCard(true);
+    };
+    window.addEventListener(TRAINER_CARD_EMITTED_EVENT, onEmitted);
+    return () => window.removeEventListener(TRAINER_CARD_EMITTED_EVENT, onEmitted);
+  }, [isZhoulia, profile.trainerId]);
+
+  const openTrainerCard = () => {
+    setTrainerCardError(null);
+    if (isZhoulia && !trainerCardReadiness.ready) {
+      const missing = trainerCardReadiness.missing.map(missingTrainerCardLabel).join(', ');
+      setTrainerCardError(`Complete o registro antes de emitir: ${missing}.`);
+      if (trainerCardReadiness.missing.includes('photo')) setEditing(true);
+      return;
+    }
+    setShowShareCard(true);
+  };
 
   return (
     <main className="journey-page">
@@ -260,7 +314,7 @@ export function JourneyPageV2({
             <span className="journey-cover-code" aria-hidden="true">
               PKM
             </span>
-            {editing && canEditProfileImages ? (
+            {editing && canEditCover ? (
               <label className="journey-cover-edit" title="Alterar capa">
                 <EditIcon />
                 <span>ALTERAR BANNER</span>
@@ -280,7 +334,7 @@ export function JourneyPageV2({
           <div className="journey-identity">
             <div className="journey-avatar-wrap">
               <TrainerAvatar avatarUrl={avatar.url} />
-              {editing && canEditProfileImages ? (
+              {editing && canEditAvatar ? (
                 <label className="journey-avatar-edit" title="Alterar foto de perfil">
                   <EditIcon />
                   <input
@@ -357,14 +411,18 @@ export function JourneyPageV2({
             <button
               className="journey-share-action"
               type="button"
-              onClick={() => setShowShareCard(true)}
+              onClick={openTrainerCard}
             >
               <span className="journey-share-action-icon">
                 <CardIcon />
               </span>
               <span className="journey-share-action-copy">
-                <strong>EMITIR TRAINER CARD</strong>
-                <small>Gerar a versão oficial para compartilhar</small>
+                <strong>{trainerCardActionLabel}</strong>
+                <small>
+                  {isZhoulia
+                    ? 'Gerar a versão oficial em PNG'
+                    : 'Abrir a versão oficial para compartilhar'}
+                </small>
               </span>
               <span className="journey-share-action-chevron">
                 <ChevronIcon />
@@ -378,9 +436,9 @@ export function JourneyPageV2({
           </div>
         </section>
 
-        {imageError ? (
+        {imageError || trainerCardError ? (
           <p className="journey-image-error" role="alert">
-            {imageError}
+            {imageError ?? trainerCardError}
           </p>
         ) : null}
 

@@ -1,0 +1,169 @@
+name: Trainer Card validation
+
+on:
+  push:
+    branches:
+      - feat/zhoulia-trainer-card-emission-v2
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+      - run: corepack enable
+      - run: corepack prepare pnpm@11.23.0 --activate
+      - run: pnpm install --ignore-scripts --no-frozen-lockfile
+      - name: Lint
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm check 2>&1 | tee /tmp/trainer-card-lint.log
+      - name: Upload lint diagnostics
+        if: failure()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: trainer-card-lint-diagnostics
+          path: /tmp/trainer-card-lint.log
+          if-no-files-found: error
+          retention-days: 2
+      - name: Typecheck
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm typecheck 2>&1 | tee /tmp/trainer-card-typecheck.log
+      - name: Upload typecheck diagnostics
+        if: failure()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: trainer-card-typecheck-diagnostics
+          path: /tmp/trainer-card-typecheck.log
+          if-no-files-found: error
+          retention-days: 2
+      - name: Unit tests
+        run: pnpm test:run --reporter=verbose
+      - name: Vite production build
+        run: pnpm exec vite build
+      - name: Browser visual UAT
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm exec vite --host 127.0.0.1 --port 4173 >/tmp/trainer-card-vite.log 2>&1 &
+          VITE_PID=$!
+          trap 'kill "$VITE_PID" 2>/dev/null || true' EXIT
+
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:4173/scripts/trainer-card-visual-uat.html >/dev/null; then
+              break
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              cat /tmp/trainer-card-vite.log
+              exit 1
+            fi
+            sleep 1
+          done
+
+          BROWSER="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          if [ -z "$BROWSER" ]; then
+            echo 'No Chrome/Chromium executable found on runner.'
+            exit 1
+          fi
+
+          "$BROWSER" \
+            --headless=new \
+            --no-sandbox \
+            --disable-gpu \
+            --hide-scrollbars \
+            --virtual-time-budget=25000 \
+            --dump-dom \
+            http://127.0.0.1:4173/scripts/trainer-card-visual-uat.html \
+            > /tmp/trainer-card-uat-dom.html
+
+          grep -q 'data-uat-ready="true"' /tmp/trainer-card-uat-dom.html || {
+            cat /tmp/trainer-card-uat-dom.html
+            cat /tmp/trainer-card-vite.log
+            exit 1
+          }
+          grep -q 'data-uat-fresh="true"' /tmp/trainer-card-uat-dom.html || {
+            cat /tmp/trainer-card-uat-dom.html
+            exit 1
+          }
+
+          "$BROWSER" \
+            --headless=new \
+            --no-sandbox \
+            --disable-gpu \
+            --hide-scrollbars \
+            --window-size=1536,1250 \
+            --virtual-time-budget=25000 \
+            --screenshot=/tmp/trainer-card-browser-uat.png \
+            http://127.0.0.1:4173/scripts/trainer-card-visual-uat.html
+
+          for VIEWPORT in 360,800 390,844; do
+            WIDTH="${VIEWPORT%,*}"
+            HEIGHT="${VIEWPORT#*,}"
+            LABEL="${WIDTH}x${HEIGHT}"
+            UAT_URL="http://127.0.0.1:4173/scripts/trainer-card-mobile-viewport-uat.html?width=${WIDTH}&height=${HEIGHT}"
+
+            "$BROWSER" \
+              --headless=new \
+              --no-sandbox \
+              --disable-gpu \
+              --hide-scrollbars \
+              --window-size=900,1000 \
+              --virtual-time-budget=35000 \
+              --dump-dom \
+              "$UAT_URL" \
+              > "/tmp/trainer-card-modal-${LABEL}.html"
+
+            grep -q 'data-viewport-ready="true"' "/tmp/trainer-card-modal-${LABEL}.html" || {
+              cat "/tmp/trainer-card-modal-${LABEL}.html"
+              cat /tmp/trainer-card-vite.log
+              exit 1
+            }
+            grep -q 'data-viewport-fresh="true"' "/tmp/trainer-card-modal-${LABEL}.html" || {
+              cat "/tmp/trainer-card-modal-${LABEL}.html"
+              exit 1
+            }
+            grep -q "data-viewport-child=\"${WIDTH}x${HEIGHT}\"" "/tmp/trainer-card-modal-${LABEL}.html" || {
+              cat "/tmp/trainer-card-modal-${LABEL}.html"
+              exit 1
+            }
+
+            "$BROWSER" \
+              --headless=new \
+              --no-sandbox \
+              --disable-gpu \
+              --hide-scrollbars \
+              --window-size=900,1000 \
+              --virtual-time-budget=35000 \
+              --screenshot="/tmp/trainer-card-modal-${LABEL}.png" \
+              "$UAT_URL"
+          done
+      - name: Upload browser visual UAT
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: trainer-card-browser-uat
+          path: |
+            /tmp/trainer-card-browser-uat.png
+            /tmp/trainer-card-uat-dom.html
+            /tmp/trainer-card-modal-360x800.png
+            /tmp/trainer-card-modal-360x800.html
+            /tmp/trainer-card-modal-390x844.png
+            /tmp/trainer-card-modal-390x844.html
+            /tmp/trainer-card-vite.log
+          if-no-files-found: warn
+          retention-days: 2
