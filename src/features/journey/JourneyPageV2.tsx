@@ -415,7 +415,7 @@ export function JourneyPageV2({
                     <strong>{activePlayer?.displayName ?? '—'}</strong>
                     <small>
                       {activePlayer
-                        ? `NV. ${activePlayer.level} · HP ${activePlayer.currentHp}/${activePlayer.maxHp}`
+                        ? `NV. ${activePlayer.level} · HP ${activePlayer.currentHp}/${activePlayer.maxHp} · ${activePlayer.conditions.length > 0 ? activePlayer.conditions.join(' · ') : 'OK'}`
                         : 'Sem combatente ativo'}
                     </small>
                   </div>
@@ -425,11 +425,25 @@ export function JourneyPageV2({
                     <strong>{activeOpponent?.displayName ?? '—'}</strong>
                     <small>
                       {activeOpponent
-                        ? `NV. ${activeOpponent.level} · HP ${activeOpponent.currentHp}/${activeOpponent.maxHp}`
+                        ? `NV. ${activeOpponent.level} · HP ${activeOpponent.currentHp}/${activeOpponent.maxHp} · ${activeOpponent.conditions.length > 0 ? activeOpponent.conditions.join(' · ') : 'OK'}`
                         : 'Sem combatente ativo'}
                     </small>
                   </div>
                 </div>
+                {activePlayer && activePlayer.moves.length > 0 ? (
+                  <div className="journey-battle-moves" aria-label="Movimentos do Pokémon ativo">
+                    {activePlayer.moves.map((move) => (
+                      <span key={move.slotNo}>
+                        <strong>{move.displayName ?? '—'}</strong>
+                        <small>
+                          {move.ppCurrent === null || move.maxPp === null
+                            ? 'PP —'
+                            : `PP ${move.ppCurrent}/${move.maxPp}`}
+                        </small>
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
                 <footer>
                   <span>CONSULTA SOMENTE LEITURA</span>
                   <strong>Continue as ações da batalha pelo WhatsApp.</strong>
