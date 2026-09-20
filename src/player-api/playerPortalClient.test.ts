@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   exchangePlayerPortalTicket,
+  getPlayerPortalInventory,
   getPlayerPortalLocation,
   getPlayerPortalSelf,
   type PlayerPortalProfile,
@@ -86,6 +87,59 @@ describe('getPlayerPortalSelf', () => {
 
     await expect(getPlayerPortalSelf(fetcher)).rejects.toThrow(
       'Player portal request failed (503)',
+    );
+  });
+});
+
+describe('getPlayerPortalInventory', () => {
+  it('reads authoritative item quantities through the same-origin BFF', async () => {
+    const inventory = [
+      {
+        itemId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        itemSlug: 'poke-ball',
+        displayName: 'Poké Ball',
+        quantity: '12',
+      },
+    ];
+    const fetcher = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ inventory }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+    );
+
+    await expect(getPlayerPortalInventory(fetcher)).resolves.toEqual({
+      status: 'authenticated',
+      inventory,
+    });
+    expect(fetcher).toHaveBeenCalledWith('/api/hub/player/inventory', {
+      method: 'GET',
+      credentials: 'include',
+      headers: { accept: 'application/json' },
+    });
+  });
+
+  it('rejects malformed inventory quantities', async () => {
+    const fetcher = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            inventory: [
+              {
+                itemId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+                itemSlug: 'poke-ball',
+                displayName: 'Poké Ball',
+                quantity: '-1',
+              },
+            ],
+          }),
+          { status: 200 },
+        ),
+    );
+
+    await expect(getPlayerPortalInventory(fetcher)).rejects.toThrow(
+      'Invalid player portal response',
     );
   });
 });
