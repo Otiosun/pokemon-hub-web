@@ -31,6 +31,7 @@ describe('product integrity routing', () => {
 
   it('keeps trainer inventory inside the Journey product surface', () => {
     expect(resolveProductRoute('/jornada/inventario')).toEqual({ kind: 'route' });
+    expect(resolveProductRoute('/jornada/movimentos')).toEqual({ kind: 'route' });
   });
 
   it('keeps Champion Store as a player-facing product route', () => {
