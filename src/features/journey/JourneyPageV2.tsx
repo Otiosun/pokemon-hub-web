@@ -445,8 +445,8 @@ export function JourneyPageV2({
                   </div>
                 ) : null}
                 <footer>
-                  <span>CONSULTA SOMENTE LEITURA</span>
-                  <strong>Continue as ações da batalha pelo WhatsApp.</strong>
+                  <span>ACOMPANHAMENTO</span>
+                  <strong>Continue a batalha pelo WhatsApp.</strong>
                 </footer>
               </section>
             );
