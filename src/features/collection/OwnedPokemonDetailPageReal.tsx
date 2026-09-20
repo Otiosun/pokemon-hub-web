@@ -4,6 +4,7 @@ import { HubModuleHeader } from '../../components/HubModuleHeader';
 import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
 import { TypeBadge } from '../../visual-assets/TypeBadge';
 import { GenerationsPokemonViewer } from '../asset-lab/GenerationsPokemonViewer';
+import { OwnedPokemonShiny3dViewer } from './OwnedPokemonShiny3dViewer';
 import { typeAccent } from '../pokemon-detail/fieldDexSpecies';
 import {
   readPokemonVisualPreference,
@@ -154,15 +155,27 @@ export function OwnedPokemonDetailPage({
           <div className={`owned-detail-visual${visualMode === '3d' ? ' is-3d' : ''}`}>
             {visualMode === '3d' && speciesSlug ? (
               <div className="owned-detail-viewer is-ready" aria-busy={!viewerReady}>
-                <GenerationsPokemonViewer
-                  species={speciesSlug}
-                  name={record.species}
-                  onReadyChange={setViewerReady}
-                  onFailedSpeciesChange={() => {
-                    setViewerReady(false);
-                    setVisualMode('2d');
-                  }}
-                />
+                {record.shiny && record.dex !== null ? (
+                  <OwnedPokemonShiny3dViewer
+                    dex={record.dex}
+                    name={record.species}
+                    onReadyChange={setViewerReady}
+                    onFailed={() => {
+                      setViewerReady(false);
+                      setVisualMode('2d');
+                    }}
+                  />
+                ) : (
+                  <GenerationsPokemonViewer
+                    species={speciesSlug}
+                    name={record.species}
+                    onReadyChange={setViewerReady}
+                    onFailedSpeciesChange={() => {
+                      setViewerReady(false);
+                      setVisualMode('2d');
+                    }}
+                  />
+                )}
               </div>
             ) : record.dex !== null ? (
               <div className="owned-detail-artwork">
