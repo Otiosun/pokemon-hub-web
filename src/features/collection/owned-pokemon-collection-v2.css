@@ -710,6 +710,83 @@
   opacity: 0.3;
 }
 
+.owned-roster-slot-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.owned-roster-slot-grid.is-team {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.owned-roster-slot-grid.is-box {
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+}
+
+.owned-roster-slot-grid button {
+  position: relative;
+  min-width: 0;
+  min-height: 88px;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 5px;
+  padding: 7px;
+  border: 1px solid rgba(198, 224, 227, 0.12);
+  border-radius: 12px;
+  color: #dceced;
+  background: rgba(20, 29, 32, 0.92);
+  cursor: pointer;
+}
+
+.owned-roster-slot-grid button:hover:not(:disabled) {
+  border-color: rgba(126, 218, 230, 0.42);
+}
+
+.owned-roster-slot-grid button > span {
+  color: #75878a;
+  font: 600 0.5rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+}
+
+.owned-roster-slot-grid button > div {
+  min-width: 0;
+  display: grid;
+  place-items: center;
+  gap: 4px;
+}
+
+.owned-roster-slot-grid button img,
+.owned-roster-slot-grid button .pokemon-asset-placeholder {
+  width: min(100%, 52px);
+  height: 46px;
+  object-fit: contain;
+}
+
+.owned-roster-slot-grid button strong {
+  max-width: 100%;
+  overflow: hidden;
+  color: #d6e4e5;
+  font: 650 0.62rem 'Space Grotesk', sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.owned-roster-slot-grid.is-box button {
+  min-height: 72px;
+  padding: 5px;
+}
+
+.owned-roster-slot-grid.is-box button img,
+.owned-roster-slot-grid.is-box button .pokemon-asset-placeholder {
+  width: 40px;
+  height: 36px;
+}
+
+.owned-roster-slot-grid.is-box button > div > strong:last-child {
+  color: #b9cbcd;
+  font-size: 0.48rem;
+}
+
 .owned-roster-slot-grid button.is-current {
   border-color: rgba(218, 91, 101, 0.34);
   background: rgba(79, 34, 39, 0.42);
@@ -753,11 +830,6 @@
 
   .owned-roster-slot-grid.is-box {
     grid-template-columns: repeat(6, minmax(0, 1fr));
-  }
-
-  .owned-roster-save {
-    width: 100%;
-    justify-self: stretch;
   }
 }
 
