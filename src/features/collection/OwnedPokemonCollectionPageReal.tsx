@@ -327,6 +327,7 @@ export function OwnedPokemonCollectionPage() {
       return;
     }
     setOrganizerPokemonId(candidate.instanceId);
+    if (candidate.boxNo !== null) setOrganizerBoxNo(candidate.boxNo);
     setLastMove(null);
     setOrganizerMessage(`${candidate.nickname} selecionado. Agora toque no slot de destino.`);
     setOrganizerStatus('idle');
