@@ -639,7 +639,6 @@ export function OwnedPokemonDetailPage({
               )}
             </section>
           ) : null}
-          </section>
         </div>
       </section>
     </main>
