@@ -20,6 +20,8 @@ const ONBOARDING_STATES = new Set([
 export type PlayerPortalTeamSlot = {
   pokemonInstanceId: string;
   formId: string;
+  formSlug?: string;
+  speciesSlug?: string;
   displayName: string | null;
   nationalDex: number | null;
   typeNames: string[];
@@ -53,6 +55,8 @@ export type PlayerPortalPokemonIvs = {
 export type PlayerPortalPokemon = {
   pokemonInstanceId: string;
   formId: string;
+  formSlug?: string;
+  speciesSlug?: string;
   displayName: string | null;
   nationalDex: number | null;
   typeNames: string[];
@@ -437,6 +441,8 @@ function isPlayerPortalTeamSlot(value: unknown): value is PlayerPortalTeamSlot {
   if (
     !isUuid(value.pokemonInstanceId) ||
     !isUuid(value.formId) ||
+    !isOptionalSlug(value.formSlug) ||
+    !isOptionalSlug(value.speciesSlug) ||
     !isCatalogPresentation(value) ||
     typeof value.level !== 'number' ||
     !Number.isInteger(value.level) ||
@@ -490,6 +496,8 @@ export function isPlayerPortalPokemon(value: unknown): value is PlayerPortalPoke
   if (
     !isUuid(value.pokemonInstanceId) ||
     !isUuid(value.formId) ||
+    !isOptionalSlug(value.formSlug) ||
+    !isOptionalSlug(value.speciesSlug) ||
     !isCatalogPresentation(value) ||
     !isNullableString(value.nickname) ||
     typeof value.level !== 'number' ||
@@ -737,6 +745,13 @@ function isNullableString(value: unknown): value is string | null {
 
 function isDisplayString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
+}
+
+function isOptionalSlug(value: unknown): value is string | undefined {
+  return (
+    value === undefined ||
+    (typeof value === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value))
+  );
 }
 
 function isNullableDisplayString(value: unknown): value is string | null {
