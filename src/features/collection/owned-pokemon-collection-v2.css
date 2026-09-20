@@ -812,7 +812,7 @@
 
 .owned-roster-feedback > button {
   flex: none;
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 12px;
   border: 1px solid rgba(139, 225, 231, 0.22);
   border-radius: 9px;
