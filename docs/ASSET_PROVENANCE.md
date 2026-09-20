@@ -31,15 +31,17 @@ Upstream license notice: MIT License, copyright (c) 2022 James Watkins. Keep thi
 
 ## Visual registry — current implementation
 
-`src/visual-assets/pokemonVisualRegistry.ts` centralizes the current 2D visual roles and their provider metadata:
+`src/visual-assets/pokemonVisualRegistry.ts` owns provider selection and fallback policy for 2D roles. Product components request a visual role and variant; they do not decide which unrelated provider to try next.
 
-- HOME artwork → species first paint / visual fallback;
-- official artwork → lightweight species record;
-- Generation VIII icon → lightweight navigation/index representation;
-- PMDCollab portrait → owned-Pokémon portrait context;
-- partywhale type symbols → semantic type UI.
+Current contracts:
 
-The Generations 3D delivery path remains isolated behind its existing asset-base/provider contract and still needs to be represented by the same high-level registry before the global AssetRegistry checklist item can be considered complete.
+- species artwork may degrade between official artwork and HOME artwork, then to a lightweight icon;
+- owned Team portraits stay inside the PMDCollab portrait family for both regular and shiny variants;
+- PMDCollab shiny portraits resolve through the repository's shiny path instead of silently switching to HOME artwork;
+- portrait failure falls back to the Hub placeholder, not to another visual language;
+- partywhale type symbols remain the semantic type UI source.
+
+`src/visual-assets/pokemon3dCapability.ts` resolves whether the generated 3D manifest actually contains a regular asset before the product offers 3D. Shiny 3D is explicitly unsupported until the Generations conversion pipeline emits a proven shiny model + materials + Idle bundle.
 
 ## Generations 3D — current contract
 
@@ -52,7 +54,7 @@ The previous spike preference for Pokémon 3D API as the primary 3D source is **
 - external/versioned asset delivery through `VITE_POKEMON_ASSET_BASE_URL`;
 - 2D catalog/Box/Time representations so multiple WebGL contexts are never required.
 
-Pokémon 3D API remains a historical spike/fallback candidate, not the primary architecture.
+The previous Pokémon 3D API product fallback has been removed from the player path. It remains historical research only; the UI must not switch to it when a Generations asset or variant is unavailable.
 
 ## Manifest / registry metadata
 
