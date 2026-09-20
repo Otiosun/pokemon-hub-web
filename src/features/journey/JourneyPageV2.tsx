@@ -483,6 +483,7 @@ export function JourneyPageV2({
                   dex={profile.leadPokemon.dex}
                   shiny={profile.leadPokemon.shiny}
                   formSlug={profile.leadPokemon.formSlug}
+                  speciesSlug={profile.leadPokemon.speciesSlug}
                   assetRole="home-artwork"
                   alt=""
                   loading="eager"
