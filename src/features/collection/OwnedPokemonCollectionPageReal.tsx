@@ -203,6 +203,23 @@ export function OwnedPokemonCollectionPage() {
       `#${String(speciesContextDex).padStart(3, '0')}`)
     : null;
 
+  const selectedOrganizerPokemon = organizerPokemonId
+    ? pokemon.find((item) => item.instanceId === organizerPokemonId) ?? null
+    : null;
+  const teamBySlot = useMemo(
+    () => new Map(team.map((item) => [item.teamSlot, item] as const)),
+    [team],
+  );
+  const boxBySlot = useMemo(
+    () =>
+      new Map(
+        pokemon
+          .filter((item) => item.boxNo === organizerBoxNo && item.storageSlot !== null)
+          .map((item) => [item.storageSlot, item] as const),
+      ),
+    [organizerBoxNo, pokemon],
+  );
+
   const clearSpeciesContext = () => {
     setSpeciesContextDex(null);
     const url = new URL(window.location.href);
@@ -244,8 +261,9 @@ export function OwnedPokemonCollectionPage() {
         return;
       }
 
-      setOrganizerMessage('Posição salva. Sincronizando coleção…');
-      window.location.reload();
+      collection.replacePokemon(result.pokemon);
+      setOrganizerStatus('idle');
+      setOrganizerMessage('Posição salva e coleção sincronizada.');
     } catch {
       setOrganizerStatus('error');
       setOrganizerMessage('Não foi possível salvar a posição agora. Nada foi alterado na tela.');
@@ -341,55 +359,104 @@ export function OwnedPokemonCollectionPage() {
                       <option value="BOX">Box</option>
                     </select>
                   </label>
-                  {organizerKind === 'TEAM' ? (
+                  {organizerKind === 'BOX' ? (
                     <label>
-                      <span>SLOT DO TIME</span>
-                      <select
-                        value={organizerTeamSlot}
-                        onChange={(event) => setOrganizerTeamSlot(Number(event.target.value))}
-                      >
-                        {[1, 2, 3, 4, 5, 6].map((slot) => (
-                          <option key={slot} value={slot}>
-                            Slot {slot}
-                          </option>
-                        ))}
-                      </select>
+                      <span>BOX Nº</span>
+                      <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={organizerBoxNo}
+                        onChange={(event) =>
+                          setOrganizerBoxNo(Math.max(1, Number(event.target.value) || 1))
+                        }
+                      />
                     </label>
-                  ) : (
-                    <>
-                      <label>
-                        <span>BOX Nº</span>
-                        <input
-                          type="number"
-                          min="1"
-                          step="1"
-                          value={organizerBoxNo}
-                          onChange={(event) =>
-                            setOrganizerBoxNo(Math.max(1, Number(event.target.value) || 1))
-                          }
-                        />
-                      </label>
-                      <label>
-                        <span>SLOT</span>
-                        <input
-                          type="number"
-                          min="1"
-                          step="1"
-                          value={organizerBoxSlot}
-                          onChange={(event) =>
-                            setOrganizerBoxSlot(Math.max(1, Number(event.target.value) || 1))
-                          }
-                        />
-                      </label>
-                    </>
-                  )}
-                  <button
-                    type="button"
-                    disabled={!organizerPokemonId || organizerStatus === 'saving'}
-                    onClick={() => void persistOrganizerMove()}
-                  >
-                    {organizerStatus === 'saving' ? 'SALVANDO…' : 'SALVAR POSIÇÃO'}
-                  </button>
+                  ) : null}
+                </div>
+
+                {organizerPokemonId ? (
+                  <div className="owned-roster-organizer">
+                    <div className="owned-roster-organizer-copy">
+                      <span>DESTINO</span>
+                      <strong>
+                        {organizerKind === 'TEAM'
+                          ? `TIME · SLOT ${String(organizerTeamSlot).padStart(2, '0')}`
+                          : `BOX ${organizerBoxNo} · SLOT ${String(organizerBoxSlot).padStart(2, '0')}`}
+                      </strong>
+                      {selectedOrganizerPokemon ? (
+                        <small>
+                          Movendo {selectedOrganizerPokemon.nickname} de {selectedOrganizerPokemon.box}
+                        </small>
+                      ) : null}
+                    </div>
+
+                    {organizerKind === 'TEAM' ? (
+                      <div className="owned-roster-slot-grid is-team" aria-label="Slots do time">
+                        {[1, 2, 3, 4, 5, 6].map((slot) => {
+                          const occupant = teamBySlot.get(slot) ?? null;
+                          return (
+                            <button
+                              key={slot}
+                              type="button"
+                              className={organizerTeamSlot === slot ? 'is-selected' : undefined}
+                              aria-pressed={organizerTeamSlot === slot}
+                              onClick={() => setOrganizerTeamSlot(slot)}
+                            >
+                              <span>{String(slot).padStart(2, '0')}</span>
+                              <div>
+                                {occupant ? (
+                                  <>
+                                    <PokemonVisual pokemon={occupant} assetRole="portrait" />
+                                    <strong>{occupant.nickname}</strong>
+                                  </>
+                                ) : (
+                                  <strong>VAZIO</strong>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="owned-roster-slot-grid is-box" aria-label={`Slots da Box ${organizerBoxNo}`}>
+                        {Array.from({ length: 30 }, (_, index) => index + 1).map((slot) => {
+                          const occupant = boxBySlot.get(slot) ?? null;
+                          return (
+                            <button
+                              key={slot}
+                              type="button"
+                              className={organizerBoxSlot === slot ? 'is-selected' : undefined}
+                              aria-pressed={organizerBoxSlot === slot}
+                              onClick={() => setOrganizerBoxSlot(slot)}
+                              title={occupant ? occupant.nickname : `Slot ${slot} vazio`}
+                            >
+                              <span>{String(slot).padStart(2, '0')}</span>
+                              <div>
+                                {occupant ? (
+                                  <PokemonVisual pokemon={occupant} assetRole="portrait" />
+                                ) : (
+                                  <strong>+</strong>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    <button
+                      className="owned-roster-save"
+                      type="button"
+                      disabled={!organizerPokemonId || organizerStatus === 'saving'}
+                      onClick={() => void persistOrganizerMove()}
+                    >
+                      {organizerStatus === 'saving' ? 'SALVANDO…' : 'CONFIRMAR POSIÇÃO'}
+                    </button>
+                  </div>
+                ) : null}
+
+                <div className="owned-pokemon-filter-strip owned-roster-save-legacy" aria-hidden="true">
                 </div>
                 {organizerMessage && (
                   <div className="owned-pokemon-runtime-note" role="status">
