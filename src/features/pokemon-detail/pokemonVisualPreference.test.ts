@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
-  readPokemonVisualPreference,
-  rememberPokemonVisualPreference,
+  readOwnedPokemonVisualPreference,
+  readPokedexVisualPreference,
+  rememberOwnedPokemonVisualPreference,
+  rememberPokedexVisualPreference,
   type PokemonVisualPreferenceStorage,
 } from './pokemonVisualPreference';
 
@@ -18,26 +20,29 @@ function createStorage(): PokemonVisualPreferenceStorage {
 }
 
 describe('pokemon visual preference', () => {
-  it('shares an explicit 3D preference across pokemon detail surfaces', () => {
+  it('keeps Pokédex and owned-Pokemon preferences isolated', () => {
     const storage = createStorage();
 
-    rememberPokemonVisualPreference('3d', storage);
+    rememberOwnedPokemonVisualPreference('3d', storage);
+    rememberPokedexVisualPreference('2d', storage);
 
-    expect(readPokemonVisualPreference('2d', storage)).toBe('3d');
-    expect(readPokemonVisualPreference('3d', storage)).toBe('3d');
+    expect(readOwnedPokemonVisualPreference('2d', storage)).toBe('3d');
+    expect(readPokedexVisualPreference('3d', storage)).toBe('2d');
   });
 
   it('keeps each surface fallback until the trainer explicitly chooses a mode', () => {
     const storage = createStorage();
 
-    expect(readPokemonVisualPreference('2d', storage)).toBe('2d');
-    expect(readPokemonVisualPreference('3d', storage)).toBe('3d');
+    expect(readOwnedPokemonVisualPreference('2d', storage)).toBe('2d');
+    expect(readPokedexVisualPreference('3d', storage)).toBe('3d');
   });
 
-  it('ignores an invalid stored value', () => {
+  it('ignores invalid stored values independently', () => {
     const storage = createStorage();
-    storage.setItem('pokemon-beyond:pokemon-visual-mode', 'cinema');
+    storage.setItem('pokemon-beyond:owned-pokemon-visual-mode', 'cinema');
+    storage.setItem('pokemon-beyond:pokedex-visual-mode', 'hologram');
 
-    expect(readPokemonVisualPreference('2d', storage)).toBe('2d');
+    expect(readOwnedPokemonVisualPreference('2d', storage)).toBe('2d');
+    expect(readPokedexVisualPreference('3d', storage)).toBe('3d');
   });
 });
