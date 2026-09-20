@@ -270,7 +270,7 @@ describe('getPlayerPortalInventory', () => {
 });
 
 describe('getPlayerPortalLocation', () => {
-  it('reads a minimal read-only location through the same-origin BFF', async () => {
+  it('reads safe read-only location routes without retaining hidden unlock keys', async () => {
     const location = {
       areaId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
       areaSlug: 'vila-dos-arrozais',
@@ -280,19 +280,37 @@ describe('getPlayerPortalLocation', () => {
       regionDisplayName: 'Zhoulia',
       safePoint: true,
       enteredAt: '2026-09-10T00:00:00.000Z',
+      connections: [
+        {
+          connectionId: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+          connectionKey: 'vila-campos',
+          destinationAreaId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+          destinationSlug: 'campos-de-yun',
+          destinationDisplayName: 'Campos de Yun',
+          available: false,
+        },
+      ],
+    };
+    const upstreamLocation = {
+      ...location,
+      revision: '7',
+      connections: location.connections.map((connection) => ({
+        ...connection,
+        missingUnlockKeys: ['story.secret-route-key'],
+      })),
     };
     const fetcher = vi.fn(
       async () =>
-        new Response(JSON.stringify({ location }), {
+        new Response(JSON.stringify({ location: upstreamLocation }), {
           status: 200,
           headers: { 'content-type': 'application/json' },
         }),
     );
 
-    await expect(getPlayerPortalLocation(fetcher)).resolves.toEqual({
-      status: 'authenticated',
-      location,
-    });
+    const result = await getPlayerPortalLocation(fetcher);
+    expect(result).toEqual({ status: 'authenticated', location });
+    expect(JSON.stringify(result)).not.toContain('story.secret-route-key');
+    expect(JSON.stringify(result)).not.toContain('missingUnlockKeys');
     expect(fetcher).toHaveBeenCalledWith('/api/hub/player/location', {
       method: 'GET',
       credentials: 'include',
