@@ -506,41 +506,101 @@
 }
 
 .owned-detail-moves {
-  margin-top: 22px;
+  margin-top: 0;
 }
 
-.owned-detail-moves header {
+.owned-detail-moves > header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  gap: 12px;
+  margin-bottom: 10px;
 }
 
-.owned-detail-moves header small {
+.owned-detail-moves > header small {
   color: #8b9497;
   font: 600 0.52rem 'IBM Plex Mono', monospace;
 }
 
-.owned-detail-moves article {
-  min-height: 56px;
+.owned-detail-move-grid {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+.owned-detail-move-grid > article {
+  min-width: 0;
+  display: grid;
+  gap: 11px;
+  padding: 14px;
+  border: 1px solid var(--owned-line);
+  border-radius: 14px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0.12)),
+    rgba(238, 237, 229, 0.72);
+}
+
+.owned-detail-move-grid > article > header {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.owned-detail-move-grid > article > header span {
+  color: var(--owned-muted);
+  font: 650 0.5rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+}
+
+.owned-detail-move-grid > article > header strong {
+  min-width: 0;
+  overflow: hidden;
+  font: 700 0.9rem 'Space Grotesk', sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.owned-detail-move-tags {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.owned-detail-move-tags > span {
+  color: #697478;
+  font: 650 0.5rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.06em;
+}
+
+.owned-detail-move-grid dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
   border-top: 1px solid var(--owned-line);
 }
 
-.owned-detail-moves article:last-of-type {
-  border-bottom: 1px solid var(--owned-line);
+.owned-detail-move-grid dl > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  padding-top: 10px;
 }
 
-.owned-detail-moves article > strong {
-  font: 650 0.8rem 'Space Grotesk', sans-serif;
+.owned-detail-move-grid dt,
+.owned-detail-move-grid dd {
+  margin: 0;
 }
 
-.owned-detail-moves article > span {
-  color: #707b7e;
-  font: 600 0.54rem 'IBM Plex Mono', monospace;
+.owned-detail-move-grid dt {
+  color: #7c8689;
+  font: 650 0.47rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.06em;
+}
+
+.owned-detail-move-grid dd {
+  font: 700 0.72rem 'Space Grotesk', sans-serif;
 }
 
 .owned-detail-history-row {
@@ -814,6 +874,13 @@
   background: rgba(31, 50, 54, 0.98);
 }
 
+.owned-detail-move-learning-options button.is-selected,
+.owned-detail-move-learning-options button[aria-pressed='true'] {
+  border-color: rgba(139, 225, 231, 0.72);
+  background: rgba(31, 57, 61, 0.98);
+  box-shadow: inset 0 0 0 1px rgba(139, 225, 231, 0.2);
+}
+
 .owned-detail-move-learning-options button.is-skip {
   border-style: dashed;
 }
@@ -836,10 +903,69 @@
   opacity: 0.48;
 }
 
+
+.owned-detail-move-confirm {
+  display: grid;
+  gap: 12px;
+  padding: 13px;
+  border: 1px solid rgba(139, 225, 231, 0.26);
+  border-radius: 12px;
+  background: rgba(8, 18, 20, 0.76);
+}
+
+.owned-detail-move-confirm > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.owned-detail-move-confirm > div:first-child span {
+  color: #86a6a9;
+  font: 650 0.5rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+}
+
+.owned-detail-move-confirm > div:first-child strong {
+  color: #edf8f8;
+  font: 650 0.76rem/1.35 'Space Grotesk', sans-serif;
+}
+
+.owned-detail-move-confirm > div:last-child {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 8px;
+}
+
+.owned-detail-move-confirm button {
+  min-height: 44px;
+  border: 1px solid rgba(220, 241, 241, 0.12);
+  border-radius: 10px;
+  color: #dce8e8;
+  background: rgba(31, 42, 45, 0.92);
+  cursor: pointer;
+  font: 650 0.55rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+.owned-detail-move-confirm button.is-confirm {
+  color: #102125;
+  border-color: rgba(139, 225, 231, 0.6);
+  background: #8be1e7;
+}
+
+.owned-detail-move-confirm button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
 @media (max-width: 560px) {
   .owned-detail-move-learning-options {
     grid-template-columns: 1fr;
   }
+
+  .owned-detail-move-grid {
+    grid-template-columns: 1fr;
+  }
+
 
   .owned-detail-move-learning > header {
     align-items: flex-start;
