@@ -216,6 +216,7 @@ export function ShareTrainerCardV2({
                 <OwnedPokemonImage
                   dex={profile.leadPokemon.dex}
                   shiny={profile.leadPokemon.shiny}
+                  formSlug={profile.leadPokemon.formSlug}
                   assetRole="home-artwork"
                   alt={profile.leadPokemon.nickname}
                   loading="eager"
