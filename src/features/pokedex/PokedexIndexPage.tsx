@@ -435,7 +435,7 @@ export function PokedexIndexPage() {
               const displayName = discovered ? item.name || `#${paddedDex}` : '???';
               return (
                 <a
-                  className={`pokedex-index-card is-${playerState.discovery}${hasShiny ? ' is-shiny-seen' : ''}`}
+                  className={`pokedex-index-card is-${playerState.discovery}${hasShiny ? ' is-shiny-seen' : ''}${visualVariant === 'shiny' && hasShiny ? ' is-shiny-visual' : ''}`}
                   key={item.dex}
                   href={`/pokedex/${paddedDex}`}
                   aria-label={discovered ? `Abrir registro de ${displayName}, número ${item.dex}${hasShiny ? ', shiny registrado' : ''}` : `Abrir registro desconhecido número ${item.dex}`}
