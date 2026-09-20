@@ -1,4 +1,8 @@
-import type { PlayerPortalPokemon } from '../../player-api/playerPortalClient';
+import type {
+  PlayerPortalPokemon,
+  PlayerPortalPokemonIvs,
+  PlayerPortalPokemonMove,
+} from '../../player-api/playerPortalClient';
 
 export type OwnedPokemonSex = 'M' | 'F' | '—';
 
@@ -8,7 +12,16 @@ export type OwnedPokemonView = {
   species: string;
   nickname: string;
   level: number;
+  xp: string;
+  xpToNextLevel: number;
   currentHp: number;
+  maxHp: number | null;
+  conditions: string[];
+  fainted: boolean;
+  nature: string | null;
+  ability: string | null;
+  ivs: PlayerPortalPokemonIvs;
+  moves: PlayerPortalPokemonMove[];
   types: string[];
   sex: OwnedPokemonSex;
   shiny: boolean;
@@ -37,7 +50,16 @@ export function createOwnedPokemonView(
       species,
       nickname,
       level: item.level,
+      xp: item.xp,
+      xpToNextLevel: item.xpToNextLevel,
       currentHp: item.currentHp,
+      maxHp: item.maxHp,
+      conditions: [...item.conditions],
+      fainted: item.currentHp === 0,
+      nature: item.natureDisplayName,
+      ability: item.abilityDisplayName,
+      ivs: { ...item.ivs },
+      moves: item.moves.map((move) => ({ ...move })),
       types: catalogResolved ? [...item.typeNames] : [],
       sex: item.gender === 'M' || item.gender === 'F' ? item.gender : '—',
       shiny: item.shiny,
