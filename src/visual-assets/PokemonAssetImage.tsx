@@ -21,6 +21,7 @@ type PokemonAssetImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 
   fallbackLabel?: string;
   variant?: PokemonVisualVariant;
   formSlug?: string;
+  speciesSlug?: string;
   onResolved?: (sourceRole: PokemonImageRole | 'placeholder') => void;
 };
 
@@ -206,6 +207,7 @@ export function PokemonAssetImage({
   fallbackLabel = '?',
   variant = 'regular',
   formSlug,
+  speciesSlug,
   className = '',
   onResolved,
   alt,
@@ -213,10 +215,10 @@ export function PokemonAssetImage({
   ...imageProps
 }: PokemonAssetImageProps) {
   const sources = useMemo(
-    () => getPokemonImageSources(dex, assetRole, variant, formSlug),
-    [assetRole, dex, formSlug, variant],
+    () => getPokemonImageSources(dex, assetRole, variant, formSlug, speciesSlug),
+    [assetRole, dex, formSlug, speciesSlug, variant],
   );
-  const sourceKey = `${dex}:${assetRole}:${variant}:${formSlug ?? 'unspecified'}`;
+  const sourceKey = `${dex}:${assetRole}:${variant}:${speciesSlug ?? 'species-unknown'}:${formSlug ?? 'form-unknown'}`;
   const [selection, setSelection] = useState<SourceSelection>({ key: sourceKey, index: 0 });
   const sourceIndex = selection.key === sourceKey ? selection.index : 0;
   const source = sources[sourceIndex];
@@ -288,6 +290,7 @@ export function PokemonAssetImage({
       data-asset-role={source.role}
       data-asset-provider={source.provider}
       data-pokemon-variant={variant}
+      data-pokemon-species={speciesSlug ?? 'unspecified'}
       data-pokemon-form={formSlug ?? 'unspecified'}
       data-alpha-normalized={alphaTransform ? 'true' : undefined}
       onLoad={(event) => {
