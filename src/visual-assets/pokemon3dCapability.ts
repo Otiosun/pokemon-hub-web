@@ -5,7 +5,13 @@ export type Pokemon3dCapabilityStatus = 'checking' | 'ready' | 'unsupported' | '
 
 export type Pokemon3dCapability = {
   status: Pokemon3dCapabilityStatus;
-  reason?: 'missing-identity' | 'variant-unsupported' | 'not-in-manifest' | 'manifest-unavailable';
+  reason?:
+    | 'missing-identity'
+    | 'form-identity-missing'
+    | 'form-unsupported'
+    | 'variant-unsupported'
+    | 'not-in-manifest'
+    | 'manifest-unavailable';
 };
 
 type ManifestAsset = {
@@ -36,16 +42,27 @@ export async function getPokemon3dCapability(
   {
     dex,
     species,
+    form,
     variant = 'regular',
   }: {
     dex: number | null;
     species: string | null;
+    form?: string | null;
     variant?: PokemonVisualVariant;
   },
   fetcher: Pokemon3dCapabilityFetcher = fetch,
 ): Promise<Pokemon3dCapability> {
   if (dex === null || !species) {
     return { status: 'unsupported', reason: 'missing-identity' };
+  }
+
+  // Species records intentionally omit form and represent the default species view.
+  // Owned Pokemon pass null when the older Hub API cannot prove their form identity.
+  if (form === null) {
+    return { status: 'unsupported', reason: 'form-identity-missing' };
+  }
+  if (form !== undefined && form !== 'default') {
+    return { status: 'unsupported', reason: 'form-unsupported' };
   }
 
   // The current Generations exporter only emits the default visual variant.
