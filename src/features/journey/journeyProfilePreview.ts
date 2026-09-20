@@ -24,6 +24,7 @@ export type JourneyLeadPokemonView = {
   level: number;
   types: string[];
   shiny: boolean;
+  formSlug: string | null;
 };
 
 export type JourneyProfilePreview = {
@@ -62,6 +63,7 @@ function resolveLeadPokemon(playerProfile: PlayerPortalProfile | null): JourneyL
     level: lead.level,
     types: [...lead.typeNames],
     shiny: lead.shiny,
+    formSlug: lead.formSlug ?? null,
   };
 }
 
