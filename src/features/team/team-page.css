@@ -379,3 +379,124 @@
   .team-slot-types .pokemon-type-badge { padding-inline: 4px; }
   .team-analysis { padding: 18px; }
 }
+
+.team-organizer {
+  width: min(1240px, 100%);
+  margin: 18px auto 0;
+  display: grid;
+  grid-template-columns: minmax(220px, 0.42fr) minmax(0, 1.58fr);
+  gap: 18px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid rgba(192, 226, 228, 0.12);
+  border-left: 4px solid rgba(101, 216, 232, 0.48);
+  background: #111719;
+}
+
+.team-organizer-copy {
+  display: grid;
+  gap: 5px;
+}
+
+.team-organizer-copy > span,
+.team-organizer-slots button > span {
+  color: #718487;
+  font: 650 0.46rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+}
+
+.team-organizer-copy > strong {
+  color: #edf6f5;
+  font: 700 0.92rem 'Space Grotesk', sans-serif;
+}
+
+.team-organizer-copy > small,
+.team-organizer > p {
+  margin: 0;
+  color: #8fa0a2;
+  font-size: 0.66rem;
+  line-height: 1.45;
+}
+
+.team-organizer-slots {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.team-organizer-slots button {
+  min-width: 0;
+  min-height: 84px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  place-items: center;
+  gap: 3px;
+  padding: 6px;
+  border: 1px solid rgba(192, 226, 228, 0.1);
+  border-radius: 10px;
+  color: #dce9e9;
+  background: #151e20;
+  cursor: pointer;
+}
+
+.team-organizer-slots button:hover:not(:disabled) {
+  border-color: rgba(101, 216, 232, 0.45);
+  background: #1a272a;
+}
+
+.team-organizer-slots button.is-selected {
+  border-color: #65d8e8;
+  box-shadow: inset 0 0 0 1px rgba(101, 216, 232, 0.24);
+  background: #1c3034;
+}
+
+.team-organizer-slots button:disabled {
+  cursor: default;
+  opacity: 0.42;
+}
+
+.team-organizer-slots img {
+  width: 48px;
+  height: 42px;
+  object-fit: contain;
+}
+
+.team-organizer-slots button > strong {
+  max-width: 100%;
+  overflow: hidden;
+  font: 650 0.56rem 'Space Grotesk', sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-organizer > p {
+  grid-column: 1 / -1;
+  padding-top: 10px;
+  border-top: 1px solid rgba(192, 226, 228, 0.08);
+  color: #8be1e7;
+}
+
+@media (max-width: 860px) {
+  .team-organizer {
+    grid-template-columns: 1fr;
+  }
+
+  .team-organizer-slots {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .team-organizer {
+    padding: 12px;
+  }
+
+  .team-organizer-slots {
+    gap: 5px;
+  }
+
+  .team-organizer-slots button {
+    min-height: 76px;
+  }
+}
+
