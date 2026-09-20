@@ -1335,3 +1335,113 @@
     border-bottom: 0;
   }
 }
+
+.journey-battle-card {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid rgba(139, 225, 231, 0.18);
+  border-radius: 14px;
+  background: rgba(16, 31, 34, 0.94);
+}
+
+.journey-battle-card > header,
+.journey-battle-card > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.journey-battle-card > header > div,
+.journey-battle-card > footer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.journey-battle-card span,
+.journey-battle-card small {
+  color: #809397;
+  font: 650 0.52rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.06em;
+}
+
+.journey-battle-card > header strong,
+.journey-battle-card > footer strong {
+  color: #e9f7f7;
+  font: 700 0.78rem 'Space Grotesk', sans-serif;
+}
+
+.journey-battle-matchup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 10px;
+}
+
+.journey-battle-matchup > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  padding: 11px;
+  border: 1px solid rgba(220, 241, 241, 0.08);
+  border-radius: 10px;
+  background: rgba(24, 35, 38, 0.92);
+}
+
+.journey-battle-matchup > div strong {
+  overflow: hidden;
+  color: #f1fbfb;
+  font: 700 0.85rem 'Space Grotesk', sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.journey-battle-matchup > b {
+  align-self: center;
+  color: #8be1e7;
+  font: 800 0.62rem 'IBM Plex Mono', monospace;
+}
+
+.journey-battle-moves {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.journey-battle-moves > span {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(220, 241, 241, 0.07);
+  border-radius: 9px;
+  background: rgba(20, 29, 32, 0.86);
+}
+
+.journey-battle-moves strong {
+  overflow: hidden;
+  color: #dfeff0;
+  font: 650 0.68rem 'Space Grotesk', sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .journey-battle-matchup {
+    grid-template-columns: 1fr;
+  }
+
+  .journey-battle-matchup > b {
+    justify-self: center;
+  }
+
+  .journey-battle-moves {
+    grid-template-columns: 1fr;
+  }
+}
+
