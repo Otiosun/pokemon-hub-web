@@ -85,6 +85,41 @@ export type PlayerPortalPokedexSpecies = {
   lastCaughtAt: string | null;
 };
 
+export type PlayerPortalBattleMove = {
+  slotNo: number;
+  displayName: string | null;
+  ppCurrent: number | null;
+  maxPp: number | null;
+};
+
+export type PlayerPortalBattleCombatant = {
+  sideNo: number;
+  playerSide: boolean;
+  active: boolean;
+  displayName: string | null;
+  level: number;
+  currentHp: number;
+  maxHp: number;
+  conditions: string[];
+  moves: PlayerPortalBattleMove[];
+};
+
+export type PlayerPortalBattle = {
+  battleType: 'WILD' | 'NPC' | 'PVP';
+  status:
+    | 'CREATED'
+    | 'ACTIVE'
+    | 'RESOLVING_TURN'
+    | 'WON'
+    | 'LOST'
+    | 'FLED'
+    | 'DRAW'
+    | 'CANCELLED';
+  turnNumber: number;
+  playerSideNo: number;
+  combatants: PlayerPortalBattleCombatant[];
+};
+
 export type PlayerPortalLocation = {
   areaId: string;
   areaSlug: string;
@@ -138,6 +173,10 @@ export type PlayerPortalLocationResult =
   | { status: 'authenticated'; location: PlayerPortalLocation }
   | { status: 'unauthenticated' }
   | { status: 'unavailable' };
+
+export type PlayerPortalBattleResult =
+  | { status: 'authenticated'; battle: PlayerPortalBattle | null }
+  | { status: 'unauthenticated' };
 
 export type PlayerPortalExchangeResult =
   | {
@@ -244,6 +283,26 @@ export async function getPlayerPortalInventory(
   }
 
   return { status: 'authenticated', inventory: body.inventory };
+}
+
+export async function getPlayerPortalBattle(
+  fetcher: PlayerPortalFetcher = fetch,
+): Promise<PlayerPortalBattleResult> {
+  const response = await fetcher('/api/hub/player/battle', {
+    method: 'GET',
+    credentials: 'include',
+    headers: { accept: 'application/json' },
+  });
+
+  if (response.status === 401) return { status: 'unauthenticated' };
+  if (!response.ok) throw new Error(`Player portal request failed (${response.status})`);
+
+  const body = await readJsonBody(response);
+  if (!isRecord(body) || (body.battle !== null && !isPlayerPortalBattle(body.battle))) {
+    throw new Error('Invalid player portal response');
+  }
+
+  return { status: 'authenticated', battle: body.battle };
 }
 
 export async function getPlayerPortalLocation(
@@ -468,6 +527,62 @@ function isPlayerPortalPokedexSpecies(value: unknown): value is PlayerPortalPoke
     isNullableIsoTimestamp(value.lastSeenAt) &&
     isNullableIsoTimestamp(value.firstCaughtAt) &&
     isNullableIsoTimestamp(value.lastCaughtAt)
+  );
+}
+
+function isPlayerPortalBattleMove(value: unknown): value is PlayerPortalBattleMove {
+  if (!isRecord(value)) return false;
+  return (
+    isPositiveInteger(value.slotNo) &&
+    value.slotNo <= 4 &&
+    isNullableDisplayString(value.displayName) &&
+    isNullableNonNegativeInteger(value.ppCurrent) &&
+    isNullableNonNegativeInteger(value.maxPp)
+  );
+}
+
+function isPlayerPortalBattleCombatant(
+  value: unknown,
+): value is PlayerPortalBattleCombatant {
+  if (!isRecord(value)) return false;
+  if (
+    !isPositiveInteger(value.sideNo) ||
+    typeof value.playerSide !== 'boolean' ||
+    typeof value.active !== 'boolean' ||
+    !isNullableDisplayString(value.displayName) ||
+    !isPositiveInteger(value.level) ||
+    value.level > 100 ||
+    !isNonNegativeInteger(value.currentHp) ||
+    !isPositiveInteger(value.maxHp) ||
+    value.currentHp > value.maxHp ||
+    !Array.isArray(value.conditions) ||
+    !value.conditions.every(isDisplayString) ||
+    !Array.isArray(value.moves) ||
+    value.moves.length > 4 ||
+    !value.moves.every(isPlayerPortalBattleMove)
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function isPlayerPortalBattle(value: unknown): value is PlayerPortalBattle {
+  if (!isRecord(value)) return false;
+  return (
+    (value.battleType === 'WILD' || value.battleType === 'NPC' || value.battleType === 'PVP') &&
+    (value.status === 'CREATED' ||
+      value.status === 'ACTIVE' ||
+      value.status === 'RESOLVING_TURN' ||
+      value.status === 'WON' ||
+      value.status === 'LOST' ||
+      value.status === 'FLED' ||
+      value.status === 'DRAW' ||
+      value.status === 'CANCELLED') &&
+    isNonNegativeInteger(value.turnNumber) &&
+    isPositiveInteger(value.playerSideNo) &&
+    Array.isArray(value.combatants) &&
+    value.combatants.length >= 2 &&
+    value.combatants.every(isPlayerPortalBattleCombatant)
   );
 }
 
