@@ -37,12 +37,12 @@ describe('Pokemon visual variants', () => {
 
 
   it('does not render base-species art for an explicitly non-default owned form', () => {
-    expect(getPokemonImageSources(386, 'official-artwork', 'regular', 'attack')).toEqual([]);
-    expect(getPokemonImageSources(386, 'portrait', 'shiny', 'speed')).toEqual([]);
+    expect(getPokemonImageSources(386, 'official-artwork', 'regular', 'attack', 'deoxys')).toEqual([]);
+    expect(getPokemonImageSources(386, 'portrait', 'shiny', 'speed', 'deoxys')).toEqual([]);
   });
 
   it('keeps default and rollout-legacy form identities on the base species pipeline', () => {
-    expect(getPokemonImageSources(386, 'official-artwork', 'regular', 'default')).not.toHaveLength(0);
+    expect(getPokemonImageSources(386, 'official-artwork', 'regular', 'deoxys', 'deoxys')).not.toHaveLength(0);
     expect(getPokemonImageSources(386, 'official-artwork', 'regular')).not.toHaveLength(0);
   });
 });
