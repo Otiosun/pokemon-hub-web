@@ -492,7 +492,7 @@ export function isPlayerPortalPokemon(value: unknown): value is PlayerPortalPoke
   }
 
   if (value.placementKind === 'BOX') {
-    return isPositiveInteger(value.boxNo);
+    return isPositiveInteger(value.boxNo) && value.slotNo <= 30;
   }
 
   return false;
