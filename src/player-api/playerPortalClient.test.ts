@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   exchangePlayerPortalTicket,
+  getPlayerPortalBattle,
   getPlayerPortalInventory,
   getPlayerPortalLocation,
   getPlayerPortalSelf,
@@ -88,6 +89,80 @@ describe('getPlayerPortalSelf', () => {
     await expect(getPlayerPortalSelf(fetcher)).rejects.toThrow(
       'Player portal request failed (503)',
     );
+  });
+});
+
+describe('getPlayerPortalBattle', () => {
+  it('reads the active battle as read-only player state', async () => {
+    const battle = {
+      battleType: 'WILD',
+      status: 'ACTIVE',
+      turnNumber: 3,
+      playerSideNo: 1,
+      combatants: [
+        {
+          sideNo: 1,
+          playerSide: true,
+          active: true,
+          displayName: 'Charmander',
+          level: 12,
+          currentHp: 20,
+          maxHp: 31,
+          conditions: [],
+          moves: [
+            {
+              slotNo: 1,
+              displayName: 'Scratch',
+              ppCurrent: 34,
+              maxPp: 35,
+            },
+          ],
+        },
+        {
+          sideNo: 2,
+          playerSide: false,
+          active: true,
+          displayName: 'Pidgey',
+          level: 7,
+          currentHp: 14,
+          maxHp: 18,
+          conditions: ['PARALYSIS'],
+          moves: [],
+        },
+      ],
+    };
+    const fetcher = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ battle }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+    );
+
+    await expect(getPlayerPortalBattle(fetcher)).resolves.toEqual({
+      status: 'authenticated',
+      battle,
+    });
+    expect(fetcher).toHaveBeenCalledWith('/api/hub/player/battle', {
+      method: 'GET',
+      credentials: 'include',
+      headers: { accept: 'application/json' },
+    });
+  });
+
+  it('accepts no active battle without fabricating one', async () => {
+    const fetcher = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ battle: null }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+    );
+
+    await expect(getPlayerPortalBattle(fetcher)).resolves.toEqual({
+      status: 'authenticated',
+      battle: null,
+    });
   });
 });
 
