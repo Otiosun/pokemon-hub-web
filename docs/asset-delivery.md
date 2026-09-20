@@ -51,6 +51,17 @@ Normal application deploys run only a representative converter smoke set. The sm
 
 Cloudflare R2 is the preferred candidate for the first hosted catalog because the generated Gen I-III catalog is roughly hundreds of MB, should not live in Git, and object delivery should not consume the application's deployment size budget. Storage/provider remains replaceable behind the base URL contract.
 
+For the first production catalog, point `VITE_POKEMON_ASSET_BASE_URL` at an immutable version root such as `https://<bucket>.r2.dev/pokemon/v1`. The frontend requests `manifest.json` from that root before enabling 3D for a species.
+
+The public asset origin must:
+
+- allow browser `GET`/`HEAD` from the Hub origins through CORS;
+- serve `manifest.json` and `asset.json` as JSON, `.glb` with a binary model content type, and textures as images;
+- cache versioned model/texture files immutably while allowing the versioned `manifest.json` to be refreshed;
+- keep published version paths immutable instead of replacing files underneath an existing `vN`.
+
+The Vercel CSP explicitly allows Cloudflare R2 public hosts (`*.r2.dev` and `*.cloudflarestorage.com`) for both fetches and textures. If a custom CDN hostname is introduced later, add that hostname to both `connect-src` and `img-src` in the same release that configures the new base URL. Cloudflare Worker previews do not use `vercel.json`, so their response-header policy must be kept equivalent if a CSP is added there later.
+
 ## RPG integration boundary
 
 Later the backend/API returns mechanical/player truth such as:
