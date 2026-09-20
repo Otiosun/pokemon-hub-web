@@ -84,6 +84,17 @@ describe('player portal move choices', () => {
     ).resolves.toEqual({ status: 'blocked' });
   });
 
+  it('treats a missing choice as stale instead of pretending it succeeded', async () => {
+    const fetcher = vi.fn(async () => new Response('{}', { status: 404 }));
+
+    await expect(
+      resolvePlayerPortalMoveChoice(
+        { choiceId: choice.choiceId, replaceSlotNo: null },
+        fetcher,
+      ),
+    ).resolves.toEqual({ status: 'stale' });
+  });
+
   it('rejects malformed pending choice payloads', async () => {
     const malformed = { ...choice, currentMoves: [{ ...choice.currentMoves[0], slotNo: 5 }] };
     const fetcher = vi.fn(
