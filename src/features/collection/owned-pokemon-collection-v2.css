@@ -533,3 +533,147 @@
     transition: none;
   }
 }
+
+.owned-roster-organizer {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(9, 15, 17, 0.7);
+}
+
+.owned-roster-organizer-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.owned-roster-organizer-copy > span,
+.owned-roster-slot-grid button > span {
+  color: #75878a;
+  font: 600 0.5rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+}
+
+.owned-roster-organizer-copy > strong {
+  color: #edf7f7;
+  font: 700 0.82rem 'Space Grotesk', sans-serif;
+}
+
+.owned-roster-organizer-copy > small {
+  color: #91a1a4;
+  font-size: 0.7rem;
+}
+
+.owned-roster-slot-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.owned-roster-slot-grid.is-team {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.owned-roster-slot-grid.is-box {
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+}
+
+.owned-roster-slot-grid button {
+  position: relative;
+  min-width: 0;
+  min-height: 88px;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 5px;
+  padding: 7px;
+  border: 1px solid rgba(198, 224, 227, 0.12);
+  border-radius: 12px;
+  color: #dceced;
+  background: rgba(20, 29, 32, 0.92);
+  cursor: pointer;
+}
+
+.owned-roster-slot-grid button:hover {
+  border-color: rgba(126, 218, 230, 0.42);
+}
+
+.owned-roster-slot-grid button.is-selected {
+  border-color: rgba(126, 218, 230, 0.88);
+  box-shadow: inset 0 0 0 1px rgba(126, 218, 230, 0.28);
+  background: rgba(31, 53, 57, 0.96);
+}
+
+.owned-roster-slot-grid button > div {
+  min-width: 0;
+  display: grid;
+  place-items: center;
+  gap: 4px;
+}
+
+.owned-roster-slot-grid button img {
+  width: min(100%, 52px);
+  height: 46px;
+  object-fit: contain;
+}
+
+.owned-roster-slot-grid button strong {
+  max-width: 100%;
+  overflow: hidden;
+  font: 650 0.62rem 'Space Grotesk', sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.owned-roster-slot-grid.is-box button {
+  min-height: 66px;
+  padding: 5px;
+}
+
+.owned-roster-slot-grid.is-box button img {
+  width: 38px;
+  height: 34px;
+}
+
+.owned-roster-slot-grid.is-box button strong {
+  color: #607174;
+  font-size: 0.9rem;
+}
+
+.owned-roster-save {
+  min-height: 44px;
+  justify-self: end;
+  padding: 0 18px;
+  border: 1px solid rgba(126, 218, 230, 0.32);
+  border-radius: 10px;
+  color: #0c1719;
+  background: #8be1e7;
+  cursor: pointer;
+  font: 700 0.64rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.06em;
+}
+
+.owned-roster-save:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+@media (max-width: 760px) {
+  .owned-roster-slot-grid.is-team {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .owned-roster-slot-grid.is-box {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .owned-roster-save {
+    width: 100%;
+    justify-self: stretch;
+  }
+}
+
+@media (max-width: 440px) {
+  .owned-roster-slot-grid.is-box {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
