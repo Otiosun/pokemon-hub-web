@@ -346,6 +346,15 @@ export function OwnedPokemonCollectionPage() {
   const moveSelectedPokemon = async (target: PlayerPortalRosterPlacement) => {
     if (!selectedOrganizerPokemon || organizerStatus === 'saving') return;
 
+    if (
+      target.placementKind === 'BOX' &&
+      selectedOrganizerPokemon.teamSlot !== null &&
+      team.length <= 1
+    ) {
+      setOrganizerMessage('O Time precisa manter pelo menos um Pokémon ativo.');
+      return;
+    }
+
     const current = placementForPokemon(selectedOrganizerPokemon);
     if (
       current.placementKind === target.placementKind &&
@@ -630,7 +639,15 @@ export function OwnedPokemonCollectionPage() {
                               disabled={
                                 !selectedOrganizerPokemon ||
                                 organizerStatus === 'saving' ||
-                                current
+                                current ||
+                                (selectedOrganizerPokemon.teamSlot !== null && team.length <= 1)
+                              }
+                              title={
+                                selectedOrganizerPokemon?.teamSlot !== null && team.length <= 1
+                                  ? 'O Time precisa manter pelo menos um Pokémon ativo'
+                                  : occupant
+                                    ? occupant.nickname
+                                    : `Slot ${slot} vazio`
                               }
                               onClick={() =>
                                 void moveSelectedPokemon({
@@ -639,7 +656,6 @@ export function OwnedPokemonCollectionPage() {
                                   slotNo: slot,
                                 })
                               }
-                              title={occupant ? occupant.nickname : `Slot ${slot} vazio`}
                             >
                               <span>{String(slot).padStart(2, '0')}</span>
                               <div>
