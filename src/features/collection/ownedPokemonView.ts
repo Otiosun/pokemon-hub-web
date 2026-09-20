@@ -26,6 +26,8 @@ export type OwnedPokemonView = {
   sex: OwnedPokemonSex;
   shiny: boolean;
   box: string;
+  boxNo: number | null;
+  storageSlot: number | null;
   teamSlot: number | null;
   catalogResolved: boolean;
 };
@@ -64,6 +66,8 @@ export function createOwnedPokemonView(
       sex: item.gender === 'M' || item.gender === 'F' ? item.gender : '—',
       shiny: item.shiny,
       box: item.placementKind === 'TEAM' ? 'TIME' : `BOX ${item.boxNo ?? '—'}`,
+      boxNo: item.placementKind === 'BOX' ? item.boxNo : null,
+      storageSlot: item.placementKind === 'BOX' ? item.slotNo : null,
       teamSlot: item.placementKind === 'TEAM' ? item.slotNo : null,
       catalogResolved,
     };
