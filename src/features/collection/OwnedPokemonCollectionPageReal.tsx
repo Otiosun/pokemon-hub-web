@@ -456,8 +456,6 @@ export function OwnedPokemonCollectionPage() {
                   </div>
                 ) : null}
 
-                <div className="owned-pokemon-filter-strip owned-roster-save-legacy" aria-hidden="true">
-                </div>
                 {organizerMessage && (
                   <div className="owned-pokemon-runtime-note" role="status">
                     <span aria-hidden="true" /> {organizerMessage}
