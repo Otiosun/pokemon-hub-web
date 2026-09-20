@@ -1,6 +1,8 @@
 import { getPokemonAssetUrl } from './assetBaseUrl';
 import { resolveTypeIconPath } from './TypeIcon';
 
+export type PokemonVisualVariant = 'regular' | 'shiny';
+
 export type PokemonSpeciesVisualAssets = {
   artworkHome: string;
   artworkOfficial: string;
@@ -61,8 +63,19 @@ export const POKEMON_VISUAL_PROVIDERS: Readonly<Record<VisualProviderId, {
 const POKEAPI_SPRITES_ROOT = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
 const PMD_PORTRAIT_ROOT = 'https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/portrait';
 
-export function getPokemonSpeciesVisualAssets(dex: number): PokemonSpeciesVisualAssets {
+export function getPokemonSpeciesVisualAssets(
+  dex: number,
+  variant: PokemonVisualVariant = 'regular',
+): PokemonSpeciesVisualAssets {
   const padded = String(dex).padStart(4, '0');
+  if (variant === 'shiny') {
+    return {
+      artworkHome: `${POKEAPI_SPRITES_ROOT}/other/home/shiny/${dex}.png`,
+      artworkOfficial: `${POKEAPI_SPRITES_ROOT}/other/official-artwork/shiny/${dex}.png`,
+      icon: `${POKEAPI_SPRITES_ROOT}/shiny/${dex}.png`,
+      portrait: `${POKEAPI_SPRITES_ROOT}/other/home/shiny/${dex}.png`,
+    };
+  }
   return {
     artworkHome: `${POKEAPI_SPRITES_ROOT}/other/home/${dex}.png`,
     artworkOfficial: `${POKEAPI_SPRITES_ROOT}/other/official-artwork/${dex}.png`,

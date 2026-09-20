@@ -6,7 +6,10 @@ import {
   type CSSProperties,
   type ImgHTMLAttributes,
 } from 'react';
-import { getPokemonSpeciesVisualAssets } from './pokemonVisualRegistry';
+import {
+  getPokemonSpeciesVisualAssets,
+  type PokemonVisualVariant,
+} from './pokemonVisualRegistry';
 import './pokemon-asset-image.css';
 
 export type PokemonImageRole = 'official-artwork' | 'home-artwork' | 'icon' | 'portrait';
@@ -15,6 +18,7 @@ type PokemonAssetImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 
   dex: number;
   assetRole: PokemonImageRole;
   fallbackLabel?: string;
+  variant?: PokemonVisualVariant;
   onResolved?: (sourceRole: PokemonImageRole | 'placeholder') => void;
 };
 
@@ -50,8 +54,12 @@ const ALPHA_PADDING_RATIO = 0.035;
 const ALPHA_FILL_RATIO = 0.94;
 const alphaBoundsCache = new Map<string, Promise<PokemonAlphaBounds | null>>();
 
-function sourceOrder(dex: number, assetRole: PokemonImageRole) {
-  const visual = getPokemonSpeciesVisualAssets(dex);
+function sourceOrder(
+  dex: number,
+  assetRole: PokemonImageRole,
+  variant: PokemonVisualVariant,
+) {
+  const visual = getPokemonSpeciesVisualAssets(dex, variant);
   const sources: Record<PokemonImageRole, Array<{ role: PokemonImageRole; src: string }>> = {
     'official-artwork': [
       { role: 'official-artwork', src: visual.artworkOfficial },
@@ -226,14 +234,18 @@ export function PokemonAssetImage({
   dex,
   assetRole,
   fallbackLabel = '?',
+  variant = 'regular',
   className = '',
   onResolved,
   alt,
   style,
   ...imageProps
 }: PokemonAssetImageProps) {
-  const sources = useMemo(() => sourceOrder(dex, assetRole), [assetRole, dex]);
-  const sourceKey = `${dex}:${assetRole}`;
+  const sources = useMemo(
+    () => sourceOrder(dex, assetRole, variant),
+    [assetRole, dex, variant],
+  );
+  const sourceKey = `${dex}:${assetRole}:${variant}`;
   const [selection, setSelection] = useState<SourceSelection>({ key: sourceKey, index: 0 });
   const sourceIndex = selection.key === sourceKey ? selection.index : 0;
   const source = sources[sourceIndex];
@@ -303,6 +315,7 @@ export function PokemonAssetImage({
       alt={alt}
       style={normalizedStyle}
       data-asset-role={source.role}
+      data-pokemon-variant={variant}
       data-alpha-normalized={alphaTransform ? 'true' : undefined}
       onLoad={(event) => {
         const loadedSource = source.src;

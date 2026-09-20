@@ -58,6 +58,7 @@ function PokemonVisual({
     <PokemonAssetImage
       dex={pokemon.dex}
       assetRole={assetRole}
+      variant={pokemon.shiny ? 'shiny' : 'regular'}
       alt=""
       aria-hidden="true"
       loading={assetRole === 'portrait' ? 'eager' : 'lazy'}

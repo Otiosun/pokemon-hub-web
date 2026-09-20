@@ -169,6 +169,7 @@ export function OwnedPokemonDetailPage({
                 <PokemonAssetImage
                   dex={record.dex}
                   assetRole="official-artwork"
+                  variant={record.shiny ? 'shiny' : 'regular'}
                   alt={`Ilustração de ${record.species}`}
                   fallbackLabel={record.species.slice(0, 1)}
                   decoding="async"
@@ -184,7 +185,7 @@ export function OwnedPokemonDetailPage({
               <a href={`/pokemon/${previous.instanceId}`} className="is-previous" aria-label={`Abrir ${previous.nickname}`}>
                 <SideArrow direction="left" />
                 {previous.dex !== null ? (
-                  <PokemonAssetImage dex={previous.dex} assetRole="icon" alt="" aria-hidden="true" loading="lazy" decoding="async" />
+                  <PokemonAssetImage dex={previous.dex} assetRole="icon" variant={previous.shiny ? 'shiny' : 'regular'} alt="" aria-hidden="true" loading="lazy" decoding="async" />
                 ) : <strong aria-hidden="true">?</strong>}
                 <span><small>ANTERIOR</small><strong>{previous.nickname}</strong></span>
               </a>
@@ -193,7 +194,7 @@ export function OwnedPokemonDetailPage({
               <a href={`/pokemon/${next.instanceId}`} className="is-next" aria-label={`Abrir ${next.nickname}`}>
                 <span><small>PRÓXIMO</small><strong>{next.nickname}</strong></span>
                 {next.dex !== null ? (
-                  <PokemonAssetImage dex={next.dex} assetRole="icon" alt="" aria-hidden="true" loading="lazy" decoding="async" />
+                  <PokemonAssetImage dex={next.dex} assetRole="icon" variant={next.shiny ? 'shiny' : 'regular'} alt="" aria-hidden="true" loading="lazy" decoding="async" />
                 ) : <strong aria-hidden="true">?</strong>}
                 <SideArrow direction="right" />
               </a>

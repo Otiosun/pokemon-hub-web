@@ -14,6 +14,15 @@ describe('external Pokemon 3D resolver', () => {
     );
   });
 
+  it('maps shiny variants to the shiny 3D asset category', () => {
+    expect(getExternalPokemon3dModelUrl(1, 'shiny')).toBe(
+      'https://raw.githubusercontent.com/Pokemon-3D-api/assets/main/models/opt/shiny/1.glb',
+    );
+    expect(getExternalPokemon3dModelUrl(197, 'shiny')).toBe(
+      'https://raw.githubusercontent.com/Pokemon-3D-api/assets/main/models/opt/shiny/197.glb',
+    );
+  });
+
   it('rejects invalid dex ids', () => {
     expect(getExternalPokemon3dModelUrl(0)).toBeNull();
     expect(getExternalPokemon3dModelUrl(387)).toBeNull();
