@@ -973,3 +973,48 @@
   }
 }
 
+
+
+.owned-detail-model-status {
+  position: absolute;
+  z-index: 5;
+  right: 14px;
+  bottom: 14px;
+  left: 14px;
+  display: grid;
+  gap: 7px;
+  padding: 12px;
+  border: 1px solid rgba(211, 232, 233, 0.14);
+  border-radius: 14px;
+  background: rgba(6, 12, 14, 0.78);
+  color: #e5f1f1;
+  backdrop-filter: blur(10px);
+}
+
+.owned-detail-model-status strong {
+  font: 700 0.68rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.owned-detail-model-status > span {
+  color: rgba(223, 239, 240, 0.66);
+  font: 500 0.58rem/1.45 'IBM Plex Mono', monospace;
+}
+
+.owned-detail-model-status > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.owned-detail-model-status button {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid rgba(221, 239, 240, 0.14);
+  border-radius: 10px;
+  color: #edf7f7;
+  background: rgba(255, 255, 255, 0.055);
+  font: 700 0.56rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.045em;
+}
