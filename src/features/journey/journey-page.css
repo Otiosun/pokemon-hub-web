@@ -1445,3 +1445,57 @@
   }
 }
 
+.journey-route-overview {
+  display: grid;
+  gap: 9px;
+  margin-top: 10px;
+}
+
+.journey-route-overview > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.journey-route-overview > header span,
+.journey-route-overview > header small,
+.journey-route-overview article small {
+  color: #7f9194;
+  font: 650 0.5rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.07em;
+}
+
+.journey-route-overview > div {
+  display: grid;
+  gap: 6px;
+}
+
+.journey-route-overview article {
+  min-height: 42px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border: 1px solid rgba(220, 241, 241, 0.08);
+  border-radius: 9px;
+  background: rgba(20, 29, 32, 0.8);
+}
+
+.journey-route-overview article > span {
+  color: #8be1e7;
+}
+
+.journey-route-overview article strong {
+  overflow: hidden;
+  color: #dcebec;
+  font: 650 0.7rem 'Space Grotesk', sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.journey-route-overview article:has(small:last-child) small {
+  text-align: right;
+}
+
