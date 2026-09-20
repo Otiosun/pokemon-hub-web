@@ -71,6 +71,7 @@ describe('advanced showcase', () => {
     expect(pokemon.some((entry) => entry.placementKind === 'BOX' && entry.boxNo === 3)).toBe(true);
     expect(pokemon.every((entry) => entry.maxHp !== null && entry.currentHp <= entry.maxHp)).toBe(true);
     expect(pokemon.every((entry) => entry.moves.length === 4)).toBe(true);
+    expect(pokemon.every((entry) => entry.formSlug === entry.speciesSlug)).toBe(true);
     expect(pokemon.every((entry) => entry.xpToNextLevel > Number(entry.xp))).toBe(true);
   });
 
