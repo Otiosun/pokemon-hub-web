@@ -29,6 +29,10 @@ describe('product integrity routing', () => {
     expect(resolveProductRoute('/pokedex/abc')).toEqual({ kind: 'not-found' });
   });
 
+  it('keeps trainer inventory inside the Journey product surface', () => {
+    expect(resolveProductRoute('/jornada/inventario')).toEqual({ kind: 'route' });
+  });
+
   it('keeps Champion Store as a player-facing product route', () => {
     expect(resolveProductRoute('/champion-store')).toEqual({ kind: 'route' });
   });
