@@ -1,8 +1,8 @@
 import { isAdvancedShowcaseActive } from '../showcase/advancedShowcase';
 import type {
   PlayerPortalFetcher,
-  PlayerPortalPokemon,
   PlayerPortalPokemonResult,
+  isPlayerPortalPokemon,
 } from './playerPortalClient';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -49,7 +49,7 @@ export async function movePlayerPortalPokemon(
     throw new Error('Invalid player portal roster response');
   }
 
-  if (!isRecord(body) || !Array.isArray(body.pokemon) || !body.pokemon.every(isPokemon)) {
+  if (!isRecord(body) || !Array.isArray(body.pokemon) || !body.pokemon.every(isPlayerPortalPokemon)) {
     throw new Error('Invalid player portal roster response');
   }
 
@@ -67,34 +67,6 @@ function isRosterMoveInput(value: unknown): value is PlayerPortalRosterMoveInput
     return isPositiveInteger(value.target.boxNo) && isPositiveInteger(value.target.slotNo);
   }
 
-  return false;
-}
-
-function isPokemon(value: unknown): value is PlayerPortalPokemon {
-  if (!isRecord(value)) return false;
-  if (
-    !isUuid(value.pokemonInstanceId) ||
-    !isUuid(value.formId) ||
-    !isNullableDisplayName(value.displayName) ||
-    !isNullableDex(value.nationalDex) ||
-    !Array.isArray(value.typeNames) ||
-    !value.typeNames.every((type) => typeof type === 'string' && type.trim().length > 0) ||
-    !isNullableString(value.nickname) ||
-    !isPositiveInteger(value.level) ||
-    !isNonNegativeInteger(value.currentHp) ||
-    !isNullableString(value.gender) ||
-    typeof value.shiny !== 'boolean' ||
-    !isPositiveInteger(value.slotNo)
-  ) {
-    return false;
-  }
-
-  if (value.placementKind === 'TEAM') {
-    return value.boxNo === null && value.slotNo <= 6;
-  }
-  if (value.placementKind === 'BOX') {
-    return isPositiveInteger(value.boxNo);
-  }
   return false;
 }
 
