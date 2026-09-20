@@ -13,7 +13,14 @@ export function SpeciesPokemonImage({
 
 export function OwnedPokemonImage({
   shiny,
+  formSlug,
   ...props
-}: PokemonImageProps & { shiny: boolean }) {
-  return <PokemonAssetImage {...props} variant={shiny ? 'shiny' : 'regular'} />;
+}: PokemonImageProps & { shiny: boolean; formSlug?: string | null }) {
+  return (
+    <PokemonAssetImage
+      {...props}
+      formSlug={formSlug ?? undefined}
+      variant={shiny ? 'shiny' : 'regular'}
+    />
+  );
 }
