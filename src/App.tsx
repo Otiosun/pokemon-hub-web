@@ -36,10 +36,6 @@ const TeamPage = lazy(() =>
 const InventoryPage = lazy(() =>
   import('./features/inventory/InventoryPage').then((module) => ({ default: module.InventoryPage })),
 );
-const MoveLearningPage = lazy(() =>
-  import('./features/moves/MoveLearningPage').then((module) => ({ default: module.MoveLearningPage })),
-);
-
 
 type ChampionStoreOffer = {
   code: string;
@@ -667,16 +663,6 @@ export function App() {
     return (
       <HubFrame active="store" destinations={hubDestinations}>
         <ChampionStorePage />
-      </HubFrame>
-    );
-  }
-
-  if (path === '/jornada/movimentos' || path === '/jornada/movimentos/') {
-    return (
-      <HubFrame active="journey" destinations={hubDestinations}>
-        <Suspense fallback={<RouteFallback module="journey" label="ABRINDO MOVIMENTOS" />}>
-          <MoveLearningPage />
-        </Suspense>
       </HubFrame>
     );
   }
