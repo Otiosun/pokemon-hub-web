@@ -54,6 +54,36 @@
   line-height: 1.55;
 }
 
+.team-header-actions {
+  flex: none;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.team-header-actions > button {
+  min-height: 52px;
+  padding: 0 16px;
+  border: 1px solid rgba(101, 216, 232, 0.22);
+  border-bottom: 3px solid rgba(101, 216, 232, 0.36);
+  color: #a9dfe3;
+  background: #12191b;
+  cursor: pointer;
+  font: 700 0.54rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.06em;
+}
+
+.team-header-actions > button.is-active {
+  color: #101d20;
+  border-color: #65d8e8;
+  background: #8be1e7;
+}
+
+.team-header-actions > button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
 .team-readout {
   flex: none;
   min-width: 150px;
@@ -128,6 +158,12 @@
 
 .team-slot-open {
   grid-column: 2 / -1;
+  width: 100%;
+  appearance: none;
+  padding: 0;
+  border: 0;
+  font: inherit;
+  text-align: left;
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 14px;
@@ -140,6 +176,49 @@
 .team-slot-open:focus-visible {
   outline: 2px solid rgba(101, 216, 232, 0.7);
   outline-offset: -2px;
+}
+
+button.team-slot-open {
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+button.team-slot-open:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.team-slot.is-selected {
+  border-color: #65d8e8;
+  box-shadow:
+    inset 3px 0 0 #65d8e8,
+    inset 0 0 0 1px rgba(101, 216, 232, 0.2);
+  background-color: #182729;
+}
+
+.team-slot.is-empty {
+  --slot-accent: #4c5b5e;
+}
+
+.team-slot-empty {
+  grid-column: 1 / -1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 5px;
+  min-height: 140px;
+  color: #526568;
+  text-align: center;
+}
+
+.team-slot-empty strong {
+  font: 700 0.76rem 'Space Grotesk', sans-serif;
+}
+
+.team-slot-empty span {
+  font: 650 0.46rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
 }
 
 .team-slot-visual {
@@ -337,6 +416,13 @@
     flex-direction: column;
   }
 
+  .team-header-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .team-header-actions > button,
   .team-readout {
     width: 100%;
     text-align: left;
@@ -378,6 +464,278 @@
   .team-slot-types .pokemon-type-badge span:last-child { display: none; }
   .team-slot-types .pokemon-type-badge { padding-inline: 4px; }
   .team-analysis { padding: 18px; }
+}
+
+.team-edit-status {
+  width: min(1240px, 100%);
+  margin: 18px auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 16px;
+  border: 1px solid rgba(101, 216, 232, 0.16);
+  border-left: 4px solid #65d8e8;
+  background: #11191b;
+}
+
+.team-edit-status > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.team-edit-status span,
+.team-box-picker > header > div > span,
+.team-box-picker label > span {
+  color: #718487;
+  font: 650 0.48rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+}
+
+.team-edit-status strong {
+  color: #edf6f5;
+  font: 700 0.9rem 'Space Grotesk', sans-serif;
+}
+
+.team-edit-status small {
+  color: #8fa0a2;
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.team-edit-status > button {
+  flex: none;
+  min-height: 44px;
+  padding: 0 13px;
+  border: 1px solid rgba(217, 67, 63, 0.28);
+  border-radius: 9px;
+  color: #e5a8aa;
+  background: rgba(90, 26, 28, 0.24);
+  cursor: pointer;
+  font: 700 0.5rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+.team-edit-status > button:disabled {
+  cursor: wait;
+  opacity: 0.45;
+}
+
+.team-box-picker {
+  width: min(1240px, 100%);
+  margin: 12px auto 0;
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid rgba(192, 226, 228, 0.12);
+  background:
+    linear-gradient(rgba(192, 229, 231, 0.018) 1px, transparent 1px) 0 0 / 32px 32px,
+    #111719;
+}
+
+.team-box-picker > header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(210px, 0.38fr);
+  gap: 18px;
+  align-items: end;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(192, 226, 228, 0.09);
+}
+
+.team-box-picker > header > div {
+  display: grid;
+  gap: 4px;
+}
+
+.team-box-picker > header > div > strong {
+  color: #edf6f5;
+  font: 700 1.05rem 'Space Grotesk', sans-serif;
+}
+
+.team-box-picker > header > div > small {
+  color: #87999c;
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.team-box-picker label {
+  display: grid;
+  gap: 6px;
+}
+
+.team-box-picker input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(192, 226, 228, 0.12);
+  border-radius: 9px;
+  outline: none;
+  color: #e7f1f1;
+  background: #151e20;
+  font: 600 0.7rem 'IBM Plex Sans', sans-serif;
+}
+
+.team-box-picker input:focus {
+  border-color: rgba(101, 216, 232, 0.62);
+  box-shadow: 0 0 0 2px rgba(101, 216, 232, 0.08);
+}
+
+.team-box-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px;
+}
+
+.team-box-grid > button {
+  min-width: 0;
+  min-height: 82px;
+  display: grid;
+  grid-template-columns: 66px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 9px;
+  border: 1px solid rgba(192, 226, 228, 0.1);
+  border-radius: 11px;
+  color: #ddeaea;
+  background: #151e20;
+  cursor: pointer;
+  text-align: left;
+}
+
+.team-box-grid > button:hover:not(:disabled),
+.team-box-grid > button:focus-visible:not(:disabled) {
+  border-color: rgba(101, 216, 232, 0.42);
+  background: #1a272a;
+}
+
+.team-box-grid > button.is-selected {
+  border-color: #65d8e8;
+  box-shadow: inset 0 0 0 1px rgba(101, 216, 232, 0.22);
+  background: #1c3034;
+}
+
+.team-box-grid > button:disabled {
+  cursor: wait;
+  opacity: 0.52;
+}
+
+.team-box-portrait {
+  min-width: 0;
+  display: grid;
+  place-items: center;
+}
+
+.team-box-portrait img,
+.team-box-portrait .pokemon-asset-placeholder {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.team-box-grid > button > div:last-child {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.team-box-grid > button strong {
+  overflow: hidden;
+  font: 700 0.78rem 'Space Grotesk', sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-box-grid > button span,
+.team-box-grid > button small {
+  overflow: hidden;
+  color: #829497;
+  font-size: 0.58rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-box-grid > button small {
+  color: #64777a;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.48rem;
+}
+
+.team-box-picker > p {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid rgba(101, 216, 232, 0.52);
+  color: #a8c9cc;
+  background: rgba(101, 216, 232, 0.05);
+  font-size: 0.68rem;
+}
+
+.team-box-empty {
+  min-height: 88px;
+  display: grid;
+  place-items: center;
+  color: #708285;
+  border: 1px dashed rgba(192, 226, 228, 0.1);
+  font-size: 0.7rem;
+}
+
+.team-box-picker > footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.team-box-picker > footer a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  color: #8be1e7;
+  text-decoration: none;
+  font: 700 0.52rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+@media (max-width: 700px) {
+  .team-edit-status {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .team-edit-status > button {
+    width: 100%;
+  }
+
+  .team-box-picker > header {
+    grid-template-columns: 1fr;
+  }
+
+  .team-box-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .team-box-grid > button {
+    min-height: 118px;
+    grid-template-columns: 1fr;
+    align-content: center;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .team-box-grid > button > div:last-child {
+    width: 100%;
+    justify-items: center;
+  }
+}
+
+@media (max-width: 420px) {
+  .team-box-picker {
+    padding: 12px;
+  }
+
+  .team-box-grid {
+    gap: 6px;
+  }
 }
 
 .team-organizer {
