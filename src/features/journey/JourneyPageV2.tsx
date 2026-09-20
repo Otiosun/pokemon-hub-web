@@ -3,6 +3,7 @@ import { HubModuleHeader } from '../../components/HubModuleHeader';
 import type { PlayerPortalLocation } from '../../player-api/playerPortalClient';
 import type { PlayerPortalBrowserSessionState } from '../../player-api/playerPortalBrowserSession';
 import { useOwnedPokemonCollection } from '../collection/useOwnedPokemonCollection';
+import { usePlayerPortalMoveChoices } from '../collection/usePlayerPortalMoveChoices';
 import { usePlayerPortalPokedex } from '../pokedex/usePlayerPortalPokedex';
 import { isAdvancedShowcaseActive } from '../../showcase/advancedShowcase';
 import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
@@ -63,15 +64,6 @@ function BagIcon() {
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M7 9h10l2 11H5L7 9Z" />
       <path d="M9 9V6.5a3 3 0 0 1 6 0V9" />
-    </svg>
-  );
-}
-
-function MoveIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M5 19 19 5M8 5h11v11" />
-      <path d="M5 10v9h9" />
     </svg>
   );
 }
@@ -219,6 +211,7 @@ export function JourneyPageV2({
   const locationState = usePlayerPortalLocation();
   const battleState = usePlayerPortalBattle();
   const ownedPokemonState = useOwnedPokemonCollection();
+  const moveChoices = usePlayerPortalMoveChoices();
   const pokedexState = usePlayerPortalPokedex();
   const profile = createJourneyProfileView(
     authoritativeProfile,
@@ -267,6 +260,9 @@ export function JourneyPageV2({
     locationState.status === 'loading' && playerPortalSession.status === 'authenticated'
       ? 'Carregando…'
       : displayValue(profile.currentLocation, 'Não disponível');
+  const pendingMoveChoices =
+    moveChoices.state.status === 'authenticated' ? moveChoices.state.choices : [];
+  const firstPendingMove = pendingMoveChoices[0] ?? null;
 
   useEffect(() => {
     if (!isZhoulia || !profile.trainerId) return;
@@ -553,18 +549,29 @@ export function JourneyPageV2({
           </span>
         </a>
 
-        <a className="journey-share-action" href="/jornada/movimentos">
-          <span className="journey-share-action-icon">
-            <MoveIcon />
-          </span>
-          <span className="journey-share-action-copy">
-            <strong>MOVIMENTOS</strong>
-            <small>Resolver aprendizados pendentes dos seus Pokémon</small>
-          </span>
-          <span className="journey-share-action-chevron">
-            <ChevronIcon />
-          </span>
-        </a>
+        {firstPendingMove ? (
+          <a
+            className="journey-share-action is-attention"
+            href={`/pokemon/${firstPendingMove.pokemonInstanceId}?focus=moves`}
+            data-hub-parent="/jornada"
+          >
+            <span className="journey-share-action-icon" aria-hidden="true">!</span>
+            <span className="journey-share-action-copy">
+              <strong>
+                {pendingMoveChoices.length} DECISÃO
+                {pendingMoveChoices.length === 1 ? '' : 'ÕES'} DE GOLPE
+              </strong>
+              <small>
+                {moveChoices.state.status === 'authenticated' && moveChoices.state.blockedByBattle
+                  ? 'Finalize a batalha ativa para alterar o moveset'
+                  : `${firstPendingMove.pokemonDisplayName} quer aprender ${firstPendingMove.moveDisplayName}`}
+              </small>
+            </span>
+            <span className="journey-share-action-chevron">
+              <ChevronIcon />
+            </span>
+          </a>
+        ) : null}
 
         {hasPersonalDetails ? (
           <details className="journey-profile-details">
