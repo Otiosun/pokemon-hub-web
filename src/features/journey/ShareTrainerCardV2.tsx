@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
+import { OwnedPokemonImage } from '../../visual-assets/PokemonPreviewImage';
 import type { JourneyBadgePreview, JourneyProfilePreview } from './journeyProfilePreview';
 import { KantoLeagueSeal, KantoTrainerPlaceholder } from './kantoLeagueVisualKit';
 import { ShareTrainerCardZhoulia } from './ShareTrainerCardZhoulia';
@@ -213,8 +213,9 @@ export function ShareTrainerCardV2({
           {profile.leadPokemon ? (
             <aside className="journey-card-v2-partner" aria-label={`Parceiro ${profile.leadPokemon.nickname}`}>
               <div className="journey-card-v2-partner-art">
-                <PokemonAssetImage
+                <OwnedPokemonImage
                   dex={profile.leadPokemon.dex}
+                  shiny={profile.leadPokemon.shiny}
                   assetRole="home-artwork"
                   alt={profile.leadPokemon.nickname}
                   loading="eager"
