@@ -1,6 +1,6 @@
 import type { PlayerPortalBrowserSessionState } from '../../player-api/playerPortalBrowserSession';
 import { HubModuleHeader } from '../../components/HubModuleHeader';
-import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
+import { OwnedPokemonImage } from '../../visual-assets/PokemonPreviewImage';
 import { TypeBadge } from '../../visual-assets/TypeBadge';
 import { typeAccent } from '../pokemon-detail/fieldDexSpecies';
 import { createTeamProfileView } from './teamProfileView';
@@ -65,9 +65,10 @@ export function TeamPage({ playerPortalSession }: TeamPageProps) {
                 >
                   <div className="team-slot-visual">
                     {pokemon.dex !== null ? (
-                      <PokemonAssetImage
+                      <OwnedPokemonImage
                         dex={pokemon.dex}
                         assetRole="portrait"
+                        shiny={pokemon.shiny}
                         alt=""
                         aria-hidden="true"
                         loading="lazy"
