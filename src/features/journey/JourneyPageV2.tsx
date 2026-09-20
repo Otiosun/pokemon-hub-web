@@ -18,6 +18,7 @@ import {
   TRAINER_CARD_EMITTED_EVENT,
   type TrainerCardMissingField,
 } from './trainerCardEmissionState';
+import { usePlayerPortalBattle } from './usePlayerPortalBattle';
 import { usePlayerPortalLocation } from './usePlayerPortalLocation';
 import './journey-page.css';
 import './journey-page-review-fixes.css';
@@ -216,6 +217,7 @@ export function JourneyPageV2({
     playerPortalSession.status === 'authenticated' ? playerPortalSession.profile : null;
   const showcase = isAdvancedShowcaseActive();
   const locationState = usePlayerPortalLocation();
+  const battleState = usePlayerPortalBattle();
   const ownedPokemonState = useOwnedPokemonCollection();
   const pokedexState = usePlayerPortalPokedex();
   const profile = createJourneyProfileView(
@@ -390,6 +392,51 @@ export function JourneyPageV2({
               <strong>{currentLocationDisplay}</strong>
             </div>
           </div>
+
+          {battleState.status === 'authenticated' && battleState.battle ? (() => {
+            const activePlayer = battleState.battle.combatants.find(
+              (combatant) => combatant.playerSide && combatant.active,
+            );
+            const activeOpponent = battleState.battle.combatants.find(
+              (combatant) => !combatant.playerSide && combatant.active,
+            );
+            return (
+              <section className="journey-battle-card" aria-label="Batalha ativa">
+                <header>
+                  <div>
+                    <span>BATALHA ATIVA · {battleState.battle.battleType}</span>
+                    <strong>TURNO {battleState.battle.turnNumber}</strong>
+                  </div>
+                  <small>{battleState.battle.status.replaceAll('_', ' ')}</small>
+                </header>
+                <div className="journey-battle-matchup">
+                  <div>
+                    <span>SEU POKÉMON</span>
+                    <strong>{activePlayer?.displayName ?? '—'}</strong>
+                    <small>
+                      {activePlayer
+                        ? `NV. ${activePlayer.level} · HP ${activePlayer.currentHp}/${activePlayer.maxHp}`
+                        : 'Sem combatente ativo'}
+                    </small>
+                  </div>
+                  <b aria-hidden="true">VS</b>
+                  <div>
+                    <span>OPONENTE</span>
+                    <strong>{activeOpponent?.displayName ?? '—'}</strong>
+                    <small>
+                      {activeOpponent
+                        ? `NV. ${activeOpponent.level} · HP ${activeOpponent.currentHp}/${activeOpponent.maxHp}`
+                        : 'Sem combatente ativo'}
+                    </small>
+                  </div>
+                </div>
+                <footer>
+                  <span>CONSULTA SOMENTE LEITURA</span>
+                  <strong>Continue as ações da batalha pelo WhatsApp.</strong>
+                </footer>
+              </section>
+            );
+          })() : null}
 
           {profile.leadPokemon ? (
             <a
