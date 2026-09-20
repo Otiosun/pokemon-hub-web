@@ -370,7 +370,7 @@ export function PokedexIndexPage() {
             ) : null}
             {shiny !== 'Todos' ? (
               <button type="button" onClick={() => setShiny('Todos')} aria-label="Remover filtro shiny">
-                Shiny<span aria-hidden="true">×</span>
+                Shiny na coleção<span aria-hidden="true">×</span>
               </button>
             ) : null}
             {activeType ? (
@@ -430,6 +430,7 @@ export function PokedexIndexPage() {
                       <SpeciesPokemonImage
                         dex={item.dex}
                         assetRole="official-artwork"
+                        variant={shiny === 'Shiny' ? 'shiny' : 'regular'}
                         alt=""
                         aria-hidden="true"
                         loading="lazy"
