@@ -24,6 +24,7 @@ const profile: PlayerPortalProfile = {
       typeNames: [],
       level: 9,
       currentHp: 18,
+      shiny: false,
       slotNo: 3,
     },
     {
@@ -34,13 +35,14 @@ const profile: PlayerPortalProfile = {
       typeNames: ['Fire'],
       level: 12,
       currentHp: 31,
+      shiny: true,
       slotNo: 1,
     },
   ],
 };
 
 describe('createTeamProfileView', () => {
-  it('maps authoritative team slots without inventing nickname, favorite or shiny state', () => {
+  it('maps authoritative team slots and preserves shiny state from the player record', () => {
     expect(createTeamProfileView(profile)).toEqual([
       {
         instanceId: '55555555-5555-4555-8555-555555555555',
@@ -49,6 +51,7 @@ describe('createTeamProfileView', () => {
         types: ['Fire'],
         level: 12,
         currentHp: 31,
+        shiny: true,
         slotNo: 1,
         catalogResolved: true,
       },
@@ -59,6 +62,7 @@ describe('createTeamProfileView', () => {
         types: [],
         level: 9,
         currentHp: 18,
+        shiny: false,
         slotNo: 3,
         catalogResolved: false,
       },
