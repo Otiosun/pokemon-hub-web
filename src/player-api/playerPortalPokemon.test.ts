@@ -9,12 +9,32 @@ const pokemon: PlayerPortalPokemon = {
   typeNames: ['Fire'],
   nickname: 'Brasa',
   level: 12,
+  xp: '120',
+  xpToNextLevel: 469,
   currentHp: 31,
+  maxHp: 31,
+  natureDisplayName: 'Adamant',
+  abilityDisplayName: 'Blaze',
+  ivs: { hp: 31, attack: 30, defense: 29, spAttack: 12, spDefense: 18, speed: 27 },
   gender: 'M',
   shiny: false,
   placementKind: 'TEAM',
   boxNo: null,
   slotNo: 1,
+  conditions: [],
+  moves: [
+    {
+      slotNo: 1,
+      moveId: '99999999-9999-4999-8999-999999999999',
+      displayName: 'Scratch',
+      typeName: 'Normal',
+      category: 'PHYSICAL',
+      power: 40,
+      accuracy: 100,
+      ppCurrent: 35,
+      maxPp: 35,
+    },
+  ],
 };
 
 describe('getPlayerPortalPokemon', () => {
