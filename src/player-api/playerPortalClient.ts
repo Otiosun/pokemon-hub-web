@@ -333,7 +333,7 @@ export async function getPlayerPortalLocation(
     throw new Error('Invalid player portal response');
   }
 
-  return { status: 'authenticated', location: body.location };
+  return { status: 'authenticated', location: playerPortalLocationView(body.location) };
 }
 
 export async function exchangePlayerPortalTicket(
@@ -630,6 +630,27 @@ function isPlayerPortalBattle(value: unknown): value is PlayerPortalBattle {
   }
 
   return true;
+}
+
+function playerPortalLocationView(location: PlayerPortalLocation): PlayerPortalLocation {
+  return {
+    areaId: location.areaId,
+    areaSlug: location.areaSlug,
+    areaDisplayName: location.areaDisplayName,
+    regionId: location.regionId,
+    regionSlug: location.regionSlug,
+    regionDisplayName: location.regionDisplayName,
+    safePoint: location.safePoint,
+    enteredAt: location.enteredAt,
+    connections: location.connections.map((connection) => ({
+      connectionId: connection.connectionId,
+      connectionKey: connection.connectionKey,
+      destinationAreaId: connection.destinationAreaId,
+      destinationSlug: connection.destinationSlug,
+      destinationDisplayName: connection.destinationDisplayName,
+      available: connection.available,
+    })),
+  };
 }
 
 function isPlayerPortalLocationConnection(
