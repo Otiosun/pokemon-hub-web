@@ -87,6 +87,21 @@ describe('getPlayerPortalPokemon', () => {
     await expect(getPlayerPortalPokemon(fetcher)).rejects.toThrow('Invalid player portal response');
   });
 
+  it('rejects duplicate owned move slots from malformed upstream data', async () => {
+    const malformed = {
+      ...pokemon,
+      moves: [
+        pokemon.moves[0],
+        { ...pokemon.moves[0], moveId: '88888888-8888-4888-8888-888888888888' },
+      ],
+    };
+    const fetcher = vi.fn(
+      async () => new Response(JSON.stringify({ pokemon: [malformed] }), { status: 200 }),
+    );
+
+    await expect(getPlayerPortalPokemon(fetcher)).rejects.toThrow('Invalid player portal response');
+  });
+
   it('accepts unresolved catalog presentation only when all presentation fields are unresolved', async () => {
     const unresolved = {
       ...pokemon,
