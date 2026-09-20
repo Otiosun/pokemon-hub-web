@@ -676,10 +676,10 @@
 
 .pokedex-species-evolution-card > strong {
   max-width: 100%;
-  overflow: hidden;
-  font: 680 0.78rem 'Space Grotesk', sans-serif;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font: 680 0.78rem/1.25 'Space Grotesk', sans-serif;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+  white-space: normal;
 }
 
 .pokedex-species-evolution-edge {
