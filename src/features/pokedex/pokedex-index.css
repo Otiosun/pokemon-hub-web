@@ -243,7 +243,7 @@
 .pokedex-index-active-filters::-webkit-scrollbar { display: none; }
 
 .pokedex-index-active-filters button {
-  min-height: 34px;
+  min-height: 44px;
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
