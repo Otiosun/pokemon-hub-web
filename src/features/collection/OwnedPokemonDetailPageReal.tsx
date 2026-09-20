@@ -1,14 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { HubMenuTrigger } from '../../components/HubNavigation';
 import { HubModuleHeader } from '../../components/HubModuleHeader';
 import { OwnedPokemonImage } from '../../visual-assets/PokemonPreviewImage';
+import {
+  getPokemon3dCapability,
+  type Pokemon3dCapabilityStatus,
+} from '../../visual-assets/pokemon3dCapability';
 import { TypeBadge } from '../../visual-assets/TypeBadge';
 import { GenerationsPokemonViewer } from '../asset-lab/GenerationsPokemonViewer';
-import { OwnedPokemonShiny3dViewer } from './OwnedPokemonShiny3dViewer';
 import { typeAccent } from '../pokemon-detail/fieldDexSpecies';
 import {
-  readPokemonVisualPreference,
-  rememberPokemonVisualPreference,
+  readOwnedPokemonVisualPreference,
+  rememberOwnedPokemonVisualPreference,
 } from '../pokemon-detail/pokemonVisualPreference';
 import { createOwnedPokemonView, findOwnedPokemonView, type OwnedPokemonSex } from './ownedPokemonView';
 import { useOwnedPokemonCollection } from './useOwnedPokemonCollection';
@@ -105,9 +108,12 @@ export function OwnedPokemonDetailPage({
   returnHref?: string;
 }) {
   const [visualMode, setVisualMode] = useState<OwnedVisualMode>(() =>
-    readPokemonVisualPreference('2d'),
+    readOwnedPokemonVisualPreference('2d'),
   );
   const [viewerReady, setViewerReady] = useState(false);
+  const [modelCapability, setModelCapability] =
+    useState<Pokemon3dCapabilityStatus>('checking');
+  const [modelRetryNonce, setModelRetryNonce] = useState(0);
   const collection = useOwnedPokemonCollection();
   const moveChoices = usePlayerPortalMoveChoices();
   const pokemon = useMemo(
@@ -119,12 +125,54 @@ export function OwnedPokemonDetailPage({
   );
   const record = findOwnedPokemonView(pokemon, instanceId);
   const resolvedReturnHref = resolveOwnedReturnHref(returnHref);
+  const capabilitySpeciesSlug =
+    record?.catalogResolved ? speciesAssetSlug(record.species) : null;
 
   const chooseVisualMode = (mode: OwnedVisualMode) => {
-    if (mode === '3d') setViewerReady(false);
+    if (mode === '3d') {
+      setViewerReady(false);
+      if (modelCapability === 'failed') {
+        setModelRetryNonce((current) => current + 1);
+      }
+    }
     setVisualMode(mode);
-    rememberPokemonVisualPreference(mode);
+    rememberOwnedPokemonVisualPreference(mode);
   };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!record || record.dex === null || !capabilitySpeciesSlug) {
+      setModelCapability('unsupported');
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setModelCapability('checking');
+    void getPokemon3dCapability({
+      dex: record.dex,
+      species: capabilitySpeciesSlug,
+      variant: record.shiny ? 'shiny' : 'regular',
+    }).then((capability) => {
+      if (cancelled) return;
+      setModelCapability(capability.status);
+      if (capability.status === 'unsupported' && visualMode === '3d') {
+        setViewerReady(false);
+        setVisualMode('2d');
+        rememberOwnedPokemonVisualPreference('2d');
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    capabilitySpeciesSlug,
+    modelRetryNonce,
+    record,
+    visualMode,
+  ]);
 
   if (collection.status === 'loading') {
     return <RecordUnavailable returnHref={resolvedReturnHref} message="Sincronizando registro oficial…" />;
@@ -145,7 +193,7 @@ export function OwnedPokemonDetailPage({
     resolvedReturnHref === '/jornada' || resolvedReturnHref.startsWith('/jornada?');
   const returnLabel = returningToTeam ? 'TIME' : returningToJourney ? 'JORNADA' : 'BOX';
   const locationLabel = record.teamSlot ? `TIME · SLOT ${record.teamSlot}` : record.box;
-  const speciesSlug = record.catalogResolved ? speciesAssetSlug(record.species) : null;
+  const speciesSlug = capabilitySpeciesSlug;
   const identityLine = record.catalogResolved
     ? `${record.nickname === record.species ? '' : `${record.species} · `}#${dex} · NV. ${record.level} · ${sexLabel(record.sex)}`
     : `CATÁLOGO INDISPONÍVEL · NV. ${record.level} · ${sexLabel(record.sex)}`;
@@ -183,8 +231,17 @@ export function OwnedPokemonDetailPage({
               </button>
               <button
                 type="button"
-                disabled={!speciesSlug}
+                disabled={
+                  !speciesSlug ||
+                  modelCapability === 'checking' ||
+                  modelCapability === 'unsupported'
+                }
                 aria-pressed={visualMode === '3d'}
+                title={
+                  record.shiny && modelCapability === 'unsupported'
+                    ? '3D shiny ainda não está disponível neste pipeline'
+                    : undefined
+                }
                 onClick={() => chooseVisualMode('3d')}
               >
                 3D
@@ -194,32 +251,10 @@ export function OwnedPokemonDetailPage({
           </div>
 
           <div className={`owned-detail-visual${visualMode === '3d' ? ' is-3d' : ''}`}>
-            {visualMode === '3d' && speciesSlug ? (
-              <div className="owned-detail-viewer is-ready" aria-busy={!viewerReady}>
-                {record.shiny && record.dex !== null ? (
-                  <OwnedPokemonShiny3dViewer
-                    dex={record.dex}
-                    name={record.species}
-                    onReadyChange={setViewerReady}
-                    onFailed={() => {
-                      setViewerReady(false);
-                      setVisualMode('2d');
-                    }}
-                  />
-                ) : (
-                  <GenerationsPokemonViewer
-                    species={speciesSlug}
-                    name={record.species}
-                    onReadyChange={setViewerReady}
-                    onFailedSpeciesChange={() => {
-                      setViewerReady(false);
-                      setVisualMode('2d');
-                    }}
-                  />
-                )}
-              </div>
-            ) : record.dex !== null ? (
-              <div className="owned-detail-artwork">
+            <div
+              className={`owned-detail-artwork${visualMode === '3d' && viewerReady ? ' is-hidden' : ''}`}
+            >
+              {record.dex !== null ? (
                 <OwnedPokemonImage
                   dex={record.dex}
                   assetRole="official-artwork"
@@ -228,10 +263,29 @@ export function OwnedPokemonDetailPage({
                   fallbackLabel={record.species.slice(0, 1)}
                   decoding="async"
                 />
+              ) : (
+                <strong aria-hidden="true">?</strong>
+              )}
+            </div>
+
+            {visualMode === '3d' && speciesSlug && modelCapability === 'ready' ? (
+              <div
+                className={`owned-detail-viewer${viewerReady ? ' is-ready' : ''}`}
+                aria-busy={!viewerReady}
+              >
+                <GenerationsPokemonViewer
+                  species={speciesSlug}
+                  name={record.species}
+                  onReadyChange={setViewerReady}
+                  onFailedSpeciesChange={() => {
+                    setViewerReady(false);
+                    setModelCapability('failed');
+                    setVisualMode('2d');
+                    rememberOwnedPokemonVisualPreference('2d');
+                  }}
+                />
               </div>
-            ) : (
-              <div className="owned-detail-artwork"><strong aria-hidden="true">?</strong></div>
-            )}
+            ) : null}
           </div>
 
           <nav className="owned-pokemon-side-nav" aria-label="Pokémon anterior e próximo na coleção">
