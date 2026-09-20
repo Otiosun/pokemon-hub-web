@@ -25,6 +25,7 @@ export type JourneyLeadPokemonView = {
   types: string[];
   shiny: boolean;
   formSlug: string | null;
+  speciesSlug: string | null;
 };
 
 export type JourneyProfilePreview = {
@@ -64,6 +65,7 @@ function resolveLeadPokemon(playerProfile: PlayerPortalProfile | null): JourneyL
     types: [...lead.typeNames],
     shiny: lead.shiny,
     formSlug: lead.formSlug ?? null,
+    speciesSlug: lead.speciesSlug ?? null,
   };
 }
 
