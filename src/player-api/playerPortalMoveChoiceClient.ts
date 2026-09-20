@@ -82,7 +82,9 @@ export async function resolvePlayerPortalMoveChoice(
   if (
     !UUID_PATTERN.test(input.choiceId) ||
     (input.replaceSlotNo !== null &&
-      (!Number.isInteger(input.replaceSlotNo) || input.replaceSlotNo < 1 || input.replaceSlotNo > 4))
+      (!Number.isInteger(input.replaceSlotNo) ||
+        input.replaceSlotNo < 1 ||
+        input.replaceSlotNo > 4))
   ) {
     throw new Error('Invalid player portal move choice request');
   }
