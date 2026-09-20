@@ -6,6 +6,7 @@ import {
   type Pokemon3dCapabilityStatus,
 } from '../../visual-assets/pokemon3dCapability';
 import { TypeBadge } from '../../visual-assets/TypeBadge';
+import type { PokemonVisualVariant } from '../../visual-assets/pokemonVisualRegistry';
 import { GenerationsPokemonViewer } from '../asset-lab/GenerationsPokemonViewer';
 import { useOwnedPokemonCollection } from '../collection/useOwnedPokemonCollection';
 import {
@@ -333,7 +334,8 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
   const [record, setRecord] = useState<RecordState>(() =>
     initialRecord(validDex, review, playerState),
   );
-  const [artworkReadyDex, setArtworkReadyDex] = useState<number | null>(null);
+  const [artworkReadyKey, setArtworkReadyKey] = useState<string | null>(null);
+  const [visualVariant, setVisualVariant] = useState<PokemonVisualVariant>('regular');
   const [visualMode, setVisualMode] = useState<VisualMode>(() =>
     readPokedexVisualPreference('2d') === '3d' ? 'model' : 'artwork',
   );
@@ -343,13 +345,22 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
 
   const activeRecord =
     record.dex === validDex ? record : initialRecord(validDex, review, playerState);
-  const artworkReady = artworkReadyDex === validDex;
+  const artworkKey = `${validDex}:${visualVariant}`;
+  const artworkReady = artworkReadyKey === artworkKey;
   const discovered = playerState.discovery !== 'unknown';
   const wants3d = discovered && visualMode === 'model';
   const showing3d = wants3d && modelCapability === 'ready';
   const waitingFor3d = wants3d && modelCapability === 'checking';
   const modelUnavailable = wants3d && modelCapability === 'unsupported';
   const modelFailed = wants3d && modelCapability === 'failed';
+
+  const chooseVisualVariant = (variant: PokemonVisualVariant) => {
+    setVisualVariant(variant);
+    setArtworkReadyKey(null);
+    if (variant === 'shiny' && visualMode === 'model') {
+      setVisualMode('artwork');
+    }
+  };
 
   const chooseVisualMode = (mode: VisualMode) => {
     if (mode === 'model' && modelCapability === 'failed') {
@@ -373,7 +384,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
     void getPokemon3dCapability({
       dex: validDex,
       species: activeRecord.slug,
-      variant: 'regular',
+      variant: visualVariant,
     }).then((capability) => {
       if (!cancelled) setModelCapability(capability.status);
     });
@@ -381,7 +392,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
     return () => {
       cancelled = true;
     };
-  }, [activeRecord.slug, discovered, modelRetryNonce, validDex]);
+  }, [activeRecord.slug, discovered, modelRetryNonce, validDex, visualVariant]);
 
   useEffect(() => {
     if (modelCapability === 'ready' && discovered && activeRecord.slug) {
@@ -391,7 +402,8 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
 
   useEffect(() => {
     const controller = new AbortController();
-    setArtworkReadyDex(null);
+    setArtworkReadyKey(null);
+    setVisualVariant('regular');
     setRecord(initialRecord(validDex, review, playerState));
 
     if (!discovered) return () => controller.abort();
@@ -476,6 +488,31 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
           <div className="pokedex-species-visual-area">
             {discovered && (
               <fieldset
+                className="pokedex-species-variant-modes"
+                style={FIELDSET_RESET}
+                aria-label="Variante visual da espécie"
+              >
+                <button
+                  type="button"
+                  className={visualVariant === 'regular' ? 'is-active' : undefined}
+                  aria-pressed={visualVariant === 'regular'}
+                  onClick={() => chooseVisualVariant('regular')}
+                >
+                  NORMAL
+                </button>
+                <button
+                  type="button"
+                  className={visualVariant === 'shiny' ? 'is-active' : undefined}
+                  aria-pressed={visualVariant === 'shiny'}
+                  onClick={() => chooseVisualVariant('shiny')}
+                >
+                  ✦ SHINY
+                </button>
+              </fieldset>
+            )}
+
+            {discovered && (
+              <fieldset
                 className="pokedex-species-view-modes"
                 style={FIELDSET_RESET}
                 aria-label="Modo de visualização da espécie"
@@ -503,15 +540,16 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
             {discovered && visualMode === 'artwork' && (
               <div className={`pokedex-species-artwork-slot${artworkReady ? ' is-ready' : ''}`}>
                 <SpeciesPokemonImage
-                  key={validDex}
+                  key={artworkKey}
                   dex={validDex}
                   assetRole="official-artwork"
+                  variant={visualVariant}
                   className="pokedex-species-artwork"
                   alt={`Ilustração de ${displayName}`}
                   decoding="async"
                   fetchPriority="high"
                   fallbackLabel="?"
-                  onResolved={() => setArtworkReadyDex(validDex)}
+                  onResolved={() => setArtworkReadyKey(artworkKey)}
                 />
               </div>
             )}
@@ -519,7 +557,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
             {showing3d && (
               <div className="pokedex-species-model-slot">
                 <GenerationsPokemonViewer
-                  key={`${validDex}-${activeRecord.slug}`}
+                  key={`${validDex}-${activeRecord.slug}-${visualVariant}`}
                   species={activeRecord.slug}
                   name={displayName}
                   onFailedSpeciesChange={() => setModelCapability('failed')}
@@ -588,7 +626,10 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
           </div>
 
           <div className="pokedex-species-identity">
-            <span className="pokedex-species-number">Nº {String(validDex).padStart(3, '0')}</span>
+            <span className="pokedex-species-number">
+              Nº {String(validDex).padStart(3, '0')}
+              {visualVariant === 'shiny' ? ' · VARIANTE SHINY' : ''}
+            </span>
             <h1>{displayName}</h1>
             {discovered && activeRecord.types.length > 0 && (
               <div className="pokedex-species-types">
