@@ -393,6 +393,25 @@ export function JourneyPageV2({
             </div>
           </div>
 
+          {locationState.status === 'authenticated' &&
+          locationState.location.connections.length > 0 ? (
+            <section className="journey-route-overview" aria-label="Rotas próximas">
+              <header>
+                <span>ROTAS PRÓXIMAS</span>
+                <small>ACOMPANHAMENTO</small>
+              </header>
+              <div>
+                {locationState.location.connections.map((connection) => (
+                  <article key={connection.connectionId}>
+                    <span aria-hidden="true">→</span>
+                    <strong>{connection.destinationDisplayName}</strong>
+                    <small>{connection.available ? 'DISPONÍVEL' : 'BLOQUEADA'}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
           {battleState.status === 'authenticated' && battleState.battle ? (() => {
             const activePlayer = battleState.battle.combatants.find(
               (combatant) => combatant.playerSide && combatant.active,
