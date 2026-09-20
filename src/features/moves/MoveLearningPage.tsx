@@ -155,7 +155,10 @@ export function MoveLearningPage() {
                           <span>NV. {choice.learnLevel}</span>
                           <strong>{choice.pokemonDisplayName}</strong>
                         </div>
-                        <a href={`/pokemon/${choice.pokemonInstanceId}?origin=journey-moves`}>
+                        <a
+                          href={`/pokemon/${choice.pokemonInstanceId}`}
+                          data-hub-parent="/jornada/movimentos"
+                        >
                           VER POKÉMON
                         </a>
                       </header>
