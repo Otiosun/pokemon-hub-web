@@ -9,6 +9,8 @@ export type OwnedPokemonSex = 'M' | 'F' | '—';
 export type OwnedPokemonView = {
   instanceId: string;
   dex: number | null;
+  speciesSlug: string | null;
+  formSlug: string | null;
   species: string;
   nickname: string;
   level: number;
@@ -49,6 +51,8 @@ export function createOwnedPokemonView(
     return {
       instanceId: item.pokemonInstanceId,
       dex: catalogResolved ? item.nationalDex : null,
+      speciesSlug: item.speciesSlug ?? null,
+      formSlug: item.formSlug ?? null,
       species,
       nickname,
       level: item.level,
