@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { HubModuleHeader } from '../../components/HubModuleHeader';
 import { rememberHubDestination } from '../../navigation/hubNavigationSession';
 import { movePlayerPortalPokemon } from '../../player-api/playerPortalRosterClient';
-import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
+import { OwnedPokemonImage } from '../../visual-assets/PokemonPreviewImage';
 import { TypeBadge } from '../../visual-assets/TypeBadge';
 import { typeAccent } from '../pokemon-detail/fieldDexSpecies';
 import {
@@ -55,10 +55,10 @@ function PokemonVisual({
 }) {
   if (pokemon.dex === null) return <strong aria-hidden="true">?</strong>;
   return (
-    <PokemonAssetImage
+    <OwnedPokemonImage
       dex={pokemon.dex}
       assetRole={assetRole}
-      variant={pokemon.shiny ? 'shiny' : 'regular'}
+      shiny={pokemon.shiny}
       alt=""
       aria-hidden="true"
       loading={assetRole === 'portrait' ? 'eager' : 'lazy'}
