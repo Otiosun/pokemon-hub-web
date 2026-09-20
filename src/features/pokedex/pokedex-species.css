@@ -610,69 +610,114 @@
 }
 
 .pokedex-species-evolution-tree {
-  display: flex;
-  align-items: stretch;
-  gap: 10px;
-  overflow-x: auto;
-  overscroll-behavior-inline: contain;
-  scrollbar-width: thin;
-}
-
-.pokedex-species-evolution-stage {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.pokedex-species-evolution-stage > div {
-  display: flex;
-  gap: 8px;
-}
-
-.pokedex-species-evolution-stage a {
-  width: 102px;
-  min-height: 108px;
   display: grid;
-  grid-template-rows: 58px auto auto;
+  justify-items: stretch;
+}
+
+.pokedex-species-evolution-branch {
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+}
+
+.pokedex-species-evolution-card {
+  width: min(190px, 100%);
+  min-height: 118px;
+  display: grid;
+  grid-template-rows: 64px auto auto;
   place-items: center;
-  padding: 8px;
+  gap: 3px;
+  padding: 10px 12px;
   border: 1px solid rgba(208, 216, 214, 0.13);
-  border-radius: 12px;
+  border-radius: 13px;
   color: #d1d0cb;
-  background: rgba(255, 255, 255, 0.018);
+  background:
+    radial-gradient(circle at 50% 28%, rgba(218, 64, 70, 0.055), transparent 58%),
+    rgba(255, 255, 255, 0.018);
   text-align: center;
   text-decoration: none;
 }
 
-.pokedex-species-evolution-stage a:hover,
-.pokedex-species-evolution-stage a:focus-visible {
-  border-color: rgba(218, 64, 70, 0.36);
-  background: rgba(201, 47, 54, 0.055);
+.pokedex-species-evolution-card:hover,
+.pokedex-species-evolution-card:focus-visible {
+  border-color: rgba(218, 64, 70, 0.42);
+  background-color: rgba(201, 47, 54, 0.055);
 }
 
-.pokedex-species-evolution-stage img {
-  width: 68px;
-  height: 54px;
+.pokedex-species-evolution-card img,
+.pokedex-species-evolution-card .pokemon-asset-placeholder {
+  width: 76px;
+  height: 60px;
   object-fit: contain;
 }
 
-.pokedex-species-evolution-stage span {
+.pokedex-species-evolution-card > span {
   color: #747d7c;
-  font: 650 0.52rem 'IBM Plex Mono', monospace;
+  font: 650 0.5rem 'IBM Plex Mono', monospace;
 }
 
-.pokedex-species-evolution-stage strong {
-  max-width: 90px;
+.pokedex-species-evolution-card > strong {
+  max-width: 100%;
   overflow: hidden;
-  font: 680 0.72rem 'Space Grotesk', sans-serif;
+  font: 680 0.78rem 'Space Grotesk', sans-serif;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.pokedex-species-evolution-edge {
+  width: min(260px, 100%);
+  min-height: 76px;
+  display: grid;
+  grid-template-rows: 16px auto 18px;
+  justify-items: center;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.pokedex-species-evolution-line {
+  width: 1px;
+  height: 16px;
+  background: linear-gradient(180deg, rgba(215, 66, 72, 0.12), rgba(215, 66, 72, 0.55));
+}
+
+.pokedex-species-evolution-edge > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+}
+
+.pokedex-species-evolution-edge > div > span {
+  min-height: 25px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  border: 1px solid rgba(218, 64, 70, 0.18);
+  border-radius: 999px;
+  color: #b7a9a2;
+  background: rgba(172, 48, 54, 0.055);
+  font: 650 0.49rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.035em;
+}
+
 .pokedex-species-evolution-arrow {
-  color: #7a8381;
-  font-size: 1rem;
+  color: #a05053;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.pokedex-species-evolution-children {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  align-items: start;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.pokedex-species-evolution-children > .pokedex-species-evolution-branch {
+  min-width: 0;
 }
 
 @media (max-width: 700px) {
@@ -813,6 +858,20 @@
   .pokedex-species-evolution {
     margin-top: 14px;
     padding: 14px;
+  }
+
+  .pokedex-species-evolution-children {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .pokedex-species-evolution-card {
+    width: min(220px, 100%);
+    min-height: 112px;
+  }
+
+  .pokedex-species-evolution-edge {
+    min-height: 70px;
   }
 }
 
