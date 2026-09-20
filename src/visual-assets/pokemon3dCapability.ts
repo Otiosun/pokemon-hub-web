@@ -61,7 +61,10 @@ export async function getPokemon3dCapability(
   if (form === null) {
     return { status: 'unsupported', reason: 'form-identity-missing' };
   }
-  if (form !== undefined && form !== 'default') {
+  if (
+    form !== undefined &&
+    normalizeSpecies(form) !== normalizeSpecies(species)
+  ) {
     return { status: 'unsupported', reason: 'form-unsupported' };
   }
 
