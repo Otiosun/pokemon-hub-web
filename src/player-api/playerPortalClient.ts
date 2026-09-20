@@ -89,10 +89,16 @@ export type PlayerPortalPokedexSpecies = {
   nationalDex: number;
   seenCount: string;
   caughtCount: string;
+  shinySeenCount?: string;
+  shinyCaughtCount?: string;
   firstSeenAt: string | null;
   lastSeenAt: string | null;
   firstCaughtAt: string | null;
   lastCaughtAt: string | null;
+  firstShinySeenAt?: string | null;
+  lastShinySeenAt?: string | null;
+  firstShinyCaughtAt?: string | null;
+  lastShinyCaughtAt?: string | null;
 };
 
 export type PlayerPortalBattleMove = {
@@ -564,6 +570,37 @@ function isPlayerPortalPokedexSpecies(value: unknown): value is PlayerPortalPoke
     return false;
   }
   if (BigInt(value.caughtCount) > BigInt(value.seenCount)) return false;
+
+  const shinyFields = [
+    value.shinySeenCount,
+    value.shinyCaughtCount,
+    value.firstShinySeenAt,
+    value.lastShinySeenAt,
+    value.firstShinyCaughtAt,
+    value.lastShinyCaughtAt,
+  ];
+  const hasAnyShinyField = shinyFields.some((field) => field !== undefined);
+  const hasAllShinyFields = shinyFields.every((field) => field !== undefined);
+
+  if (hasAnyShinyField && !hasAllShinyFields) return false;
+
+  if (hasAllShinyFields) {
+    if (
+      typeof value.shinySeenCount !== 'string' ||
+      !DIGITS_PATTERN.test(value.shinySeenCount) ||
+      typeof value.shinyCaughtCount !== 'string' ||
+      !DIGITS_PATTERN.test(value.shinyCaughtCount) ||
+      BigInt(value.shinyCaughtCount) > BigInt(value.shinySeenCount) ||
+      BigInt(value.shinySeenCount) > BigInt(value.seenCount) ||
+      BigInt(value.shinyCaughtCount) > BigInt(value.caughtCount) ||
+      !isNullableIsoTimestamp(value.firstShinySeenAt) ||
+      !isNullableIsoTimestamp(value.lastShinySeenAt) ||
+      !isNullableIsoTimestamp(value.firstShinyCaughtAt) ||
+      !isNullableIsoTimestamp(value.lastShinyCaughtAt)
+    ) {
+      return false;
+    }
+  }
 
   return (
     isNullableIsoTimestamp(value.firstSeenAt) &&
