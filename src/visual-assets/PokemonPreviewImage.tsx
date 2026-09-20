@@ -2,7 +2,10 @@ import type { ComponentProps } from 'react';
 import { PokemonAssetImage } from './PokemonAssetImage';
 import type { PokemonVisualVariant } from './pokemonVisualRegistry';
 
-type PokemonImageProps = Omit<ComponentProps<typeof PokemonAssetImage>, 'variant'>;
+type PokemonImageProps = Omit<
+  ComponentProps<typeof PokemonAssetImage>,
+  'variant' | 'formSlug'
+>;
 
 export function SpeciesPokemonImage({
   variant = 'regular',
