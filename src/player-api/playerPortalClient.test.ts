@@ -59,7 +59,9 @@ describe('getPlayerPortalSelf', () => {
     expect(result).toEqual({ status: 'authenticated', profile });
   });
 
-  it('returns an explicit unauthenticated state for 401 without fabricating profile data', async () => {
+  it(
+    'returns an explicit unauthenticated state for 401 without fabricating profile data',
+    async () => {
     const fetcher = vi.fn(async () => new Response('{"error":"UNAUTHENTICATED"}', { status: 401 }));
 
     await expect(getPlayerPortalSelf(fetcher)).resolves.toEqual({ status: 'unauthenticated' });
@@ -74,14 +76,17 @@ describe('getPlayerPortalSelf', () => {
     await expect(getPlayerPortalSelf(fetcher)).rejects.toThrow('Invalid player portal response');
   });
 
-  it('rejects malformed catalog presentation instead of accepting untrusted display metadata', async () => {
+  it(
+    'rejects malformed catalog presentation instead of accepting untrusted display metadata',
+    async () => {
     const malformedProfile = { ...profile, originRegionName: 42 };
     const fetcher = vi.fn(
       async () => new Response(JSON.stringify({ profile: malformedProfile }), { status: 200 }),
     );
 
     await expect(getPlayerPortalSelf(fetcher)).rejects.toThrow('Invalid player portal response');
-  });
+    },
+  );
 
   it('rejects non-authentication HTTP failures as API errors', async () => {
     const fetcher = vi.fn(async () => new Response('{"error":"INTERNAL_ERROR"}', { status: 503 }));
@@ -298,7 +303,9 @@ describe('getPlayerPortalLocation', () => {
 });
 
 describe('movePlayerPortalPokemon', () => {
-  it('persists a roster placement through the same-origin BFF and returns the authoritative collection', async () => {
+  it(
+    'persists a roster placement through the same-origin BFF and returns the authoritative collection',
+    async () => {
     const fetcher = vi.fn(
       async () =>
         new Response(JSON.stringify({ pokemon: [] }), {
