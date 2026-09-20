@@ -64,7 +64,7 @@ function isRosterMoveInput(value: unknown): value is PlayerPortalRosterMoveInput
   }
 
   if (value.target.placementKind === 'BOX') {
-    return isPositiveInteger(value.target.boxNo) && isPositiveInteger(value.target.slotNo);
+    return isPositiveInteger(value.target.boxNo) && isIntegerBetween(value.target.slotNo, 1, 30);
   }
 
   return false;
