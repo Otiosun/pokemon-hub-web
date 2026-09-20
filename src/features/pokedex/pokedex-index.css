@@ -232,6 +232,51 @@
   transform: rotate(90deg);
 }
 
+.pokedex-index-visual-modes {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 0 0 9px;
+}
+
+.pokedex-index-visual-modes > span {
+  margin-right: 3px;
+  color: #667679;
+  font: 700 0.58rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.07em;
+}
+
+.pokedex-index-visual-modes button {
+  min-height: 44px;
+  min-width: 78px;
+  padding: 0 12px;
+  border: 1px solid rgba(190, 226, 228, 0.11);
+  border-radius: 999px;
+  background: #151b1d;
+  color: #91a0a2;
+  cursor: pointer;
+  font: 700 0.62rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.055em;
+}
+
+.pokedex-index-visual-modes button.is-active {
+  border-color: rgba(214, 231, 232, 0.27);
+  background: #222b2d;
+  color: #e4eded;
+}
+
+.pokedex-index-visual-modes button.is-shiny.is-active {
+  border-color: rgba(219, 190, 83, 0.32);
+  background: rgba(77, 61, 18, 0.42);
+  color: #f0d979;
+}
+
+.pokedex-index-visual-modes button:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+
 .pokedex-index-active-filters {
   display: flex;
   gap: 6px;
@@ -391,6 +436,36 @@
 .pokedex-index-card.is-seen .pokedex-index-sprite-wrap img {
   filter: grayscale(1) saturate(0) contrast(1.04) brightness(0.93) drop-shadow(0 10px 17px rgba(0, 0, 0, 0.24));
   opacity: 0.88;
+}
+
+.pokedex-index-card.is-shiny-visual .pokedex-index-sprite-wrap img {
+  filter: saturate(1) contrast(1.02) drop-shadow(0 12px 20px rgba(0, 0, 0, 0.28));
+  opacity: 1;
+}
+
+.pokedex-index-shiny-locked {
+  width: 62px;
+  height: 62px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed rgba(219, 190, 83, 0.22);
+  border-radius: 50%;
+  background: rgba(81, 65, 21, 0.08);
+  color: #75662d;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.pokedex-index-shiny-locked span {
+  grid-area: 1 / 1;
+  margin: -28px -34px 0 0;
+  color: rgba(226, 197, 83, 0.52);
+  font-size: 0.76rem;
+}
+
+.pokedex-index-shiny-locked small {
+  grid-area: 1 / 1;
+  font-size: 1.45rem;
+  font-weight: 700;
 }
 
 .pokedex-index-unknown-glyph {
@@ -723,6 +798,16 @@
 
   .pokedex-index-toolbar {
     top: 64px;
+  }
+
+  .pokedex-index-visual-modes {
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .pokedex-index-visual-modes::-webkit-scrollbar {
+    display: none;
   }
 
   .pokedex-index-filter-dialog {
