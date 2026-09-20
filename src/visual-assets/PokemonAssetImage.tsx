@@ -284,6 +284,7 @@ export function PokemonAssetImage({
       alt={alt}
       style={normalizedStyle}
       data-asset-role={source.role}
+      data-asset-provider={source.provider}
       data-pokemon-variant={variant}
       data-alpha-normalized={alphaTransform ? 'true' : undefined}
       onLoad={(event) => {
