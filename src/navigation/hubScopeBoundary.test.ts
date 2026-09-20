@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import appSource from '../App.tsx?raw';
 import playerPortalClientSource from '../player-api/playerPortalClient.ts?raw';
 import cloudflareUatWorkerSource from '../player-api/cloudflareUatWorker.ts?raw';
+import playerBattleProxySource from '../../api/hub/player/battle.ts?raw';
 import productIntegritySource from './productIntegrity.ts?raw';
 
 const hubApiModules = import.meta.glob('../../api/hub/**/*.ts');
@@ -24,10 +25,12 @@ const FORBIDDEN_GAMEPLAY_PATH_FRAGMENTS = [
   '/api/hub/encounter',
   '/api/hub/battle',
   '/api/hub/capture',
+  '/api/hub/player/battle/action',
   '/v1/hub/world/',
   '/v1/hub/encounter',
   '/v1/hub/battle',
   '/v1/hub/capture',
+  '/v1/hub/player/battle/action',
 ] as const;
 
 describe('Hub scope boundary', () => {
@@ -42,6 +45,12 @@ describe('Hub scope boundary', () => {
     for (const fragment of FORBIDDEN_GAMEPLAY_PATH_FRAGMENTS) {
       expect(playerPortalClientSource).not.toContain(fragment);
     }
+  });
+
+  it('keeps active battle consultation read-only at the Hub boundary', () => {
+    expect(playerBattleProxySource).toContain("upstreamPath: '/v1/hub/player/battle'");
+    expect(playerBattleProxySource).toContain("allowedMethod: 'GET'");
+    expect(playerBattleProxySource).not.toContain('/battle/action');
   });
 
   it('does not proxy gameplay routes through the temporary UAT worker', () => {
