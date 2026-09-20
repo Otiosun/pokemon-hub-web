@@ -107,7 +107,16 @@ export function getPokemonImageSources(
   dex: number,
   assetRole: PokemonImageRole,
   variant: PokemonVisualVariant = 'regular',
+  formSlug?: string,
 ): readonly PokemonVisualImageSource[] {
+  // The current 2D providers are indexed by species/default-form identity. Once
+  // the Hub API proves that an owned Pokemon is a non-default form, do not
+  // silently render the base species artwork as if it were that form.
+  //
+  // An omitted formSlug remains a rollout compatibility path for species views
+  // and older Hub payloads until the authoritative formSlug contract is live.
+  if (formSlug && formSlug !== 'default') return [];
+
   const visual = getPokemonSpeciesVisualAssets(dex, variant);
   const official: PokemonVisualImageSource = {
     role: 'official-artwork',
