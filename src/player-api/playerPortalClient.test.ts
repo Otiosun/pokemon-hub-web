@@ -31,6 +31,7 @@ const profile: PlayerPortalProfile = {
       typeNames: ['Fire'],
       level: 12,
       currentHp: 31,
+      shiny: true,
       slotNo: 1,
     },
   ],
