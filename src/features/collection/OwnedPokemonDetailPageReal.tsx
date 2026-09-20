@@ -80,6 +80,16 @@ function ivLabel(value: number | null) {
   return value === null ? '—' : String(value);
 }
 
+function formLabel(formSlug: string | null) {
+  if (formSlug === null) return 'Não confirmada';
+  if (formSlug === 'default') return 'Padrão';
+  return formSlug
+    .split('-')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
 function resolveOwnedReturnHref(returnHref: string) {
   const params = new URLSearchParams(window.location.search);
   return params.get('origin') === 'journey-lead' ? '/jornada?pokemonContext=lead' : returnHref;
@@ -432,6 +442,7 @@ export function OwnedPokemonDetailPage({
                   <dd><span className="owned-detail-sex">{sexGlyph(record.sex)}</span> {sexLabel(record.sex)}</dd>
                 </div>
                 <div><dt>SHINY</dt><dd>{record.shiny ? 'Sim' : 'Não'}</dd></div>
+                <div><dt>FORMA</dt><dd>{formLabel(record.formSlug)}</dd></div>
                 <div className="is-wide"><dt>LOCAL ATUAL</dt><dd>{locationLabel}</dd></div>
               </dl>
             </section>
