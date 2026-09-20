@@ -8,7 +8,11 @@ const hubApiModules = import.meta.glob('../../api/hub/**/*.ts');
 
 const ALLOWED_HUB_API_MODULES = [
   '../../api/hub/auth/exchange.ts',
+  '../../api/hub/player/battle.ts',
+  '../../api/hub/player/inventory.ts',
   '../../api/hub/player/location.ts',
+  '../../api/hub/player/move-choices.ts',
+  '../../api/hub/player/move-choices/resolve.ts',
   '../../api/hub/player/pokedex.ts',
   '../../api/hub/player/pokemon.ts',
   '../../api/hub/player/roster.ts',
@@ -27,7 +31,7 @@ const FORBIDDEN_GAMEPLAY_PATH_FRAGMENTS = [
 ] as const;
 
 describe('Hub scope boundary', () => {
-  it('exposes only companion reads, auth and roster organization through the same-origin Hub API', () => {
+  it('exposes only companion reads, auth, roster organization and move learning through the same-origin Hub API', () => {
     expect(Object.keys(hubApiModules).sort()).toEqual([...ALLOWED_HUB_API_MODULES].sort());
   });
 
