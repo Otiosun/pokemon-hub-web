@@ -34,6 +34,7 @@ function pokemonPortrait(pokemon: OwnedPokemonView) {
       assetRole="portrait"
       shiny={pokemon.shiny}
       formSlug={pokemon.formSlug}
+      speciesSlug={pokemon.speciesSlug}
       alt=""
       aria-hidden="true"
       loading="lazy"
