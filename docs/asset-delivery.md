@@ -43,9 +43,11 @@ A future catalog release becomes `pokemon/v2/`; do not overwrite a published rel
 
 `Generations packs -> semantic resolver -> format decoder (TRANM/GFBANM/SMD) -> material bake -> idle-only web asset -> manifest -> object storage/CDN`
 
-The conversion pipeline is an offline/release process. It must not run during every normal Vercel application deploy.
+The complete conversion pipeline is an offline/release process and must not be used to rebuild the full Gen I-III catalog on every application deploy.
 
-Normal application deploys run only a representative converter smoke set. The smoke intentionally covers TRANM, GFBANM, SMD, Scyther/Shedinja and the two converter regressions Suicune #245 and Lugia #249.
+Until the immutable external catalog is live, the application build materializes a bounded deployment-local fallback under `/research/generations` through `build-generations-player-preview.py`. That fallback exists to keep representative 3D and the active showcase team testable; it is not the production-complete catalog. Once `VITE_POKEMON_ASSET_BASE_URL` points at the published catalog, the external versioned manifest is the authoritative 3D source.
+
+Converter verification also runs a representative smoke set covering TRANM, GFBANM, SMD, Scyther/Shedinja and the converter regressions Suicune #245 and Lugia #249.
 
 ## Storage direction
 
@@ -70,7 +72,8 @@ Later the backend/API returns mechanical/player truth such as:
 {
   "instanceId": "...",
   "speciesId": 4,
-  "form": "default",
+  "speciesSlug": "charmander",
+  "formSlug": "charmander",
   "shiny": false
 }
 ```
