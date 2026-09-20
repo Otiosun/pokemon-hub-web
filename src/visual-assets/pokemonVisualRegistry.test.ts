@@ -34,4 +34,15 @@ describe('Pokemon visual variants', () => {
     expect(sources[0]?.provider).toBe('pmdcollab-portrait');
     expect(sources[0]?.role).toBe('portrait');
   });
+
+
+  it('does not render base-species art for an explicitly non-default owned form', () => {
+    expect(getPokemonImageSources(386, 'official-artwork', 'regular', 'attack')).toEqual([]);
+    expect(getPokemonImageSources(386, 'portrait', 'shiny', 'speed')).toEqual([]);
+  });
+
+  it('keeps default and rollout-legacy form identities on the base species pipeline', () => {
+    expect(getPokemonImageSources(386, 'official-artwork', 'regular', 'default')).not.toHaveLength(0);
+    expect(getPokemonImageSources(386, 'official-artwork', 'regular')).not.toHaveLength(0);
+  });
 });
