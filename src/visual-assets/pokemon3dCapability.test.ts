@@ -17,6 +17,37 @@ describe('Pokemon 3D capability', () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
 
+
+  it('does not guess an owned Pokemon form when the Hub API has not provided one', async () => {
+    const fetcher = vi.fn();
+
+    await expect(
+      getPokemon3dCapability(
+        { dex: 386, species: 'deoxys', form: null, variant: 'regular' },
+        fetcher,
+      ),
+    ).resolves.toEqual({
+      status: 'unsupported',
+      reason: 'form-identity-missing',
+    });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it('keeps non-default forms unsupported until the 3D manifest models forms explicitly', async () => {
+    const fetcher = vi.fn();
+
+    await expect(
+      getPokemon3dCapability(
+        { dex: 386, species: 'deoxys', form: 'attack', variant: 'regular' },
+        fetcher,
+      ),
+    ).resolves.toEqual({
+      status: 'unsupported',
+      reason: 'form-unsupported',
+    });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it('enables regular 3D only when the generated manifest contains the species', async () => {
     const fetcher = vi.fn(async () =>
       new Response(
