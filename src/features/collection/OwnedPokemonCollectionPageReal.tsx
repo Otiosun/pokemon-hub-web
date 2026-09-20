@@ -236,6 +236,7 @@ export function OwnedPokemonCollectionPage() {
     label: string;
   } | null>(null);
   const restoredScroll = useRef(false);
+  const organizerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     rememberCollectionFilters(mode, query, filters);
@@ -334,6 +335,14 @@ export function OwnedPokemonCollectionPage() {
     setOrganizerPokemonId(candidate.instanceId);
     setOrganizerMessage(`${candidate.nickname} selecionado. Agora toque no slot de destino.`);
     setOrganizerStatus('idle');
+
+    requestAnimationFrame(() => {
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      organizerRef.current?.scrollIntoView({
+        behavior: reducedMotion ? 'auto' : 'smooth',
+        block: 'start',
+      });
+    });
   };
 
   const moveSelectedPokemon = async (target: PlayerPortalRosterPlacement) => {
@@ -499,7 +508,11 @@ export function OwnedPokemonCollectionPage() {
               </header>
 
               {organizing ? (
-                <section className="owned-roster-direct" aria-label="Organizar Time e Box">
+                <section
+                  ref={organizerRef}
+                  className="owned-roster-direct"
+                  aria-label="Organizar Time e Box"
+                >
                   <header className="owned-roster-direct-head">
                     <div>
                       <span>ORGANIZAÇÃO DIRETA</span>
