@@ -267,14 +267,14 @@ export function TeamPage({ playerPortalSession }: TeamPageProps) {
                 {source ? `${source.nickname} selecionado` : 'Selecione um Pokémon'}
               </strong>
               <small>
-                {source?.teamSlot !== null && source
+                {source && source.teamSlot !== null
                   ? 'Toque em outro slot para reorganizar, ou escolha um Pokémon da Box para fazer a substituição.'
                   : source
                     ? 'Toque em um slot do Time para colocar este Pokémon na formação.'
                     : 'Os próprios cards abaixo são os controles. Não há uma segunda cópia do Time.'}
               </small>
             </div>
-            {source?.teamSlot !== null && source ? (
+            {source && source.teamSlot !== null ? (
               <button
                 type="button"
                 disabled={organizingStatus === 'saving'}
@@ -397,12 +397,12 @@ export function TeamPage({ playerPortalSession }: TeamPageProps) {
               <div>
                 <span>BOX</span>
                 <strong>
-                  {source?.teamSlot !== null && source
+                  {source && source.teamSlot !== null
                     ? `Escolha quem substitui ${source.nickname}`
                     : 'Escolha um Pokémon da Box'}
                 </strong>
                 <small>
-                  {source?.teamSlot !== null && source
+                  {source && source.teamSlot !== null
                     ? 'Tocar em um Pokémon abaixo faz a troca diretamente com o slot selecionado.'
                     : 'Depois de selecionar, toque no slot do Time onde ele deve entrar.'}
                 </small>
