@@ -358,7 +358,7 @@ function isPlayerPortalPokemonIvs(value: unknown): value is PlayerPortalPokemonI
   );
 }
 
-function isPlayerPortalPokemon(value: unknown): value is PlayerPortalPokemon {
+export function isPlayerPortalPokemon(value: unknown): value is PlayerPortalPokemon {
   if (!isRecord(value)) return false;
   if (
     !isUuid(value.pokemonInstanceId) ||
