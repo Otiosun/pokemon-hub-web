@@ -25,16 +25,32 @@ export function InventoryPage() {
 
   useEffect(() => {
     let cancelled = false;
-    getPlayerPortalInventory()
-      .then((result) => {
-        if (cancelled) return;
-        setState(result);
-      })
-      .catch(() => {
-        if (!cancelled) setState({ status: 'unavailable' });
-      });
+
+    const load = async (preserveSnapshot = false) => {
+      if (!preserveSnapshot) setState({ status: 'loading' });
+      try {
+        const result = await getPlayerPortalInventory();
+        if (!cancelled) setState(result);
+      } catch {
+        if (!cancelled && !preserveSnapshot) setState({ status: 'unavailable' });
+      }
+    };
+
+    void load();
+
+    const onFocus = () => {
+      if (document.visibilityState === 'visible') void load(true);
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') void load(true);
+    };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+
     return () => {
       cancelled = true;
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, []);
 

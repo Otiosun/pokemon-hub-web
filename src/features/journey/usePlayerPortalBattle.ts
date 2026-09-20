@@ -31,9 +31,20 @@ export function usePlayerPortalBattle(): PlayerPortalBattleState {
       if (document.visibilityState === 'visible') void load();
     }, 10_000);
 
+    const onFocus = () => {
+      if (document.visibilityState === 'visible') void load();
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') void load();
+    };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+
     return () => {
       cancelled = true;
       if (timer !== null) window.clearInterval(timer);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, []);
 

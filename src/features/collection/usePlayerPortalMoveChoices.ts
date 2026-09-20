@@ -79,5 +79,20 @@ export function usePlayerPortalMoveChoices() {
     [refresh],
   );
 
+  useEffect(() => {
+    const sync = () => {
+      if (document.visibilityState === 'visible') void refresh();
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') void refresh();
+    };
+    window.addEventListener('focus', sync);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('focus', sync);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [refresh]);
+
   return { state, savingChoiceId, message, resolve, refresh };
 }

@@ -11,6 +11,7 @@ export type PlayerPortalBrowserSessionState =
   | { status: 'unavailable' };
 
 let sharedBootstrap: Promise<PlayerPortalSessionBootstrap> | null = null;
+let sharedRefresh: Promise<PlayerPortalSessionBootstrap> | null = null;
 
 export function extractPlayerPortalTicketFromUrl(url: URL): {
   ticket: string | null;
@@ -28,6 +29,15 @@ export function extractPlayerPortalTicketFromUrl(url: URL): {
     ticket,
     cleanPath: `${url.pathname}${url.search}${remainingHash ? `#${remainingHash}` : ''}`,
   };
+}
+
+function refreshBrowserSession(): Promise<PlayerPortalSessionBootstrap> {
+  if (sharedRefresh) return sharedRefresh;
+  const pending = bootstrapPlayerPortalSession(null).finally(() => {
+    if (sharedRefresh === pending) sharedRefresh = null;
+  });
+  sharedRefresh = pending;
+  return pending;
 }
 
 function bootstrapBrowserSession(): Promise<PlayerPortalSessionBootstrap> {
@@ -68,6 +78,33 @@ export function usePlayerPortalBrowserSession(): PlayerPortalBrowserSessionState
 
     return () => {
       cancelled = true;
+    };
+  }, [showcase]);
+
+  useEffect(() => {
+    if (showcase) return;
+
+    let cancelled = false;
+    const refresh = () => {
+      if (document.visibilityState !== 'visible') return;
+      void refreshBrowserSession()
+        .then((next) => {
+          if (!cancelled) setState(next);
+        })
+        .catch(() => {
+          // Keep the last known session snapshot on transient focus-refresh failures.
+        });
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') refresh();
+    };
+
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, [showcase]);
 

@@ -86,5 +86,39 @@ export function usePlayerPortalLocation(): PlayerPortalLocationState {
     };
   }, [playerId, session.status, showcase]);
 
+  useEffect(() => {
+    if (showcase || playerId === null) return;
+
+    let cancelled = false;
+    const sync = () => {
+      if (document.visibilityState !== 'visible') return;
+      cache = null;
+      void loadLocation(playerId)
+        .then((result) => {
+          if (cancelled) return;
+          if (result.status !== 'authenticated') {
+            setState(result);
+            return;
+          }
+          cache = { playerId, location: result.location };
+          setState(result);
+        })
+        .catch(() => {
+          // Keep the previous location during transient focus-refresh failures.
+        });
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') sync();
+    };
+
+    window.addEventListener('focus', sync);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('focus', sync);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [playerId, showcase]);
+
   return state;
 }

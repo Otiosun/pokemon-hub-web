@@ -124,5 +124,39 @@ export function useOwnedPokemonCollection(): OwnedPokemonCollectionState {
     }
   }, [playerId, showcase]);
 
+  useEffect(() => {
+    if (showcase || playerId === null) return;
+
+    let cancelled = false;
+    const sync = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (cache?.playerId === playerId) cache = null;
+      void loadPokemon(playerId)
+        .then((result) => {
+          if (cancelled) return;
+          if (result.status === 'unauthenticated') {
+            setState(result);
+            return;
+          }
+          cache = { playerId, pokemon: result.pokemon };
+          setState({ status: 'authenticated', pokemon: result.pokemon });
+        })
+        .catch(() => {
+          // Preserve the visible snapshot on transient background-sync failures.
+        });
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') sync();
+    };
+
+    window.addEventListener('focus', sync);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('focus', sync);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [playerId, showcase]);
+
   return { ...state, replacePokemon, refresh };
 }

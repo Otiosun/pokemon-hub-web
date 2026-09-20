@@ -142,5 +142,39 @@ export function usePlayerPortalPokedex(): PlayerPortalPokedexState {
     };
   }, [playerId, session.status, showcase]);
 
+  useEffect(() => {
+    if (showcase || playerId === null) return;
+
+    let cancelled = false;
+    const sync = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (cache?.playerId === playerId) cache = null;
+      void loadPokedex(playerId)
+        .then((result) => {
+          if (cancelled) return;
+          if (result.status === 'unauthenticated') {
+            setState(result);
+            return;
+          }
+          cache = { playerId, pokedex: result.pokedex };
+          setState({ status: 'authenticated', pokedex: result.pokedex });
+        })
+        .catch(() => {
+          // Preserve the current Pokédex snapshot if a focus refresh fails.
+        });
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') sync();
+    };
+
+    window.addEventListener('focus', sync);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('focus', sync);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [playerId, showcase]);
+
   return state;
 }
