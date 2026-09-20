@@ -6,9 +6,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-# Current player-preview contract: every species that can be SEEN or CAUGHT in
-# speciesPlayerStatePreview/ownedPokemonPreview must have a real 3D asset.
-# UNKNOWN species deliberately do not expose 2D/3D controls.
+# Deployment-local fallback used while the complete immutable catalog is not
+# hosted behind VITE_POKEMON_ASSET_BASE_URL. Keep the active showcase team and
+# the representative converter coverage here; this is not the full Gen I-III
+# production catalog.
 PLAYER_VISIBLE_DEX = (
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 18, 19, 20, 22, 24, 25, 26,
     41, 58, 59, 63, 92, 94, 129, 131, 133, 134, 148, 149, 197, 245, 249, 384,
