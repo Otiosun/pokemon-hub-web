@@ -447,9 +447,14 @@ function isPlayerPortalPokemonMove(value: unknown): value is PlayerPortalPokemon
 
 function isPlayerPortalPokemonIvs(value: unknown): value is PlayerPortalPokemonIvs {
   if (!isRecord(value)) return false;
-  return [value.hp, value.attack, value.defense, value.spAttack, value.spDefense, value.speed].every(
-    (stat) => stat === null || (isNonNegativeInteger(stat) && stat <= 31),
-  );
+  return [
+    value.hp,
+    value.attack,
+    value.defense,
+    value.spAttack,
+    value.spDefense,
+    value.speed,
+  ].every((stat) => stat === null || (isNonNegativeInteger(stat) && stat <= 31));
 }
 
 export function isPlayerPortalPokemon(value: unknown): value is PlayerPortalPokemon {
@@ -607,7 +612,8 @@ function isPlayerPortalBattle(value: unknown): value is PlayerPortalBattle {
   if (sideNos.length < 2 || !sideNos.includes(value.playerSideNo)) return false;
   if (
     sideNos.some(
-      (sideNo) => combatants.filter((combatant) => combatant.sideNo === sideNo && combatant.active).length > 1,
+      (sideNo) =>
+        combatants.filter((combatant) => combatant.sideNo === sideNo && combatant.active).length > 1,
     )
   ) {
     return false;
