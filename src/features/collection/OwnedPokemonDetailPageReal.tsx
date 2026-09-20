@@ -13,6 +13,8 @@ import {
   readOwnedPokemonVisualPreference,
   rememberOwnedPokemonVisualPreference,
 } from '../pokemon-detail/pokemonVisualPreference';
+import { applyCollectionFilters } from './collectionFilters';
+import { readCollectionSession } from './collectionSession';
 import { createOwnedPokemonView, findOwnedPokemonView, type OwnedPokemonSex } from './ownedPokemonView';
 import { useOwnedPokemonCollection } from './useOwnedPokemonCollection';
 import { usePlayerPortalMoveChoices } from './usePlayerPortalMoveChoices';
@@ -205,18 +207,54 @@ export function OwnedPokemonDetailPage({
     return <RecordUnavailable returnHref={resolvedReturnHref} message="Pokémon não encontrado na sua coleção." />;
   }
 
-  const index = pokemon.findIndex((item) => item.instanceId === instanceId);
-  const previous = index > 0 ? pokemon[index - 1] : null;
-  const next = index >= 0 && index < pokemon.length - 1 ? pokemon[index + 1] : null;
   const dex = record.dex === null ? null : String(record.dex).padStart(3, '0');
   const returningToTeam = resolvedReturnHref === '/team' || resolvedReturnHref.startsWith('/team?');
   const returningToJourney =
     resolvedReturnHref === '/jornada' || resolvedReturnHref.startsWith('/jornada?');
   const returnLabel = returningToTeam ? 'TIME' : returningToJourney ? 'JORNADA' : 'BOX';
-  const siblingHref = (siblingInstanceId: string) =>
-    returningToJourney
-      ? `/pokemon/${siblingInstanceId}?origin=journey-lead`
-      : `/pokemon/${siblingInstanceId}`;
+
+  const contextualPokemon = (() => {
+    if (returningToJourney) return [record];
+
+    if (returningToTeam) {
+      return pokemon
+        .filter((item) => item.teamSlot !== null)
+        .sort((left, right) => (left.teamSlot ?? 99) - (right.teamSlot ?? 99));
+    }
+
+    const session = readCollectionSession();
+    const context = new URL(resolvedReturnHref, window.location.origin);
+    const speciesRaw = context.searchParams.get('species');
+    const speciesDex = speciesRaw ? Number.parseInt(speciesRaw, 10) : null;
+    const needle = session.query
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+
+    const base = pokemon.filter((item) => {
+      if (speciesDex && item.dex !== speciesDex) return false;
+      if (!needle) return true;
+      const nickname = item.nickname
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+      const species = item.species
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+      return nickname.includes(needle) || species.includes(needle);
+    });
+
+    return applyCollectionFilters(base, session.filters);
+  })();
+
+  const contextIndex = contextualPokemon.findIndex((item) => item.instanceId === instanceId);
+  const previous = contextIndex > 0 ? contextualPokemon[contextIndex - 1] : null;
+  const next =
+    contextIndex >= 0 && contextIndex < contextualPokemon.length - 1
+      ? contextualPokemon[contextIndex + 1]
+      : null;
   const locationLabel = record.teamSlot ? `TIME · SLOT ${record.teamSlot}` : record.box;
   const speciesSlug = capabilitySpeciesSlug;
   const identityLine = record.catalogResolved
