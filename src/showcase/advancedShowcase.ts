@@ -200,6 +200,8 @@ export function createAdvancedShowcasePokemon(): PlayerPortalPokemon[] {
     return {
       pokemonInstanceId: demoUuid(1000 + species.dex),
       formId: demoUuid(5000 + species.dex),
+      formSlug: 'default',
+      speciesSlug: species.name.toLowerCase(),
       displayName: species.name,
       nationalDex: species.dex,
       typeNames: [...species.types],
@@ -546,6 +548,8 @@ function showcaseTeam(pokemon: readonly PlayerPortalPokemon[]) {
     .map((entry) => ({
       pokemonInstanceId: entry.pokemonInstanceId,
       formId: entry.formId,
+      formSlug: entry.formSlug,
+      speciesSlug: entry.speciesSlug,
       displayName: entry.displayName,
       nationalDex: entry.nationalDex,
       typeNames: [...entry.typeNames],
