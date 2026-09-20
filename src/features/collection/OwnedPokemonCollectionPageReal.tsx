@@ -277,12 +277,6 @@ export function OwnedPokemonCollectionPage() {
     ? (pokemon.find((item) => item.dex === speciesContextDex)?.species ??
       `#${String(speciesContextDex).padStart(3, '0')}`)
     : null;
-  const maxBoxNo = Math.max(
-    1,
-    ...pokemon.map((item) => item.boxNo ?? 0),
-    organizerBoxNo,
-  );
-
   const selectedOrganizerPokemon = organizerPokemonId
     ? pokemon.find((item) => item.instanceId === organizerPokemonId) ?? null
     : null;
