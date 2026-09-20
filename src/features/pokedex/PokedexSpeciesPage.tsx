@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
+import { SpeciesPokemonImage } from '../../visual-assets/PokemonPreviewImage';
 import { getPokemonAssetUrl } from '../../visual-assets/assetBaseUrl';
 import { TypeBadge } from '../../visual-assets/TypeBadge';
 import { GenerationsPokemonViewer } from '../asset-lab/GenerationsPokemonViewer';
@@ -215,7 +215,7 @@ function EvolutionTree({ stages }: { stages: EvolutionSpecies[][] }) {
           <div>
             {stage.map((species) => (
               <a href={neighbourHref(species.dex)} key={species.dex}>
-                <PokemonAssetImage
+                <SpeciesPokemonImage
                   dex={species.dex}
                   assetRole="icon"
                   alt=""
@@ -444,7 +444,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
 
             {discovered && visualMode === 'artwork' && (
               <div className={`pokedex-species-artwork-slot${artworkReady ? ' is-ready' : ''}`}>
-                <PokemonAssetImage
+                <SpeciesPokemonImage
                   key={validDex}
                   dex={validDex}
                   assetRole="official-artwork"
