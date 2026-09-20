@@ -120,6 +120,15 @@ export type PlayerPortalBattle = {
   combatants: PlayerPortalBattleCombatant[];
 };
 
+export type PlayerPortalLocationConnection = {
+  connectionId: string;
+  connectionKey: string;
+  destinationAreaId: string;
+  destinationSlug: string;
+  destinationDisplayName: string;
+  available: boolean;
+};
+
 export type PlayerPortalLocation = {
   areaId: string;
   areaSlug: string;
@@ -129,6 +138,7 @@ export type PlayerPortalLocation = {
   regionDisplayName: string;
   safePoint: boolean;
   enteredAt: string;
+  connections: PlayerPortalLocationConnection[];
 };
 
 export type PlayerPortalProfile = {
@@ -622,6 +632,20 @@ function isPlayerPortalBattle(value: unknown): value is PlayerPortalBattle {
   return true;
 }
 
+function isPlayerPortalLocationConnection(
+  value: unknown,
+): value is PlayerPortalLocationConnection {
+  if (!isRecord(value)) return false;
+  return (
+    isUuid(value.connectionId) &&
+    isDisplayString(value.connectionKey) &&
+    isUuid(value.destinationAreaId) &&
+    isDisplayString(value.destinationSlug) &&
+    isDisplayString(value.destinationDisplayName) &&
+    typeof value.available === 'boolean'
+  );
+}
+
 function isPlayerPortalLocation(value: unknown): value is PlayerPortalLocation {
   if (!isRecord(value)) return false;
   return (
@@ -632,7 +656,9 @@ function isPlayerPortalLocation(value: unknown): value is PlayerPortalLocation {
     isDisplayString(value.regionSlug) &&
     isDisplayString(value.regionDisplayName) &&
     typeof value.safePoint === 'boolean' &&
-    isIsoTimestamp(value.enteredAt)
+    isIsoTimestamp(value.enteredAt) &&
+    Array.isArray(value.connections) &&
+    value.connections.every(isPlayerPortalLocationConnection)
   );
 }
 
