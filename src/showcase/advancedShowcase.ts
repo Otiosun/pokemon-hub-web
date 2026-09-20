@@ -186,8 +186,18 @@ export function isAdvancedShowcaseActive() {
   return resolved.active;
 }
 
+function showcaseSpeciesSlug(name: string) {
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 export function createAdvancedShowcasePokemon(): PlayerPortalPokemon[] {
   return SHOWCASE_SPECIES.map((species, index) => {
+    const speciesSlug = showcaseSpeciesSlug(species.name);
     const inTeam = index < 6;
     const boxIndex = Math.floor(Math.max(index - 6, 0) / 12) + 1;
     const boxSlot = (Math.max(index - 6, 0) % 12) + 1;
@@ -200,8 +210,8 @@ export function createAdvancedShowcasePokemon(): PlayerPortalPokemon[] {
     return {
       pokemonInstanceId: demoUuid(1000 + species.dex),
       formId: demoUuid(5000 + species.dex),
-      formSlug: 'default',
-      speciesSlug: species.name.toLowerCase(),
+      formSlug: speciesSlug,
+      speciesSlug,
       displayName: species.name,
       nationalDex: species.dex,
       typeNames: [...species.types],
