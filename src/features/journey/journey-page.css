@@ -640,6 +640,21 @@
   transform: translateY(-1px);
 }
 
+.journey-share-action.is-attention {
+  border-color: rgba(185, 131, 24, 0.58);
+  background: rgba(242, 201, 76, 0.08);
+}
+
+.journey-share-action.is-attention .journey-share-action-icon {
+  border-color: rgba(185, 131, 24, 0.62);
+  color: #8a6512;
+  font: 800 1rem 'IBM Plex Mono', monospace;
+}
+
+.journey-share-action.is-attention .journey-share-action-chevron {
+  color: #8a6512;
+}
+
 .journey-share-action-icon {
   display: grid;
   width: 38px;
