@@ -1,5 +1,7 @@
 import { proxyPlayerPortalRequest } from '../../../../src/player-api/playerPortalProxy.js';
-import { readPlayerPortalApiBaseUrl } from '../../../../src/player-api/playerPortalServerRuntime.js';
+import {
+  readPlayerPortalApiBaseUrl,
+} from '../../../../src/player-api/playerPortalServerRuntime.js';
 
 export default {
   fetch(request: Request): Promise<Response> {
