@@ -33,6 +33,7 @@ function pokemonPortrait(pokemon: OwnedPokemonView) {
       dex={pokemon.dex}
       assetRole="portrait"
       shiny={pokemon.shiny}
+      formSlug={pokemon.formSlug}
       alt=""
       aria-hidden="true"
       loading="lazy"
