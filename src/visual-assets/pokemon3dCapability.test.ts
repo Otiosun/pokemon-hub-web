@@ -33,6 +33,21 @@ describe('Pokemon 3D capability', () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
 
+  it('accepts the catalog default form when its slug matches the species slug', async () => {
+    const fetcher = vi.fn(async () =>
+      new Response(JSON.stringify({ assets: [{ dex: 6, species: 'charizard' }] }), {
+        status: 200,
+      }),
+    );
+
+    await expect(
+      getPokemon3dCapability(
+        { dex: 6, species: 'charizard', form: 'charizard', variant: 'regular' },
+        fetcher,
+      ),
+    ).resolves.toEqual({ status: 'ready' });
+  });
+
   it('keeps non-default forms unsupported until the 3D manifest models forms explicitly', async () => {
     const fetcher = vi.fn();
 
