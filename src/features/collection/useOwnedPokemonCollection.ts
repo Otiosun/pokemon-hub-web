@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   getPlayerPortalPokemon,
   type PlayerPortalPokemon,
@@ -10,11 +10,16 @@ import {
   isAdvancedShowcaseActive,
 } from '../../showcase/advancedShowcase';
 
-export type OwnedPokemonCollectionState =
+type OwnedPokemonCollectionSnapshot =
   | { status: 'loading' }
   | { status: 'authenticated'; pokemon: readonly PlayerPortalPokemon[] }
   | { status: 'unauthenticated' }
   | { status: 'unavailable' };
+
+export type OwnedPokemonCollectionState = OwnedPokemonCollectionSnapshot & {
+  readonly replacePokemon: (pokemon: readonly PlayerPortalPokemon[]) => void;
+  readonly refresh: () => Promise<void>;
+};
 
 let cache: { playerId: string; pokemon: readonly PlayerPortalPokemon[] } | null = null;
 let pending: { playerId: string; promise: Promise<PlayerPortalPokemonResult> } | null = null;
@@ -36,7 +41,7 @@ export function useOwnedPokemonCollection(): OwnedPokemonCollectionState {
   const showcase = isAdvancedShowcaseActive();
   const session = usePlayerPortalBrowserSession();
   const playerId = session.status === 'authenticated' ? session.profile.playerId : null;
-  const [state, setState] = useState<OwnedPokemonCollectionState>(() =>
+  const [state, setState] = useState<OwnedPokemonCollectionSnapshot>(() =>
     showcase
       ? { status: 'authenticated', pokemon: createAdvancedShowcasePokemon() }
       : { status: 'loading' },
@@ -93,5 +98,31 @@ export function useOwnedPokemonCollection(): OwnedPokemonCollectionState {
     };
   }, [playerId, session.status, showcase]);
 
-  return state;
+  const replacePokemon = useCallback(
+    (pokemon: readonly PlayerPortalPokemon[]) => {
+      if (showcase || playerId === null) return;
+      cache = { playerId, pokemon: [...pokemon] };
+      setState({ status: 'authenticated', pokemon: [...pokemon] });
+    },
+    [playerId, showcase],
+  );
+
+  const refresh = useCallback(async () => {
+    if (showcase || playerId === null) return;
+    if (cache?.playerId === playerId) cache = null;
+    setState({ status: 'loading' });
+    try {
+      const result = await getPlayerPortalPokemon();
+      if (result.status === 'unauthenticated') {
+        setState(result);
+        return;
+      }
+      cache = { playerId, pokemon: result.pokemon };
+      setState({ status: 'authenticated', pokemon: result.pokemon });
+    } catch {
+      setState({ status: 'unavailable' });
+    }
+  }, [playerId, showcase]);
+
+  return { ...state, replacePokemon, refresh };
 }
