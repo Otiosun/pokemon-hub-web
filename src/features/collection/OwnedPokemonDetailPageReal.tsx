@@ -53,6 +53,31 @@ function sexGlyph(sex: OwnedPokemonSex) {
   return '—';
 }
 
+function conditionLabel(condition: string) {
+  const labels: Record<string, string> = {
+    BURN: 'QUEIMADO',
+    POISON: 'ENVENENADO',
+    BAD_POISON: 'TOXIC',
+    PARALYSIS: 'PARALISADO',
+    SLEEP: 'DORMINDO',
+    FREEZE: 'CONGELADO',
+  };
+  return labels[condition] ?? condition.replaceAll('_', ' ');
+}
+
+function ownedStatusLabel(record: {
+  fainted: boolean;
+  conditions: readonly string[];
+}) {
+  if (record.fainted) return 'CAÍDO';
+  if (record.conditions.length > 0) return record.conditions.map(conditionLabel).join(' · ');
+  return 'OK';
+}
+
+function ivLabel(value: number | null) {
+  return value === null ? '—' : String(value);
+}
+
 function resolveOwnedReturnHref(returnHref: string) {
   const params = new URLSearchParams(window.location.search);
   return params.get('origin') === 'journey-lead' ? '/jornada?pokemonContext=lead' : returnHref;
@@ -230,6 +255,10 @@ export function OwnedPokemonDetailPage({
               style={{ minWidth: 0, margin: 0, padding: 0, border: 0 }}
             >
               {record.shiny ? <strong>SHINY</strong> : null}
+              {record.fainted ? <strong>CAÍDO</strong> : null}
+              {!record.fainted && record.conditions.length > 0 ? (
+                <strong>{record.conditions.map(conditionLabel).join(' · ')}</strong>
+              ) : null}
             </fieldset>
           </header>
 
@@ -246,11 +275,64 @@ export function OwnedPokemonDetailPage({
                 </dd>
               </div>
               <div><dt>NÍVEL</dt><dd>{record.level}</dd></div>
-              <div><dt>HP ATUAL</dt><dd>{record.currentHp}</dd></div>
-              <div><dt>SEXO</dt><dd><span className="owned-detail-sex">{sexGlyph(record.sex)}</span> {sexLabel(record.sex)}</dd></div>
+              <div>
+                <dt>XP</dt>
+                <dd>
+                  {record.xpToNextLevel > 0
+                    ? `${record.xp} / ${record.xpToNextLevel}`
+                    : 'NÍVEL MÁXIMO'}
+                </dd>
+              </div>
+              <div>
+                <dt>HP</dt>
+                <dd>
+                  {record.maxHp === null
+                    ? record.currentHp
+                    : `${record.currentHp} / ${record.maxHp}`}
+                </dd>
+              </div>
+              <div><dt>ESTADO</dt><dd>{ownedStatusLabel(record)}</dd></div>
+              <div><dt>NATURE</dt><dd>{record.nature ?? '—'}</dd></div>
+              <div><dt>ABILITY</dt><dd>{record.ability ?? '—'}</dd></div>
+              <div>
+                <dt>SEXO</dt>
+                <dd><span className="owned-detail-sex">{sexGlyph(record.sex)}</span> {sexLabel(record.sex)}</dd>
+              </div>
               <div><dt>SHINY</dt><dd>{record.shiny ? 'Sim' : 'Não'}</dd></div>
               <div className="is-wide"><dt>LOCAL ATUAL</dt><dd>{locationLabel}</dd></div>
             </dl>
+
+            <dl className="owned-detail-combat-core" aria-label="Valores individuais">
+              <div className="is-wide"><dt>IVs</dt><dd>VALORES INDIVIDUAIS</dd></div>
+              <div><dt>HP</dt><dd>{ivLabel(record.ivs.hp)}</dd></div>
+              <div><dt>ATTACK</dt><dd>{ivLabel(record.ivs.attack)}</dd></div>
+              <div><dt>DEFENSE</dt><dd>{ivLabel(record.ivs.defense)}</dd></div>
+              <div><dt>SP. ATK</dt><dd>{ivLabel(record.ivs.spAttack)}</dd></div>
+              <div><dt>SP. DEF</dt><dd>{ivLabel(record.ivs.spDefense)}</dd></div>
+              <div><dt>SPEED</dt><dd>{ivLabel(record.ivs.speed)}</dd></div>
+            </dl>
+
+            <section className="owned-detail-moves" aria-label="Movimentos atuais">
+              <header>
+                <span>MOVIMENTOS</span>
+                <small>PP ATUAL / MÁX.</small>
+              </header>
+              {record.moves.length > 0 ? (
+                record.moves.map((move) => (
+                  <article key={move.slotNo}>
+                    <span>{String(move.slotNo).padStart(2, '0')}</span>
+                    <strong>{move.displayName ?? 'MOVIMENTO INDISPONÍVEL'}</strong>
+                    <span>
+                      {move.ppCurrent === null || move.maxPp === null
+                        ? 'PP —'
+                        : `PP ${move.ppCurrent}/${move.maxPp}`}
+                    </span>
+                  </article>
+                ))
+              ) : (
+                <div className="owned-detail-empty-block">Nenhum movimento registrado.</div>
+              )}
+            </section>
 
             {dex !== null ? (
               <a className="owned-detail-species-link" href={`/pokedex/${dex}`}>
