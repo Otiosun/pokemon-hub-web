@@ -304,6 +304,24 @@ export function OwnedPokemonDetailPage({
                 />
               </div>
             ) : null}
+
+            {visualMode === '3d' && modelCapability === 'failed' ? (
+              <div className="owned-detail-model-status" role="status">
+                <strong>3D indisponível agora</strong>
+                <span>O artwork 2D continua disponível enquanto o modelo não carrega.</span>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setModelRetryNonce((current) => current + 1)}
+                  >
+                    TENTAR NOVAMENTE
+                  </button>
+                  <button type="button" onClick={() => chooseVisualMode('2d')}>
+                    FICAR NO 2D
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <nav className="owned-pokemon-side-nav" aria-label="Pokémon anterior e próximo na coleção">
