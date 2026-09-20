@@ -288,6 +288,19 @@ describe('movePlayerPortalPokemon', () => {
     });
   });
 
+  it('rejects a Box slot outside the canonical 30-slot capacity before the request', async () => {
+    const fetcher = vi.fn(async () => new Response('{}', { status: 500 }));
+    const input = {
+      pokemonInstanceId: '66666666-6666-4666-8666-666666666666',
+      target: { placementKind: 'BOX' as const, boxNo: 1, slotNo: 31 },
+    };
+
+    await expect(movePlayerPortalPokemon(input, fetcher)).rejects.toThrow(
+      'Invalid player portal roster request',
+    );
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it('does not pretend a roster move succeeded after session expiry', async () => {
     const fetcher = vi.fn(async () => new Response('{"error":"UNAUTHENTICATED"}', { status: 401 }));
     const input = {
