@@ -127,6 +127,8 @@ export function OwnedPokemonDetailPage({
   const resolvedReturnHref = resolveOwnedReturnHref(returnHref);
   const capabilitySpeciesSlug =
     record?.catalogResolved ? speciesAssetSlug(record.species) : null;
+  const capabilityDex = record?.dex ?? null;
+  const capabilityVariant = record?.shiny ? 'shiny' : 'regular';
 
   const chooseVisualMode = (mode: OwnedVisualMode) => {
     if (mode === '3d') {
@@ -142,7 +144,7 @@ export function OwnedPokemonDetailPage({
   useEffect(() => {
     let cancelled = false;
 
-    if (!record || record.dex === null || !capabilitySpeciesSlug) {
+    if (capabilityDex === null || !capabilitySpeciesSlug) {
       setModelCapability('unsupported');
       return () => {
         cancelled = true;
@@ -151,28 +153,29 @@ export function OwnedPokemonDetailPage({
 
     setModelCapability('checking');
     void getPokemon3dCapability({
-      dex: record.dex,
+      dex: capabilityDex,
       species: capabilitySpeciesSlug,
-      variant: record.shiny ? 'shiny' : 'regular',
+      variant: capabilityVariant,
     }).then((capability) => {
-      if (cancelled) return;
-      setModelCapability(capability.status);
-      if (capability.status === 'unsupported' && visualMode === '3d') {
-        setViewerReady(false);
-        setVisualMode('2d');
-        rememberOwnedPokemonVisualPreference('2d');
-      }
+      if (!cancelled) setModelCapability(capability.status);
     });
 
     return () => {
       cancelled = true;
     };
   }, [
+    capabilityDex,
     capabilitySpeciesSlug,
+    capabilityVariant,
     modelRetryNonce,
-    record,
-    visualMode,
   ]);
+
+  useEffect(() => {
+    if (modelCapability !== 'unsupported' || visualMode !== '3d') return;
+    setViewerReady(false);
+    setVisualMode('2d');
+    rememberOwnedPokemonVisualPreference('2d');
+  }, [modelCapability, visualMode]);
 
   if (collection.status === 'loading') {
     return <RecordUnavailable returnHref={resolvedReturnHref} message="Sincronizando registro oficial…" />;
