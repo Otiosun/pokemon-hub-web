@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { SpeciesPokemonImage } from '../../visual-assets/PokemonPreviewImage';
-import type { PokemonVisualVariant } from '../../visual-assets/pokemonVisualRegistry';
 import { TypeIcon } from '../../visual-assets/TypeIcon';
 import { typeAccent } from '../pokemon-detail/fieldDexSpecies';
 import {
@@ -13,6 +12,7 @@ import {
   rememberPokedexIndexFilters,
   rememberPokedexIndexScroll,
   type PokedexDiscoveryFilter,
+  type PokedexIndexVisualVariant,
   type PokedexRegionFilter,
 } from './pokedexIndexSession';
 import {
@@ -106,7 +106,9 @@ export function PokedexIndexPage() {
   const [region, setRegion] = useState<PokedexRegionFilter>(initialSession.region);
   const [discovery, setDiscovery] = useState<PokedexDiscoveryFilter>(initialSession.discovery);
   const [shiny, setShiny] = useState<PokedexShinyFilter>(initialSession.shiny);
-  const [visualVariant, setVisualVariant] = useState<PokemonVisualVariant>('regular');
+  const [visualVariant, setVisualVariant] = useState<PokedexIndexVisualVariant>(
+    initialSession.visualVariant,
+  );
   const [typeSlug, setTypeSlug] = useState<string | null>(initialSession.typeSlug);
   const [typeMembers, setTypeMembers] = useState<ReadonlySet<number> | null>(initialTypeMembers);
   const [typeStatus, setTypeStatus] = useState<TypeFilterStatus>(
@@ -192,8 +194,8 @@ export function PokedexIndexPage() {
   }, [shiny, shinyReady, visualVariant]);
 
   useEffect(() => {
-    rememberPokedexIndexFilters(query, region, discovery, shiny, typeSlug);
-  }, [discovery, query, region, shiny, typeSlug]);
+    rememberPokedexIndexFilters(query, region, discovery, shiny, visualVariant, typeSlug);
+  }, [discovery, query, region, shiny, typeSlug, visualVariant]);
 
   useEffect(() => {
     if (!catalogReady || restoredScroll.current) return;
