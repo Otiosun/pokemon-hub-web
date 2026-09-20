@@ -271,6 +271,7 @@ export function OwnedPokemonDetailPage({
                   dex={record.dex}
                   assetRole="official-artwork"
                   shiny={record.shiny}
+                  formSlug={record.formSlug}
                   alt={`Ilustração de ${record.species}`}
                   fallbackLabel={record.species.slice(0, 1)}
                   decoding="async"
@@ -323,7 +324,7 @@ export function OwnedPokemonDetailPage({
               <a href={`/pokemon/${previous.instanceId}`} className="is-previous" aria-label={`Abrir ${previous.nickname}`}>
                 <SideArrow direction="left" />
                 {previous.dex !== null ? (
-                  <OwnedPokemonImage dex={previous.dex} assetRole="icon" shiny={previous.shiny} alt="" aria-hidden="true" loading="lazy" decoding="async" />
+                  <OwnedPokemonImage dex={previous.dex} assetRole="icon" shiny={previous.shiny} formSlug={previous.formSlug} alt="" aria-hidden="true" loading="lazy" decoding="async" />
                 ) : <strong aria-hidden="true">?</strong>}
                 <span><small>ANTERIOR</small><strong>{previous.nickname}</strong></span>
               </a>
@@ -332,7 +333,7 @@ export function OwnedPokemonDetailPage({
               <a href={`/pokemon/${next.instanceId}`} className="is-next" aria-label={`Abrir ${next.nickname}`}>
                 <span><small>PRÓXIMO</small><strong>{next.nickname}</strong></span>
                 {next.dex !== null ? (
-                  <OwnedPokemonImage dex={next.dex} assetRole="icon" shiny={next.shiny} alt="" aria-hidden="true" loading="lazy" decoding="async" />
+                  <OwnedPokemonImage dex={next.dex} assetRole="icon" shiny={next.shiny} formSlug={next.formSlug} alt="" aria-hidden="true" loading="lazy" decoding="async" />
                 ) : <strong aria-hidden="true">?</strong>}
                 <SideArrow direction="right" />
               </a>
