@@ -6,7 +6,7 @@ import { useOwnedPokemonCollection } from '../collection/useOwnedPokemonCollecti
 import { usePlayerPortalMoveChoices } from '../collection/usePlayerPortalMoveChoices';
 import { usePlayerPortalPokedex } from '../pokedex/usePlayerPortalPokedex';
 import { isAdvancedShowcaseActive } from '../../showcase/advancedShowcase';
-import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
+import { OwnedPokemonImage } from '../../visual-assets/PokemonPreviewImage';
 import {
   createJourneyProfileView,
   type JourneyBadgePreview,
@@ -479,8 +479,9 @@ export function JourneyPageV2({
                 <small>Nv. {profile.leadPokemon.level}</small>
               </div>
               <div className="journey-partner-portrait" aria-hidden="true">
-                <PokemonAssetImage
+                <OwnedPokemonImage
                   dex={profile.leadPokemon.dex}
+                  shiny={profile.leadPokemon.shiny}
                   assetRole="home-artwork"
                   alt=""
                   loading="eager"
