@@ -482,6 +482,7 @@ export function JourneyPageV2({
                 <OwnedPokemonImage
                   dex={profile.leadPokemon.dex}
                   shiny={profile.leadPokemon.shiny}
+                  formSlug={profile.leadPokemon.formSlug}
                   assetRole="home-artwork"
                   alt=""
                   loading="eager"
