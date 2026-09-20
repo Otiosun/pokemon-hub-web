@@ -43,15 +43,6 @@ function SideArrow({ direction }: { direction: 'left' | 'right' }) {
   );
 }
 
-function speciesAssetSlug(species: string) {
-  return species
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-
 function sexLabel(sex: OwnedPokemonSex) {
   if (sex === 'M') return 'Macho';
   if (sex === 'F') return 'Fêmea';
@@ -140,7 +131,8 @@ export function OwnedPokemonDetailPage({
   const record = findOwnedPokemonView(pokemon, instanceId);
   const resolvedReturnHref = resolveOwnedReturnHref(returnHref);
   const capabilitySpeciesSlug =
-    record?.catalogResolved ? speciesAssetSlug(record.species) : null;
+    record?.catalogResolved ? record.speciesSlug : null;
+  const capabilityFormSlug = record?.catalogResolved ? record.formSlug : null;
   const capabilityDex = record?.dex ?? null;
   const capabilityVariant = record?.shiny ? 'shiny' : 'regular';
 
@@ -169,6 +161,7 @@ export function OwnedPokemonDetailPage({
     void getPokemon3dCapability({
       dex: capabilityDex,
       species: capabilitySpeciesSlug,
+      form: capabilityFormSlug,
       variant: capabilityVariant,
     }).then((capability) => {
       if (!cancelled) setModelCapability(capability.status);
@@ -180,6 +173,7 @@ export function OwnedPokemonDetailPage({
   }, [
     capabilityDex,
     capabilitySpeciesSlug,
+    capabilityFormSlug,
     capabilityVariant,
     modelRetryNonce,
   ]);
