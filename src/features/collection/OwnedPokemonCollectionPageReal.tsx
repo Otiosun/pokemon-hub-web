@@ -333,6 +333,7 @@ export function OwnedPokemonCollectionPage() {
       return;
     }
     setOrganizerPokemonId(candidate.instanceId);
+    setLastMove(null);
     setOrganizerMessage(`${candidate.nickname} selecionado. Agora toque no slot de destino.`);
     setOrganizerStatus('idle');
 
@@ -603,7 +604,7 @@ export function OwnedPokemonCollectionPage() {
                           >
                             ‹
                           </button>
-                          <span>{organizerBoxNo} / {maxBoxNo}</span>
+                          <span>BOX {String(organizerBoxNo).padStart(2, '0')}</span>
                           <button
                             type="button"
                             aria-label="Próxima Box"
