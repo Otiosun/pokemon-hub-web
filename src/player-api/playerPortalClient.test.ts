@@ -150,6 +150,44 @@ describe('getPlayerPortalBattle', () => {
     });
   });
 
+  it('rejects battle payloads whose player-side marker disagrees with playerSideNo', async () => {
+    const malformed = {
+      battleType: 'WILD',
+      status: 'ACTIVE',
+      turnNumber: 1,
+      playerSideNo: 1,
+      combatants: [
+        {
+          sideNo: 1,
+          playerSide: false,
+          active: true,
+          displayName: 'Charmander',
+          level: 12,
+          currentHp: 20,
+          maxHp: 31,
+          conditions: [],
+          moves: [],
+        },
+        {
+          sideNo: 2,
+          playerSide: false,
+          active: true,
+          displayName: 'Pidgey',
+          level: 7,
+          currentHp: 14,
+          maxHp: 18,
+          conditions: [],
+          moves: [],
+        },
+      ],
+    };
+    const fetcher = vi.fn(
+      async () => new Response(JSON.stringify({ battle: malformed }), { status: 200 }),
+    );
+
+    await expect(getPlayerPortalBattle(fetcher)).rejects.toThrow('Invalid player portal response');
+  });
+
   it('accepts no active battle without fabricating one', async () => {
     const fetcher = vi.fn(
       async () =>
