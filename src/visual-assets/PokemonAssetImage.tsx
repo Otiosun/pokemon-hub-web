@@ -7,12 +7,13 @@ import {
   type ImgHTMLAttributes,
 } from 'react';
 import {
-  getPokemonSpeciesVisualAssets,
+  getPokemonImageSources,
+  type PokemonImageRole,
   type PokemonVisualVariant,
 } from './pokemonVisualRegistry';
 import './pokemon-asset-image.css';
 
-export type PokemonImageRole = 'official-artwork' | 'home-artwork' | 'icon' | 'portrait';
+export type { PokemonImageRole } from './pokemonVisualRegistry';
 
 type PokemonAssetImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'onError' | 'role'> & {
   dex: number;
@@ -53,38 +54,6 @@ const ALPHA_THRESHOLD = 12;
 const ALPHA_PADDING_RATIO = 0.035;
 const ALPHA_FILL_RATIO = 0.94;
 const alphaBoundsCache = new Map<string, Promise<PokemonAlphaBounds | null>>();
-
-function sourceOrder(
-  dex: number,
-  assetRole: PokemonImageRole,
-  variant: PokemonVisualVariant,
-) {
-  const visual = getPokemonSpeciesVisualAssets(dex, variant);
-  const sources: Record<PokemonImageRole, Array<{ role: PokemonImageRole; src: string }>> = {
-    'official-artwork': [
-      { role: 'official-artwork', src: visual.artworkOfficial },
-      { role: 'home-artwork', src: visual.artworkHome },
-      { role: 'icon', src: visual.icon },
-    ],
-    'home-artwork': [
-      { role: 'home-artwork', src: visual.artworkHome },
-      { role: 'official-artwork', src: visual.artworkOfficial },
-      { role: 'icon', src: visual.icon },
-    ],
-    icon: [
-      { role: 'icon', src: visual.icon },
-      { role: 'home-artwork', src: visual.artworkHome },
-      { role: 'official-artwork', src: visual.artworkOfficial },
-    ],
-    portrait: [
-      { role: 'portrait', src: visual.portrait },
-      { role: 'home-artwork', src: visual.artworkHome },
-      { role: 'official-artwork', src: visual.artworkOfficial },
-      { role: 'icon', src: visual.icon },
-    ],
-  };
-  return sources[assetRole];
-}
 
 function shouldNormalizeAlpha(assetRole: PokemonImageRole) {
   return assetRole === 'official-artwork' || assetRole === 'home-artwork';
@@ -242,7 +211,7 @@ export function PokemonAssetImage({
   ...imageProps
 }: PokemonAssetImageProps) {
   const sources = useMemo(
-    () => sourceOrder(dex, assetRole, variant),
+    () => getPokemonImageSources(dex, assetRole, variant),
     [assetRole, dex, variant],
   );
   const sourceKey = `${dex}:${assetRole}:${variant}`;
