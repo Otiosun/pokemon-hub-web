@@ -523,19 +523,30 @@ export function resolveAdvancedShowcaseMoveChoice(
 }
 
 export function createAdvancedShowcasePokedex(): PlayerPortalPokedexSpecies[] {
+  const shinyDexes = new Set(
+    SHOWCASE_SPECIES.filter((species) => species.shiny).map((species) => species.dex),
+  );
+
   return Array.from({ length: 386 }, (_, index) => {
     const nationalDex = index + 1;
     const caught = 1 + (nationalDex % 4);
     const seen = caught + 2 + (nationalDex % 5);
+    const shinyRegistered = shinyDexes.has(nationalDex);
 
     return {
       nationalDex,
       seenCount: String(seen),
       caughtCount: String(caught),
+      shinySeenCount: shinyRegistered ? '1' : '0',
+      shinyCaughtCount: shinyRegistered ? '1' : '0',
       firstSeenAt: SHOWCASE_TIMESTAMP,
       lastSeenAt: SHOWCASE_TIMESTAMP,
       firstCaughtAt: SHOWCASE_TIMESTAMP,
       lastCaughtAt: SHOWCASE_TIMESTAMP,
+      firstShinySeenAt: shinyRegistered ? SHOWCASE_TIMESTAMP : null,
+      lastShinySeenAt: shinyRegistered ? SHOWCASE_TIMESTAMP : null,
+      firstShinyCaughtAt: shinyRegistered ? SHOWCASE_TIMESTAMP : null,
+      lastShinyCaughtAt: shinyRegistered ? SHOWCASE_TIMESTAMP : null,
     };
   });
 }
