@@ -162,7 +162,7 @@ function evolutionConditions(details: readonly EvolutionDetail[] | undefined) {
   return [...labels];
 }
 
-function buildEvolutionTree(chain: EvolutionChainNode | undefined): EvolutionTreeNode | null {
+export function buildEvolutionTree(chain: EvolutionChainNode | undefined): EvolutionTreeNode | null {
   if (!chain) return null;
 
   function visit(node: EvolutionChainNode): EvolutionTreeNode[] {
