@@ -19,6 +19,8 @@ const realProfile: PlayerPortalProfile = {
     {
       pokemonInstanceId: '66666666-6666-4666-8666-666666666666',
       formId: '77777777-7777-4777-8777-777777777777',
+      formSlug: 'default',
+      speciesSlug: 'charmander',
       displayName: 'Charmander',
       nationalDex: 4,
       typeNames: ['Fire'],
@@ -30,6 +32,8 @@ const realProfile: PlayerPortalProfile = {
     {
       pokemonInstanceId: '88888888-8888-4888-8888-888888888888',
       formId: '99999999-9999-4999-8999-999999999999',
+      formSlug: 'default',
+      speciesSlug: 'pidgey',
       displayName: 'Pidgey',
       nationalDex: 16,
       typeNames: ['Normal', 'Flying'],
@@ -58,6 +62,7 @@ describe('createJourneyProfileView', () => {
         level: 12,
         types: ['Fire'],
         shiny: true,
+        formSlug: 'default',
       },
       badges: [],
       ownedPokemonCount: null,
