@@ -108,14 +108,13 @@ export function getPokemonImageSources(
   assetRole: PokemonImageRole,
   variant: PokemonVisualVariant = 'regular',
   formSlug?: string,
+  speciesSlug?: string,
 ): readonly PokemonVisualImageSource[] {
-  // The current 2D providers are indexed by species/default-form identity. Once
-  // the Hub API proves that an owned Pokemon is a non-default form, do not
-  // silently render the base species artwork as if it were that form.
-  //
-  // An omitted formSlug remains a rollout compatibility path for species views
-  // and older Hub payloads until the authoritative formSlug contract is live.
-  if (formSlug && formSlug !== 'default') return [];
+  // The Gen I-III catalog names the default form with the same slug as its
+  // species (for example species "charizard" + form "charizard"). Only a
+  // proven mismatch means this is an alternate form. Missing slugs remain a
+  // rollout compatibility path for older Hub payloads and species-only views.
+  if (formSlug && speciesSlug && formSlug !== speciesSlug) return [];
 
   const visual = getPokemonSpeciesVisualAssets(dex, variant);
   const official: PokemonVisualImageSource = {
