@@ -66,6 +66,15 @@ function BagIcon() {
   );
 }
 
+function MoveIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 19 19 5M8 5h11v11" />
+      <path d="M5 10v9h9" />
+    </svg>
+  );
+}
+
 function useImagePreview(slot: ProfileImageSlot) {
   const [url, setUrl] = useState<string | null>(() => profileImagePreviewUrls[slot]);
   const [error, setError] = useState<string | null>(null);
@@ -458,6 +467,19 @@ export function JourneyPageV2({
           <span className="journey-share-action-copy">
             <strong>INVENTÁRIO</strong>
             <small>Consultar itens e quantidades do registro oficial</small>
+          </span>
+          <span className="journey-share-action-chevron">
+            <ChevronIcon />
+          </span>
+        </a>
+
+        <a className="journey-share-action" href="/jornada/movimentos">
+          <span className="journey-share-action-icon">
+            <MoveIcon />
+          </span>
+          <span className="journey-share-action-copy">
+            <strong>MOVIMENTOS</strong>
+            <small>Resolver aprendizados pendentes dos seus Pokémon</small>
           </span>
           <span className="journey-share-action-chevron">
             <ChevronIcon />
