@@ -7,6 +7,7 @@ export interface TeamProfileMemberView {
   types: string[];
   level: number;
   currentHp: number;
+  shiny: boolean;
   slotNo: number;
   catalogResolved: boolean;
 }
@@ -25,6 +26,7 @@ export function createTeamProfileView(
       types: [...slot.typeNames],
       level: slot.level,
       currentHp: slot.currentHp,
+      shiny: slot.shiny,
       slotNo: slot.slotNo,
       catalogResolved:
         slot.displayName !== null && slot.nationalDex !== null && slot.typeNames.length > 0,
