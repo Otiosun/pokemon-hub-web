@@ -23,6 +23,27 @@ export type PlayerPortalTeamSlot = {
   slotNo: number;
 };
 
+export type PlayerPortalPokemonMove = {
+  slotNo: number;
+  moveId: string;
+  displayName: string | null;
+  typeName: string | null;
+  category: 'PHYSICAL' | 'SPECIAL' | 'STATUS' | null;
+  power: number | null;
+  accuracy: number | null;
+  ppCurrent: number | null;
+  maxPp: number | null;
+};
+
+export type PlayerPortalPokemonIvs = {
+  hp: number | null;
+  attack: number | null;
+  defense: number | null;
+  spAttack: number | null;
+  spDefense: number | null;
+  speed: number | null;
+};
+
 export type PlayerPortalPokemon = {
   pokemonInstanceId: string;
   formId: string;
@@ -31,12 +52,20 @@ export type PlayerPortalPokemon = {
   typeNames: string[];
   nickname: string | null;
   level: number;
+  xp: string;
+  xpToNextLevel: number;
   currentHp: number;
+  maxHp: number | null;
+  natureDisplayName: string | null;
+  abilityDisplayName: string | null;
+  ivs: PlayerPortalPokemonIvs;
   gender: string | null;
   shiny: boolean;
   placementKind: 'TEAM' | 'BOX';
   boxNo: number | null;
   slotNo: number;
+  conditions: string[];
+  moves: PlayerPortalPokemonMove[];
 };
 
 export type PlayerPortalPokedexSpecies = {
@@ -303,6 +332,32 @@ function isPlayerPortalTeamSlot(value: unknown): value is PlayerPortalTeamSlot {
   return true;
 }
 
+function isPlayerPortalPokemonMove(value: unknown): value is PlayerPortalPokemonMove {
+  if (!isRecord(value)) return false;
+  return (
+    isPositiveInteger(value.slotNo) &&
+    value.slotNo <= 4 &&
+    isUuid(value.moveId) &&
+    isNullableDisplayString(value.displayName) &&
+    isNullableDisplayString(value.typeName) &&
+    (value.category === null ||
+      value.category === 'PHYSICAL' ||
+      value.category === 'SPECIAL' ||
+      value.category === 'STATUS') &&
+    isNullableNonNegativeInteger(value.power) &&
+    isNullableNonNegativeInteger(value.accuracy) &&
+    isNullableNonNegativeInteger(value.ppCurrent) &&
+    isNullableNonNegativeInteger(value.maxPp)
+  );
+}
+
+function isPlayerPortalPokemonIvs(value: unknown): value is PlayerPortalPokemonIvs {
+  if (!isRecord(value)) return false;
+  return [value.hp, value.attack, value.defense, value.spAttack, value.spDefense, value.speed].every(
+    (stat) => stat === null || (isNonNegativeInteger(stat) && stat <= 31),
+  );
+}
+
 function isPlayerPortalPokemon(value: unknown): value is PlayerPortalPokemon {
   if (!isRecord(value)) return false;
   if (
@@ -313,15 +368,30 @@ function isPlayerPortalPokemon(value: unknown): value is PlayerPortalPokemon {
     typeof value.level !== 'number' ||
     !Number.isInteger(value.level) ||
     value.level < 1 ||
+    typeof value.xp !== 'string' ||
+    !DIGITS_PATTERN.test(value.xp) ||
+    !isNonNegativeInteger(value.xpToNextLevel) ||
     !isNonNegativeInteger(value.currentHp) ||
+    !isNullableNonNegativeInteger(value.maxHp) ||
+    !isNullableDisplayString(value.natureDisplayName) ||
+    !isNullableDisplayString(value.abilityDisplayName) ||
+    !isPlayerPortalPokemonIvs(value.ivs) ||
     !isNullableString(value.gender) ||
     typeof value.shiny !== 'boolean' ||
     typeof value.slotNo !== 'number' ||
     !Number.isInteger(value.slotNo) ||
-    value.slotNo < 1
+    value.slotNo < 1 ||
+    !Array.isArray(value.conditions) ||
+    !value.conditions.every(isDisplayString) ||
+    !Array.isArray(value.moves) ||
+    value.moves.length > 4 ||
+    !value.moves.every(isPlayerPortalPokemonMove)
   ) {
     return false;
   }
+
+  if (value.maxHp !== null && value.currentHp > value.maxHp) return false;
+  if (value.xpToNextLevel > 0 && BigInt(value.xp) >= BigInt(value.xpToNextLevel)) return false;
 
   if (value.placementKind === 'TEAM') {
     return value.boxNo === null && value.slotNo <= 6;
@@ -413,6 +483,10 @@ function isNullableDisplayString(value: unknown): value is string | null {
 
 function isNonNegativeInteger(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value >= 0;
+}
+
+function isNullableNonNegativeInteger(value: unknown): value is number | null {
+  return value === null || isNonNegativeInteger(value);
 }
 
 function isPositiveInteger(value: unknown): value is number {
