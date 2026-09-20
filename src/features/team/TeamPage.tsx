@@ -211,6 +211,10 @@ export function TeamPage({ playerPortalSession }: TeamPageProps) {
 
   const sendSelectedToBox = async () => {
     if (!source || source.teamSlot === null) return;
+    if (team.length <= 1) {
+      setOrganizingMessage('O Time precisa manter pelo menos um Pokémon ativo.');
+      return;
+    }
     const target = firstFreeBoxTarget(pokemon);
     await persistMove({
       pokemonInstanceId: source.instanceId,
@@ -277,7 +281,8 @@ export function TeamPage({ playerPortalSession }: TeamPageProps) {
             {source && source.teamSlot !== null ? (
               <button
                 type="button"
-                disabled={organizingStatus === 'saving'}
+                disabled={organizingStatus === 'saving' || team.length <= 1}
+                title={team.length <= 1 ? 'O Time precisa manter pelo menos um Pokémon ativo' : undefined}
                 onClick={() => void sendSelectedToBox()}
               >
                 ENVIAR PARA BOX
