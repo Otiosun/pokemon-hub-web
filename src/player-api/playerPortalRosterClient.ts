@@ -49,7 +49,11 @@ export async function movePlayerPortalPokemon(
     throw new Error('Invalid player portal roster response');
   }
 
-  if (!isRecord(body) || !Array.isArray(body.pokemon) || !body.pokemon.every(isPlayerPortalPokemon)) {
+  if (
+    !isRecord(body) ||
+    !Array.isArray(body.pokemon) ||
+    !body.pokemon.every(isPlayerPortalPokemon)
+  ) {
     throw new Error('Invalid player portal roster response');
   }
 
