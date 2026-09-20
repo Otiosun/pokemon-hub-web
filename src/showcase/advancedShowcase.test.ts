@@ -65,6 +65,9 @@ describe('advanced showcase', () => {
     expect(team.map((entry) => entry.slotNo)).toEqual([1, 2, 3, 4, 5, 6]);
     expect(shinies.length).toBeGreaterThanOrEqual(6);
     expect(pokemon.some((entry) => entry.placementKind === 'BOX' && entry.boxNo === 3)).toBe(true);
+    expect(pokemon.every((entry) => entry.maxHp !== null && entry.currentHp <= entry.maxHp)).toBe(true);
+    expect(pokemon.every((entry) => entry.moves.length === 4)).toBe(true);
+    expect(pokemon.every((entry) => entry.xpToNextLevel > Number(entry.xp))).toBe(true);
   });
 
   it('exposes a high-level authenticated trainer profile for the Journey preview', () => {

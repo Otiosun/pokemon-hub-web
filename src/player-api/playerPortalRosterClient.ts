@@ -1,4 +1,7 @@
-import { isAdvancedShowcaseActive } from '../showcase/advancedShowcase';
+import {
+  isAdvancedShowcaseActive,
+  moveAdvancedShowcasePokemon,
+} from '../showcase/advancedShowcase';
 import {
   isPlayerPortalPokemon,
   type PlayerPortalFetcher,
@@ -26,7 +29,10 @@ export async function movePlayerPortalPokemon(
   }
 
   if (showcaseActive) {
-    throw new Error('Advanced showcase roster writes are disabled');
+    return {
+      status: 'authenticated',
+      pokemon: moveAdvancedShowcasePokemon(input.pokemonInstanceId, input.target),
+    };
   }
 
   const response = await fetcher('/api/hub/player/roster', {

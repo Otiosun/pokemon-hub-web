@@ -6,8 +6,9 @@ import {
 } from '../../player-api/playerPortalClient';
 import { usePlayerPortalBrowserSession } from '../../player-api/playerPortalBrowserSession';
 import {
-  createAdvancedShowcasePokemon,
   isAdvancedShowcaseActive,
+  readAdvancedShowcasePokemon,
+  writeAdvancedShowcasePokemon,
 } from '../../showcase/advancedShowcase';
 
 type OwnedPokemonCollectionSnapshot =
@@ -43,7 +44,7 @@ export function useOwnedPokemonCollection(): OwnedPokemonCollectionState {
   const playerId = session.status === 'authenticated' ? session.profile.playerId : null;
   const [state, setState] = useState<OwnedPokemonCollectionSnapshot>(() =>
     showcase
-      ? { status: 'authenticated', pokemon: createAdvancedShowcasePokemon() }
+      ? { status: 'authenticated', pokemon: readAdvancedShowcasePokemon() }
       : { status: 'loading' },
   );
 
@@ -51,7 +52,7 @@ export function useOwnedPokemonCollection(): OwnedPokemonCollectionState {
     let cancelled = false;
 
     if (showcase) {
-      setState({ status: 'authenticated', pokemon: createAdvancedShowcasePokemon() });
+      setState({ status: 'authenticated', pokemon: readAdvancedShowcasePokemon() });
       return () => {
         cancelled = true;
       };
@@ -100,7 +101,12 @@ export function useOwnedPokemonCollection(): OwnedPokemonCollectionState {
 
   const replacePokemon = useCallback(
     (pokemon: readonly PlayerPortalPokemon[]) => {
-      if (showcase || playerId === null) return;
+      if (showcase) {
+        const snapshot = writeAdvancedShowcasePokemon(pokemon);
+        setState({ status: 'authenticated', pokemon: snapshot });
+        return;
+      }
+      if (playerId === null) return;
       cache = { playerId, pokemon: [...pokemon] };
       setState({ status: 'authenticated', pokemon: [...pokemon] });
     },
@@ -108,7 +114,11 @@ export function useOwnedPokemonCollection(): OwnedPokemonCollectionState {
   );
 
   const refresh = useCallback(async () => {
-    if (showcase || playerId === null) return;
+    if (showcase) {
+      setState({ status: 'authenticated', pokemon: readAdvancedShowcasePokemon() });
+      return;
+    }
+    if (playerId === null) return;
     if (cache?.playerId === playerId) cache = null;
     setState({ status: 'loading' });
     try {

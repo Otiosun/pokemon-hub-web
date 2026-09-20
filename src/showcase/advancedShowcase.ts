@@ -8,10 +8,26 @@ import type {
 const SHOWCASE_QUERY_KEY = 'showcase';
 const SHOWCASE_QUERY_VALUE = 'advanced';
 const SHOWCASE_SESSION_KEY = 'pokemon-beyond:showcase';
+const SHOWCASE_ROSTER_KEY = 'pokemon-beyond:showcase-roster:v1';
 const SHOWCASE_TIMESTAMP = '2026-09-01T12:00:00.000Z';
 
 function demoUuid(seed: number) {
   return `00000000-0000-4000-8000-${String(seed).padStart(12, '0')}`;
+}
+
+function xpToNextLevel(level: number) {
+  return (level + 1) ** 3 - level ** 3;
+}
+
+function demoIvs(seed: number) {
+  return {
+    hp: 18 + (seed % 14),
+    attack: 17 + ((seed * 3) % 15),
+    defense: 16 + ((seed * 5) % 16),
+    spAttack: 15 + ((seed * 7) % 17),
+    spDefense: 14 + ((seed * 11) % 18),
+    speed: 13 + ((seed * 13) % 19),
+  };
 }
 
 type ShowcaseSpecies = {
@@ -167,6 +183,11 @@ export function createAdvancedShowcasePokemon(): PlayerPortalPokemon[] {
     const inTeam = index < 6;
     const boxIndex = Math.floor(Math.max(index - 6, 0) / 12) + 1;
     const boxSlot = (Math.max(index - 6, 0) % 12) + 1;
+    const maxHp = 130 + ((species.dex * 11) % 170);
+    const currentHp = maxHp - (species.dex % 5) * 7;
+    const nextLevel = xpToNextLevel(species.level);
+    const xp = String((species.dex * 37) % Math.max(nextLevel, 1));
+    const moveSeed = 7000 + species.dex * 10;
 
     return {
       pokemonInstanceId: demoUuid(1000 + species.dex),
@@ -176,14 +197,110 @@ export function createAdvancedShowcasePokemon(): PlayerPortalPokemon[] {
       typeNames: [...species.types],
       nickname: species.dex === 25 ? 'Volt' : null,
       level: species.level,
-      currentHp: 95 + ((species.dex * 7) % 145),
+      xp,
+      xpToNextLevel: nextLevel,
+      currentHp,
+      maxHp,
+      natureDisplayName: index % 3 === 0 ? 'Adamant' : index % 3 === 1 ? 'Timid' : 'Calm',
+      abilityDisplayName: index % 2 === 0 ? 'Pressure' : 'Inner Focus',
+      ivs: demoIvs(species.dex),
       gender: species.dex % 5 === 0 ? null : species.dex % 2 === 0 ? 'F' : 'M',
       shiny: Boolean(species.shiny),
       placementKind: inTeam ? 'TEAM' : 'BOX',
       boxNo: inTeam ? null : Math.min(boxIndex, 3),
       slotNo: inTeam ? index + 1 : boxSlot,
+      conditions: index === 8 ? ['POISON'] : [],
+      moves: Array.from({ length: 4 }, (_, moveIndex) => ({
+        slotNo: moveIndex + 1,
+        moveId: demoUuid(moveSeed + moveIndex),
+        displayName: ['Golpe Principal', 'Cobertura', 'Controle', 'Finalizador'][moveIndex] ?? null,
+        typeName: species.types[moveIndex % species.types.length] ?? null,
+        category: moveIndex === 2 ? ('STATUS' as const) : moveIndex % 2 === 0 ? ('PHYSICAL' as const) : ('SPECIAL' as const),
+        power: moveIndex === 2 ? null : 60 + moveIndex * 15,
+        accuracy: moveIndex === 2 ? null : 100 - moveIndex * 5,
+        ppCurrent: 12 + moveIndex * 3,
+        maxPp: 15 + moveIndex * 3,
+      })),
     };
   });
+}
+
+function parseStoredShowcasePokemon(value: string | null): PlayerPortalPokemon[] | null {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(value) as PlayerPortalPokemon[];
+    if (!Array.isArray(parsed) || parsed.length !== SHOWCASE_SPECIES.length) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function readAdvancedShowcasePokemon(): PlayerPortalPokemon[] {
+  if (typeof window === 'undefined') return createAdvancedShowcasePokemon();
+  try {
+    return (
+      parseStoredShowcasePokemon(window.sessionStorage.getItem(SHOWCASE_ROSTER_KEY)) ??
+      createAdvancedShowcasePokemon()
+    );
+  } catch {
+    return createAdvancedShowcasePokemon();
+  }
+}
+
+export function writeAdvancedShowcasePokemon(
+  pokemon: readonly PlayerPortalPokemon[],
+): PlayerPortalPokemon[] {
+  const snapshot = pokemon.map((entry) => ({
+    ...entry,
+    typeNames: [...entry.typeNames],
+    conditions: [...entry.conditions],
+    moves: entry.moves.map((move) => ({ ...move })),
+    ivs: { ...entry.ivs },
+  }));
+  if (typeof window !== 'undefined') {
+    try {
+      window.sessionStorage.setItem(SHOWCASE_ROSTER_KEY, JSON.stringify(snapshot));
+    } catch {
+      // Showcase remains interactive for the current render when storage is unavailable.
+    }
+  }
+  return snapshot;
+}
+
+export function moveAdvancedShowcasePokemon(
+  pokemonInstanceId: string,
+  target: { placementKind: 'TEAM'; boxNo: null; slotNo: number } | { placementKind: 'BOX'; boxNo: number; slotNo: number },
+): PlayerPortalPokemon[] {
+  const current = readAdvancedShowcasePokemon();
+  const source = current.find((entry) => entry.pokemonInstanceId === pokemonInstanceId);
+  if (!source) return current;
+
+  const occupant = current.find(
+    (entry) =>
+      entry.pokemonInstanceId !== pokemonInstanceId &&
+      entry.placementKind === target.placementKind &&
+      entry.boxNo === target.boxNo &&
+      entry.slotNo === target.slotNo,
+  );
+
+  const sourcePlacement = {
+    placementKind: source.placementKind,
+    boxNo: source.boxNo,
+    slotNo: source.slotNo,
+  } as const;
+
+  const next = current.map((entry) => {
+    if (entry.pokemonInstanceId === pokemonInstanceId) {
+      return { ...entry, ...target };
+    }
+    if (occupant && entry.pokemonInstanceId === occupant.pokemonInstanceId) {
+      return { ...entry, ...sourcePlacement } as PlayerPortalPokemon;
+    }
+    return entry;
+  });
+
+  return writeAdvancedShowcasePokemon(next);
 }
 
 export function createAdvancedShowcasePokedex(): PlayerPortalPokedexSpecies[] {
@@ -204,20 +321,25 @@ export function createAdvancedShowcasePokedex(): PlayerPortalPokedexSpecies[] {
   });
 }
 
-const SHOWCASE_POKEMON = createAdvancedShowcasePokemon();
-const SHOWCASE_TEAM = SHOWCASE_POKEMON.slice(0, 6).map((pokemon, index) => ({
-  pokemonInstanceId: pokemon.pokemonInstanceId,
-  formId: pokemon.formId,
-  displayName: pokemon.displayName,
-  nationalDex: pokemon.nationalDex,
-  typeNames: [...pokemon.typeNames],
-  nickname: pokemon.nickname,
-  level: pokemon.level,
-  currentHp: pokemon.currentHp,
-  slotNo: index + 1,
-}));
+function showcaseTeam(pokemon: readonly PlayerPortalPokemon[]) {
+  return pokemon
+    .filter((entry) => entry.placementKind === 'TEAM')
+    .sort((left, right) => left.slotNo - right.slotNo)
+    .slice(0, 6)
+    .map((entry) => ({
+      pokemonInstanceId: entry.pokemonInstanceId,
+      formId: entry.formId,
+      displayName: entry.displayName,
+      nationalDex: entry.nationalDex,
+      typeNames: [...entry.typeNames],
+      level: entry.level,
+      currentHp: entry.currentHp,
+      shiny: entry.shiny,
+      slotNo: entry.slotNo,
+    }));
+}
 
-const SHOWCASE_PROFILE: PlayerPortalProfile = {
+const SHOWCASE_PROFILE: Omit<PlayerPortalProfile, 'team' | 'starterPokemonInstanceId'> = {
   playerId: demoUuid(73),
   playerStatus: 'ACTIVE',
   trainerName: 'Aster Vale',
@@ -229,14 +351,18 @@ const SHOWCASE_PROFILE: PlayerPortalProfile = {
   onboardingState: 'COMPLETE',
   contentReleaseId: demoUuid(901),
   rulesetId: demoUuid(902),
-  starterPokemonInstanceId: SHOWCASE_TEAM[2]?.pokemonInstanceId ?? null,
-  team: SHOWCASE_TEAM,
 };
 
 export function getAdvancedShowcaseSession(): PlayerPortalSessionBootstrap {
+  const pokemon = readAdvancedShowcasePokemon();
+  const team = showcaseTeam(pokemon);
   return {
     status: 'authenticated',
     source: 'session',
-    profile: SHOWCASE_PROFILE,
+    profile: {
+      ...SHOWCASE_PROFILE,
+      starterPokemonInstanceId: team[2]?.pokemonInstanceId ?? team[0]?.pokemonInstanceId ?? null,
+      team,
+    },
   };
 }
