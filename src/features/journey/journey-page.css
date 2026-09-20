@@ -134,7 +134,7 @@
 }
 
 .journey-edit-toggle {
-  min-height: 32px;
+  min-height: 44px;
   padding: 0 10px;
   border: 1px solid rgba(148, 69, 56, 0.35);
   border-radius: 6px;
@@ -256,7 +256,7 @@
 .journey-cover-edit {
   top: 12px;
   left: 12px;
-  min-height: 38px;
+  min-height: 44px;
   gap: 7px;
   padding: 0 11px;
   border: 1px solid rgba(255, 255, 255, 0.38);
@@ -377,8 +377,8 @@
 .journey-avatar-edit {
   right: -4px;
   bottom: -4px;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   border: 3px solid var(--journey-paper);
   border-radius: 50%;
   background: #1f211f;
@@ -1158,8 +1158,8 @@
   }
 
   .journey-avatar-edit {
-    width: 34px;
-    height: 34px;
+    width: 44px;
+    height: 44px;
   }
 
   .journey-identity-copy h1 {
