@@ -1,3 +1,9 @@
+import {
+  createAdvancedShowcaseBattle,
+  createAdvancedShowcaseInventory,
+  createAdvancedShowcaseLocation,
+  isAdvancedShowcaseActive,
+} from '../showcase/advancedShowcase';
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DIGITS_PATTERN = /^\d+$/;
 const HUB_LOGIN_TICKET_PATTERN = /^[A-Za-z0-9_-]{43}$/;
@@ -274,6 +280,10 @@ export async function getPlayerPortalPokedex(
 export async function getPlayerPortalInventory(
   fetcher: PlayerPortalFetcher = fetch,
 ): Promise<PlayerPortalInventoryResult> {
+  if (isAdvancedShowcaseActive()) {
+    return { status: 'authenticated', inventory: createAdvancedShowcaseInventory() };
+  }
+
   const response = await fetcher('/api/hub/player/inventory', {
     method: 'GET',
     credentials: 'include',
@@ -298,6 +308,10 @@ export async function getPlayerPortalInventory(
 export async function getPlayerPortalBattle(
   fetcher: PlayerPortalFetcher = fetch,
 ): Promise<PlayerPortalBattleResult> {
+  if (isAdvancedShowcaseActive()) {
+    return { status: 'authenticated', battle: createAdvancedShowcaseBattle() };
+  }
+
   const response = await fetcher('/api/hub/player/battle', {
     method: 'GET',
     credentials: 'include',
@@ -318,6 +332,10 @@ export async function getPlayerPortalBattle(
 export async function getPlayerPortalLocation(
   fetcher: PlayerPortalFetcher = fetch,
 ): Promise<PlayerPortalLocationResult> {
+  if (isAdvancedShowcaseActive()) {
+    return { status: 'authenticated', location: createAdvancedShowcaseLocation() };
+  }
+
   const response = await fetcher('/api/hub/player/location', {
     method: 'GET',
     credentials: 'include',

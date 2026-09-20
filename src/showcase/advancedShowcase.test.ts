@@ -1,4 +1,8 @@
 import {
+  createAdvancedShowcaseBattle,
+  createAdvancedShowcaseInventory,
+  createAdvancedShowcaseLocation,
+  createAdvancedShowcaseMoveChoices,
   createAdvancedShowcasePokedex,
   createAdvancedShowcasePokemon,
   getAdvancedShowcaseSession,
@@ -68,6 +72,13 @@ describe('advanced showcase', () => {
     expect(pokemon.every((entry) => entry.maxHp !== null && entry.currentHp <= entry.maxHp)).toBe(true);
     expect(pokemon.every((entry) => entry.moves.length === 4)).toBe(true);
     expect(pokemon.every((entry) => entry.xpToNextLevel > Number(entry.xp))).toBe(true);
+  });
+
+  it('exposes complete local companion surfaces for the advanced showcase', () => {
+    expect(createAdvancedShowcaseInventory().length).toBeGreaterThan(0);
+    expect(createAdvancedShowcaseLocation().connections).toHaveLength(1);
+    expect(createAdvancedShowcaseBattle().status).toBe('ACTIVE');
+    expect(createAdvancedShowcaseMoveChoices().length).toBeGreaterThan(0);
   });
 
   it('exposes a high-level authenticated trainer profile for the Journey preview', () => {

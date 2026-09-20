@@ -1,14 +1,22 @@
 import type { PlayerPortalSessionBootstrap } from '../player-api/playerPortalSession';
 import type {
+  PlayerPortalBattle,
+  PlayerPortalInventoryItem,
+  PlayerPortalLocation,
   PlayerPortalPokedexSpecies,
   PlayerPortalPokemon,
   PlayerPortalProfile,
 } from '../player-api/playerPortalClient';
+import type {
+  PlayerPortalPendingMoveChoice,
+  PlayerPortalResolvedMoveChoice,
+} from '../player-api/playerPortalMoveChoiceClient';
 
 const SHOWCASE_QUERY_KEY = 'showcase';
 const SHOWCASE_QUERY_VALUE = 'advanced';
 const SHOWCASE_SESSION_KEY = 'pokemon-beyond:showcase';
 const SHOWCASE_ROSTER_KEY = 'pokemon-beyond:showcase-roster:v1';
+const SHOWCASE_MOVE_CHOICES_KEY = 'pokemon-beyond:showcase-move-choices:v1';
 const SHOWCASE_TIMESTAMP = '2026-09-01T12:00:00.000Z';
 
 function demoUuid(seed: number) {
@@ -301,6 +309,215 @@ export function moveAdvancedShowcasePokemon(
   });
 
   return writeAdvancedShowcasePokemon(next);
+}
+
+export function createAdvancedShowcaseInventory(): PlayerPortalInventoryItem[] {
+  return [
+    { itemId: demoUuid(9101), itemSlug: 'poke-ball', displayName: 'Poké Ball', quantity: '42' },
+    { itemId: demoUuid(9102), itemSlug: 'great-ball', displayName: 'Great Ball', quantity: '18' },
+    { itemId: demoUuid(9103), itemSlug: 'ultra-ball', displayName: 'Ultra Ball', quantity: '7' },
+    { itemId: demoUuid(9104), itemSlug: 'potion', displayName: 'Potion', quantity: '12' },
+    { itemId: demoUuid(9105), itemSlug: 'super-potion', displayName: 'Super Potion', quantity: '5' },
+    { itemId: demoUuid(9106), itemSlug: 'full-heal', displayName: 'Full Heal', quantity: '3' },
+  ];
+}
+
+export function createAdvancedShowcaseLocation(): PlayerPortalLocation {
+  return {
+    areaId: demoUuid(9201),
+    areaSlug: 'vila-dos-arrozais',
+    areaDisplayName: 'Vila dos Arrozais',
+    regionId: demoUuid(9202),
+    regionSlug: 'zhoulia',
+    regionDisplayName: 'Zhoulia',
+    safePoint: true,
+    enteredAt: SHOWCASE_TIMESTAMP,
+    connections: [
+      {
+        connectionId: demoUuid(9203),
+        connectionKey: 'vila-dos-arrozais--campos-de-yun',
+        destinationAreaId: demoUuid(9204),
+        destinationSlug: 'campos-de-yun',
+        destinationDisplayName: 'Campos de Yun',
+        available: true,
+      },
+    ],
+  };
+}
+
+export function createAdvancedShowcaseBattle(): PlayerPortalBattle {
+  const pokemon = readAdvancedShowcasePokemon();
+  const lead = pokemon.find((entry) => entry.placementKind === 'TEAM') ?? pokemon[0]!;
+  return {
+    battleType: 'WILD',
+    status: 'ACTIVE',
+    turnNumber: 4,
+    playerSideNo: 1,
+    combatants: [
+      {
+        sideNo: 1,
+        playerSide: true,
+        active: true,
+        displayName: lead.nickname?.trim() || lead.displayName,
+        level: lead.level,
+        currentHp: lead.currentHp,
+        maxHp: lead.maxHp ?? Math.max(lead.currentHp, 1),
+        conditions: [...lead.conditions],
+        moves: lead.moves.map((move) => ({
+          slotNo: move.slotNo,
+          displayName: move.displayName,
+          ppCurrent: move.ppCurrent,
+          maxPp: move.maxPp,
+        })),
+      },
+      {
+        sideNo: 2,
+        playerSide: false,
+        active: true,
+        displayName: 'Absol',
+        level: 67,
+        currentHp: 118,
+        maxHp: 164,
+        conditions: [],
+        moves: [
+          { slotNo: 1, displayName: 'Bite', ppCurrent: 19, maxPp: 25 },
+          { slotNo: 2, displayName: 'Slash', ppCurrent: 17, maxPp: 20 },
+        ],
+      },
+    ],
+  };
+}
+
+export function createAdvancedShowcaseMoveChoices(): PlayerPortalPendingMoveChoice[] {
+  const pokemon = readAdvancedShowcasePokemon();
+  const first = pokemon[0];
+  const second = pokemon[6] ?? pokemon[1];
+  const choices: PlayerPortalPendingMoveChoice[] = [];
+  if (first) {
+    choices.push({
+      choiceId: demoUuid(9301),
+      pokemonInstanceId: first.pokemonInstanceId,
+      pokemonDisplayName: first.nickname?.trim() || first.displayName || 'Pokémon',
+      learnLevel: first.level,
+      moveId: demoUuid(9311),
+      moveDisplayName: 'Dragon Claw',
+      currentMoves: first.moves.map((move) => ({
+        slotNo: move.slotNo,
+        moveId: move.moveId,
+        displayName: move.displayName ?? 'Movimento',
+      })),
+    });
+  }
+  if (second) {
+    choices.push({
+      choiceId: demoUuid(9302),
+      pokemonInstanceId: second.pokemonInstanceId,
+      pokemonDisplayName: second.nickname?.trim() || second.displayName || 'Pokémon',
+      learnLevel: second.level,
+      moveId: demoUuid(9312),
+      moveDisplayName: 'Thunder Wave',
+      currentMoves: second.moves.map((move) => ({
+        slotNo: move.slotNo,
+        moveId: move.moveId,
+        displayName: move.displayName ?? 'Movimento',
+      })),
+    });
+  }
+  return choices;
+}
+
+function parseStoredShowcaseMoveChoices(
+  value: string | null,
+): PlayerPortalPendingMoveChoice[] | null {
+  if (value === null) return null;
+  try {
+    const parsed = JSON.parse(value) as PlayerPortalPendingMoveChoice[];
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+export function readAdvancedShowcaseMoveChoices(): PlayerPortalPendingMoveChoice[] {
+  if (typeof window === 'undefined') return createAdvancedShowcaseMoveChoices();
+  try {
+    return (
+      parseStoredShowcaseMoveChoices(window.sessionStorage.getItem(SHOWCASE_MOVE_CHOICES_KEY)) ??
+      createAdvancedShowcaseMoveChoices()
+    );
+  } catch {
+    return createAdvancedShowcaseMoveChoices();
+  }
+}
+
+function writeAdvancedShowcaseMoveChoices(
+  choices: readonly PlayerPortalPendingMoveChoice[],
+): PlayerPortalPendingMoveChoice[] {
+  const snapshot = choices.map((choice) => ({
+    ...choice,
+    currentMoves: choice.currentMoves.map((move) => ({ ...move })),
+  }));
+  if (typeof window !== 'undefined') {
+    try {
+      window.sessionStorage.setItem(SHOWCASE_MOVE_CHOICES_KEY, JSON.stringify(snapshot));
+    } catch {
+      // Keep the in-memory showcase usable when session storage is blocked.
+    }
+  }
+  return snapshot;
+}
+
+export function resolveAdvancedShowcaseMoveChoice(
+  choiceId: string,
+  replaceSlotNo: number | null,
+): {
+  result: PlayerPortalResolvedMoveChoice;
+  choices: PlayerPortalPendingMoveChoice[];
+} | null {
+  const choices = readAdvancedShowcaseMoveChoices();
+  const choice = choices.find((entry) => entry.choiceId === choiceId);
+  if (!choice) return null;
+
+  if (replaceSlotNo !== null) {
+    const pokemon = readAdvancedShowcasePokemon();
+    const nextPokemon = pokemon.map((entry) => {
+      if (entry.pokemonInstanceId !== choice.pokemonInstanceId) return entry;
+      return {
+        ...entry,
+        moves: entry.moves.map((move) =>
+          move.slotNo === replaceSlotNo
+            ? {
+                slotNo: replaceSlotNo,
+                moveId: choice.moveId,
+                displayName: choice.moveDisplayName,
+                typeName: null,
+                category: 'STATUS' as const,
+                power: null,
+                accuracy: null,
+                ppCurrent: 15,
+                maxPp: 15,
+              }
+            : move,
+        ),
+      };
+    });
+    writeAdvancedShowcasePokemon(nextPokemon);
+  }
+
+  const remaining = writeAdvancedShowcaseMoveChoices(
+    choices.filter((entry) => entry.choiceId !== choiceId),
+  );
+  return {
+    result: {
+      choiceId: choice.choiceId,
+      pokemonInstanceId: choice.pokemonInstanceId,
+      moveId: choice.moveId,
+      status: replaceSlotNo === null ? 'SKIPPED' : 'RESOLVED',
+      replacedSlotNo: replaceSlotNo,
+      replayed: false,
+    },
+    choices: remaining,
+  };
 }
 
 export function createAdvancedShowcasePokedex(): PlayerPortalPokedexSpecies[] {

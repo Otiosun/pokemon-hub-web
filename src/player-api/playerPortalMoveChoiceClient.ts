@@ -1,3 +1,8 @@
+import {
+  isAdvancedShowcaseActive,
+  readAdvancedShowcaseMoveChoices,
+  resolveAdvancedShowcaseMoveChoice,
+} from '../showcase/advancedShowcase';
 import type { PlayerPortalFetcher } from './playerPortalClient';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -49,6 +54,14 @@ export type PlayerPortalResolveMoveChoiceResult =
 export async function getPlayerPortalMoveChoices(
   fetcher: PlayerPortalFetcher = fetch,
 ): Promise<PlayerPortalMoveChoicesResult> {
+  if (isAdvancedShowcaseActive()) {
+    return {
+      status: 'authenticated',
+      blockedByBattle: false,
+      choices: readAdvancedShowcaseMoveChoices(),
+    };
+  }
+
   const response = await fetcher('/api/hub/player/move-choices', {
     method: 'GET',
     credentials: 'include',
@@ -87,6 +100,17 @@ export async function resolvePlayerPortalMoveChoice(
         input.replaceSlotNo > 4))
   ) {
     throw new Error('Invalid player portal move choice request');
+  }
+
+  if (isAdvancedShowcaseActive()) {
+    const resolved = resolveAdvancedShowcaseMoveChoice(input.choiceId, input.replaceSlotNo);
+    if (!resolved) return { status: 'stale' };
+    return {
+      status: 'authenticated',
+      result: resolved.result,
+      blockedByBattle: false,
+      choices: resolved.choices,
+    };
   }
 
   const response = await fetcher('/api/hub/player/move-choices/resolve', {

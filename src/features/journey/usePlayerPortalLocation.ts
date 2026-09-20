@@ -5,7 +5,10 @@ import {
   type PlayerPortalLocationResult,
 } from '../../player-api/playerPortalClient';
 import { usePlayerPortalBrowserSession } from '../../player-api/playerPortalBrowserSession';
-import { isAdvancedShowcaseActive } from '../../showcase/advancedShowcase';
+import {
+  createAdvancedShowcaseLocation,
+  isAdvancedShowcaseActive,
+} from '../../showcase/advancedShowcase';
 
 export type PlayerPortalLocationState =
   | { status: 'loading' }
@@ -39,7 +42,7 @@ export function usePlayerPortalLocation(): PlayerPortalLocationState {
     let cancelled = false;
 
     if (showcase) {
-      setState({ status: 'unavailable' });
+      setState({ status: 'authenticated', location: createAdvancedShowcaseLocation() });
       return () => {
         cancelled = true;
       };
