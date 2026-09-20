@@ -1,8 +1,8 @@
 import { isAdvancedShowcaseActive } from '../showcase/advancedShowcase';
-import type {
-  PlayerPortalFetcher,
-  PlayerPortalPokemonResult,
+import {
   isPlayerPortalPokemon,
+  type PlayerPortalFetcher,
+  type PlayerPortalPokemonResult,
 } from './playerPortalClient';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -78,24 +78,8 @@ function isUuid(value: unknown): value is string {
   return typeof value === 'string' && UUID_PATTERN.test(value);
 }
 
-function isNullableString(value: unknown): value is string | null {
-  return value === null || typeof value === 'string';
-}
-
-function isNullableDisplayName(value: unknown): value is string | null {
-  return value === null || (typeof value === 'string' && value.trim().length > 0);
-}
-
-function isNullableDex(value: unknown): value is number | null {
-  return value === null || isPositiveInteger(value);
-}
-
 function isPositiveInteger(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value >= 1;
-}
-
-function isNonNegativeInteger(value: unknown): value is number {
-  return typeof value === 'number' && Number.isInteger(value) && value >= 0;
 }
 
 function isIntegerBetween(value: unknown, min: number, max: number): value is number {
