@@ -11,6 +11,7 @@ describe('product route preload classification', () => {
   it('keeps primary roots distinct', () => {
     expect(productRouteChunk('/jornada')).toBe('journey');
     expect(productRouteChunk('/jornada/inventario')).toBe('inventory');
+    expect(productRouteChunk('/jornada/movimentos')).toBe('move-learning');
     expect(productRouteChunk('/pokedex')).toBe('pokedex-index');
     expect(productRouteChunk('/pokemon')).toBe('box');
   });
