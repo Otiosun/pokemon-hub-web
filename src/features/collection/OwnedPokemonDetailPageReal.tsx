@@ -667,6 +667,18 @@ export function OwnedPokemonDetailPage({
                     <p role="status">{moveChoices.message}</p>
                   ) : null}
                 </section>
+              ) : moveChoices.state.status === 'loading' ? (
+                <div className="owned-detail-history-empty">
+                  Sincronizando decisões de aprendizado…
+                </div>
+              ) : moveChoices.state.status === 'unauthenticated' ? (
+                <div className="owned-detail-history-empty">
+                  Abra o Hub novamente pelo WhatsApp para consultar decisões de aprendizado.
+                </div>
+              ) : moveChoices.state.status === 'unavailable' ? (
+                <div className="owned-detail-history-empty">
+                  Não foi possível verificar decisões de aprendizado agora.
+                </div>
               ) : (
                 <div className="owned-detail-history-empty">
                   Nenhuma decisão de aprendizado está pendente para este Pokémon.
