@@ -484,6 +484,8 @@ export function isPlayerPortalPokemon(value: unknown): value is PlayerPortalPoke
     return false;
   }
 
+  if (new Set(value.moves.map((move) => move.slotNo)).size !== value.moves.length) return false;
+  if (new Set(value.conditions).size !== value.conditions.length) return false;
   if (value.maxHp !== null && value.currentHp > value.maxHp) return false;
   if (value.xpToNextLevel > 0 && BigInt(value.xp) >= BigInt(value.xpToNextLevel)) return false;
 
@@ -568,22 +570,50 @@ function isPlayerPortalBattleCombatant(
 
 function isPlayerPortalBattle(value: unknown): value is PlayerPortalBattle {
   if (!isRecord(value)) return false;
-  return (
-    (value.battleType === 'WILD' || value.battleType === 'NPC' || value.battleType === 'PVP') &&
-    (value.status === 'CREATED' ||
+  if (
+    !(value.battleType === 'WILD' || value.battleType === 'NPC' || value.battleType === 'PVP') ||
+    !(
+      value.status === 'CREATED' ||
       value.status === 'ACTIVE' ||
       value.status === 'RESOLVING_TURN' ||
       value.status === 'WON' ||
       value.status === 'LOST' ||
       value.status === 'FLED' ||
       value.status === 'DRAW' ||
-      value.status === 'CANCELLED') &&
-    isNonNegativeInteger(value.turnNumber) &&
-    isPositiveInteger(value.playerSideNo) &&
-    Array.isArray(value.combatants) &&
-    value.combatants.length >= 2 &&
-    value.combatants.every(isPlayerPortalBattleCombatant)
-  );
+      value.status === 'CANCELLED'
+    ) ||
+    !isNonNegativeInteger(value.turnNumber) ||
+    !isPositiveInteger(value.playerSideNo) ||
+    !Array.isArray(value.combatants) ||
+    value.combatants.length < 2 ||
+    !value.combatants.every(isPlayerPortalBattleCombatant)
+  ) {
+    return false;
+  }
+
+  const combatants = value.combatants;
+  if (
+    combatants.some(
+      (combatant) =>
+        combatant.playerSide !== (combatant.sideNo === value.playerSideNo) ||
+        new Set(combatant.moves.map((move) => move.slotNo)).size !== combatant.moves.length ||
+        new Set(combatant.conditions).size !== combatant.conditions.length,
+    )
+  ) {
+    return false;
+  }
+
+  const sideNos = [...new Set(combatants.map((combatant) => combatant.sideNo))];
+  if (sideNos.length < 2 || !sideNos.includes(value.playerSideNo)) return false;
+  if (
+    sideNos.some(
+      (sideNo) => combatants.filter((combatant) => combatant.sideNo === sideNo && combatant.active).length > 1,
+    )
+  ) {
+    return false;
+  }
+
+  return true;
 }
 
 function isPlayerPortalLocation(value: unknown): value is PlayerPortalLocation {
