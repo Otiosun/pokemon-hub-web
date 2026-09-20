@@ -5,6 +5,8 @@ import { createOwnedPokemonView, findOwnedPokemonView } from './ownedPokemonView
 const teamPokemon: PlayerPortalPokemon = {
   pokemonInstanceId: '11111111-1111-4111-8111-111111111111',
   formId: '22222222-2222-4222-8222-222222222222',
+  formSlug: 'default',
+  speciesSlug: 'charmander',
   displayName: 'Charmander',
   nationalDex: 4,
   typeNames: ['Fire'],
@@ -68,6 +70,8 @@ describe('createOwnedPokemonView', () => {
       {
         instanceId: teamPokemon.pokemonInstanceId,
         dex: 4,
+        speciesSlug: 'charmander',
+        formSlug: 'default',
         species: 'Charmander',
         nickname: 'Brasa',
         level: 12,
@@ -105,6 +109,8 @@ describe('createOwnedPokemonView', () => {
       {
         instanceId: boxedPokemon.pokemonInstanceId,
         dex: null,
+        speciesSlug: null,
+        formSlug: null,
         species: 'REGISTRO INDISPONÍVEL',
         nickname: 'REGISTRO INDISPONÍVEL',
         level: 8,
