@@ -12,6 +12,7 @@ import {
 } from '../pokemon-detail/pokemonVisualPreference';
 import { createOwnedPokemonView, findOwnedPokemonView, type OwnedPokemonSex } from './ownedPokemonView';
 import { useOwnedPokemonCollection } from './useOwnedPokemonCollection';
+import { usePlayerPortalMoveChoices } from './usePlayerPortalMoveChoices';
 import './owned-pokemon-detail.css';
 import './owned-pokemon-detail-menu.css';
 
@@ -108,6 +109,7 @@ export function OwnedPokemonDetailPage({
   );
   const [viewerReady, setViewerReady] = useState(false);
   const collection = useOwnedPokemonCollection();
+  const moveChoices = usePlayerPortalMoveChoices();
   const pokemon = useMemo(
     () =>
       collection.status === 'authenticated'
@@ -147,6 +149,20 @@ export function OwnedPokemonDetailPage({
   const identityLine = record.catalogResolved
     ? `${record.nickname === record.species ? '' : `${record.species} · `}#${dex} · NV. ${record.level} · ${sexLabel(record.sex)}`
     : `CATÁLOGO INDISPONÍVEL · NV. ${record.level} · ${sexLabel(record.sex)}`;
+
+  const pendingMoveChoices =
+    moveChoices.state.status === 'authenticated'
+      ? moveChoices.state.choices.filter((choice) => choice.pokemonInstanceId === instanceId)
+      : [];
+  const moveLearningBlocked =
+    moveChoices.state.status === 'authenticated' && moveChoices.state.blockedByBattle;
+
+  const resolvePendingMove = async (choiceId: string, replaceSlotNo: number | null) => {
+    const result = await moveChoices.resolve(choiceId, replaceSlotNo);
+    if (result.status === 'authenticated' || result.status === 'stale') {
+      await collection.refresh();
+    }
+  };
 
   return (
     <main className="owned-detail-page">
@@ -333,6 +349,71 @@ export function OwnedPokemonDetailPage({
                 <div className="owned-detail-empty-block">Nenhum movimento registrado.</div>
               )}
             </section>
+
+            {pendingMoveChoices.length > 0 ? (
+              <section className="owned-detail-move-learning" aria-label="Aprendizado pendente">
+                <header>
+                  <span>APRENDIZADO PENDENTE</span>
+                  <small>{moveLearningBlocked ? 'BLOQUEADO EM BATALHA' : 'DECISÃO NECESSÁRIA'}</small>
+                </header>
+
+                {pendingMoveChoices.map((choice) => {
+                  const saving = moveChoices.savingChoiceId === choice.choiceId;
+                  return (
+                    <article key={choice.choiceId}>
+                      <div className="owned-detail-move-learning-copy">
+                        <span>NV. {choice.learnLevel}</span>
+                        <strong>{choice.moveDisplayName}</strong>
+                        <small>
+                          Escolha qual golpe será substituído ou preserve o moveset atual.
+                        </small>
+                      </div>
+
+                      <div className="owned-detail-move-learning-options">
+                        {choice.currentMoves.map((move) => {
+                          const richMove = record.moves.find((candidate) => candidate.slotNo === move.slotNo);
+                          return (
+                            <button
+                              key={move.slotNo}
+                              type="button"
+                              disabled={moveLearningBlocked || saving}
+                              onClick={() => void resolvePendingMove(choice.choiceId, move.slotNo)}
+                            >
+                              <span>SUBSTITUIR {String(move.slotNo).padStart(2, '0')}</span>
+                              <strong>{move.displayName}</strong>
+                              <small>
+                                {richMove?.ppCurrent === null ||
+                                richMove?.ppCurrent === undefined ||
+                                richMove.maxPp === null
+                                  ? 'PP —'
+                                  : `PP ${richMove.ppCurrent}/${richMove.maxPp}`}
+                              </small>
+                            </button>
+                          );
+                        })}
+
+                        <button
+                          type="button"
+                          className="is-skip"
+                          disabled={moveLearningBlocked || saving}
+                          onClick={() => void resolvePendingMove(choice.choiceId, null)}
+                        >
+                          <span>PULAR</span>
+                          <strong>MANTER MOVESET</strong>
+                          <small>Não aprender {choice.moveDisplayName}</small>
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+
+                {moveLearningBlocked ? (
+                  <p>Finalize a batalha ativa antes de alterar os movimentos.</p>
+                ) : moveChoices.message ? (
+                  <p role="status">{moveChoices.message}</p>
+                ) : null}
+              </section>
+            ) : null}
 
             {dex !== null ? (
               <a className="owned-detail-species-link" href={`/pokedex/${dex}`}>
