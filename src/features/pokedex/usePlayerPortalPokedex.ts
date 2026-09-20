@@ -13,10 +13,17 @@ export type AuthoritativePokedexSpeciesState = {
   discovery: PokedexDiscoveryState;
   seenCount: string;
   caughtCount: string;
+  shinyHistoryAvailable: boolean;
+  shinySeenCount: string;
+  shinyCaughtCount: string;
   firstSeenAt: string | null;
   lastSeenAt: string | null;
   firstCaughtAt: string | null;
   lastCaughtAt: string | null;
+  firstShinySeenAt: string | null;
+  lastShinySeenAt: string | null;
+  firstShinyCaughtAt: string | null;
+  lastShinyCaughtAt: string | null;
 };
 
 export type PlayerPortalPokedexState =
@@ -29,10 +36,17 @@ const UNKNOWN_STATE: AuthoritativePokedexSpeciesState = {
   discovery: 'unknown',
   seenCount: '0',
   caughtCount: '0',
+  shinyHistoryAvailable: false,
+  shinySeenCount: '0',
+  shinyCaughtCount: '0',
   firstSeenAt: null,
   lastSeenAt: null,
   firstCaughtAt: null,
   lastCaughtAt: null,
+  firstShinySeenAt: null,
+  lastShinySeenAt: null,
+  firstShinyCaughtAt: null,
+  lastShinyCaughtAt: null,
 };
 
 let cache: { playerId: string; pokedex: readonly PlayerPortalPokedexSpecies[] } | null = null;
@@ -57,14 +71,29 @@ export function getAuthoritativePokedexSpeciesState(
       ? 'seen'
       : 'unknown';
 
+  const shinyHistoryAvailable =
+    entry.shinySeenCount !== undefined &&
+    entry.shinyCaughtCount !== undefined &&
+    entry.firstShinySeenAt !== undefined &&
+    entry.lastShinySeenAt !== undefined &&
+    entry.firstShinyCaughtAt !== undefined &&
+    entry.lastShinyCaughtAt !== undefined;
+
   return {
     discovery,
     seenCount: entry.seenCount,
     caughtCount: entry.caughtCount,
+    shinyHistoryAvailable,
+    shinySeenCount: entry.shinySeenCount ?? '0',
+    shinyCaughtCount: entry.shinyCaughtCount ?? '0',
     firstSeenAt: entry.firstSeenAt,
     lastSeenAt: entry.lastSeenAt,
     firstCaughtAt: entry.firstCaughtAt,
     lastCaughtAt: entry.lastCaughtAt,
+    firstShinySeenAt: entry.firstShinySeenAt ?? null,
+    lastShinySeenAt: entry.lastShinySeenAt ?? null,
+    firstShinyCaughtAt: entry.firstShinyCaughtAt ?? null,
+    lastShinyCaughtAt: entry.lastShinyCaughtAt ?? null,
   };
 }
 
