@@ -348,6 +348,15 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
   const artworkKey = `${validDex}:${visualVariant}`;
   const artworkReady = artworkReadyKey === artworkKey;
   const discovered = playerState.discovery !== 'unknown';
+  const shinyRegistered =
+    playerState.shinyHistoryAvailable &&
+    (() => {
+      try {
+        return BigInt(playerState.shinySeenCount) > 0n;
+      } catch {
+        return false;
+      }
+    })();
   const wants3d = discovered && visualMode === 'model';
   const showing3d = wants3d && modelCapability === 'ready';
   const waitingFor3d = wants3d && modelCapability === 'checking';
@@ -355,6 +364,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
   const modelFailed = wants3d && modelCapability === 'failed';
 
   const chooseVisualVariant = (variant: PokemonVisualVariant) => {
+    if (variant === 'shiny' && !shinyRegistered) return;
     setVisualVariant(variant);
     setArtworkReadyKey(null);
     if (variant === 'shiny' && visualMode === 'model') {
@@ -504,6 +514,12 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
                   type="button"
                   className={visualVariant === 'shiny' ? 'is-active' : undefined}
                   aria-pressed={visualVariant === 'shiny'}
+                  disabled={!shinyRegistered}
+                  title={
+                    playerState.shinyHistoryAvailable
+                      ? 'Variante shiny ainda não registrada'
+                      : 'Histórico shiny ainda não disponível nesta versão do Hub'
+                  }
                   onClick={() => chooseVisualVariant('shiny')}
                 >
                   ✦ SHINY
@@ -678,6 +694,17 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
                 <ResearchRow label="HABITAT" value={activeRecord.habitat} tone="ready" />
                 <ResearchRow label="FORMAS / VARIEDADES" value={varietiesValue} tone="ready" />
                 <ResearchRow label="LINHA EVOLUTIVA" value={evolutionValue} tone="ready" />
+                <ResearchRow
+                  label="VARIANTE SHINY"
+                  value={
+                    !playerState.shinyHistoryAvailable
+                      ? 'Histórico indisponível'
+                      : shinyRegistered
+                        ? `Registrado · ${playerState.shinySeenCount} avist. · ${playerState.shinyCaughtCount} capt.`
+                        : 'Não registrado'
+                  }
+                  tone={shinyRegistered ? 'ready' : 'neutral'}
+                />
 
                 {ownedCount !== null ? (
                   ownedCount > 0 ? (
