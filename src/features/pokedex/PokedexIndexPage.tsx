@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
+import { SpeciesPokemonImage } from '../../visual-assets/PokemonPreviewImage';
 import { TypeIcon } from '../../visual-assets/TypeIcon';
 import { useOwnedPokemonCollection } from '../collection/useOwnedPokemonCollection';
 import { typeAccent } from '../pokemon-detail/fieldDexSpecies';
@@ -427,7 +427,7 @@ export function PokedexIndexPage() {
                   </div>
                   <div className="pokedex-index-sprite-wrap">
                     {discovered ? (
-                      <PokemonAssetImage
+                      <SpeciesPokemonImage
                         dex={item.dex}
                         assetRole="official-artwork"
                         alt=""
