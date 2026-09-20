@@ -29,9 +29,12 @@ describe('product integrity routing', () => {
     expect(resolveProductRoute('/pokedex/abc')).toEqual({ kind: 'not-found' });
   });
 
-  it('keeps trainer inventory inside the Journey product surface', () => {
+  it('keeps inventory in Journey and retires the duplicate standalone moves manager', () => {
     expect(resolveProductRoute('/jornada/inventario')).toEqual({ kind: 'route' });
-    expect(resolveProductRoute('/jornada/movimentos')).toEqual({ kind: 'route' });
+    expect(resolveProductRoute('/jornada/movimentos')).toEqual({
+      kind: 'redirect',
+      to: '/jornada',
+    });
   });
 
   it('keeps Champion Store as a player-facing product route', () => {
