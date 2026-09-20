@@ -727,3 +727,118 @@
     transition: none;
   }
 }
+
+.owned-detail-move-learning {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid rgba(139, 225, 231, 0.16);
+  border-radius: 14px;
+  background: rgba(15, 29, 32, 0.86);
+}
+
+.owned-detail-move-learning > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.owned-detail-move-learning > header span,
+.owned-detail-move-learning-copy > span,
+.owned-detail-move-learning-options button > span {
+  color: #7f9396;
+  font: 650 0.52rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+}
+
+.owned-detail-move-learning > header small {
+  color: #8be1e7;
+  font: 650 0.52rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.06em;
+}
+
+.owned-detail-move-learning > article {
+  display: grid;
+  gap: 12px;
+}
+
+.owned-detail-move-learning-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.owned-detail-move-learning-copy strong {
+  color: #f2fbfb;
+  font: 700 1rem 'Space Grotesk', sans-serif;
+}
+
+.owned-detail-move-learning-copy small,
+.owned-detail-move-learning > p {
+  margin: 0;
+  color: #9caeb0;
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.owned-detail-move-learning-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.owned-detail-move-learning-options button {
+  min-width: 0;
+  min-height: 70px;
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+  padding: 11px 12px;
+  border: 1px solid rgba(220, 241, 241, 0.1);
+  border-radius: 10px;
+  color: #e8f2f1;
+  background: rgba(24, 34, 37, 0.94);
+  cursor: pointer;
+  text-align: left;
+}
+
+.owned-detail-move-learning-options button:hover:not(:disabled),
+.owned-detail-move-learning-options button:focus-visible:not(:disabled) {
+  border-color: rgba(139, 225, 231, 0.6);
+  background: rgba(31, 50, 54, 0.98);
+}
+
+.owned-detail-move-learning-options button.is-skip {
+  border-style: dashed;
+}
+
+.owned-detail-move-learning-options button strong {
+  max-width: 100%;
+  overflow: hidden;
+  font: 650 0.76rem 'Space Grotesk', sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.owned-detail-move-learning-options button small {
+  color: #85979a;
+  font-size: 0.62rem;
+}
+
+.owned-detail-move-learning-options button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+@media (max-width: 560px) {
+  .owned-detail-move-learning-options {
+    grid-template-columns: 1fr;
+  }
+
+  .owned-detail-move-learning > header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
