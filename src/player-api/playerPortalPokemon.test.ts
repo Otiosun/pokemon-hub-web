@@ -64,6 +64,18 @@ describe('getPlayerPortalPokemon', () => {
     await expect(getPlayerPortalPokemon(fetcher)).resolves.toEqual({ status: 'unauthenticated' });
   });
 
+  it('rejects impossible IV values from the portal payload', async () => {
+    const malformed = {
+      ...pokemon,
+      ivs: { ...pokemon.ivs, speed: 32 },
+    };
+    const fetcher = vi.fn(
+      async () => new Response(JSON.stringify({ pokemon: [malformed] }), { status: 200 }),
+    );
+
+    await expect(getPlayerPortalPokemon(fetcher)).rejects.toThrow('Invalid player portal response');
+  });
+
   it('rejects malformed ownership and placement data instead of trusting arbitrary JSON', async () => {
     const malformed = { ...pokemon, placementKind: 'LOCAL_PREVIEW', boxNo: 99 };
     const fetcher = vi.fn(
