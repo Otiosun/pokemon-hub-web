@@ -27,6 +27,9 @@ export function resolveProductRoute(path: string): ProductRouteResolution {
   const normalized = normalizePath(path);
   const legacyRedirect = LEGACY_SPECIES_REDIRECTS[normalized];
   if (legacyRedirect) return { kind: 'redirect', to: legacyRedirect };
+  if (normalized === '/jornada/movimentos') {
+    return { kind: 'redirect', to: '/jornada' };
+  }
 
   if (normalized.startsWith('/pokemon/demo-')) return { kind: 'not-found' };
   if (normalized === '/asset-lab' || normalized.startsWith('/asset-lab/')) {
@@ -37,7 +40,6 @@ export function resolveProductRoute(path: string): ProductRouteResolution {
     normalized === '/' ||
     normalized === '/jornada' ||
     normalized === '/jornada/inventario' ||
-    normalized === '/jornada/movimentos' ||
     normalized === '/pokedex' ||
     normalized === '/pokemon' ||
     normalized === '/team' ||
