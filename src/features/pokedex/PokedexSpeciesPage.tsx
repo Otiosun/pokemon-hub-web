@@ -313,7 +313,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
   );
   const [artworkReadyDex, setArtworkReadyDex] = useState<number | null>(null);
   const [visualMode, setVisualMode] = useState<VisualMode>(() =>
-    readPokedexVisualPreference('3d') === '3d' ? 'model' : 'artwork',
+    readPokedexVisualPreference('2d') === '3d' ? 'model' : 'artwork',
   );
   const [modelCapability, setModelCapability] =
     useState<Pokemon3dCapabilityStatus>('checking');
