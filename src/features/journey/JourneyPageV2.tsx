@@ -57,6 +57,15 @@ function CardIcon() {
   );
 }
 
+function BagIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7 9h10l2 11H5L7 9Z" />
+      <path d="M9 9V6.5a3 3 0 0 1 6 0V9" />
+    </svg>
+  );
+}
+
 function useImagePreview(slot: ProfileImageSlot) {
   const [url, setUrl] = useState<string | null>(() => profileImagePreviewUrls[slot]);
   const [error, setError] = useState<string | null>(null);
@@ -441,6 +450,19 @@ export function JourneyPageV2({
             {imageError ?? trainerCardError}
           </p>
         ) : null}
+
+        <a className="journey-share-action" href="/jornada/inventario">
+          <span className="journey-share-action-icon">
+            <BagIcon />
+          </span>
+          <span className="journey-share-action-copy">
+            <strong>INVENTÁRIO</strong>
+            <small>Consultar itens e quantidades do registro oficial</small>
+          </span>
+          <span className="journey-share-action-chevron">
+            <ChevronIcon />
+          </span>
+        </a>
 
         {hasPersonalDetails ? (
           <details className="journey-profile-details">

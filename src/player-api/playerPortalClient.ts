@@ -68,6 +68,13 @@ export type PlayerPortalPokemon = {
   moves: PlayerPortalPokemonMove[];
 };
 
+export type PlayerPortalInventoryItem = {
+  itemId: string;
+  itemSlug: string;
+  displayName: string;
+  quantity: string;
+};
+
 export type PlayerPortalPokedexSpecies = {
   nationalDex: number;
   seenCount: string;
@@ -121,6 +128,10 @@ export type PlayerPortalPokemonResult =
 
 export type PlayerPortalPokedexResult =
   | { status: 'authenticated'; pokedex: PlayerPortalPokedexSpecies[] }
+  | { status: 'unauthenticated' };
+
+export type PlayerPortalInventoryResult =
+  | { status: 'authenticated'; inventory: PlayerPortalInventoryItem[] }
   | { status: 'unauthenticated' };
 
 export type PlayerPortalLocationResult =
@@ -209,6 +220,30 @@ export async function getPlayerPortalPokedex(
   }
 
   return { status: 'authenticated', pokedex: body.pokedex };
+}
+
+export async function getPlayerPortalInventory(
+  fetcher: PlayerPortalFetcher = fetch,
+): Promise<PlayerPortalInventoryResult> {
+  const response = await fetcher('/api/hub/player/inventory', {
+    method: 'GET',
+    credentials: 'include',
+    headers: { accept: 'application/json' },
+  });
+
+  if (response.status === 401) return { status: 'unauthenticated' };
+  if (!response.ok) throw new Error(`Player portal request failed (${response.status})`);
+
+  const body = await readJsonBody(response);
+  if (
+    !isRecord(body) ||
+    !Array.isArray(body.inventory) ||
+    !body.inventory.every(isPlayerPortalInventoryItem)
+  ) {
+    throw new Error('Invalid player portal response');
+  }
+
+  return { status: 'authenticated', inventory: body.inventory };
 }
 
 export async function getPlayerPortalLocation(
@@ -402,6 +437,17 @@ export function isPlayerPortalPokemon(value: unknown): value is PlayerPortalPoke
   }
 
   return false;
+}
+
+function isPlayerPortalInventoryItem(value: unknown): value is PlayerPortalInventoryItem {
+  if (!isRecord(value)) return false;
+  return (
+    isUuid(value.itemId) &&
+    isDisplayString(value.itemSlug) &&
+    isDisplayString(value.displayName) &&
+    typeof value.quantity === 'string' &&
+    DIGITS_PATTERN.test(value.quantity)
+  );
 }
 
 function isPlayerPortalPokedexSpecies(value: unknown): value is PlayerPortalPokedexSpecies {

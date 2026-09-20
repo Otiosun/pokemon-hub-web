@@ -36,6 +36,7 @@ export function resolveProductRoute(path: string): ProductRouteResolution {
   if (
     normalized === '/' ||
     normalized === '/jornada' ||
+    normalized === '/jornada/inventario' ||
     normalized === '/pokedex' ||
     normalized === '/pokemon' ||
     normalized === '/team' ||

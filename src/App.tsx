@@ -33,6 +33,9 @@ const OwnedPokemonDetailPage = lazy(() =>
 const TeamPage = lazy(() =>
   import('./features/team/TeamPage').then((module) => ({ default: module.TeamPage })),
 );
+const InventoryPage = lazy(() =>
+  import('./features/inventory/InventoryPage').then((module) => ({ default: module.InventoryPage })),
+);
 
 
 type ChampionStoreOffer = {
@@ -661,6 +664,16 @@ export function App() {
     return (
       <HubFrame active="store" destinations={hubDestinations}>
         <ChampionStorePage />
+      </HubFrame>
+    );
+  }
+
+  if (path === '/jornada/inventario' || path === '/jornada/inventario/') {
+    return (
+      <HubFrame active="journey" destinations={hubDestinations}>
+        <Suspense fallback={<RouteFallback module="journey" label="ABRINDO INVENTÁRIO" />}>
+          <InventoryPage />
+        </Suspense>
       </HubFrame>
     );
   }
