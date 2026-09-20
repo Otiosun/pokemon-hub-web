@@ -19,6 +19,7 @@ export type PlayerPortalTeamSlot = {
   typeNames: string[];
   level: number;
   currentHp: number;
+  shiny: boolean;
   slotNo: number;
 };
 
@@ -290,6 +291,7 @@ function isPlayerPortalTeamSlot(value: unknown): value is PlayerPortalTeamSlot {
     !Number.isInteger(value.level) ||
     value.level < 1 ||
     !isNonNegativeInteger(value.currentHp) ||
+    typeof value.shiny !== 'boolean' ||
     typeof value.slotNo !== 'number' ||
     !Number.isInteger(value.slotNo) ||
     value.slotNo < 1 ||
