@@ -26,7 +26,7 @@ export type PlayerPortalMoveChoicesResult =
     }
   | { status: 'unauthenticated' };
 
-export type PlayerPortalMoveChoiceResolution = {
+export type PlayerPortalResolvedMoveChoice = {
   choiceId: string;
   pokemonInstanceId: string;
   moveId: string;
@@ -35,10 +35,10 @@ export type PlayerPortalMoveChoiceResolution = {
   replayed: boolean;
 };
 
-export type ResolvePlayerPortalMoveChoiceResult =
+export type PlayerPortalResolveMoveChoiceResult =
   | {
       status: 'authenticated';
-      result: PlayerPortalMoveChoiceResolution;
+      result: PlayerPortalResolvedMoveChoice;
       blockedByBattle: boolean;
       choices: PlayerPortalPendingMoveChoice[];
     }
@@ -56,10 +56,18 @@ export async function getPlayerPortalMoveChoices(
   });
 
   if (response.status === 401) return { status: 'unauthenticated' };
-  if (!response.ok) throw new Error(`Player portal move choices request failed (${response.status})`);
+  if (!response.ok) throw new Error(`Player portal move choices failed (${response.status})`);
 
   const body = await readJson(response);
-  if (!isMoveChoicesBody(body)) throw new Error('Invalid player portal move choices response');
+  if (
+    !isRecord(body) ||
+    typeof body.blockedByBattle !== 'boolean' ||
+    !Array.isArray(body.choices) ||
+    !body.choices.every(isPendingMoveChoice)
+  ) {
+    throw new Error('Invalid player portal move choices response');
+  }
+
   return {
     status: 'authenticated',
     blockedByBattle: body.blockedByBattle,
@@ -70,10 +78,11 @@ export async function getPlayerPortalMoveChoices(
 export async function resolvePlayerPortalMoveChoice(
   input: { choiceId: string; replaceSlotNo: number | null },
   fetcher: PlayerPortalFetcher = fetch,
-): Promise<ResolvePlayerPortalMoveChoiceResult> {
+): Promise<PlayerPortalResolveMoveChoiceResult> {
   if (
-    !isUuid(input.choiceId) ||
-    (input.replaceSlotNo !== null && !isIntegerBetween(input.replaceSlotNo, 1, 4))
+    !UUID_PATTERN.test(input.choiceId) ||
+    (input.replaceSlotNo !== null &&
+      (!Number.isInteger(input.replaceSlotNo) || input.replaceSlotNo < 1 || input.replaceSlotNo > 4))
   ) {
     throw new Error('Invalid player portal move choice request');
   }
@@ -89,12 +98,25 @@ export async function resolvePlayerPortalMoveChoice(
   });
 
   if (response.status === 401) return { status: 'unauthenticated' };
-  if (response.status === 409) return { status: 'blocked' };
   if (response.status === 404) return { status: 'stale' };
-  if (!response.ok) throw new Error(`Player portal move choice request failed (${response.status})`);
+  if (response.status === 409) {
+    const body = await readJson(response);
+    if (isRecord(body) && body.error === 'FLOW_BLOCKED') return { status: 'blocked' };
+    throw new Error('Player portal move choice conflict');
+  }
+  if (!response.ok) throw new Error(`Player portal move choice failed (${response.status})`);
 
   const body = await readJson(response);
-  if (!isResolutionBody(body)) throw new Error('Invalid player portal move choice response');
+  if (
+    !isRecord(body) ||
+    !isResolvedMoveChoice(body.result) ||
+    typeof body.blockedByBattle !== 'boolean' ||
+    !Array.isArray(body.choices) ||
+    !body.choices.every(isPendingMoveChoice)
+  ) {
+    throw new Error('Invalid player portal move choice response');
+  }
+
   return {
     status: 'authenticated',
     result: body.result,
@@ -103,54 +125,15 @@ export async function resolvePlayerPortalMoveChoice(
   };
 }
 
-async function readJson(response: Response): Promise<unknown> {
-  try {
-    return await response.json();
-  } catch {
-    throw new Error('Invalid player portal move choice response');
-  }
-}
-
-function isMoveChoicesBody(
-  value: unknown,
-): value is { blockedByBattle: boolean; choices: PlayerPortalPendingMoveChoice[] } {
-  if (!isRecord(value)) return false;
-  return (
-    typeof value.blockedByBattle === 'boolean' &&
-    Array.isArray(value.choices) &&
-    value.choices.every(isPendingChoice)
-  );
-}
-
-function isResolutionBody(
-  value: unknown,
-): value is {
-  result: PlayerPortalMoveChoiceResolution;
-  blockedByBattle: boolean;
-  choices: PlayerPortalPendingMoveChoice[];
-} {
-  if (!isRecord(value) || !isRecord(value.result)) return false;
-  const result = value.result;
-  return (
-    isUuid(result.choiceId) &&
-    isUuid(result.pokemonInstanceId) &&
-    isUuid(result.moveId) &&
-    (result.status === 'RESOLVED' || result.status === 'SKIPPED') &&
-    (result.replacedSlotNo === null || isIntegerBetween(result.replacedSlotNo, 1, 4)) &&
-    typeof result.replayed === 'boolean' &&
-    typeof value.blockedByBattle === 'boolean' &&
-    Array.isArray(value.choices) &&
-    value.choices.every(isPendingChoice)
-  );
-}
-
-function isPendingChoice(value: unknown): value is PlayerPortalPendingMoveChoice {
+function isPendingMoveChoice(value: unknown): value is PlayerPortalPendingMoveChoice {
   if (!isRecord(value)) return false;
   return (
     isUuid(value.choiceId) &&
     isUuid(value.pokemonInstanceId) &&
     isDisplayString(value.pokemonDisplayName) &&
-    isPositiveInteger(value.learnLevel) &&
+    Number.isInteger(value.learnLevel) &&
+    typeof value.learnLevel === 'number' &&
+    value.learnLevel >= 1 &&
     value.learnLevel <= 100 &&
     isUuid(value.moveId) &&
     isDisplayString(value.moveDisplayName) &&
@@ -161,16 +144,39 @@ function isPendingChoice(value: unknown): value is PlayerPortalPendingMoveChoice
 }
 
 function isPendingMove(value: unknown): value is PlayerPortalPendingMove {
+  if (!isRecord(value)) return false;
   return (
-    isRecord(value) &&
-    isIntegerBetween(value.slotNo, 1, 4) &&
+    typeof value.slotNo === 'number' &&
+    Number.isInteger(value.slotNo) &&
+    value.slotNo >= 1 &&
+    value.slotNo <= 4 &&
     isUuid(value.moveId) &&
     isDisplayString(value.displayName)
   );
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+function isResolvedMoveChoice(value: unknown): value is PlayerPortalResolvedMoveChoice {
+  if (!isRecord(value)) return false;
+  return (
+    isUuid(value.choiceId) &&
+    isUuid(value.pokemonInstanceId) &&
+    isUuid(value.moveId) &&
+    (value.status === 'RESOLVED' || value.status === 'SKIPPED') &&
+    (value.replacedSlotNo === null ||
+      (typeof value.replacedSlotNo === 'number' &&
+        Number.isInteger(value.replacedSlotNo) &&
+        value.replacedSlotNo >= 1 &&
+        value.replacedSlotNo <= 4)) &&
+    typeof value.replayed === 'boolean'
+  );
+}
+
+async function readJson(response: Response): Promise<unknown> {
+  try {
+    return await response.json();
+  } catch {
+    throw new Error('Invalid player portal move choices response');
+  }
 }
 
 function isUuid(value: unknown): value is string {
@@ -181,10 +187,6 @@ function isDisplayString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
-function isPositiveInteger(value: unknown): value is number {
-  return typeof value === 'number' && Number.isInteger(value) && value >= 1;
-}
-
-function isIntegerBetween(value: unknown, min: number, max: number): value is number {
-  return typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
