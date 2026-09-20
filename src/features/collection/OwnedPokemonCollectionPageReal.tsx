@@ -63,6 +63,7 @@ function PokemonVisual({
       assetRole={assetRole}
       shiny={pokemon.shiny}
       formSlug={pokemon.formSlug}
+      speciesSlug={pokemon.speciesSlug}
       alt=""
       aria-hidden="true"
       loading={assetRole === 'portrait' ? 'eager' : 'lazy'}
