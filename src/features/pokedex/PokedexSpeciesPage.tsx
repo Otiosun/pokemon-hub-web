@@ -21,7 +21,7 @@ import { formatNationalDexName, getCachedNationalDexName } from './nationalDexRu
 import {
   getCachedPokedexSpeciesRuntime,
   loadPokedexSpeciesRuntime,
-  type EvolutionSpecies,
+  type EvolutionTreeNode,
   type SpeciesVariety,
 } from './pokedexSpeciesRuntime';
 import {
@@ -46,7 +46,7 @@ type RecordState = {
   types: string[];
   habitat: string;
   varieties: SpeciesVariety[];
-  evolutionStages: EvolutionSpecies[][];
+  evolutionTree: EvolutionTreeNode | null;
 };
 
 type ReviewAssetPayload = {
@@ -132,7 +132,7 @@ function initialRecord(
       types: [],
       habitat: '—',
       varieties: [],
-      evolutionStages: [],
+      evolutionTree: null,
     };
   }
 
@@ -151,7 +151,7 @@ function initialRecord(
     types: cached?.typeSlugs.map(translateType) ?? review?.types ?? [],
     habitat: cached?.habitat ?? '—',
     varieties: cached?.varieties ?? [],
-    evolutionStages: cached?.evolutionStages ?? [],
+    evolutionTree: cached?.evolutionTree ?? null,
   };
 }
 
@@ -203,38 +203,60 @@ function SideArrow({ direction }: { direction: 'left' | 'right' }) {
   );
 }
 
-function EvolutionTree({ stages }: { stages: EvolutionSpecies[][] }) {
+function EvolutionBranch({
+  node,
+  root = false,
+}: {
+  node: EvolutionTreeNode;
+  root?: boolean;
+}) {
   return (
-    <div className="pokedex-species-evolution-tree">
-      {stages.map((stage, stageIndex) => (
-        <div
-          className="pokedex-species-evolution-stage"
-          key={stage.map((species) => species.dex).join('-')}
-        >
-          {stageIndex > 0 && (
-            <span className="pokedex-species-evolution-arrow" aria-hidden="true">
-              →
-            </span>
-          )}
+    <div className={`pokedex-species-evolution-branch${root ? ' is-root' : ''}`}>
+      {!root ? (
+        <div className="pokedex-species-evolution-edge" aria-label="Condição de evolução">
+          <span className="pokedex-species-evolution-line" aria-hidden="true" />
           <div>
-            {stage.map((species) => (
-              <a href={neighbourHref(species.dex)} key={species.dex}>
-                <SpeciesPokemonImage
-                  dex={species.dex}
-                  assetRole="icon"
-                  alt=""
-                  aria-hidden="true"
-                  loading="lazy"
-                  decoding="async"
-                  fallbackLabel="?"
-                />
-                <span>#{String(species.dex).padStart(3, '0')}</span>
-                <strong>{species.name}</strong>
-              </a>
+            {(node.conditions.length > 0 ? node.conditions : ['Evolução']).map((condition) => (
+              <span key={condition}>{condition}</span>
             ))}
           </div>
+          <span className="pokedex-species-evolution-arrow" aria-hidden="true">↓</span>
         </div>
-      ))}
+      ) : null}
+
+      <a
+        className="pokedex-species-evolution-card"
+        href={neighbourHref(node.species.dex)}
+        aria-label={`Abrir ${node.species.name}, número ${node.species.dex}`}
+      >
+        <SpeciesPokemonImage
+          dex={node.species.dex}
+          assetRole="icon"
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          decoding="async"
+          fallbackLabel="?"
+        />
+        <span>#{String(node.species.dex).padStart(3, '0')}</span>
+        <strong>{node.species.name}</strong>
+      </a>
+
+      {node.children.length > 0 ? (
+        <div className="pokedex-species-evolution-children">
+          {node.children.map((child) => (
+            <EvolutionBranch key={`${node.species.dex}-${child.species.dex}`} node={child} />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function EvolutionTree({ tree }: { tree: EvolutionTreeNode }) {
+  return (
+    <div className="pokedex-species-evolution-tree">
+      <EvolutionBranch node={tree} root />
     </div>
   );
 }
@@ -387,7 +409,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
           types: payload.typeSlugs.map(translateType),
           habitat: payload.habitat,
           varieties: payload.varieties,
-          evolutionStages: payload.evolutionStages,
+          evolutionTree: payload.evolutionTree,
         });
       } catch (error) {
         if (controller.signal.aborted) return;
@@ -424,7 +446,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
   const evolutionValue =
     activeRecord.status === 'loading'
       ? 'Carregando'
-      : activeRecord.evolutionStages.length > 0
+      : activeRecord.evolutionTree
         ? 'Disponível'
         : 'Sem evolução catalogada';
 
@@ -651,8 +673,8 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
           {discovered && (
             <section className="pokedex-species-evolution" aria-label="Linha evolutiva">
               <header>LINHA EVOLUTIVA</header>
-              {activeRecord.evolutionStages.length > 0 ? (
-                <EvolutionTree stages={activeRecord.evolutionStages} />
+              {activeRecord.evolutionTree ? (
+                <EvolutionTree tree={activeRecord.evolutionTree} />
               ) : (
                 <p>Sem evolução catalogada.</p>
               )}
