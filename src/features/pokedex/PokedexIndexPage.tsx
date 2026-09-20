@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { SpeciesPokemonImage } from '../../visual-assets/PokemonPreviewImage';
+import type { PokemonVisualVariant } from '../../visual-assets/pokemonVisualRegistry';
 import { TypeIcon } from '../../visual-assets/TypeIcon';
 import { typeAccent } from '../pokemon-detail/fieldDexSpecies';
 import {
@@ -105,6 +106,7 @@ export function PokedexIndexPage() {
   const [region, setRegion] = useState<PokedexRegionFilter>(initialSession.region);
   const [discovery, setDiscovery] = useState<PokedexDiscoveryFilter>(initialSession.discovery);
   const [shiny, setShiny] = useState<PokedexShinyFilter>(initialSession.shiny);
+  const [visualVariant, setVisualVariant] = useState<PokemonVisualVariant>('regular');
   const [typeSlug, setTypeSlug] = useState<string | null>(initialSession.typeSlug);
   const [typeMembers, setTypeMembers] = useState<ReadonlySet<number> | null>(initialTypeMembers);
   const [typeStatus, setTypeStatus] = useState<TypeFilterStatus>(
@@ -186,7 +188,8 @@ export function PokedexIndexPage() {
 
   useEffect(() => {
     if (shiny === 'Shiny' && !shinyReady) setShiny('Todos');
-  }, [shiny, shinyReady]);
+    if (visualVariant === 'shiny' && !shinyReady) setVisualVariant('regular');
+  }, [shiny, shinyReady, visualVariant]);
 
   useEffect(() => {
     rememberPokedexIndexFilters(query, region, discovery, shiny, typeSlug);
@@ -352,6 +355,28 @@ export function PokedexIndexPage() {
           </button>
         </div>
 
+        <div className="pokedex-index-visual-modes" role="group" aria-label="Visual do índice">
+          <span>VISUAL</span>
+          <button
+            type="button"
+            className={visualVariant === 'regular' ? 'is-active' : undefined}
+            aria-pressed={visualVariant === 'regular'}
+            onClick={() => setVisualVariant('regular')}
+          >
+            NORMAL
+          </button>
+          <button
+            type="button"
+            className={visualVariant === 'shiny' ? 'is-active is-shiny' : undefined}
+            aria-pressed={visualVariant === 'shiny'}
+            disabled={!shinyReady}
+            title={shinyReady ? 'Mostrar variantes shiny registradas' : 'Histórico shiny indisponível'}
+            onClick={() => setVisualVariant('shiny')}
+          >
+            SHINY
+          </button>
+        </div>
+
         {activeFilterCount ? (
           <div className="pokedex-index-active-filters">
             {region !== 'Todos' ? (
@@ -405,6 +430,7 @@ export function PokedexIndexPage() {
               const playerState = getAuthoritativePokedexSpeciesState(pokedexByDex.get(item.dex));
               const discovered = playerState.discovery !== 'unknown';
               const hasShiny = shinyDexes.has(item.dex);
+              const shinyVisualLocked = visualVariant === 'shiny' && discovered && !hasShiny;
               const paddedDex = String(item.dex).padStart(3, '0');
               const displayName = discovered ? item.name || `#${paddedDex}` : '???';
               return (
@@ -423,16 +449,27 @@ export function PokedexIndexPage() {
                   </div>
                   <div className="pokedex-index-sprite-wrap">
                     {discovered ? (
-                      <SpeciesPokemonImage
-                        dex={item.dex}
-                        assetRole="official-artwork"
-                        variant={shiny === 'Shiny' ? 'shiny' : 'regular'}
-                        alt=""
-                        aria-hidden="true"
-                        loading="lazy"
-                        decoding="async"
-                        fallbackLabel="?"
-                      />
+                      shinyVisualLocked ? (
+                        <span
+                          className="pokedex-index-shiny-locked"
+                          role="img"
+                          aria-label="Variante shiny não registrada"
+                        >
+                          <span aria-hidden="true">✦</span>
+                          <small aria-hidden="true">?</small>
+                        </span>
+                      ) : (
+                        <SpeciesPokemonImage
+                          dex={item.dex}
+                          assetRole="official-artwork"
+                          variant={visualVariant === 'shiny' ? 'shiny' : 'regular'}
+                          alt=""
+                          aria-hidden="true"
+                          loading="lazy"
+                          decoding="async"
+                          fallbackLabel="?"
+                        />
+                      )
                     ) : (
                       <span className="pokedex-index-unknown-glyph" aria-hidden="true">?</span>
                     )}
