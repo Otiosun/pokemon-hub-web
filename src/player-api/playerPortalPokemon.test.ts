@@ -73,6 +73,20 @@ describe('getPlayerPortalPokemon', () => {
     await expect(getPlayerPortalPokemon(fetcher)).rejects.toThrow('Invalid player portal response');
   });
 
+  it('rejects Box positions above the canonical 30-slot capacity', async () => {
+    const malformed = {
+      ...pokemon,
+      placementKind: 'BOX' as const,
+      boxNo: 1,
+      slotNo: 31,
+    };
+    const fetcher = vi.fn(
+      async () => new Response(JSON.stringify({ pokemon: [malformed] }), { status: 200 }),
+    );
+
+    await expect(getPlayerPortalPokemon(fetcher)).rejects.toThrow('Invalid player portal response');
+  });
+
   it('accepts unresolved catalog presentation only when all presentation fields are unresolved', async () => {
     const unresolved = {
       ...pokemon,
