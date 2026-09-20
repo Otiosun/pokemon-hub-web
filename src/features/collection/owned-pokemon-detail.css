@@ -138,6 +138,11 @@
   box-shadow: 0 3px 13px rgba(0, 0, 0, 0.2);
 }
 
+.owned-detail-view-switch button:disabled {
+  opacity: 0.28;
+  cursor: not-allowed;
+}
+
 .owned-detail-visual {
   position: absolute;
   z-index: 3;
