@@ -24,11 +24,19 @@ const profile: PlayerPortalProfile = {
   contentReleaseId: '33333333-3333-4333-8333-333333333333',
   rulesetId: '44444444-4444-4444-8444-444444444444',
   starterPokemonInstanceId: '55555555-5555-4555-8555-555555555555',
+  profileCustomization: {
+    title: 'Explorador',
+    bio: 'Sempre seguindo a próxima trilha.',
+    appearance: null,
+    age: 29,
+    height: '1,94 m',
+    accent: 'gold',
+  },
   team: [
     {
       pokemonInstanceId: '66666666-6666-4666-8666-666666666666',
       formId: '77777777-7777-4777-8777-777777777777',
-      formSlug: 'default',
+      formSlug: 'charmander',
       speciesSlug: 'charmander',
       displayName: 'Charmander',
       nationalDex: 4,
