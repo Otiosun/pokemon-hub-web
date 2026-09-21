@@ -16,6 +16,7 @@ import {
   type CollectionShinyFilter,
   type CollectionSort,
 } from './collectionFilters';
+import { blocksLastTeamMemberBoxMove } from './collectionOrganizerRules';
 import {
   readCollectionSession,
   rememberCollectionFilters,
@@ -355,9 +356,11 @@ export function OwnedPokemonCollectionPage() {
 
     if (
       target.placementKind === 'BOX' &&
-      selectedOrganizerPokemon.teamSlot !== null &&
-      team.length <= 1 &&
-      targetOccupant === null
+      blocksLastTeamMemberBoxMove({
+        sourceInTeam: selectedOrganizerPokemon.teamSlot !== null,
+        teamSize: team.length,
+        targetOccupied: targetOccupant !== null,
+      })
     ) {
       setOrganizerMessage('O Time precisa manter pelo menos um Pokémon ativo.');
       return;
@@ -639,14 +642,19 @@ export function OwnedPokemonCollectionPage() {
                                 !selectedOrganizerPokemon ||
                                 organizerStatus === 'saving' ||
                                 current ||
-                                (selectedOrganizerPokemon.teamSlot !== null &&
-                                  team.length <= 1 &&
-                                  occupant === null)
+                                blocksLastTeamMemberBoxMove({
+                                  sourceInTeam: selectedOrganizerPokemon.teamSlot !== null,
+                                  teamSize: team.length,
+                                  targetOccupied: occupant !== null,
+                                })
                               }
                               title={
-                                selectedOrganizerPokemon?.teamSlot !== null &&
-                                team.length <= 1 &&
-                                occupant === null
+                                selectedOrganizerPokemon &&
+                                blocksLastTeamMemberBoxMove({
+                                  sourceInTeam: selectedOrganizerPokemon.teamSlot !== null,
+                                  teamSize: team.length,
+                                  targetOccupied: occupant !== null,
+                                })
                                   ? 'O Time precisa manter pelo menos um Pokémon ativo'
                                   : occupant
                                     ? `Trocar com ${occupant.nickname}`
