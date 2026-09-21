@@ -27,8 +27,8 @@ export function OwnedPokemonImage({
   return (
     <PokemonAssetImage
       {...props}
-      formSlug={formSlug ?? undefined}
-      speciesSlug={speciesSlug ?? undefined}
+      {...(formSlug !== null && formSlug !== undefined ? { formSlug } : {})}
+      {...(speciesSlug !== null && speciesSlug !== undefined ? { speciesSlug } : {})}
       variant={shiny ? 'shiny' : 'regular'}
     />
   );
