@@ -555,9 +555,8 @@ export function OwnedPokemonCollectionPage() {
                         <span>DESTINO</span>
                         <strong id="owned-roster-team-destination">TIME</strong>
                       </header>
-                      <div
+                      <section
                         className="owned-roster-slot-grid is-team"
-                        role="group"
                         aria-label="Slots do Time"
                       >
                         {[1, 2, 3, 4, 5, 6].map((slot) => {
@@ -596,7 +595,7 @@ export function OwnedPokemonCollectionPage() {
                             </button>
                           );
                         })}
-                      </div>
+                      </section>
                     </section>
 
                     <section aria-labelledby="owned-roster-box-destination">
@@ -628,9 +627,8 @@ export function OwnedPokemonCollectionPage() {
                         </div>
                       </header>
 
-                      <div
+                      <section
                         className="owned-roster-slot-grid is-box"
-                        role="group"
                         aria-label={`Slots da Box ${organizerBoxNo}`}
                       >
                         {Array.from({ length: 30 }, (_, index) => index + 1).map((slot) => {
@@ -687,7 +685,7 @@ export function OwnedPokemonCollectionPage() {
                             </button>
                           );
                         })}
-                      </div>
+                      </section>
                     </section>
                   </div>
 
