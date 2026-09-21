@@ -85,6 +85,12 @@
 
 .pokedex-species-artwork-slot {
   opacity: 1;
+  transition: opacity 180ms ease;
+}
+
+.pokedex-species-artwork-slot.is-hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .pokedex-species-artwork-slot::before {
@@ -138,6 +144,17 @@
 
 .pokedex-species-page.is-seen .pokedex-species-artwork {
   filter: grayscale(1) saturate(0) contrast(0.96) brightness(0.94) drop-shadow(0 22px 34px rgba(0, 0, 0, 0.25));
+}
+
+.pokedex-species-model-slot {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.pokedex-species-model-slot.is-ready {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .pokedex-species-model-slot .generations-demo,
