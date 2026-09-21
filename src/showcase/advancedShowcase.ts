@@ -6,6 +6,7 @@ import type {
   PlayerPortalPokedexSpecies,
   PlayerPortalPokemon,
   PlayerPortalProfile,
+  PlayerPortalProfileCustomization,
 } from '../player-api/playerPortalClient';
 import type {
   PlayerPortalPendingMoveChoice,
@@ -17,6 +18,8 @@ const SHOWCASE_QUERY_VALUE = 'advanced';
 const SHOWCASE_SESSION_KEY = 'pokemon-beyond:showcase';
 const SHOWCASE_ROSTER_KEY = 'pokemon-beyond:showcase-roster:v1';
 const SHOWCASE_MOVE_CHOICES_KEY = 'pokemon-beyond:showcase-move-choices:v1';
+const SHOWCASE_PROFILE_CUSTOMIZATION_KEY =
+  'pokemon-beyond:showcase-profile-customization:v1';
 const SHOWCASE_TIMESTAMP = '2026-09-01T12:00:00.000Z';
 
 function demoUuid(seed: number) {
@@ -581,6 +584,43 @@ function showcaseTeam(pokemon: readonly PlayerPortalPokemon[]) {
     }));
 }
 
+const DEFAULT_SHOWCASE_PROFILE_CUSTOMIZATION: PlayerPortalProfileCustomization = {
+  title: 'Veterano da Liga',
+  bio: ADVANCED_SHOWCASE_JOURNEY.personal.bio,
+  appearance: ADVANCED_SHOWCASE_JOURNEY.personal.appearance,
+  age: ADVANCED_SHOWCASE_JOURNEY.personal.age,
+  height: ADVANCED_SHOWCASE_JOURNEY.personal.height,
+  accent: 'gold',
+};
+
+export function readAdvancedShowcaseProfileCustomization(): PlayerPortalProfileCustomization {
+  if (typeof window === 'undefined') return { ...DEFAULT_SHOWCASE_PROFILE_CUSTOMIZATION };
+  try {
+    const stored = window.sessionStorage.getItem(SHOWCASE_PROFILE_CUSTOMIZATION_KEY);
+    if (!stored) return { ...DEFAULT_SHOWCASE_PROFILE_CUSTOMIZATION };
+    const parsed = JSON.parse(stored) as PlayerPortalProfileCustomization;
+    return { ...DEFAULT_SHOWCASE_PROFILE_CUSTOMIZATION, ...parsed };
+  } catch {
+    return { ...DEFAULT_SHOWCASE_PROFILE_CUSTOMIZATION };
+  }
+}
+
+export function writeAdvancedShowcaseProfileCustomization(
+  customization: PlayerPortalProfileCustomization,
+) {
+  if (typeof window !== 'undefined') {
+    try {
+      window.sessionStorage.setItem(
+        SHOWCASE_PROFILE_CUSTOMIZATION_KEY,
+        JSON.stringify(customization),
+      );
+    } catch {
+      // Showcase keeps the current in-memory update even when storage is unavailable.
+    }
+  }
+  return { ...customization };
+}
+
 const SHOWCASE_PROFILE: Omit<PlayerPortalProfile, 'team' | 'starterPokemonInstanceId'> = {
   playerId: demoUuid(73),
   playerStatus: 'ACTIVE',
@@ -604,6 +644,7 @@ export function getAdvancedShowcaseSession(): PlayerPortalSessionBootstrap {
     profile: {
       ...SHOWCASE_PROFILE,
       starterPokemonInstanceId: team[2]?.pokemonInstanceId ?? team[0]?.pokemonInstanceId ?? null,
+      profileCustomization: readAdvancedShowcaseProfileCustomization(),
       team,
     },
   };
