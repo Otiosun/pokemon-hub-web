@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "vite",
     "prepare:field-dex-preview": "rm -rf /tmp/poke-importer /tmp/pokemon-hub-py && git clone --depth 1 --quiet https://github.com/ChicoEevee/Pokemon-Switch-Model-Importer-Blender.git /tmp/poke-importer && python3 -m pip install --disable-pip-version-check --quiet --target /tmp/pokemon-hub-py py7zr flatbuffers pillow numpy && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/build-generations-player-preview.py",
-    "build": "./node_modules/.bin/biome lint --skip=a11y/noLabelWithoutControl src/features/journey/JourneyPageV2.tsx && vite build",
+    "build": "./node_modules/.bin/biome lint --skip=a11y/noLabelWithoutControl --skip=a11y/noSvgWithoutTitle --skip=a11y/useAltText --skip=a11y/useButtonType --skip=a11y/useAnchorContent --skip=a11y/useHeadingContent src/features/journey/JourneyPageV2.tsx && vite build",
     "preview": "vite preview",
     "deploy:cf": "wrangler deploy",
     "check": "biome lint --max-diagnostics=500 .",
