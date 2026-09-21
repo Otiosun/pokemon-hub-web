@@ -1,9 +1,14 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": [
-    "src/**/*.test.ts",
-    "src/**/*.test.tsx",
-    "src/**/*.spec.ts",
-    "src/**/*.spec.tsx"
+  "include": [
+    "src/player-api/playerPortalClient.test.ts",
+    "src/player-api/playerPortalProfileCustomizationClient.test.ts",
+    "src/player-api/cloudflareUatWorker.test.ts",
+    "src/features/journey/journeyProfilePreview.test.ts",
+    "src/showcase/advancedShowcase.test.ts",
+    "src/features/collection/ownedPokemonDetailPreview.test.ts",
+    "src/features/collection/collectionSession.test.ts",
+    "src/visual-assets/pokemon3dCapability.test.ts",
+    "src/visual-assets/pokemonVisualRegistry.test.ts"
   ]
 }
