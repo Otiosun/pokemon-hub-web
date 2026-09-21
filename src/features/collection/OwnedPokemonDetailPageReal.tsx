@@ -624,7 +624,10 @@ export function OwnedPokemonDetailPage({
                         </div>
 
                         {decision ? (
-                          <div className="owned-detail-move-confirm" role="group" aria-label="Confirmar decisão">
+                          <section
+                            className="owned-detail-move-confirm"
+                            aria-label="Confirmar decisão"
+                          >
                             <div>
                               <span>CONFIRMAR</span>
                               <strong>
@@ -655,7 +658,7 @@ export function OwnedPokemonDetailPage({
                                 {saving ? 'SALVANDO…' : 'CONFIRMAR'}
                               </button>
                             </div>
-                          </div>
+                          </section>
                         ) : null}
                       </article>
                     );
