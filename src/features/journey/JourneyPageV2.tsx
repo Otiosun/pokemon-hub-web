@@ -345,12 +345,6 @@ export function JourneyPageV2({
   const firstPendingMove = pendingMoveChoices[0] ?? null;
 
   useEffect(() => {
-    if (!editing) {
-      setProfileDraft(customizationDraft(currentCustomization));
-    }
-  }, [currentCustomization, editing]);
-
-  useEffect(() => {
     if (!isZhoulia || !profile.trainerId) return;
     const onEmitted = (event: Event) => {
       const detail = (event as CustomEvent<{ trainerId?: string }>).detail;
