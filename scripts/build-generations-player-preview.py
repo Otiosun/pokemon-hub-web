@@ -12,7 +12,8 @@ from pathlib import Path
 # production catalog.
 PLAYER_VISIBLE_DEX = (
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 18, 19, 20, 22, 24, 25, 26,
-    41, 58, 59, 63, 92, 94, 129, 131, 133, 134, 148, 149, 197, 245, 249, 384,
+    41, 58, 59, 63, 92, 94, 129, 131, 133, 134, 148, 149, 197, 245, 248, 249,
+    376, 384,
 )
 
 OUTPUT_ROOT = Path('public/research/generations')
