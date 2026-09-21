@@ -344,6 +344,15 @@ export function OwnedPokemonCollectionPage() {
   const moveSelectedPokemon = async (target: PlayerPortalRosterPlacement) => {
     if (!selectedOrganizerPokemon || organizerStatus === 'saving') return;
 
+    const targetOccupant =
+      target.placementKind === 'TEAM'
+        ? teamBySlot.get(target.slotNo) ?? null
+        : pokemon.find(
+            (item) =>
+              item.boxNo === target.boxNo &&
+              item.storageSlot === target.slotNo,
+          ) ?? null;
+
     if (
       target.placementKind === 'BOX' &&
       selectedOrganizerPokemon.teamSlot !== null &&
@@ -363,15 +372,6 @@ export function OwnedPokemonCollectionPage() {
       setOrganizerMessage('Esse já é o local atual do Pokémon.');
       return;
     }
-
-    const targetOccupant =
-      target.placementKind === 'TEAM'
-        ? teamBySlot.get(target.slotNo) ?? null
-        : pokemon.find(
-            (item) =>
-              item.boxNo === target.boxNo &&
-              item.storageSlot === target.slotNo,
-          ) ?? null;
 
     setOrganizerStatus('saving');
     setOrganizerMessage('Salvando nova posição…');
