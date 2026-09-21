@@ -347,7 +347,8 @@ export function OwnedPokemonCollectionPage() {
     if (
       target.placementKind === 'BOX' &&
       selectedOrganizerPokemon.teamSlot !== null &&
-      team.length <= 1
+      team.length <= 1 &&
+      targetOccupant === null
     ) {
       setOrganizerMessage('O Time precisa manter pelo menos um Pokémon ativo.');
       return;
@@ -638,13 +639,17 @@ export function OwnedPokemonCollectionPage() {
                                 !selectedOrganizerPokemon ||
                                 organizerStatus === 'saving' ||
                                 current ||
-                                (selectedOrganizerPokemon.teamSlot !== null && team.length <= 1)
+                                (selectedOrganizerPokemon.teamSlot !== null &&
+                                  team.length <= 1 &&
+                                  occupant === null)
                               }
                               title={
-                                selectedOrganizerPokemon?.teamSlot !== null && team.length <= 1
+                                selectedOrganizerPokemon?.teamSlot !== null &&
+                                team.length <= 1 &&
+                                occupant === null
                                   ? 'O Time precisa manter pelo menos um Pokémon ativo'
                                   : occupant
-                                    ? occupant.nickname
+                                    ? `Trocar com ${occupant.nickname}`
                                     : `Slot ${slot} vazio`
                               }
                               onClick={() =>
