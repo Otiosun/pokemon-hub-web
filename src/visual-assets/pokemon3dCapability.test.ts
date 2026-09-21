@@ -1,9 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
-import { getPokemon3dCapability } from './pokemon3dCapability';
+import {
+  getPokemon3dCapability,
+  type Pokemon3dCapabilityFetcher,
+} from './pokemon3dCapability';
 
 describe('Pokemon 3D capability', () => {
   it('marks shiny as unsupported before touching the manifest', async () => {
-    const fetcher = vi.fn(async () => new Response('unexpected manifest fetch', { status: 500 }));
+    const fetcher = vi.fn<Pokemon3dCapabilityFetcher>(async () => new Response('unexpected manifest fetch', { status: 500 }));
 
     await expect(
       getPokemon3dCapability(
@@ -19,7 +22,7 @@ describe('Pokemon 3D capability', () => {
 
 
   it('does not guess an owned Pokemon form when the Hub API has not provided one', async () => {
-    const fetcher = vi.fn(async () => new Response('unexpected manifest fetch', { status: 500 }));
+    const fetcher = vi.fn<Pokemon3dCapabilityFetcher>(async () => new Response('unexpected manifest fetch', { status: 500 }));
 
     await expect(
       getPokemon3dCapability(
@@ -34,7 +37,7 @@ describe('Pokemon 3D capability', () => {
   });
 
   it('accepts the catalog default form when its slug matches the species slug', async () => {
-    const fetcher = vi.fn(async () =>
+    const fetcher = vi.fn<Pokemon3dCapabilityFetcher>(async () =>
       new Response(JSON.stringify({ assets: [{ dex: 6, species: 'charizard' }] }), {
         status: 200,
       }),
@@ -49,7 +52,7 @@ describe('Pokemon 3D capability', () => {
   });
 
   it('keeps non-default forms unsupported until the 3D manifest models forms explicitly', async () => {
-    const fetcher = vi.fn(async () => new Response('unexpected manifest fetch', { status: 500 }));
+    const fetcher = vi.fn<Pokemon3dCapabilityFetcher>(async () => new Response('unexpected manifest fetch', { status: 500 }));
 
     await expect(
       getPokemon3dCapability(
@@ -64,7 +67,7 @@ describe('Pokemon 3D capability', () => {
   });
 
   it('enables regular 3D only when the generated manifest contains the species', async () => {
-    const fetcher = vi.fn(async () =>
+    const fetcher = vi.fn<Pokemon3dCapabilityFetcher>(async () =>
       new Response(
         JSON.stringify({
           assets: [
@@ -84,7 +87,7 @@ describe('Pokemon 3D capability', () => {
   });
 
   it('keeps absent regular models explicitly unsupported', async () => {
-    const fetcher = vi.fn(async () =>
+    const fetcher = vi.fn<Pokemon3dCapabilityFetcher>(async () =>
       new Response(JSON.stringify({ assets: [{ dex: 6, species: 'charizard' }] }), {
         status: 200,
       }),
@@ -102,7 +105,7 @@ describe('Pokemon 3D capability', () => {
   });
 
   it('distinguishes manifest failure from unsupported assets', async () => {
-    const fetcher = vi.fn(async () => new Response('offline', { status: 503 }));
+    const fetcher = vi.fn<Pokemon3dCapabilityFetcher>(async () => new Response('offline', { status: 503 }));
 
     await expect(
       getPokemon3dCapability(
