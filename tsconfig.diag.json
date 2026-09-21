@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "include": [
-    "src/features/collection/ownedPokemonDetailPreview.test.ts",
-    "src/features/collection/collectionSession.test.ts"
+    "src/visual-assets/pokemon3dCapability.test.ts",
+    "src/visual-assets/pokemonVisualRegistry.test.ts"
   ]
 }
