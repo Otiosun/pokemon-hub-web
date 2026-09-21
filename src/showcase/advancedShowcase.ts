@@ -572,8 +572,8 @@ function showcaseTeam(pokemon: readonly PlayerPortalPokemon[]) {
     .map((entry) => ({
       pokemonInstanceId: entry.pokemonInstanceId,
       formId: entry.formId,
-      formSlug: entry.formSlug,
-      speciesSlug: entry.speciesSlug,
+      ...(entry.formSlug !== undefined ? { formSlug: entry.formSlug } : {}),
+      ...(entry.speciesSlug !== undefined ? { speciesSlug: entry.speciesSlug } : {}),
       displayName: entry.displayName,
       nationalDex: entry.nationalDex,
       typeNames: [...entry.typeNames],
