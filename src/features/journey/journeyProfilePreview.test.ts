@@ -76,6 +76,32 @@ describe('createJourneyProfileView', () => {
     expect(JSON.stringify(profile)).not.toContain('Brasa');
   });
 
+  it('projects persisted cosmetic customization without changing trainer identity', () => {
+    const profile = createJourneyProfileView({
+      ...realProfile,
+      profileCustomization: {
+        title: 'Explorador de Zhoulia',
+        bio: 'Coleciona registros e rotas.',
+        appearance: 'Casaco escuro e mochila de campo.',
+        age: 29,
+        height: '1,94 m',
+        accent: 'violet',
+      },
+    });
+
+    expect(profile).toMatchObject({
+      trainerName: 'Natan',
+      trainerTitle: 'Explorador de Zhoulia',
+      accent: 'violet',
+      personal: {
+        age: 29,
+        height: '1,94 m',
+        appearance: 'Casaco escuro e mochila de campo.',
+        bio: 'Coleciona registros e rotas.',
+      },
+    });
+  });
+
   it('projects authoritative journey reads without inventing unsupported profile fields', () => {
     const profile = createJourneyProfileView(realProfile, {
       currentLocation: 'Vila dos Arrozais · Zhoulia',
