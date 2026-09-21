@@ -42,6 +42,10 @@ const HUB_UAT_ROUTES: Readonly<Record<string, HubUatRoute>> = {
     upstreamPath: '/v1/hub/player/roster',
     allowedMethod: 'PUT',
   },
+  '/api/hub/player/profile-customization': {
+    upstreamPath: '/v1/hub/player/profile-customization',
+    allowedMethod: 'PUT',
+  },
 };
 
 export async function handleCloudflareUatRequest(
