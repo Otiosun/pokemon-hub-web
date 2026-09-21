@@ -1,7 +1,6 @@
 {
   "extends": "./tsconfig.json",
   "include": [
-    "src/visual-assets/pokemon3dCapability.test.ts",
-    "src/visual-assets/pokemonVisualRegistry.test.ts"
+    "src/visual-assets/pokemon3dCapability.test.ts"
   ]
 }
