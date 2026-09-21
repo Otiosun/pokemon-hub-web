@@ -163,7 +163,7 @@ export type PlayerPortalProfileCustomization = {
   appearance: string | null;
   age: number | null;
   height: string | null;
-  accent: 'teal' | 'gold' | 'violet' | 'crimson' | 'blue';
+  accent: 'crimson' | 'gold' | 'violet' | 'crimson' | 'blue';
 };
 
 export const DEFAULT_PLAYER_PORTAL_PROFILE_CUSTOMIZATION: PlayerPortalProfileCustomization = {
@@ -172,7 +172,7 @@ export const DEFAULT_PLAYER_PORTAL_PROFILE_CUSTOMIZATION: PlayerPortalProfileCus
   appearance: null,
   age: null,
   height: null,
-  accent: 'teal',
+  accent: 'crimson',
 };
 
 export type PlayerPortalProfile = {
