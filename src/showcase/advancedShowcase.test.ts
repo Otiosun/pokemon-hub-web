@@ -92,5 +92,9 @@ describe('advanced showcase', () => {
     expect(session.profile.trainerLevel).toBeGreaterThanOrEqual(50);
     expect(session.profile.team).toHaveLength(6);
     expect(session.profile.originRegionName).toBe('Kanto');
+    expect(session.profile.profileCustomization).toMatchObject({
+      title: 'Veterano da Liga',
+      accent: 'gold',
+    });
   });
 });
