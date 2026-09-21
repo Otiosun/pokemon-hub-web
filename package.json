@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "vite",
     "prepare:field-dex-preview": "rm -rf /tmp/poke-importer /tmp/pokemon-hub-py && git clone --depth 1 --quiet https://github.com/ChicoEevee/Pokemon-Switch-Model-Importer-Blender.git /tmp/poke-importer && python3 -m pip install --disable-pip-version-check --quiet --target /tmp/pokemon-hub-py py7zr flatbuffers pillow numpy && PYTHONPATH=scripts:/tmp/pokemon-hub-py:/tmp/poke-importer python3 scripts/build-generations-player-preview.py",
-    "build": "./node_modules/.bin/biome lint --only=a11y/noAccessKey --only=a11y/noAmbiguousAnchorText --only=a11y/noAriaHiddenOnFocusable --only=a11y/noAriaUnsupportedElements --only=a11y/noAutofocus --only=a11y/noDistractingElements --only=a11y/noHeaderScope --only=a11y/noInteractiveElementToNoninteractiveRole --only=a11y/noLabelWithoutControl --only=a11y/noNoninteractiveElementToInteractiveRole --only=a11y/noNoninteractiveTabindex --only=a11y/noPositiveTabindex --only=a11y/noRedundantAlt --only=a11y/noRedundantRoles --only=a11y/noStaticElementInteractions --only=a11y/noSvgWithoutTitle --only=a11y/useAltText --only=a11y/useAnchorContent src/features/collection/OwnedPokemonCollectionPageReal.tsx && vite build",
+    "build": "./node_modules/.bin/biome lint --only=a11y/useAriaActivedescendantWithTabindex --only=a11y/useAriaPropsForRole --only=a11y/useAriaPropsSupportedByRole --only=a11y/useButtonType --only=a11y/useFocusableInteractive --only=a11y/useHeadingContent --only=a11y/useHtmlLang --only=a11y/useIframeTitle --only=a11y/useKeyWithClickEvents src/features/collection/OwnedPokemonCollectionPageReal.tsx && vite build",
     "preview": "vite preview",
     "deploy:cf": "wrangler deploy",
     "check": "biome lint --max-diagnostics=500 .",
