@@ -374,7 +374,7 @@ export function OwnedPokemonDetailPage({
 
           <nav className="owned-pokemon-side-nav" aria-label="Pokémon anterior e próximo na coleção">
             {previous ? (
-              <a href={siblingHref(previous.instanceId)} className="is-previous" aria-label={`Abrir ${previous.nickname}`}>
+              <a href={`/pokemon/${previous.instanceId}`} className="is-previous" aria-label={`Abrir ${previous.nickname}`}>
                 <SideArrow direction="left" />
                 {previous.dex !== null ? (
                   <OwnedPokemonImage dex={previous.dex} assetRole="icon" shiny={previous.shiny} formSlug={previous.formSlug} speciesSlug={previous.speciesSlug} alt="" aria-hidden="true" loading="lazy" decoding="async" />
@@ -383,7 +383,7 @@ export function OwnedPokemonDetailPage({
               </a>
             ) : <span />}
             {next ? (
-              <a href={siblingHref(next.instanceId)} className="is-next" aria-label={`Abrir ${next.nickname}`}>
+              <a href={`/pokemon/${next.instanceId}`} className="is-next" aria-label={`Abrir ${next.nickname}`}>
                 <span><small>PRÓXIMO</small><strong>{next.nickname}</strong></span>
                 {next.dex !== null ? (
                   <OwnedPokemonImage dex={next.dex} assetRole="icon" shiny={next.shiny} formSlug={next.formSlug} speciesSlug={next.speciesSlug} alt="" aria-hidden="true" loading="lazy" decoding="async" />
