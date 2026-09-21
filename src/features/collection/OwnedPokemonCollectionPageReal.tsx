@@ -555,7 +555,11 @@ export function OwnedPokemonCollectionPage() {
                         <span>DESTINO</span>
                         <strong id="owned-roster-team-destination">TIME</strong>
                       </header>
-                      <div className="owned-roster-slot-grid is-team" role="group" aria-label="Slots do Time">
+                      <div
+                        className="owned-roster-slot-grid is-team"
+                        role="group"
+                        aria-label="Slots do Time"
+                      >
                         {[1, 2, 3, 4, 5, 6].map((slot) => {
                           const occupant = teamBySlot.get(slot) ?? null;
                           const current =
