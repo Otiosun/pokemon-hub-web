@@ -7,7 +7,7 @@ import {
 
 describe('owned Pokemon collection session', () => {
   it('preserves mode, filters, search and deep scroll when returning from an owned Pokemon record', () => {
-    rememberCollectionFilters('favorites', 'bulba', {
+    rememberCollectionFilters('all', 'bulba', {
       type: 'Planta',
       level: '11-20',
       presence: 'team',
@@ -18,7 +18,7 @@ describe('owned Pokemon collection session', () => {
     rememberCollectionScroll(1764.6);
 
     expect(readCollectionSession()).toEqual({
-      mode: 'favorites',
+      mode: 'all',
       query: 'bulba',
       filters: {
         type: 'Planta',
