@@ -341,6 +341,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
   );
   const [modelCapability, setModelCapability] =
     useState<Pokemon3dCapabilityStatus>('checking');
+  const [modelReady, setModelReady] = useState(false);
   const [modelRetryNonce, setModelRetryNonce] = useState(0);
 
   const activeRecord =
@@ -358,8 +359,11 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
       }
     })();
   const wants3d = discovered && visualMode === 'model';
-  const showing3d = wants3d && modelCapability === 'ready';
-  const waitingFor3d = wants3d && modelCapability === 'checking';
+  const modelCanRender = wants3d && modelCapability === 'ready';
+  const showing3d = modelCanRender && modelReady;
+  const waitingFor3d =
+    wants3d &&
+    (modelCapability === 'checking' || (modelCapability === 'ready' && !modelReady));
   const modelUnavailable = wants3d && modelCapability === 'unsupported';
   const modelFailed = wants3d && modelCapability === 'failed';
 
@@ -367,14 +371,18 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
     if (variant === 'shiny' && !shinyRegistered) return;
     setVisualVariant(variant);
     setArtworkReadyKey(null);
+    setModelReady(false);
     if (variant === 'shiny' && visualMode === 'model') {
       setVisualMode('artwork');
     }
   };
 
   const chooseVisualMode = (mode: VisualMode) => {
-    if (mode === 'model' && modelCapability === 'failed') {
-      setModelRetryNonce((current) => current + 1);
+    if (mode === 'model') {
+      setModelReady(false);
+      if (modelCapability === 'failed') {
+        setModelRetryNonce((current) => current + 1);
+      }
     }
     setVisualMode(mode);
     rememberPokedexVisualPreference(mode === 'model' ? '3d' : '2d');
@@ -390,6 +398,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
       };
     }
 
+    setModelReady(false);
     setModelCapability('checking');
     void getPokemon3dCapability({
       dex: validDex,
@@ -414,6 +423,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
     const controller = new AbortController();
     setArtworkReadyKey(null);
     setVisualVariant('regular');
+    setModelReady(false);
     setRecord(initialRecord(validDex, review, playerState));
 
     if (!discovered) return () => controller.abort();
@@ -553,8 +563,10 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
               </fieldset>
             )}
 
-            {discovered && visualMode === 'artwork' && (
-              <div className={`pokedex-species-artwork-slot${artworkReady ? ' is-ready' : ''}`}>
+            {discovered && (
+              <div
+                className={`pokedex-species-artwork-slot${artworkReady ? ' is-ready' : ''}${showing3d ? ' is-hidden' : ''}`}
+              >
                 <SpeciesPokemonImage
                   key={artworkKey}
                   dex={validDex}
@@ -570,13 +582,20 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
               </div>
             )}
 
-            {showing3d && (
-              <div className="pokedex-species-model-slot">
+            {modelCanRender && (
+              <div
+                className={`pokedex-species-model-slot${modelReady ? ' is-ready' : ''}`}
+                aria-busy={!modelReady}
+              >
                 <GenerationsPokemonViewer
                   key={`${validDex}-${activeRecord.slug}-${visualVariant}`}
                   species={activeRecord.slug}
                   name={displayName}
-                  onFailedSpeciesChange={() => setModelCapability('failed')}
+                  onReadyChange={setModelReady}
+                  onFailedSpeciesChange={() => {
+                    setModelReady(false);
+                    setModelCapability('failed');
+                  }}
                 />
                 <span className="pokedex-species-model-hint">ARRASTE PARA GIRAR · PINÇA PARA ZOOM</span>
               </div>
