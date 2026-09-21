@@ -701,7 +701,10 @@ export function JourneyPageV2({
                   </div>
                 </div>
                 {activePlayer && activePlayer.moves.length > 0 ? (
-                  <div className="journey-battle-moves" aria-label="Movimentos do Pokémon ativo">
+                  <section
+                    className="journey-battle-moves"
+                    aria-label="Movimentos do Pokémon ativo"
+                  >
                     {activePlayer.moves.map((move) => (
                       <span key={move.slotNo}>
                         <strong>{move.displayName ?? '—'}</strong>
@@ -712,7 +715,7 @@ export function JourneyPageV2({
                         </small>
                       </span>
                     ))}
-                  </div>
+                  </section>
                 ) : null}
                 <footer>
                   <span>ACOMPANHAMENTO</span>
