@@ -157,6 +157,24 @@ export type PlayerPortalLocation = {
   connections: PlayerPortalLocationConnection[];
 };
 
+export type PlayerPortalProfileCustomization = {
+  title: string | null;
+  bio: string | null;
+  appearance: string | null;
+  age: number | null;
+  height: string | null;
+  accent: 'teal' | 'gold' | 'violet' | 'crimson' | 'blue';
+};
+
+export const DEFAULT_PLAYER_PORTAL_PROFILE_CUSTOMIZATION: PlayerPortalProfileCustomization = {
+  title: null,
+  bio: null,
+  appearance: null,
+  age: null,
+  height: null,
+  accent: 'teal',
+};
+
 export type PlayerPortalProfile = {
   playerId: string;
   playerStatus: 'ACTIVE';
@@ -176,6 +194,7 @@ export type PlayerPortalProfile = {
   contentReleaseId: string;
   rulesetId: string;
   starterPokemonInstanceId: string | null;
+  profileCustomization?: PlayerPortalProfileCustomization;
   team: PlayerPortalTeamSlot[];
 };
 
@@ -408,7 +427,7 @@ async function readJsonBody(response: Response): Promise<unknown> {
   }
 }
 
-function isPlayerPortalProfile(value: unknown): value is PlayerPortalProfile {
+export function isPlayerPortalProfile(value: unknown): value is PlayerPortalProfile {
   if (!isRecord(value)) return false;
   if (!isUuid(value.playerId) || value.playerStatus !== 'ACTIVE') return false;
   if (!isNullableString(value.trainerName)) return false;
@@ -431,6 +450,12 @@ function isPlayerPortalProfile(value: unknown): value is PlayerPortalProfile {
   }
   if (!isUuid(value.contentReleaseId) || !isUuid(value.rulesetId)) return false;
   if (!isNullableUuid(value.starterPokemonInstanceId)) return false;
+  if (
+    value.profileCustomization !== undefined &&
+    !isPlayerPortalProfileCustomization(value.profileCustomization)
+  ) {
+    return false;
+  }
   if (!Array.isArray(value.team) || value.team.length > 6) return false;
 
   const slots = new Set<number>();
@@ -440,6 +465,40 @@ function isPlayerPortalProfile(value: unknown): value is PlayerPortalProfile {
   }
 
   return true;
+}
+
+function isPlayerPortalProfileCustomization(
+  value: unknown,
+): value is PlayerPortalProfileCustomization {
+  if (!isRecord(value)) return false;
+  if (
+    !isNullableBoundedString(value.title, 60) ||
+    !isNullableBoundedString(value.bio, 500) ||
+    !isNullableBoundedString(value.appearance, 500) ||
+    !isNullableBoundedString(value.height, 32)
+  ) {
+    return false;
+  }
+  if (
+    value.age !== null &&
+    !(typeof value.age === 'number' && Number.isInteger(value.age) && value.age >= 1 && value.age <= 150)
+  ) {
+    return false;
+  }
+  return (
+    value.accent === 'teal' ||
+    value.accent === 'gold' ||
+    value.accent === 'violet' ||
+    value.accent === 'crimson' ||
+    value.accent === 'blue'
+  );
+}
+
+function isNullableBoundedString(value: unknown, max: number): value is string | null {
+  return (
+    value === null ||
+    (typeof value === 'string' && value.trim().length >= 1 && value.trim().length <= max)
+  );
 }
 
 function isPlayerPortalTeamSlot(value: unknown): value is PlayerPortalTeamSlot {
