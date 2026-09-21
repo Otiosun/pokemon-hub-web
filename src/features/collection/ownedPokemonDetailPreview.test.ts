@@ -36,6 +36,14 @@ describe('owned Pokemon contextual neighbours', () => {
     expect(neighbours).toEqual({ previous: null, next: null });
   });
 
+
+  it('does not fall back to the whole Box when the current Pokemon is outside the context', () => {
+    rememberCollectionFilters('all', '', { ...DEFAULT_COLLECTION_FILTERS });
+    const neighbours = getOwnedPokemonNeighbours('pkm-squirtle-a1', '/pokemon?species=4');
+
+    expect(neighbours).toEqual({ previous: null, next: null });
+  });
+
   it('uses the current collection filters for sibling navigation', () => {
     rememberCollectionFilters('all', '', {
       ...DEFAULT_COLLECTION_FILTERS,
