@@ -98,14 +98,11 @@ export function getOwnedPokemonDetailPreview(instanceId: string): OwnedPokemonDe
 }
 
 export function getOwnedPokemonNeighbours(instanceId: string, returnHref = '/pokemon') {
-  const contextual = collectionContextSequence(returnHref);
-  const containsCurrent = contextual.some((item) => item.instanceId === instanceId);
-  if (isJourneyLeadContext(returnHref) && !containsCurrent) {
+  const sequence = collectionContextSequence(returnHref);
+  const containsCurrent = sequence.some((item) => item.instanceId === instanceId);
+  if (!containsCurrent || sequence.length <= 1) {
     return { previous: null, next: null };
   }
-  const sequence = containsCurrent ? contextual : [...OWNED_POKEMON_PREVIEW];
-
-  if (sequence.length <= 1) return { previous: null, next: null };
 
   const index = sequence.findIndex((item) => item.instanceId === instanceId);
   if (index < 0) return { previous: null, next: null };
