@@ -221,9 +221,7 @@ export function OwnedPokemonCollectionPage() {
         .sort((a, b) => (a.teamSlot ?? 99) - (b.teamSlot ?? 99)),
     [pokemon],
   );
-  const [mode, setMode] = useState<CollectionMode>(
-    initial.mode === 'favorites' ? 'all' : initial.mode,
-  );
+  const [mode, setMode] = useState<CollectionMode>(initial.mode);
   const [query, setQuery] = useState(initial.query);
   const [filters, setFilters] = useState<CollectionFilterState>(initial.filters);
   const [speciesContextDex, setSpeciesContextDex] = useState(readSpeciesContextFilter);
