@@ -3,7 +3,7 @@ import { getPokemon3dCapability } from './pokemon3dCapability';
 
 describe('Pokemon 3D capability', () => {
   it('marks shiny as unsupported before touching the manifest', async () => {
-    const fetcher = vi.fn();
+    const fetcher = vi.fn(async () => new Response('unexpected manifest fetch', { status: 500 }));
 
     await expect(
       getPokemon3dCapability(
@@ -19,7 +19,7 @@ describe('Pokemon 3D capability', () => {
 
 
   it('does not guess an owned Pokemon form when the Hub API has not provided one', async () => {
-    const fetcher = vi.fn();
+    const fetcher = vi.fn(async () => new Response('unexpected manifest fetch', { status: 500 }));
 
     await expect(
       getPokemon3dCapability(
@@ -49,7 +49,7 @@ describe('Pokemon 3D capability', () => {
   });
 
   it('keeps non-default forms unsupported until the 3D manifest models forms explicitly', async () => {
-    const fetcher = vi.fn();
+    const fetcher = vi.fn(async () => new Response('unexpected manifest fetch', { status: 500 }));
 
     await expect(
       getPokemon3dCapability(
