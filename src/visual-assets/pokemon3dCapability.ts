@@ -44,11 +44,13 @@ export async function getPokemon3dCapability(
     species,
     form,
     variant = 'regular',
+    refresh = false,
   }: {
     dex: number | null;
     species: string | null;
     form?: string | null;
     variant?: PokemonVisualVariant;
+    refresh?: boolean;
   },
   fetcher: Pokemon3dCapabilityFetcher = fetch,
 ): Promise<Pokemon3dCapability> {
@@ -77,7 +79,7 @@ export async function getPokemon3dCapability(
 
   try {
     const response = await fetcher(`${getPokemonAssetBaseUrl()}/manifest.json`, {
-      cache: 'force-cache',
+      cache: refresh ? 'no-store' : 'force-cache',
     });
     if (!response.ok) {
       return { status: 'failed', reason: 'manifest-unavailable' };
