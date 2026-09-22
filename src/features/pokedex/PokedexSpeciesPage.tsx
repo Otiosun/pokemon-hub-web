@@ -404,6 +404,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
       dex: validDex,
       species: activeRecord.slug,
       variant: visualVariant,
+      refresh: modelRetryNonce > 0,
     }).then((capability) => {
       if (!cancelled) setModelCapability(capability.status);
     });
