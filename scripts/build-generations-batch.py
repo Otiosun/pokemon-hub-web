@@ -22,7 +22,7 @@ AUDIT = FORMAT.AUDIT
 BASE = FORMAT.BASE
 MODEL_ROOT = 'assets/generations_core/bedrock/pokemon/models/'
 DEFAULT_REPORT = Path('public/research/generations/semantic-coverage-report.json')
-DEFAULT_OUTPUT = Path('/tmp/pokemon-hub-generations-assets')
+DEFAULT_OUTPUT = Path(tempfile.gettempdir()) / 'pokemon-hub-generations-assets'
 SYNTHETIC_ANIMATION_HELPERS = {'blender_implicit'}
 
 
