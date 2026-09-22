@@ -81,9 +81,9 @@ export function ShareTrainerCardZhoulia({
 
   return (
     <div className="journey-card-v2-backdrop">
-      <section
+      <dialog
+        open
         className="journey-zhoulia-card-dialog"
-        role="dialog"
         aria-modal="true"
         aria-label={`Trainer Card de ${originRegion}`}
       >
@@ -136,7 +136,7 @@ export function ShareTrainerCardZhoulia({
             </button>
           </div>
         ) : null}
-      </section>
+      </dialog>
     </div>
   );
 }
