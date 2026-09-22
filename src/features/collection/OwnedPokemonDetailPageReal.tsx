@@ -175,6 +175,7 @@ export function OwnedPokemonDetailPage({
       species: capabilitySpeciesSlug,
       form: capabilityFormSlug,
       variant: capabilityVariant,
+      refresh: modelRetryNonce > 0,
     }).then((capability) => {
       if (!cancelled) setModelCapability(capability.status);
     });
