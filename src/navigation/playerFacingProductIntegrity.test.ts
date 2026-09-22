@@ -52,7 +52,8 @@ describe('player-facing product integrity', () => {
 
     expect(pokedexSource).not.toContain('speciesPlayerStatePreview');
     expect(pokedexSource).not.toContain('researchLevel');
-    expect(pokedexSource).not.toContain('shinySeen');
+    expect(pokedexSource).toContain('usePlayerPortalPokedex');
+    expect(pokedexSource).toContain('shinySeenCount');
   });
 
   it('paints the loaded 3D model before announcing the viewer as ready', () => {
