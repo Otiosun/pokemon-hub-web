@@ -94,6 +94,25 @@ describe('Pokemon 3D capability', () => {
     ).resolves.toEqual({ status: 'ready' });
   });
 
+  it('bypasses the manifest cache when an explicit retry is requested', async () => {
+    let requestCache: RequestCache | undefined;
+    const fetcher: Pokemon3dCapabilityFetcher = async (_input, init) => {
+      requestCache = init?.cache;
+      return new Response(JSON.stringify({ assets: [{ dex: 6, species: 'charizard' }] }), {
+        status: 200,
+      });
+    };
+
+    await expect(
+      getPokemon3dCapability(
+        { dex: 6, species: 'charizard', variant: 'regular', refresh: true },
+        fetcher,
+      ),
+    ).resolves.toEqual({ status: 'ready' });
+
+    expect(requestCache).toBe('no-store');
+  });
+
   it('keeps absent regular models explicitly unsupported', async () => {
     const fetcher: Pokemon3dCapabilityFetcher = async () =>
       new Response(JSON.stringify({ assets: [{ dex: 6, species: 'charizard' }] }), {
