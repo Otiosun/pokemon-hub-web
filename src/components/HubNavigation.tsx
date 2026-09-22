@@ -109,7 +109,7 @@ export function HubMenuTrigger() {
 export function HubNavigation({ active, destinations, children }: HubNavigationProps) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     const prioritySection = active ?? 'journey';
@@ -167,7 +167,7 @@ export function HubNavigation({ active, destinations, children }: HubNavigationP
     requestAnimationFrame(() => triggerRef.current?.focus());
   };
 
-  const onMenuKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onMenuKeyDown = (event: KeyboardEvent<HTMLDialogElement>) => {
     if (event.key === 'Escape') {
       event.preventDefault();
       closeMenu();
