@@ -214,7 +214,7 @@ function EvolutionBranch({
   return (
     <div className={`pokedex-species-evolution-branch${root ? ' is-root' : ''}`}>
       {!root ? (
-        <div className="pokedex-species-evolution-edge" aria-label="Condição de evolução">
+        <section className="pokedex-species-evolution-edge" aria-label="Condição de evolução">
           <span className="pokedex-species-evolution-line" aria-hidden="true" />
           <div>
             {(node.conditions.length > 0 ? node.conditions : ['Evolução']).map((condition) => (
@@ -222,7 +222,7 @@ function EvolutionBranch({
             ))}
           </div>
           <span className="pokedex-species-evolution-arrow" aria-hidden="true">↓</span>
-        </div>
+        </section>
       ) : null}
 
       <a
