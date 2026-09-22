@@ -357,7 +357,7 @@ export function PokedexIndexPage() {
           </button>
         </div>
 
-        <div className="pokedex-index-visual-modes" role="group" aria-label="Visual do índice">
+        <section className="pokedex-index-visual-modes" aria-label="Visual do índice">
           <span>VISUAL</span>
           <button
             type="button"
@@ -377,7 +377,7 @@ export function PokedexIndexPage() {
           >
             SHINY
           </button>
-        </div>
+        </section>
 
         {activeFilterCount ? (
           <div className="pokedex-index-active-filters">
