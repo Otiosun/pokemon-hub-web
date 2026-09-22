@@ -1,0 +1,1 @@
+Trigger Cloudflare diagnostic for diag/hub-tests-b-v1.
