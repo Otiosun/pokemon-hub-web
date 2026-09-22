@@ -118,7 +118,7 @@ export function PokedexIndexPage() {
   const [catalogFailed, setCatalogFailed] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const restoredScroll = useRef(false);
-  const filterDialogRef = useRef<HTMLDivElement>(null);
+  const filterDialogRef = useRef<HTMLDialogElement>(null);
 
   const pokedexByDex = useMemo(() => {
     if (pokedexState.status !== 'authenticated') return new Map();
