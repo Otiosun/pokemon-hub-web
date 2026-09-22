@@ -1,1 +1,1 @@
-Trigger Hub test gate via Cloudflare preview.
+Trigger Hub test gate via Cloudflare preview after PR reopen.
