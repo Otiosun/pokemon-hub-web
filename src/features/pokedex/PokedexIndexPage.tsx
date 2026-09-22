@@ -497,10 +497,10 @@ export function PokedexIndexPage() {
             aria-label="Fechar filtros"
             onClick={() => setFiltersOpen(false)}
           />
-          <div
+          <dialog
             ref={filterDialogRef}
+            open
             className="pokedex-index-filter-dialog"
-            role="dialog"
             aria-modal="true"
             aria-labelledby="pokedex-filter-title"
             tabIndex={-1}
@@ -608,7 +608,7 @@ export function PokedexIndexPage() {
               <button type="button" className="is-clear" onClick={clearFilters} disabled={!activeFilterCount}>Limpar</button>
               <button type="button" className="is-apply" onClick={() => setFiltersOpen(false)}>Ver registros</button>
             </footer>
-          </div>
+          </dialog>
         </div>
       ) : null}
     </main>
