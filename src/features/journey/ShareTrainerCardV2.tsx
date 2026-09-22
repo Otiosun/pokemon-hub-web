@@ -155,9 +155,9 @@ export function ShareTrainerCardV2({
 
   return (
     <div className="journey-card-v2-backdrop">
-      <section
+      <dialog
+        open
         className="journey-card-v2-dialog"
-        role="dialog"
         aria-modal="true"
         aria-label={`Trainer Card de ${originRegion}`}
       >
@@ -234,7 +234,7 @@ export function ShareTrainerCardV2({
             <BadgeStrip badges={profile.badges} />
           </section>
         </article>
-      </section>
+      </dialog>
     </div>
   );
 }
