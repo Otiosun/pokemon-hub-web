@@ -8,6 +8,7 @@ const MODULES = [
     title: 'JOGADORES',
     detail: 'Perfis, acesso, progressão, localização e suporte.',
     prefixes: ['player.', 'progression.', 'pokedex.'],
+    href: '/admin/players',
   },
   {
     id: 'pokemon',
@@ -112,11 +113,9 @@ export function AdminPage() {
           {MODULES.map((module) => {
             const grants = relevantCapabilities(capabilities, module.prefixes);
             const available = grants.length > 0;
-            return (
-              <article
-                key={module.id}
-                className={`admin-module-card${available ? ' is-authorized' : ' is-unavailable'}`}
-              >
+            const className = `admin-module-card${available ? ' is-authorized' : ' is-unavailable'}`;
+            const content = (
+              <>
                 <header>
                   <span>{module.title}</span>
                   <strong>{available ? 'AUTORIZADO' : 'SEM ACESSO'}</strong>
@@ -124,8 +123,20 @@ export function AdminPage() {
                 <p>{module.detail}</p>
                 <footer>
                   <span>{grants.length} permissões</span>
-                  <small>INTERFACE EM CONSTRUÇÃO</small>
+                  <small>
+                    {'href' in module && module.href && available ? 'ABRIR PLAYER 360' : 'INTERFACE EM CONSTRUÇÃO'}
+                  </small>
                 </footer>
+              </>
+            );
+
+            return 'href' in module && module.href && available ? (
+              <a key={module.id} className={`${className} is-link`} href={module.href}>
+                {content}
+              </a>
+            ) : (
+              <article key={module.id} className={className}>
+                {content}
               </article>
             );
           })}

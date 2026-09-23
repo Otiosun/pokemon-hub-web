@@ -37,9 +37,14 @@ describe('product integrity routing', () => {
     });
   });
 
-  it('keeps Champion Store and the capability-gated admin shell as product routes', () => {
+  it('keeps Champion Store and capability-gated admin tools as product routes', () => {
     expect(resolveProductRoute('/champion-store')).toEqual({ kind: 'route' });
     expect(resolveProductRoute('/admin')).toEqual({ kind: 'route' });
+    expect(resolveProductRoute('/admin/players')).toEqual({ kind: 'route' });
+    expect(
+      resolveProductRoute('/admin/players/11111111-1111-4111-8111-111111111111'),
+    ).toEqual({ kind: 'route' });
+    expect(resolveProductRoute('/admin/players/not-a-player')).toEqual({ kind: 'not-found' });
   });
 
   it('keeps legitimate owned-Pokémon instance routes available', () => {
