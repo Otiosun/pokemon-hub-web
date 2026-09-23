@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { HubMenuTrigger } from '../../components/HubNavigation';
+import { AdminPlayerAdjustments } from './AdminPlayerAdjustments';
 import { SpeciesPokemonImage } from '../../visual-assets/PokemonPreviewImage';
 import {
   getAdminPlayer,
@@ -28,6 +29,7 @@ function EmptyValue({ value }: { value: string | null | undefined }) {
 export function AdminPlayerDetailPage({ playerId }: { playerId: string }) {
   const admin = usePlayerPortalAdmin();
   const [player, setPlayer] = useState<AdminPlayer360 | null>(null);
+  const [reloadVersion, setReloadVersion] = useState(0);
   const [loadState, setLoadState] = useState<'loading' | 'ready' | 'not-found' | 'error'>('loading');
   const canReadPlayers =
     admin.status === 'admin' && admin.admin.capabilities.includes('player.read');
@@ -56,7 +58,7 @@ export function AdminPlayerDetailPage({ playerId }: { playerId: string }) {
     return () => {
       active = false;
     };
-  }, [canReadPlayers, playerId]);
+  }, [canReadPlayers, playerId, reloadVersion]);
 
   if (admin.status === 'loading') {
     return (
@@ -252,15 +254,13 @@ export function AdminPlayerDetailPage({ playerId }: { playerId: string }) {
           )) : <p className="admin-muted">Nenhuma atividade recente registrada.</p>}
         </section>
 
-        <section className="admin-player-actions-placeholder">
-          <span>PRÓXIMA ETAPA</span>
-          <strong>AÇÕES DE MESTRE</strong>
-          <p>
-            Recompensas, correção de localização, inventário, Pokémon e suporte de encontro serão
-            conectados aqui às operações administrativas auditadas. Esta versão é leitura real,
-            não escreve diretamente no banco.
-          </p>
-        </section>
+        <AdminPlayerAdjustments
+          playerId={player.player.id}
+          capabilities={admin.status === 'admin' ? admin.admin.capabilities : []}
+          inventory={player.inventory}
+          wallets={player.wallets}
+          onApplied={() => setReloadVersion((current) => current + 1)}
+        />
       </section>
     </main>
   );
