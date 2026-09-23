@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  adjustAdminPlayer,
   getAdminPlayer,
   searchAdminPlayers,
 } from './playerPortalAdminPlayersClient';
@@ -58,6 +59,66 @@ describe('Player 360 admin client', () => {
         }),
       ],
       nextCursor: null,
+    });
+  });
+
+  it('posts audited adjustments with the caller request id and parses APPLIED evidence', async () => {
+    const requestId = '22222222-2222-4222-8222-222222222222';
+    let requestUrl = '';
+    let requestInit: RequestInit | undefined;
+
+    const result = await adjustAdminPlayer(
+      playerId,
+      {
+        requestId,
+        kind: 'PROGRESSION',
+        delta: '50',
+        reason: 'Restore missing event progress',
+      },
+      (url, init) => {
+        requestUrl = String(url);
+        requestInit = init;
+        return jsonResponse(200, {
+          operationId: '33333333-3333-4333-8333-333333333333',
+          status: 'APPLIED',
+          replayed: false,
+          result: { afterPoints: 150 },
+        });
+      },
+    );
+
+    expect(requestUrl).toBe(`/api/hub/admin/players/${playerId}/adjustments`);
+    expect(requestInit?.method).toBe('POST');
+    expect(JSON.parse(String(requestInit?.body))).toEqual({
+      requestId,
+      kind: 'PROGRESSION',
+      delta: '50',
+      reason: 'Restore missing event progress',
+    });
+    expect(result).toEqual({
+      status: 'ok',
+      operationId: '33333333-3333-4333-8333-333333333333',
+      replayed: false,
+      result: { afterPoints: 150 },
+    });
+  });
+
+  it('returns administrative rejections without pretending the adjustment succeeded', async () => {
+    const result = await adjustAdminPlayer(
+      playerId,
+      {
+        requestId: '22222222-2222-4222-8222-222222222222',
+        kind: 'WALLET',
+        currencyId: '33333333-3333-4333-8333-333333333333',
+        delta: '-999',
+        reason: 'Correction',
+      },
+      () => jsonResponse(409, { error: 'ADMIN_DOMAIN_OPERATION_REJECTED' }),
+    );
+
+    expect(result).toEqual({
+      status: 'rejected',
+      code: 'ADMIN_DOMAIN_OPERATION_REJECTED',
     });
   });
 
