@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { HubMenuTrigger } from '../../components/HubNavigation';
+import { AdminPlayerAdjustments } from './AdminPlayerAdjustments';
 import { SpeciesPokemonImage } from '../../visual-assets/PokemonPreviewImage';
 import {
   getAdminPlayer,
@@ -32,31 +33,41 @@ export function AdminPlayerDetailPage({ playerId }: { playerId: string }) {
   const canReadPlayers =
     admin.status === 'admin' && admin.admin.capabilities.includes('player.read');
 
-  useEffect(() => {
-    if (!canReadPlayers) return;
-    let active = true;
-    setLoadState('loading');
-    void getAdminPlayer(playerId)
-      .then((result) => {
-        if (!active) return;
+  const loadPlayer = useCallback(
+    async (signal?: AbortSignal) => {
+      setLoadState('loading');
+      try {
+        const result = await getAdminPlayer(playerId);
+        if (signal?.aborted) return;
         if (result.status === 'not-found') {
+          setPlayer(null);
           setLoadState('not-found');
           return;
         }
         if (result.status !== 'ok') {
+          setPlayer(null);
           setLoadState('error');
           return;
         }
         setPlayer(result.player);
         setLoadState('ready');
-      })
-      .catch(() => {
-        if (active) setLoadState('error');
-      });
+      } catch {
+        if (signal?.aborted) return;
+        setPlayer(null);
+        setLoadState('error');
+      }
+    },
+    [playerId],
+  );
+
+  useEffect(() => {
+    if (!canReadPlayers) return;
+    const controller = new AbortController();
+    void loadPlayer(controller.signal);
     return () => {
-      active = false;
+      controller.abort();
     };
-  }, [canReadPlayers, playerId]);
+  }, [canReadPlayers, loadPlayer]);
 
   if (admin.status === 'loading') {
     return (
@@ -252,15 +263,15 @@ export function AdminPlayerDetailPage({ playerId }: { playerId: string }) {
           )) : <p className="admin-muted">Nenhuma atividade recente registrada.</p>}
         </section>
 
-        <section className="admin-player-actions-placeholder">
-          <span>PRÓXIMA ETAPA</span>
-          <strong>AÇÕES DE MESTRE</strong>
-          <p>
-            Recompensas, correção de localização, inventário, Pokémon e suporte de encontro serão
-            conectados aqui às operações administrativas auditadas. Esta versão é leitura real,
-            não escreve diretamente no banco.
-          </p>
-        </section>
+        <AdminPlayerAdjustments
+          playerId={player.player.id}
+          capabilities={admin.status === 'admin' ? admin.admin.capabilities : []}
+          inventory={player.inventory}
+          wallets={player.wallets}
+          onApplied={() => {
+            void loadPlayer();
+          }}
+        />
       </section>
     </main>
   );

@@ -35,6 +35,17 @@ export function resolveAdminProxyRoute(url: URL): AdminProxyRoute | null {
     };
   }
 
+  const adjustmentMatch = url.pathname.match(
+    /^\/api\/hub\/admin\/players\/([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\/adjustments$/i,
+  );
+  const adjustmentPlayerId = adjustmentMatch?.[1];
+  if (adjustmentPlayerId !== undefined && UUID_PATTERN.test(adjustmentPlayerId)) {
+    return {
+      upstreamPath: `/v1/hub/admin/players/${adjustmentPlayerId}/adjustments`,
+      allowedMethod: 'POST',
+    };
+  }
+
   return null;
 }
 
