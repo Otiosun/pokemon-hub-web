@@ -26,12 +26,24 @@ describe('consolidated admin proxy boundary', () => {
         '/v1/hub/admin/players/11111111-1111-4111-8111-111111111111',
       allowedMethod: 'GET',
     });
+    expect(
+      resolveAdminProxyRoute(
+        new URL(
+          'https://hub.test/api/hub/admin/players/11111111-1111-4111-8111-111111111111/adjustments',
+        ),
+      ),
+    ).toEqual({
+      upstreamPath:
+        '/v1/hub/admin/players/11111111-1111-4111-8111-111111111111/adjustments',
+      allowedMethod: 'POST',
+    });
   });
 
   it('rejects malformed and unregistered admin routes instead of generic passthrough', () => {
     for (const path of [
       '/api/hub/admin/players/not-a-uuid',
       '/api/hub/admin/players/11111111-1111-4111-8111-111111111111/delete',
+      '/api/hub/admin/players/not-a-uuid/adjustments',
       '/api/hub/admin/operations',
       '/api/hub/admin/battle/action',
     ]) {
