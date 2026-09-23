@@ -34,12 +34,12 @@ export function resolveStaticPath(urlPath, root = DEFAULT_ROOT) {
   }
 
   if (!decoded.startsWith('/research/')) return null;
+  if (decoded.includes('\\\\') || decoded.includes('\\0')) return null;
 
   const normalizedRoot = path.resolve(root);
+  const researchRoot = path.resolve(normalizedRoot, 'research');
   const candidate = path.resolve(normalizedRoot, `.${decoded}`);
-  if (candidate !== normalizedRoot && !candidate.startsWith(`${normalizedRoot}${path.sep}`)) {
-    return null;
-  }
+  if (!candidate.startsWith(`${researchRoot}${path.sep}`)) return null;
   return candidate;
 }
 
