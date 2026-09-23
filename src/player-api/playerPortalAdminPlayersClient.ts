@@ -352,7 +352,6 @@ export async function getAdminPlayer(
   return { status: 'ok', player: body.player };
 }
 
-
 export async function adjustAdminPlayer(
   playerId: string,
   input: AdminPlayerAdjustmentInput,
@@ -377,11 +376,10 @@ export async function adjustAdminPlayer(
   const denied = statusFromResponse(response);
   if (denied) return { status: denied };
 
-  const body = await response.json().catch(() => null) as unknown;
+  const body = (await response.json().catch(() => null)) as unknown;
   if (!response.ok) {
-    const code = isRecord(body) && typeof body.error === 'string'
-      ? body.error
-      : `HTTP_${response.status}`;
+    const code =
+      isRecord(body) && typeof body.error === 'string' ? body.error : `HTTP_${response.status}`;
     return { status: 'rejected', code };
   }
 
