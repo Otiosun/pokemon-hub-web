@@ -8,6 +8,7 @@ import productIntegritySource from './productIntegrity.ts?raw';
 const hubApiModules = import.meta.glob('../../api/hub/**/*.ts');
 
 const ALLOWED_HUB_API_MODULES = [
+  '../../api/hub/admin/self.ts',
   '../../api/hub/auth/exchange.ts',
   '../../api/hub/player/battle.ts',
   '../../api/hub/player/inventory.ts',
@@ -35,7 +36,7 @@ const FORBIDDEN_GAMEPLAY_PATH_FRAGMENTS = [
 ] as const;
 
 describe('Hub scope boundary', () => {
-  it('exposes only companion reads, auth, profile customization, roster organization and move learning through the same-origin Hub API', () => {
+  it('exposes only companion/admin reads, auth, profile customization, roster organization and move learning through the same-origin Hub API', () => {
     expect(Object.keys(hubApiModules).sort()).toEqual([...ALLOWED_HUB_API_MODULES].sort());
   });
 
