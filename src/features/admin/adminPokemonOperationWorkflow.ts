@@ -153,10 +153,21 @@ function deniedOrRejected(
   return null;
 }
 
+type AdminPokemonOperationDependencies = {
+  prepare: typeof prepareAdminOperation;
+  advance: typeof advanceAdminOperation;
+};
+
+const DEFAULT_DEPENDENCIES: AdminPokemonOperationDependencies = {
+  prepare: prepareAdminOperation,
+  advance: advanceAdminOperation,
+};
+
 export async function runAdminPokemonOperation(
   request: AdminOperationPrepareInput,
+  dependencies: AdminPokemonOperationDependencies = DEFAULT_DEPENDENCIES,
 ): Promise<AdminPokemonOperationRunResult> {
-  let current = await prepareAdminOperation(request);
+  let current = await dependencies.prepare(request);
   const initialFailure = deniedOrRejected(current);
   if (initialFailure) return initialFailure;
 
@@ -174,14 +185,14 @@ export async function runAdminPokemonOperation(
       return { status: 'awaiting-approval', operationId: current.operationId };
     }
     if (current.operationStatus === 'VALIDATED') {
-      current = await advanceAdminOperation(current.operationId, 'simulate');
+      current = await dependencies.advance(current.operationId, 'simulate');
     } else if (
       current.operationStatus === 'SIMULATED' ||
       current.operationStatus === 'PENDING_CONFIRMATION'
     ) {
-      current = await advanceAdminOperation(current.operationId, 'confirm');
+      current = await dependencies.advance(current.operationId, 'confirm');
     } else if (current.operationStatus === 'READY') {
-      current = await advanceAdminOperation(current.operationId, 'apply');
+      current = await dependencies.advance(current.operationId, 'apply');
     } else {
       return {
         status: 'rejected',
