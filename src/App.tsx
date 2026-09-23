@@ -778,5 +778,5 @@ export function App() {
     );
   }
 
-  return <ProductNotFound destinations={hubDestinations} />;
+  return <ProductNotFound destinations={hubDestinations} showAdmin={showAdmin} />;
 }
