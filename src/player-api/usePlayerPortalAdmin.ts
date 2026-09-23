@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { usePlayerPortalBrowserSession } from './playerPortalBrowserSession';
 import {
   getPlayerPortalAdmin,
   type PlayerPortalAdminAccess,
@@ -11,11 +12,16 @@ export type PlayerPortalAdminState =
   | { status: 'unavailable'; admin: null }
   | { status: 'admin'; admin: PlayerPortalAdminAccess };
 
-let cachedState: PlayerPortalAdminState | null = null;
+let cachedAuthorizedState: PlayerPortalAdminState | null = null;
 let pending: Promise<PlayerPortalAdminState> | null = null;
 
 async function loadAdminState(): Promise<PlayerPortalAdminState> {
-  if (cachedState && cachedState.status !== 'unavailable') return cachedState;
+  if (
+    cachedAuthorizedState?.status === 'admin' ||
+    cachedAuthorizedState?.status === 'not-admin'
+  ) {
+    return cachedAuthorizedState;
+  }
   if (pending) return pending;
 
   pending = getPlayerPortalAdmin()
@@ -25,7 +31,9 @@ async function loadAdminState(): Promise<PlayerPortalAdminState> {
     })
     .catch((): PlayerPortalAdminState => ({ status: 'unavailable', admin: null }))
     .then((state) => {
-      cachedState = state;
+      if (state.status === 'admin' || state.status === 'not-admin') {
+        cachedAuthorizedState = state;
+      }
       pending = null;
       return state;
     });
@@ -34,19 +42,36 @@ async function loadAdminState(): Promise<PlayerPortalAdminState> {
 }
 
 export function usePlayerPortalAdmin(): PlayerPortalAdminState {
+  const session = usePlayerPortalBrowserSession();
   const [state, setState] = useState<PlayerPortalAdminState>(
-    cachedState ?? { status: 'loading', admin: null },
+    cachedAuthorizedState ?? { status: 'loading', admin: null },
   );
 
   useEffect(() => {
     let active = true;
+
+    if (session.status === 'loading') {
+      setState({ status: 'loading', admin: null });
+      return () => {
+        active = false;
+      };
+    }
+
+    if (session.status !== 'authenticated') {
+      setState({ status: 'unauthenticated', admin: null });
+      return () => {
+        active = false;
+      };
+    }
+
     void loadAdminState().then((next) => {
       if (active) setState(next);
     });
+
     return () => {
       active = false;
     };
-  }, []);
+  }, [session.status]);
 
   return state;
 }
