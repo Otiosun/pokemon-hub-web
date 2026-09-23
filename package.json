@@ -9,8 +9,8 @@
   },
   "scripts": {
     "dev": "vite",
-    "prepare:field-dex-preview": "node scripts/run-generations-player-preview.mjs",
-    "build": "biome lint src/features/admin/AdminPlayerDetailPage.tsx && mkdir -p dist && printf '<!doctype html><title>diag</title>' > dist/index.html",
+    "prepare:field-dex-preview": "node scripts/prepare-generations-for-build.mjs",
+    "build": "node scripts/capture-box-lint.mjs && npm run check && npm run typecheck && npm run test:run && npm run prepare:field-dex-preview && vite build",
     "preview": "vite preview",
     "deploy:cf": "wrangler deploy",
     "check": "biome lint --max-diagnostics=500 .",
