@@ -14,7 +14,8 @@ import numpy as np
 import py7zr
 from PIL import Image
 
-IMPORTER = Path('/tmp/poke-importer')
+TEMP_ROOT = Path(tempfile.gettempdir())
+IMPORTER = TEMP_ROOT / 'poke-importer'
 if str(IMPORTER) not in sys.path:
     sys.path.insert(0, str(IMPORTER))
 
@@ -22,7 +23,7 @@ from GFLib.Anim.Animation import AnimationT
 
 VERSION_ID = 'qzYLTuPI'
 API_URL = f'https://api.modrinth.com/v2/version/{VERSION_ID}'
-ZIP_PATH = Path('/tmp/generations-gen1.zip')
+ZIP_PATH = TEMP_ROOT / 'generations-gen1.zip'
 OUTPUT_ROOT = Path('public/research/generations')
 DRACO_SOURCE = Path('node_modules/three/examples/jsm/libs/draco')
 DRACO_OUTPUT = Path('public/research/draco')

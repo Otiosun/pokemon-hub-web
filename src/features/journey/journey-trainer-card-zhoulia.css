@@ -1,8 +1,14 @@
 .journey-zhoulia-card-dialog {
   position: relative;
   width: min(96vw, 1120px);
+  max-width: none;
   display: grid;
   gap: 14px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
 }
 
 .journey-zhoulia-card-stage {

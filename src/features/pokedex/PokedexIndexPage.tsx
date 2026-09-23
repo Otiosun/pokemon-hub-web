@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { SpeciesPokemonImage } from '../../visual-assets/PokemonPreviewImage';
 import { TypeIcon } from '../../visual-assets/TypeIcon';
-import { useOwnedPokemonCollection } from '../collection/useOwnedPokemonCollection';
 import { typeAccent } from '../pokemon-detail/fieldDexSpecies';
 import {
   getCachedNationalDexCatalog,
@@ -13,10 +12,12 @@ import {
   rememberPokedexIndexFilters,
   rememberPokedexIndexScroll,
   type PokedexDiscoveryFilter,
+  type PokedexIndexVisualVariant,
   type PokedexRegionFilter,
 } from './pokedexIndexSession';
 import {
-  buildOwnedShinyDexSet,
+  buildRegisteredShinyDexSet,
+  hasShinyHistoryContract,
   matchesPokedexShinyFilter,
   type PokedexShinyFilter,
 } from './pokedexShinyFilter';
@@ -96,7 +97,6 @@ function activityLabel(seenCount: string, caughtCount: string, discovery: 'unkno
 export function PokedexIndexPage() {
   const initialSession = useMemo(readPokedexIndexSession, []);
   const pokedexState = usePlayerPortalPokedex();
-  const ownedPokemonState = useOwnedPokemonCollection();
   const cachedCatalog = getCachedNationalDexCatalog();
   const initialTypeMembers = initialSession.typeSlug
     ? getCachedTypeMembers(initialSession.typeSlug)
@@ -106,6 +106,9 @@ export function PokedexIndexPage() {
   const [region, setRegion] = useState<PokedexRegionFilter>(initialSession.region);
   const [discovery, setDiscovery] = useState<PokedexDiscoveryFilter>(initialSession.discovery);
   const [shiny, setShiny] = useState<PokedexShinyFilter>(initialSession.shiny);
+  const [visualVariant, setVisualVariant] = useState<PokedexIndexVisualVariant>(
+    initialSession.visualVariant,
+  );
   const [typeSlug, setTypeSlug] = useState<string | null>(initialSession.typeSlug);
   const [typeMembers, setTypeMembers] = useState<ReadonlySet<number> | null>(initialTypeMembers);
   const [typeStatus, setTypeStatus] = useState<TypeFilterStatus>(
@@ -115,7 +118,7 @@ export function PokedexIndexPage() {
   const [catalogFailed, setCatalogFailed] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const restoredScroll = useRef(false);
-  const filterDialogRef = useRef<HTMLDivElement>(null);
+  const filterDialogRef = useRef<HTMLDialogElement>(null);
 
   const pokedexByDex = useMemo(() => {
     if (pokedexState.status !== 'authenticated') return new Map();
@@ -123,13 +126,15 @@ export function PokedexIndexPage() {
   }, [pokedexState]);
   const shinyDexes = useMemo(
     () =>
-      ownedPokemonState.status === 'authenticated'
-        ? buildOwnedShinyDexSet(ownedPokemonState.pokemon)
+      pokedexState.status === 'authenticated'
+        ? buildRegisteredShinyDexSet(pokedexState.pokedex)
         : new Set<number>(),
-    [ownedPokemonState],
+    [pokedexState],
   );
   const progressReady = pokedexState.status === 'authenticated';
-  const shinyReady = ownedPokemonState.status === 'authenticated';
+  const shinyReady =
+    pokedexState.status === 'authenticated' &&
+    hasShinyHistoryContract(pokedexState.pokedex);
   const controlsReady = catalogReady && progressReady;
 
   useEffect(() => {
@@ -184,17 +189,13 @@ export function PokedexIndexPage() {
   }, [typeSlug]);
 
   useEffect(() => {
-    if (
-      shiny === 'Shiny' &&
-      (ownedPokemonState.status === 'unauthenticated' || ownedPokemonState.status === 'unavailable')
-    ) {
-      setShiny('Todos');
-    }
-  }, [ownedPokemonState.status, shiny]);
+    if (shiny === 'Shiny' && !shinyReady) setShiny('Todos');
+    if (visualVariant === 'shiny' && !shinyReady) setVisualVariant('regular');
+  }, [shiny, shinyReady, visualVariant]);
 
   useEffect(() => {
-    rememberPokedexIndexFilters(query, region, discovery, shiny, typeSlug);
-  }, [discovery, query, region, shiny, typeSlug]);
+    rememberPokedexIndexFilters(query, region, discovery, shiny, visualVariant, typeSlug);
+  }, [discovery, query, region, shiny, typeSlug, visualVariant]);
 
   useEffect(() => {
     if (!catalogReady || restoredScroll.current) return;
@@ -356,6 +357,28 @@ export function PokedexIndexPage() {
           </button>
         </div>
 
+        <section className="pokedex-index-visual-modes" aria-label="Visual do índice">
+          <span>VISUAL</span>
+          <button
+            type="button"
+            className={visualVariant === 'regular' ? 'is-active' : undefined}
+            aria-pressed={visualVariant === 'regular'}
+            onClick={() => setVisualVariant('regular')}
+          >
+            NORMAL
+          </button>
+          <button
+            type="button"
+            className={visualVariant === 'shiny' ? 'is-active is-shiny' : undefined}
+            aria-pressed={visualVariant === 'shiny'}
+            disabled={!shinyReady}
+            title={shinyReady ? 'Mostrar variantes shiny registradas' : 'Histórico shiny indisponível'}
+            onClick={() => setVisualVariant('shiny')}
+          >
+            SHINY
+          </button>
+        </section>
+
         {activeFilterCount ? (
           <div className="pokedex-index-active-filters">
             {region !== 'Todos' ? (
@@ -370,7 +393,7 @@ export function PokedexIndexPage() {
             ) : null}
             {shiny !== 'Todos' ? (
               <button type="button" onClick={() => setShiny('Todos')} aria-label="Remover filtro shiny">
-                Shiny<span aria-hidden="true">×</span>
+                Shiny registrado<span aria-hidden="true">×</span>
               </button>
             ) : null}
             {activeType ? (
@@ -409,33 +432,46 @@ export function PokedexIndexPage() {
               const playerState = getAuthoritativePokedexSpeciesState(pokedexByDex.get(item.dex));
               const discovered = playerState.discovery !== 'unknown';
               const hasShiny = shinyDexes.has(item.dex);
+              const shinyVisualLocked = visualVariant === 'shiny' && discovered && !hasShiny;
               const paddedDex = String(item.dex).padStart(3, '0');
               const displayName = discovered ? item.name || `#${paddedDex}` : '???';
               return (
                 <a
-                  className={`pokedex-index-card is-${playerState.discovery}${hasShiny ? ' is-shiny-seen' : ''}`}
+                  className={`pokedex-index-card is-${playerState.discovery}${hasShiny ? ' is-shiny-seen' : ''}${visualVariant === 'shiny' && hasShiny ? ' is-shiny-visual' : ''}`}
                   key={item.dex}
                   href={`/pokedex/${paddedDex}`}
-                  aria-label={discovered ? `Abrir registro de ${displayName}, número ${item.dex}${hasShiny ? ', shiny na coleção' : ''}` : `Abrir registro desconhecido número ${item.dex}`}
+                  aria-label={discovered ? `Abrir registro de ${displayName}, número ${item.dex}${hasShiny ? ', shiny registrado' : ''}` : `Abrir registro desconhecido número ${item.dex}`}
                 >
                   <div className="pokedex-index-card-top">
                     <span>#{paddedDex}</span>
                     <span className="pokedex-index-state-group">
-                      {hasShiny ? <span className="pokedex-index-shiny-mark" role="img" aria-label="Shiny na coleção">✦</span> : null}
+                      {hasShiny ? <span className="pokedex-index-shiny-mark" role="img" aria-label="Shiny registrado">✦</span> : null}
                       <strong className="pokedex-index-discovery-state">{discoveryLabel(playerState.discovery)}</strong>
                     </span>
                   </div>
                   <div className="pokedex-index-sprite-wrap">
                     {discovered ? (
-                      <SpeciesPokemonImage
-                        dex={item.dex}
-                        assetRole="official-artwork"
-                        alt=""
-                        aria-hidden="true"
-                        loading="lazy"
-                        decoding="async"
-                        fallbackLabel="?"
-                      />
+                      shinyVisualLocked ? (
+                        <span
+                          className="pokedex-index-shiny-locked"
+                          role="img"
+                          aria-label="Variante shiny não registrada"
+                        >
+                          <span aria-hidden="true">✦</span>
+                          <small aria-hidden="true">?</small>
+                        </span>
+                      ) : (
+                        <SpeciesPokemonImage
+                          dex={item.dex}
+                          assetRole="official-artwork"
+                          variant={visualVariant === 'shiny' ? 'shiny' : 'regular'}
+                          alt=""
+                          aria-hidden="true"
+                          loading="lazy"
+                          decoding="async"
+                          fallbackLabel="?"
+                        />
+                      )
                     ) : (
                       <span className="pokedex-index-unknown-glyph" aria-hidden="true">?</span>
                     )}
@@ -461,10 +497,10 @@ export function PokedexIndexPage() {
             aria-label="Fechar filtros"
             onClick={() => setFiltersOpen(false)}
           />
-          <div
+          <dialog
             ref={filterDialogRef}
+            open
             className="pokedex-index-filter-dialog"
-            role="dialog"
             aria-modal="true"
             aria-labelledby="pokedex-filter-title"
             tabIndex={-1}
@@ -524,14 +560,14 @@ export function PokedexIndexPage() {
                       disabled={item === 'Shiny' && !shinyReady}
                       onClick={() => setShiny(item)}
                     >
-                      {item === 'Shiny' ? 'Tenho shiny' : 'Todos'}
+                      {item === 'Shiny' ? 'Registrado' : 'Todos'}
                     </button>
                   ))}
                 </div>
-                {ownedPokemonState.status === 'loading' ? (
-                  <small className="pokedex-index-filter-error">Lendo variantes da Box…</small>
-                ) : ownedPokemonState.status !== 'authenticated' ? (
-                  <small className="pokedex-index-filter-error">Box indisponível para este filtro.</small>
+                {!shinyReady ? (
+                  <small className="pokedex-index-filter-error">
+                    Histórico shiny ainda não está disponível nesta versão do Hub.
+                  </small>
                 ) : null}
               </fieldset>
 
@@ -572,7 +608,7 @@ export function PokedexIndexPage() {
               <button type="button" className="is-clear" onClick={clearFilters} disabled={!activeFilterCount}>Limpar</button>
               <button type="button" className="is-apply" onClick={() => setFiltersOpen(false)}>Ver registros</button>
             </footer>
-          </div>
+          </dialog>
         </div>
       ) : null}
     </main>

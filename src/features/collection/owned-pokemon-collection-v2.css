@@ -103,9 +103,18 @@
   letter-spacing: -0.035em;
 }
 
-.owned-pokemon-team-head > a {
+.owned-pokemon-team-actions {
   position: relative;
   z-index: 3;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.owned-pokemon-team-actions > a,
+.owned-pokemon-team-actions > button {
   min-height: 44px;
   display: inline-flex;
   align-items: center;
@@ -117,8 +126,16 @@
   color: #f2d7d9;
   background: rgba(85, 21, 28, 0.28);
   text-decoration: none;
+  cursor: pointer;
   font: 700 0.52rem 'IBM Plex Mono', monospace;
   letter-spacing: 0.065em;
+}
+
+.owned-pokemon-team-actions > button.is-active {
+  color: #112124;
+  border-color: rgba(139, 225, 231, 0.7);
+  border-bottom-color: #4faeb8;
+  background: #8be1e7;
 }
 
 .owned-pokemon-team-grid {
@@ -131,6 +148,10 @@
 
 .owned-pokemon-team-card {
   position: relative;
+  width: 100%;
+  appearance: none;
+  font: inherit;
+  text-align: left;
   min-width: 0;
   min-height: 182px;
   display: grid;
@@ -149,6 +170,20 @@
 
 .owned-pokemon-team-card.is-shiny {
   box-shadow: inset 0 2px 0 rgba(224, 184, 56, 0.7);
+}
+
+.owned-pokemon-team-card.is-selected {
+  border-color: rgba(139, 225, 231, 0.88);
+  background: rgba(28, 53, 57, 0.88);
+  box-shadow:
+    inset 0 0 0 1px rgba(139, 225, 231, 0.28),
+    0 0 0 2px rgba(139, 225, 231, 0.08);
+}
+
+.owned-pokemon-team-card:disabled,
+.owned-pokemon-card:disabled {
+  cursor: wait;
+  opacity: 0.64;
 }
 
 .owned-pokemon-team-slot {
@@ -337,6 +372,10 @@
 
 .owned-pokemon-storage-section .owned-pokemon-card {
   --owned-accent: #a2a6a1;
+  width: 100%;
+  appearance: none;
+  font: inherit;
+  text-align: left;
   min-height: 276px;
   contain-intrinsic-size: 276px;
   border-color: rgba(23, 32, 36, 0.12);
@@ -534,34 +573,141 @@
   }
 }
 
-.owned-roster-organizer {
+
+.owned-pokemon-storage-section .owned-pokemon-card.is-selected {
+  border-color: rgba(177, 52, 62, 0.72);
+  box-shadow:
+    inset 0 0 0 1px rgba(177, 52, 62, 0.2),
+    0 10px 24px rgba(87, 24, 30, 0.1);
+  background: rgba(255, 246, 243, 0.92);
+}
+
+.owned-roster-direct {
   display: grid;
   gap: 16px;
+  margin-bottom: 16px;
   padding: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(9, 15, 17, 0.7);
+  border: 1px solid rgba(139, 225, 231, 0.16);
+  border-radius: 16px;
+  color: #eaf5f5;
+  background:
+    linear-gradient(rgba(166, 214, 217, 0.035) 1px, transparent 1px) 0 0 / 22px 22px,
+    linear-gradient(90deg, rgba(166, 214, 217, 0.035) 1px, transparent 1px) 0 0 / 22px 22px,
+    #111b1e;
+  box-shadow: 0 16px 32px rgba(4, 10, 12, 0.14);
 }
 
-.owned-roster-organizer-copy {
+.owned-roster-direct-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(205, 234, 235, 0.1);
+}
+
+.owned-roster-direct-head > div {
+  min-width: 0;
   display: grid;
-  gap: 4px;
+  gap: 5px;
 }
 
-.owned-roster-organizer-copy > span,
-.owned-roster-slot-grid button > span {
-  color: #75878a;
-  font: 600 0.5rem 'IBM Plex Mono', monospace;
-  letter-spacing: 0.08em;
+.owned-roster-direct-head span,
+.owned-roster-destinations > section > header span,
+.owned-roster-box-nav > div:first-child > span {
+  color: #779093;
+  font: 650 0.49rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.09em;
 }
 
-.owned-roster-organizer-copy > strong {
-  color: #edf7f7;
-  font: 700 0.82rem 'Space Grotesk', sans-serif;
+.owned-roster-direct-head strong {
+  color: #f0f8f8;
+  font: 700 1rem 'Space Grotesk', sans-serif;
 }
 
-.owned-roster-organizer-copy > small {
-  color: #91a1a4;
+.owned-roster-direct-head small {
+  max-width: 660px;
+  color: #91a4a7;
   font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.owned-roster-direct-head > button {
+  flex: none;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(218, 91, 101, 0.28);
+  border-radius: 10px;
+  color: #eab9bd;
+  background: rgba(117, 32, 40, 0.18);
+  cursor: pointer;
+  font: 650 0.5rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+.owned-roster-destinations {
+  display: grid;
+  gap: 16px;
+}
+
+.owned-roster-destinations > section {
+  min-width: 0;
+  display: grid;
+  gap: 9px;
+}
+
+.owned-roster-destinations > section > header:not(.owned-roster-box-nav) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.owned-roster-destinations > section > header strong,
+.owned-roster-box-nav strong {
+  color: #dceaea;
+  font: 700 0.72rem 'Space Grotesk', sans-serif;
+}
+
+.owned-roster-box-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.owned-roster-box-nav > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.owned-roster-box-nav > div:last-child {
+  display: grid;
+  grid-template-columns: 44px auto 44px;
+  align-items: center;
+  gap: 6px;
+}
+
+.owned-roster-box-nav > div:last-child > span {
+  min-width: 58px;
+  color: #91a5a8;
+  text-align: center;
+  font: 650 0.54rem 'IBM Plex Mono', monospace;
+}
+
+.owned-roster-box-nav button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid rgba(198, 224, 227, 0.14);
+  border-radius: 10px;
+  color: #dceced;
+  background: rgba(20, 29, 32, 0.92);
+  cursor: pointer;
+  font-size: 1.25rem;
+}
+
+.owned-roster-box-nav button:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
 }
 
 .owned-roster-slot-grid {
@@ -592,14 +738,14 @@
   cursor: pointer;
 }
 
-.owned-roster-slot-grid button:hover {
+.owned-roster-slot-grid button:hover:not(:disabled) {
   border-color: rgba(126, 218, 230, 0.42);
 }
 
-.owned-roster-slot-grid button.is-selected {
-  border-color: rgba(126, 218, 230, 0.88);
-  box-shadow: inset 0 0 0 1px rgba(126, 218, 230, 0.28);
-  background: rgba(31, 53, 57, 0.96);
+.owned-roster-slot-grid button > span {
+  color: #75878a;
+  font: 600 0.5rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
 }
 
 .owned-roster-slot-grid button > div {
@@ -609,7 +755,8 @@
   gap: 4px;
 }
 
-.owned-roster-slot-grid button img {
+.owned-roster-slot-grid button img,
+.owned-roster-slot-grid button .pokemon-asset-placeholder {
   width: min(100%, 52px);
   height: 46px;
   object-fit: contain;
@@ -618,42 +765,62 @@
 .owned-roster-slot-grid button strong {
   max-width: 100%;
   overflow: hidden;
+  color: #d6e4e5;
   font: 650 0.62rem 'Space Grotesk', sans-serif;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .owned-roster-slot-grid.is-box button {
-  min-height: 66px;
+  min-height: 72px;
   padding: 5px;
 }
 
-.owned-roster-slot-grid.is-box button img {
-  width: 38px;
-  height: 34px;
+.owned-roster-slot-grid.is-box button img,
+.owned-roster-slot-grid.is-box button .pokemon-asset-placeholder {
+  width: 40px;
+  height: 36px;
 }
 
-.owned-roster-slot-grid.is-box button strong {
-  color: #607174;
-  font-size: 0.9rem;
+.owned-roster-slot-grid.is-box button > div > strong:last-child {
+  color: #b9cbcd;
+  font-size: 0.48rem;
 }
 
-.owned-roster-save {
+.owned-roster-slot-grid button.is-current {
+  border-color: rgba(218, 91, 101, 0.34);
+  background: rgba(79, 34, 39, 0.42);
+  opacity: 0.64;
+}
+
+.owned-roster-slot-grid button:disabled:not(.is-current) {
+  cursor: default;
+  opacity: 0.46;
+}
+
+.owned-roster-feedback {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 12px;
+  border-top: 1px solid rgba(205, 234, 235, 0.1);
+  color: #a8b9bb;
+  font-size: 0.7rem;
+}
+
+.owned-roster-feedback > button {
+  flex: none;
   min-height: 44px;
-  justify-self: end;
-  padding: 0 18px;
-  border: 1px solid rgba(126, 218, 230, 0.32);
-  border-radius: 10px;
-  color: #0c1719;
-  background: #8be1e7;
+  padding: 0 12px;
+  border: 1px solid rgba(139, 225, 231, 0.22);
+  border-radius: 9px;
+  color: #a9e8ec;
+  background: rgba(31, 53, 57, 0.78);
   cursor: pointer;
-  font: 700 0.64rem 'IBM Plex Mono', monospace;
+  font: 700 0.5rem 'IBM Plex Mono', monospace;
   letter-spacing: 0.06em;
-}
-
-.owned-roster-save:disabled {
-  cursor: not-allowed;
-  opacity: 0.48;
 }
 
 @media (max-width: 760px) {
@@ -664,11 +831,6 @@
   .owned-roster-slot-grid.is-box {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
-
-  .owned-roster-save {
-    width: 100%;
-    justify-self: stretch;
-  }
 }
 
 @media (max-width: 440px) {
@@ -677,3 +839,45 @@
   }
 }
 
+
+
+@media (max-width: 620px) {
+  .owned-pokemon-team-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .owned-pokemon-team-actions > a,
+  .owned-pokemon-team-actions > button {
+    flex: 1 1 0;
+    justify-content: center;
+  }
+
+  .owned-roster-direct {
+    margin-inline: -4px;
+    padding: 13px;
+    border-radius: 14px;
+  }
+
+  .owned-roster-direct-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .owned-roster-direct-head > button {
+    width: 100%;
+  }
+
+  .owned-roster-box-nav {
+    align-items: flex-end;
+  }
+
+  .owned-roster-feedback {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .owned-roster-feedback > button {
+    width: 100%;
+  }
+}

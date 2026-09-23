@@ -12,6 +12,7 @@ import {
 const profile: TrainerCardProfile = {
   trainerName: 'Enzo',
   trainerTitle: 'Explorador de Fronteiras',
+  accent: 'crimson',
   trainerId: 'ZHO-028419',
   publicVerificationId: 'tcv_0123456789ABCDEFGHIJKLMN',
   originRegion: 'Zhoulia',
@@ -24,6 +25,9 @@ const profile: TrainerCardProfile = {
     nickname: 'Brasa',
     level: 12,
     types: ['Fogo'],
+    shiny: false,
+    formSlug: 'growlithe',
+    speciesSlug: 'growlithe',
   },
   badges: [],
   ownedPokemonCount: 1,

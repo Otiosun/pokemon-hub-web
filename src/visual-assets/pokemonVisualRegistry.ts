@@ -2,12 +2,19 @@ import { getPokemonAssetUrl } from './assetBaseUrl';
 import { resolveTypeIconPath } from './TypeIcon';
 
 export type PokemonVisualVariant = 'regular' | 'shiny';
+export type PokemonImageRole = 'official-artwork' | 'home-artwork' | 'icon' | 'portrait';
 
 export type PokemonSpeciesVisualAssets = {
   artworkHome: string;
   artworkOfficial: string;
   icon: string;
   portrait: string;
+};
+
+export type PokemonVisualImageSource = {
+  role: PokemonImageRole;
+  provider: VisualProviderId;
+  src: string;
 };
 
 export type Pokemon3dAssetUrls = {
@@ -19,6 +26,7 @@ export type VisualProviderId =
   | 'pokeapi-home'
   | 'pokeapi-official-artwork'
   | 'pokeapi-gen8-icon'
+  | 'pokeapi-core-sprite'
   | 'pmdcollab-portrait'
   | 'partywhale-type-icons'
   | 'generations-cobblemon-3d';
@@ -43,6 +51,11 @@ export const POKEMON_VISUAL_PROVIDERS: Readonly<Record<VisualProviderId, {
     source: 'PokeAPI/sprites · generation-viii icons',
     rights: 'pokemon-derived',
   },
+  'pokeapi-core-sprite': {
+    role: 'lightweight-shiny-navigation-sprite',
+    source: 'PokeAPI/sprites · core sprites',
+    rights: 'pokemon-derived',
+  },
   'pmdcollab-portrait': {
     role: 'owned-pokemon-portrait',
     source: 'PMDCollab/SpriteCollab',
@@ -63,25 +76,80 @@ export const POKEMON_VISUAL_PROVIDERS: Readonly<Record<VisualProviderId, {
 const POKEAPI_SPRITES_ROOT = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
 const PMD_PORTRAIT_ROOT = 'https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/portrait';
 
+function pmdPortraitUrl(dex: number, variant: PokemonVisualVariant) {
+  const padded = String(dex).padStart(4, '0');
+  return variant === 'shiny'
+    ? `${PMD_PORTRAIT_ROOT}/${padded}/0000/0001/Normal.png`
+    : `${PMD_PORTRAIT_ROOT}/${padded}/Normal.png`;
+}
+
 export function getPokemonSpeciesVisualAssets(
   dex: number,
   variant: PokemonVisualVariant = 'regular',
 ): PokemonSpeciesVisualAssets {
-  const padded = String(dex).padStart(4, '0');
   if (variant === 'shiny') {
     return {
       artworkHome: `${POKEAPI_SPRITES_ROOT}/other/home/shiny/${dex}.png`,
       artworkOfficial: `${POKEAPI_SPRITES_ROOT}/other/official-artwork/shiny/${dex}.png`,
       icon: `${POKEAPI_SPRITES_ROOT}/shiny/${dex}.png`,
-      portrait: `${POKEAPI_SPRITES_ROOT}/other/home/shiny/${dex}.png`,
+      portrait: pmdPortraitUrl(dex, variant),
     };
   }
   return {
     artworkHome: `${POKEAPI_SPRITES_ROOT}/other/home/${dex}.png`,
     artworkOfficial: `${POKEAPI_SPRITES_ROOT}/other/official-artwork/${dex}.png`,
     icon: `${POKEAPI_SPRITES_ROOT}/versions/generation-viii/icons/${dex}.png`,
-    portrait: `${PMD_PORTRAIT_ROOT}/${padded}/Normal.png`,
+    portrait: pmdPortraitUrl(dex, variant),
   };
+}
+
+export function getPokemonImageSources(
+  dex: number,
+  assetRole: PokemonImageRole,
+  variant: PokemonVisualVariant = 'regular',
+  formSlug?: string,
+  speciesSlug?: string,
+): readonly PokemonVisualImageSource[] {
+  // The Gen I-III catalog names the default form with the same slug as its
+  // species (for example species "charizard" + form "charizard"). Only a
+  // proven mismatch means this is an alternate form. Missing slugs remain a
+  // rollout compatibility path for older Hub payloads and species-only views.
+  if (formSlug && speciesSlug && formSlug !== speciesSlug) return [];
+
+  const visual = getPokemonSpeciesVisualAssets(dex, variant);
+  const official: PokemonVisualImageSource = {
+    role: 'official-artwork',
+    provider: 'pokeapi-official-artwork',
+    src: visual.artworkOfficial,
+  };
+  const home: PokemonVisualImageSource = {
+    role: 'home-artwork',
+    provider: 'pokeapi-home',
+    src: visual.artworkHome,
+  };
+  const icon: PokemonVisualImageSource = {
+    role: 'icon',
+    provider: variant === 'shiny' ? 'pokeapi-core-sprite' : 'pokeapi-gen8-icon',
+    src: visual.icon,
+  };
+  const portrait: PokemonVisualImageSource = {
+    role: 'portrait',
+    provider: 'pmdcollab-portrait',
+    src: visual.portrait,
+  };
+
+  switch (assetRole) {
+    case 'official-artwork':
+      return [official, home, icon];
+    case 'home-artwork':
+      return [home, official, icon];
+    case 'icon':
+      return [icon, home, official];
+    case 'portrait':
+      // Portraits are a visual language of their own. Never fall through to HOME/artwork,
+      // otherwise one shiny can look unrelated to the other five members of the same team.
+      return [portrait];
+  }
 }
 
 export function getPokemon3dAssets(speciesSlug: string): Pokemon3dAssetUrls {

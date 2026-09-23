@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { SpeciesPokemonImage } from '../../visual-assets/PokemonPreviewImage';
 import { getPokemonAssetUrl } from '../../visual-assets/assetBaseUrl';
+import {
+  getPokemon3dCapability,
+  type Pokemon3dCapabilityStatus,
+} from '../../visual-assets/pokemon3dCapability';
 import { TypeBadge } from '../../visual-assets/TypeBadge';
+import type { PokemonVisualVariant } from '../../visual-assets/pokemonVisualRegistry';
 import { GenerationsPokemonViewer } from '../asset-lab/GenerationsPokemonViewer';
 import { useOwnedPokemonCollection } from '../collection/useOwnedPokemonCollection';
 import {
@@ -10,14 +15,14 @@ import {
   type FieldDexSpecies,
 } from '../pokemon-detail/fieldDexSpecies';
 import {
-  readPokemonVisualPreference,
-  rememberPokemonVisualPreference,
+  readPokedexVisualPreference,
+  rememberPokedexVisualPreference,
 } from '../pokemon-detail/pokemonVisualPreference';
 import { formatNationalDexName, getCachedNationalDexName } from './nationalDexRuntime';
 import {
   getCachedPokedexSpeciesRuntime,
   loadPokedexSpeciesRuntime,
-  type EvolutionSpecies,
+  type EvolutionTreeNode,
   type SpeciesVariety,
 } from './pokedexSpeciesRuntime';
 import {
@@ -42,7 +47,7 @@ type RecordState = {
   types: string[];
   habitat: string;
   varieties: SpeciesVariety[];
-  evolutionStages: EvolutionSpecies[][];
+  evolutionTree: EvolutionTreeNode | null;
 };
 
 type ReviewAssetPayload = {
@@ -128,7 +133,7 @@ function initialRecord(
       types: [],
       habitat: '—',
       varieties: [],
-      evolutionStages: [],
+      evolutionTree: null,
     };
   }
 
@@ -147,7 +152,7 @@ function initialRecord(
     types: cached?.typeSlugs.map(translateType) ?? review?.types ?? [],
     habitat: cached?.habitat ?? '—',
     varieties: cached?.varieties ?? [],
-    evolutionStages: cached?.evolutionStages ?? [],
+    evolutionTree: cached?.evolutionTree ?? null,
   };
 }
 
@@ -199,38 +204,60 @@ function SideArrow({ direction }: { direction: 'left' | 'right' }) {
   );
 }
 
-function EvolutionTree({ stages }: { stages: EvolutionSpecies[][] }) {
+function EvolutionBranch({
+  node,
+  root = false,
+}: {
+  node: EvolutionTreeNode;
+  root?: boolean;
+}) {
   return (
-    <div className="pokedex-species-evolution-tree">
-      {stages.map((stage, stageIndex) => (
-        <div
-          className="pokedex-species-evolution-stage"
-          key={stage.map((species) => species.dex).join('-')}
-        >
-          {stageIndex > 0 && (
-            <span className="pokedex-species-evolution-arrow" aria-hidden="true">
-              →
-            </span>
-          )}
+    <div className={`pokedex-species-evolution-branch${root ? ' is-root' : ''}`}>
+      {!root ? (
+        <section className="pokedex-species-evolution-edge" aria-label="Condição de evolução">
+          <span className="pokedex-species-evolution-line" aria-hidden="true" />
           <div>
-            {stage.map((species) => (
-              <a href={neighbourHref(species.dex)} key={species.dex}>
-                <SpeciesPokemonImage
-                  dex={species.dex}
-                  assetRole="icon"
-                  alt=""
-                  aria-hidden="true"
-                  loading="lazy"
-                  decoding="async"
-                  fallbackLabel="?"
-                />
-                <span>#{String(species.dex).padStart(3, '0')}</span>
-                <strong>{species.name}</strong>
-              </a>
+            {(node.conditions.length > 0 ? node.conditions : ['Evolução']).map((condition) => (
+              <span key={condition}>{condition}</span>
             ))}
           </div>
+          <span className="pokedex-species-evolution-arrow" aria-hidden="true">↓</span>
+        </section>
+      ) : null}
+
+      <a
+        className="pokedex-species-evolution-card"
+        href={neighbourHref(node.species.dex)}
+        aria-label={`Abrir ${node.species.name}, número ${node.species.dex}`}
+      >
+        <SpeciesPokemonImage
+          dex={node.species.dex}
+          assetRole="icon"
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          decoding="async"
+          fallbackLabel="?"
+        />
+        <span>#{String(node.species.dex).padStart(3, '0')}</span>
+        <strong>{node.species.name}</strong>
+      </a>
+
+      {node.children.length > 0 ? (
+        <div className="pokedex-species-evolution-children">
+          {node.children.map((child) => (
+            <EvolutionBranch key={`${node.species.dex}-${child.species.dex}`} node={child} />
+          ))}
         </div>
-      ))}
+      ) : null}
+    </div>
+  );
+}
+
+function EvolutionTree({ tree }: { tree: EvolutionTreeNode }) {
+  return (
+    <div className="pokedex-species-evolution-tree">
+      <EvolutionBranch node={tree} root />
     </div>
   );
 }
@@ -307,33 +334,97 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
   const [record, setRecord] = useState<RecordState>(() =>
     initialRecord(validDex, review, playerState),
   );
-  const [artworkReadyDex, setArtworkReadyDex] = useState<number | null>(null);
+  const [artworkReadyKey, setArtworkReadyKey] = useState<string | null>(null);
+  const [visualVariant, setVisualVariant] = useState<PokemonVisualVariant>('regular');
   const [visualMode, setVisualMode] = useState<VisualMode>(() =>
-    readPokemonVisualPreference('3d') === '3d' ? 'model' : 'artwork',
+    readPokedexVisualPreference('2d') === '3d' ? 'model' : 'artwork',
   );
+  const [modelCapability, setModelCapability] =
+    useState<Pokemon3dCapabilityStatus>('checking');
+  const [modelReady, setModelReady] = useState(false);
+  const [modelRetryNonce, setModelRetryNonce] = useState(0);
 
   const activeRecord =
     record.dex === validDex ? record : initialRecord(validDex, review, playerState);
-  const artworkReady = artworkReadyDex === validDex;
+  const artworkKey = `${validDex}:${visualVariant}`;
+  const artworkReady = artworkReadyKey === artworkKey;
   const discovered = playerState.discovery !== 'unknown';
+  const shinyRegistered =
+    playerState.shinyHistoryAvailable &&
+    (() => {
+      try {
+        return BigInt(playerState.shinySeenCount) > 0n;
+      } catch {
+        return false;
+      }
+    })();
   const wants3d = discovered && visualMode === 'model';
-  const canShow3d = discovered && Boolean(activeRecord.slug);
-  const showing3d = wants3d && canShow3d;
-  const waitingFor3d = wants3d && !canShow3d && activeRecord.status === 'loading';
-  const modelUnavailable = wants3d && !canShow3d && activeRecord.status === 'failed';
+  const modelCanRender = wants3d && modelCapability === 'ready';
+  const showing3d = modelCanRender && modelReady;
+  const waitingFor3d =
+    wants3d &&
+    (modelCapability === 'checking' || (modelCapability === 'ready' && !modelReady));
+  const modelUnavailable = wants3d && modelCapability === 'unsupported';
+  const modelFailed = wants3d && modelCapability === 'failed';
+
+  const chooseVisualVariant = (variant: PokemonVisualVariant) => {
+    if (variant === 'shiny' && !shinyRegistered) return;
+    setVisualVariant(variant);
+    setArtworkReadyKey(null);
+    setModelReady(false);
+    if (variant === 'shiny' && visualMode === 'model') {
+      setVisualMode('artwork');
+    }
+  };
 
   const chooseVisualMode = (mode: VisualMode) => {
+    if (mode === 'model') {
+      setModelReady(false);
+      if (modelCapability === 'failed') {
+        setModelRetryNonce((current) => current + 1);
+      }
+    }
     setVisualMode(mode);
-    rememberPokemonVisualPreference(mode === 'model' ? '3d' : '2d');
+    rememberPokedexVisualPreference(mode === 'model' ? '3d' : '2d');
   };
 
   useEffect(() => {
-    if (discovered && activeRecord.slug) void warmSpecies3d(activeRecord.slug);
-  }, [activeRecord.slug, discovered]);
+    let cancelled = false;
+
+    if (!discovered || !activeRecord.slug) {
+      setModelCapability('unsupported');
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setModelReady(false);
+    setModelCapability('checking');
+    void getPokemon3dCapability({
+      dex: validDex,
+      species: activeRecord.slug,
+      variant: visualVariant,
+      refresh: modelRetryNonce > 0,
+    }).then((capability) => {
+      if (!cancelled) setModelCapability(capability.status);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeRecord.slug, discovered, modelRetryNonce, validDex, visualVariant]);
+
+  useEffect(() => {
+    if (modelCapability === 'ready' && discovered && activeRecord.slug) {
+      void warmSpecies3d(activeRecord.slug);
+    }
+  }, [activeRecord.slug, discovered, modelCapability]);
 
   useEffect(() => {
     const controller = new AbortController();
-    setArtworkReadyDex(null);
+    setArtworkReadyKey(null);
+    setVisualVariant('regular');
+    setModelReady(false);
     setRecord(initialRecord(validDex, review, playerState));
 
     if (!discovered) return () => controller.abort();
@@ -351,7 +442,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
           types: payload.typeSlugs.map(translateType),
           habitat: payload.habitat,
           varieties: payload.varieties,
-          evolutionStages: payload.evolutionStages,
+          evolutionTree: payload.evolutionTree,
         });
       } catch (error) {
         if (controller.signal.aborted) return;
@@ -388,7 +479,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
   const evolutionValue =
     activeRecord.status === 'loading'
       ? 'Carregando'
-      : activeRecord.evolutionStages.length > 0
+      : activeRecord.evolutionTree
         ? 'Disponível'
         : 'Sem evolução catalogada';
 
@@ -418,6 +509,37 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
           <div className="pokedex-species-visual-area">
             {discovered && (
               <fieldset
+                className="pokedex-species-variant-modes"
+                style={FIELDSET_RESET}
+                aria-label="Variante visual da espécie"
+              >
+                <button
+                  type="button"
+                  className={visualVariant === 'regular' ? 'is-active' : undefined}
+                  aria-pressed={visualVariant === 'regular'}
+                  onClick={() => chooseVisualVariant('regular')}
+                >
+                  NORMAL
+                </button>
+                <button
+                  type="button"
+                  className={visualVariant === 'shiny' ? 'is-active' : undefined}
+                  aria-pressed={visualVariant === 'shiny'}
+                  disabled={!shinyRegistered}
+                  title={
+                    playerState.shinyHistoryAvailable
+                      ? 'Variante shiny ainda não registrada'
+                      : 'Histórico shiny ainda não disponível nesta versão do Hub'
+                  }
+                  onClick={() => chooseVisualVariant('shiny')}
+                >
+                  ✦ SHINY
+                </button>
+              </fieldset>
+            )}
+
+            {discovered && (
+              <fieldset
                 className="pokedex-species-view-modes"
                 style={FIELDSET_RESET}
                 aria-label="Modo de visualização da espécie"
@@ -434,7 +556,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
                   type="button"
                   className={visualMode === 'model' ? 'is-active' : undefined}
                   aria-pressed={visualMode === 'model'}
-                  disabled={modelUnavailable}
+                  disabled={modelCapability === 'unsupported'}
                   onClick={() => chooseVisualMode('model')}
                 >
                   3D
@@ -442,41 +564,67 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
               </fieldset>
             )}
 
-            {discovered && visualMode === 'artwork' && (
-              <div className={`pokedex-species-artwork-slot${artworkReady ? ' is-ready' : ''}`}>
+            {discovered && (
+              <div
+                className={`pokedex-species-artwork-slot${artworkReady ? ' is-ready' : ''}${showing3d ? ' is-hidden' : ''}`}
+              >
                 <SpeciesPokemonImage
-                  key={validDex}
+                  key={artworkKey}
                   dex={validDex}
                   assetRole="official-artwork"
+                  variant={visualVariant}
                   className="pokedex-species-artwork"
                   alt={`Ilustração de ${displayName}`}
                   decoding="async"
                   fetchPriority="high"
                   fallbackLabel="?"
-                  onResolved={() => setArtworkReadyDex(validDex)}
+                  onResolved={() => setArtworkReadyKey(artworkKey)}
                 />
               </div>
             )}
 
-            {showing3d && (
-              <div className="pokedex-species-model-slot">
+            {modelCanRender && (
+              <div
+                className={`pokedex-species-model-slot${modelReady ? ' is-ready' : ''}`}
+                aria-busy={!modelReady}
+              >
                 <GenerationsPokemonViewer
-                  key={`${validDex}-${activeRecord.slug}`}
+                  key={`${validDex}-${activeRecord.slug}-${visualVariant}`}
                   species={activeRecord.slug}
                   name={displayName}
-                  onFailedSpeciesChange={() => setVisualMode('artwork')}
+                  onReadyChange={setModelReady}
+                  onFailedSpeciesChange={() => {
+                    setModelReady(false);
+                    setModelCapability('failed');
+                  }}
                 />
                 <span className="pokedex-species-model-hint">ARRASTE PARA GIRAR · PINÇA PARA ZOOM</span>
               </div>
             )}
 
-            {(waitingFor3d || modelUnavailable) && (
+            {(waitingFor3d || modelUnavailable || modelFailed) && (
               <div className="pokedex-species-model-loading" role="status">
-                <span>{modelUnavailable ? 'MODELO 3D INDISPONÍVEL' : 'PREPARANDO MODELO 3D'}</span>
-                {modelUnavailable && (
-                  <button type="button" onClick={() => setVisualMode('artwork')}>
-                    VER 2D
-                  </button>
+                <span>
+                  {modelFailed
+                    ? 'NÃO FOI POSSÍVEL ABRIR O MODELO 3D'
+                    : modelUnavailable
+                      ? 'MODELO 3D INDISPONÍVEL'
+                      : 'PREPARANDO MODELO 3D'}
+                </span>
+                {(modelUnavailable || modelFailed) && (
+                  <div className="pokedex-species-model-actions">
+                    {modelFailed ? (
+                      <button
+                        type="button"
+                        onClick={() => setModelRetryNonce((current) => current + 1)}
+                      >
+                        TENTAR NOVAMENTE
+                      </button>
+                    ) : null}
+                    <button type="button" onClick={() => chooseVisualMode('artwork')}>
+                      VER 2D
+                    </button>
+                  </div>
                 )}
               </div>
             )}
@@ -514,7 +662,10 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
           </div>
 
           <div className="pokedex-species-identity">
-            <span className="pokedex-species-number">Nº {String(validDex).padStart(3, '0')}</span>
+            <span className="pokedex-species-number">
+              Nº {String(validDex).padStart(3, '0')}
+              {visualVariant === 'shiny' ? ' · VARIANTE SHINY' : ''}
+            </span>
             <h1>{displayName}</h1>
             {discovered && activeRecord.types.length > 0 && (
               <div className="pokedex-species-types">
@@ -563,6 +714,17 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
                 <ResearchRow label="HABITAT" value={activeRecord.habitat} tone="ready" />
                 <ResearchRow label="FORMAS / VARIEDADES" value={varietiesValue} tone="ready" />
                 <ResearchRow label="LINHA EVOLUTIVA" value={evolutionValue} tone="ready" />
+                <ResearchRow
+                  label="VARIANTE SHINY"
+                  value={
+                    !playerState.shinyHistoryAvailable
+                      ? 'Histórico indisponível'
+                      : shinyRegistered
+                        ? `Registrado · ${playerState.shinySeenCount} avist. · ${playerState.shinyCaughtCount} capt.`
+                        : 'Não registrado'
+                  }
+                  tone={shinyRegistered ? 'ready' : 'neutral'}
+                />
 
                 {ownedCount !== null ? (
                   ownedCount > 0 ? (
@@ -599,8 +761,8 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
           {discovered && (
             <section className="pokedex-species-evolution" aria-label="Linha evolutiva">
               <header>LINHA EVOLUTIVA</header>
-              {activeRecord.evolutionStages.length > 0 ? (
-                <EvolutionTree stages={activeRecord.evolutionStages} />
+              {activeRecord.evolutionTree ? (
+                <EvolutionTree tree={activeRecord.evolutionTree} />
               ) : (
                 <p>Sem evolução catalogada.</p>
               )}

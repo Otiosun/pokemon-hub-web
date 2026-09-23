@@ -462,8 +462,10 @@ export function GenerationsPokemonViewer({
         const mixer = new activeRuntime.THREE.AnimationMixer(model);
         pendingMixer = mixer;
         const idle = mixer.clipAction(clip);
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         idle.setLoop(activeRuntime.THREE.LoopRepeat, Infinity);
         idle.play();
+        if (reducedMotion) idle.paused = true;
         mixer.update(0);
         model.updateMatrixWorld(true);
 
@@ -474,7 +476,6 @@ export function GenerationsPokemonViewer({
         }
 
         const replacingVisibleModel = Boolean(activeRuntime.model);
-        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (replacingVisibleModel) {
           setIsSwapping(true);
           await waitForSwap(reducedMotion ? 16 : 110);

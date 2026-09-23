@@ -71,6 +71,7 @@ describe('advanced showcase', () => {
     expect(pokemon.some((entry) => entry.placementKind === 'BOX' && entry.boxNo === 3)).toBe(true);
     expect(pokemon.every((entry) => entry.maxHp !== null && entry.currentHp <= entry.maxHp)).toBe(true);
     expect(pokemon.every((entry) => entry.moves.length === 4)).toBe(true);
+    expect(pokemon.every((entry) => entry.formSlug === entry.speciesSlug)).toBe(true);
     expect(pokemon.every((entry) => entry.xpToNextLevel > Number(entry.xp))).toBe(true);
   });
 
@@ -91,5 +92,9 @@ describe('advanced showcase', () => {
     expect(session.profile.trainerLevel).toBeGreaterThanOrEqual(50);
     expect(session.profile.team).toHaveLength(6);
     expect(session.profile.originRegionName).toBe('Kanto');
+    expect(session.profile.profileCustomization).toMatchObject({
+      title: 'Veterano da Liga',
+      accent: 'gold',
+    });
   });
 });

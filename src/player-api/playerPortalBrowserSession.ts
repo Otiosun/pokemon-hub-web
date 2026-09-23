@@ -4,6 +4,7 @@ import {
   bootstrapPlayerPortalSession,
   type PlayerPortalSessionBootstrap,
 } from './playerPortalSession';
+import type { PlayerPortalProfile } from './playerPortalClient';
 
 export type PlayerPortalBrowserSessionState =
   | { status: 'loading' }
@@ -12,6 +13,16 @@ export type PlayerPortalBrowserSessionState =
 
 let sharedBootstrap: Promise<PlayerPortalSessionBootstrap> | null = null;
 let sharedRefresh: Promise<PlayerPortalSessionBootstrap> | null = null;
+
+const PLAYER_PORTAL_PROFILE_UPDATED_EVENT = 'pokemon-beyond:player-profile-updated';
+
+export function publishPlayerPortalProfileUpdate(profile: PlayerPortalProfile) {
+  window.dispatchEvent(
+    new CustomEvent<PlayerPortalProfile>(PLAYER_PORTAL_PROFILE_UPDATED_EVENT, {
+      detail: profile,
+    }),
+  );
+}
 
 export function extractPlayerPortalTicketFromUrl(url: URL): {
   ticket: string | null;
@@ -80,6 +91,21 @@ export function usePlayerPortalBrowserSession(): PlayerPortalBrowserSessionState
       cancelled = true;
     };
   }, [showcase]);
+
+  useEffect(() => {
+    const onProfileUpdate = (event: Event) => {
+      const profile = (event as CustomEvent<PlayerPortalProfile>).detail;
+      setState((current) =>
+        current.status === 'authenticated'
+          ? { ...current, profile }
+          : current,
+      );
+    };
+
+    window.addEventListener(PLAYER_PORTAL_PROFILE_UPDATED_EVENT, onProfileUpdate);
+    return () =>
+      window.removeEventListener(PLAYER_PORTAL_PROFILE_UPDATED_EVENT, onProfileUpdate);
+  }, []);
 
   useEffect(() => {
     if (showcase) return;

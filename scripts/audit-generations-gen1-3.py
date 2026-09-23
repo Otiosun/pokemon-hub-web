@@ -12,7 +12,8 @@ from pathlib import Path
 
 import py7zr
 
-IMPORTER = Path('/tmp/poke-importer')
+TEMP_ROOT = Path(tempfile.gettempdir())
+IMPORTER = TEMP_ROOT / 'poke-importer'
 if str(IMPORTER) not in sys.path:
     sys.path.insert(0, str(IMPORTER))
 
@@ -84,7 +85,7 @@ def latest_pack(generation: int) -> dict:
 
 
 def download_pack(generation: int, pack: dict) -> Path:
-    path = Path(f'/tmp/generations-gen{generation}.zip')
+    path = TEMP_ROOT / f'generations-gen{generation}.zip'
     if path.exists() and (not pack['size'] or path.stat().st_size == pack['size']):
         return path
     if path.exists():

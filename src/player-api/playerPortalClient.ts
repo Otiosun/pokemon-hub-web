@@ -20,6 +20,8 @@ const ONBOARDING_STATES = new Set([
 export type PlayerPortalTeamSlot = {
   pokemonInstanceId: string;
   formId: string;
+  formSlug?: string;
+  speciesSlug?: string;
   displayName: string | null;
   nationalDex: number | null;
   typeNames: string[];
@@ -53,6 +55,8 @@ export type PlayerPortalPokemonIvs = {
 export type PlayerPortalPokemon = {
   pokemonInstanceId: string;
   formId: string;
+  formSlug?: string;
+  speciesSlug?: string;
   displayName: string | null;
   nationalDex: number | null;
   typeNames: string[];
@@ -85,10 +89,16 @@ export type PlayerPortalPokedexSpecies = {
   nationalDex: number;
   seenCount: string;
   caughtCount: string;
+  shinySeenCount?: string;
+  shinyCaughtCount?: string;
   firstSeenAt: string | null;
   lastSeenAt: string | null;
   firstCaughtAt: string | null;
   lastCaughtAt: string | null;
+  firstShinySeenAt?: string | null;
+  lastShinySeenAt?: string | null;
+  firstShinyCaughtAt?: string | null;
+  lastShinyCaughtAt?: string | null;
 };
 
 export type PlayerPortalBattleMove = {
@@ -147,6 +157,24 @@ export type PlayerPortalLocation = {
   connections: PlayerPortalLocationConnection[];
 };
 
+export type PlayerPortalProfileCustomization = {
+  title: string | null;
+  bio: string | null;
+  appearance: string | null;
+  age: number | null;
+  height: string | null;
+  accent: 'teal' | 'gold' | 'violet' | 'crimson' | 'blue';
+};
+
+export const DEFAULT_PLAYER_PORTAL_PROFILE_CUSTOMIZATION: PlayerPortalProfileCustomization = {
+  title: null,
+  bio: null,
+  appearance: null,
+  age: null,
+  height: null,
+  accent: 'crimson',
+};
+
 export type PlayerPortalProfile = {
   playerId: string;
   playerStatus: 'ACTIVE';
@@ -166,6 +194,7 @@ export type PlayerPortalProfile = {
   contentReleaseId: string;
   rulesetId: string;
   starterPokemonInstanceId: string | null;
+  profileCustomization?: PlayerPortalProfileCustomization;
   team: PlayerPortalTeamSlot[];
 };
 
@@ -398,7 +427,7 @@ async function readJsonBody(response: Response): Promise<unknown> {
   }
 }
 
-function isPlayerPortalProfile(value: unknown): value is PlayerPortalProfile {
+export function isPlayerPortalProfile(value: unknown): value is PlayerPortalProfile {
   if (!isRecord(value)) return false;
   if (!isUuid(value.playerId) || value.playerStatus !== 'ACTIVE') return false;
   if (!isNullableString(value.trainerName)) return false;
@@ -421,6 +450,12 @@ function isPlayerPortalProfile(value: unknown): value is PlayerPortalProfile {
   }
   if (!isUuid(value.contentReleaseId) || !isUuid(value.rulesetId)) return false;
   if (!isNullableUuid(value.starterPokemonInstanceId)) return false;
+  if (
+    value.profileCustomization !== undefined &&
+    !isPlayerPortalProfileCustomization(value.profileCustomization)
+  ) {
+    return false;
+  }
   if (!Array.isArray(value.team) || value.team.length > 6) return false;
 
   const slots = new Set<number>();
@@ -432,11 +467,47 @@ function isPlayerPortalProfile(value: unknown): value is PlayerPortalProfile {
   return true;
 }
 
+function isPlayerPortalProfileCustomization(
+  value: unknown,
+): value is PlayerPortalProfileCustomization {
+  if (!isRecord(value)) return false;
+  if (
+    !isNullableBoundedString(value.title, 60) ||
+    !isNullableBoundedString(value.bio, 500) ||
+    !isNullableBoundedString(value.appearance, 500) ||
+    !isNullableBoundedString(value.height, 32)
+  ) {
+    return false;
+  }
+  if (
+    value.age !== null &&
+    !(typeof value.age === 'number' && Number.isInteger(value.age) && value.age >= 1 && value.age <= 150)
+  ) {
+    return false;
+  }
+  return (
+    value.accent === 'teal' ||
+    value.accent === 'gold' ||
+    value.accent === 'violet' ||
+    value.accent === 'crimson' ||
+    value.accent === 'blue'
+  );
+}
+
+function isNullableBoundedString(value: unknown, max: number): value is string | null {
+  return (
+    value === null ||
+    (typeof value === 'string' && value.trim().length >= 1 && value.trim().length <= max)
+  );
+}
+
 function isPlayerPortalTeamSlot(value: unknown): value is PlayerPortalTeamSlot {
   if (!isRecord(value)) return false;
   if (
     !isUuid(value.pokemonInstanceId) ||
     !isUuid(value.formId) ||
+    !isOptionalSlug(value.formSlug) ||
+    !isOptionalSlug(value.speciesSlug) ||
     !isCatalogPresentation(value) ||
     typeof value.level !== 'number' ||
     !Number.isInteger(value.level) ||
@@ -490,6 +561,8 @@ export function isPlayerPortalPokemon(value: unknown): value is PlayerPortalPoke
   if (
     !isUuid(value.pokemonInstanceId) ||
     !isUuid(value.formId) ||
+    !isOptionalSlug(value.formSlug) ||
+    !isOptionalSlug(value.speciesSlug) ||
     !isCatalogPresentation(value) ||
     !isNullableString(value.nickname) ||
     typeof value.level !== 'number' ||
@@ -556,6 +629,37 @@ function isPlayerPortalPokedexSpecies(value: unknown): value is PlayerPortalPoke
     return false;
   }
   if (BigInt(value.caughtCount) > BigInt(value.seenCount)) return false;
+
+  const shinyFields = [
+    value.shinySeenCount,
+    value.shinyCaughtCount,
+    value.firstShinySeenAt,
+    value.lastShinySeenAt,
+    value.firstShinyCaughtAt,
+    value.lastShinyCaughtAt,
+  ];
+  const hasAnyShinyField = shinyFields.some((field) => field !== undefined);
+  const hasAllShinyFields = shinyFields.every((field) => field !== undefined);
+
+  if (hasAnyShinyField && !hasAllShinyFields) return false;
+
+  if (hasAllShinyFields) {
+    if (
+      typeof value.shinySeenCount !== 'string' ||
+      !DIGITS_PATTERN.test(value.shinySeenCount) ||
+      typeof value.shinyCaughtCount !== 'string' ||
+      !DIGITS_PATTERN.test(value.shinyCaughtCount) ||
+      BigInt(value.shinyCaughtCount) > BigInt(value.shinySeenCount) ||
+      BigInt(value.shinySeenCount) > BigInt(value.seenCount) ||
+      BigInt(value.shinyCaughtCount) > BigInt(value.caughtCount) ||
+      !isNullableIsoTimestamp(value.firstShinySeenAt) ||
+      !isNullableIsoTimestamp(value.lastShinySeenAt) ||
+      !isNullableIsoTimestamp(value.firstShinyCaughtAt) ||
+      !isNullableIsoTimestamp(value.lastShinyCaughtAt)
+    ) {
+      return false;
+    }
+  }
 
   return (
     isNullableIsoTimestamp(value.firstSeenAt) &&
@@ -737,6 +841,13 @@ function isNullableString(value: unknown): value is string | null {
 
 function isDisplayString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
+}
+
+function isOptionalSlug(value: unknown): value is string | undefined {
+  return (
+    value === undefined ||
+    (typeof value === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value))
+  );
 }
 
 function isNullableDisplayString(value: unknown): value is string | null {

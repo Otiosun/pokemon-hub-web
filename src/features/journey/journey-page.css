@@ -34,6 +34,31 @@
     inset 0 0 0 1px rgba(255, 255, 255, 0.46);
 }
 
+.journey-license[data-profile-accent='teal'] {
+  --journey-red: #32776f;
+  --journey-red-dark: #20534d;
+}
+
+.journey-license[data-profile-accent='gold'] {
+  --journey-red: #a77a24;
+  --journey-red-dark: #725313;
+}
+
+.journey-license[data-profile-accent='violet'] {
+  --journey-red: #7257a4;
+  --journey-red-dark: #4d3973;
+}
+
+.journey-license[data-profile-accent='blue'] {
+  --journey-red: #426d9f;
+  --journey-red-dark: #2b4a70;
+}
+
+.journey-license[data-profile-accent='crimson'] {
+  --journey-red: #ae2e28;
+  --journey-red-dark: #7f211e;
+}
+
 .journey-license::after {
   position: absolute;
   inset: 10px;
@@ -57,7 +82,7 @@
   overflow: hidden;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 25%),
-    linear-gradient(180deg, #b3322b 0%, #99261f 72%, #7f211e 100%);
+    linear-gradient(180deg, var(--journey-red) 0%, var(--journey-red) 72%, var(--journey-red-dark) 100%);
   color: rgba(255, 255, 255, 0.88);
   box-shadow: inset -1px 0 rgba(77, 20, 17, 0.32);
 }
@@ -134,7 +159,7 @@
 }
 
 .journey-edit-toggle {
-  min-height: 32px;
+  min-height: 44px;
   padding: 0 10px;
   border: 1px solid rgba(148, 69, 56, 0.35);
   border-radius: 6px;
@@ -256,7 +281,7 @@
 .journey-cover-edit {
   top: 12px;
   left: 12px;
-  min-height: 38px;
+  min-height: 44px;
   gap: 7px;
   padding: 0 11px;
   border: 1px solid rgba(255, 255, 255, 0.38);
@@ -377,8 +402,8 @@
 .journey-avatar-edit {
   right: -4px;
   bottom: -4px;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   border: 3px solid var(--journey-paper);
   border-radius: 50%;
   background: #1f211f;
@@ -638,6 +663,21 @@
 .journey-share-action:hover {
   background: rgba(174, 46, 40, 0.045);
   transform: translateY(-1px);
+}
+
+.journey-share-action.is-attention {
+  border-color: rgba(185, 131, 24, 0.58);
+  background: rgba(242, 201, 76, 0.08);
+}
+
+.journey-share-action.is-attention .journey-share-action-icon {
+  border-color: rgba(185, 131, 24, 0.62);
+  color: #8a6512;
+  font: 800 1rem 'IBM Plex Mono', monospace;
+}
+
+.journey-share-action.is-attention .journey-share-action-chevron {
+  color: #8a6512;
 }
 
 .journey-share-action-icon {
@@ -1143,8 +1183,8 @@
   }
 
   .journey-avatar-edit {
-    width: 34px;
-    height: 34px;
+    width: 44px;
+    height: 44px;
   }
 
   .journey-identity-copy h1 {
@@ -1499,3 +1539,194 @@
   text-align: right;
 }
 
+
+
+.journey-profile-editor {
+  display: grid;
+  gap: 16px;
+  margin: 18px 0 20px;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--journey-red) 26%, transparent);
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--journey-red) 5%, white), transparent 55%),
+    rgba(255, 255, 255, 0.24);
+}
+
+.journey-profile-editor > header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 0.9fr);
+  gap: 12px 20px;
+  align-items: end;
+}
+
+.journey-profile-editor > header div {
+  display: grid;
+  gap: 3px;
+}
+
+.journey-profile-editor > header span,
+.journey-profile-editor label > span,
+.journey-profile-accent legend {
+  color: var(--journey-red-dark);
+  font: 760 0.61rem/1.2 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+}
+
+.journey-profile-editor > header strong {
+  color: var(--journey-ink);
+  font: 760 1rem/1.1 'Space Grotesk', system-ui, sans-serif;
+}
+
+.journey-profile-editor > header small {
+  color: var(--journey-muted);
+  font-size: 0.67rem;
+  line-height: 1.45;
+}
+
+.journey-profile-editor-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.journey-profile-editor-grid label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.journey-profile-editor-grid label.is-wide {
+  grid-column: 1 / -1;
+}
+
+.journey-profile-editor input,
+.journey-profile-editor textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 11px;
+  border: 1px solid rgba(77, 67, 55, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--journey-ink);
+  font: 650 0.78rem/1.4 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+.journey-profile-editor textarea {
+  min-height: 86px;
+  resize: vertical;
+}
+
+.journey-profile-editor input:focus-visible,
+.journey-profile-editor textarea:focus-visible,
+.journey-profile-accent button:focus-visible,
+.journey-profile-editor footer button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--journey-red) 62%, white);
+  outline-offset: 2px;
+}
+
+.journey-profile-accent {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.journey-profile-accent legend {
+  width: 100%;
+  margin-bottom: 1px;
+}
+
+.journey-profile-accent button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 11px;
+  border: 1px solid rgba(77, 67, 55, 0.17);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.42);
+  color: var(--journey-muted);
+  cursor: pointer;
+  font: 750 0.59rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+.journey-profile-accent button i {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  background: var(--profile-accent-swatch);
+  box-shadow: 0 0 0 1px rgba(39, 35, 29, 0.18);
+}
+
+.journey-profile-accent button[data-accent='teal'] { --profile-accent-swatch: #32776f; }
+.journey-profile-accent button[data-accent='gold'] { --profile-accent-swatch: #a77a24; }
+.journey-profile-accent button[data-accent='violet'] { --profile-accent-swatch: #7257a4; }
+.journey-profile-accent button[data-accent='crimson'] { --profile-accent-swatch: #ae2e28; }
+.journey-profile-accent button[data-accent='blue'] { --profile-accent-swatch: #426d9f; }
+
+.journey-profile-accent button.is-active {
+  border-color: color-mix(in srgb, var(--profile-accent-swatch) 62%, transparent);
+  background: color-mix(in srgb, var(--profile-accent-swatch) 11%, white);
+  color: var(--journey-ink);
+}
+
+.journey-profile-editor-error {
+  margin: 0;
+  color: #9f2630;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.journey-profile-editor > footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.journey-profile-editor > footer button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid rgba(77, 67, 55, 0.22);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.4);
+  color: var(--journey-ink);
+  cursor: pointer;
+  font: 760 0.64rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+.journey-profile-editor > footer button.is-save {
+  border-color: var(--journey-red);
+  background: var(--journey-red);
+  color: white;
+}
+
+.journey-profile-editor button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+@media (max-width: 560px) {
+  .journey-profile-editor {
+    padding: 14px;
+  }
+
+  .journey-profile-editor > header,
+  .journey-profile-editor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .journey-profile-editor-grid label.is-wide {
+    grid-column: auto;
+  }
+
+  .journey-profile-editor > footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}

@@ -19,6 +19,12 @@ body:has(.journey-card-v2-backdrop) .hub-menu-trigger {
 .journey-card-v2-dialog {
   position: relative;
   width: min(1040px, calc(100vw - 12px), 165vh);
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
 }
 
 .journey-card-v2-close {

@@ -19,21 +19,27 @@ const realProfile: PlayerPortalProfile = {
     {
       pokemonInstanceId: '66666666-6666-4666-8666-666666666666',
       formId: '77777777-7777-4777-8777-777777777777',
+      formSlug: 'charmander',
+      speciesSlug: 'charmander',
       displayName: 'Charmander',
       nationalDex: 4,
       typeNames: ['Fire'],
       level: 12,
       currentHp: 31,
+      shiny: true,
       slotNo: 1,
     },
     {
       pokemonInstanceId: '88888888-8888-4888-8888-888888888888',
       formId: '99999999-9999-4999-8999-999999999999',
+      formSlug: 'pidgey',
+      speciesSlug: 'pidgey',
       displayName: 'Pidgey',
       nationalDex: 16,
       typeNames: ['Normal', 'Flying'],
       level: 9,
       currentHp: 24,
+      shiny: false,
       slotNo: 2,
     },
   ],
@@ -55,6 +61,9 @@ describe('createJourneyProfileView', () => {
         displayName: 'Charmander',
         level: 12,
         types: ['Fire'],
+        shiny: true,
+        formSlug: 'charmander',
+        speciesSlug: 'charmander',
       },
       badges: [],
       ownedPokemonCount: null,
@@ -65,6 +74,32 @@ describe('createJourneyProfileView', () => {
     expect(JSON.stringify(profile)).not.toContain('Whatever');
     expect(JSON.stringify(profile)).not.toContain('Route 1');
     expect(JSON.stringify(profile)).not.toContain('Brasa');
+  });
+
+  it('projects persisted cosmetic customization without changing trainer identity', () => {
+    const profile = createJourneyProfileView({
+      ...realProfile,
+      profileCustomization: {
+        title: 'Explorador de Zhoulia',
+        bio: 'Coleciona registros e rotas.',
+        appearance: 'Casaco escuro e mochila de campo.',
+        age: 29,
+        height: '1,94 m',
+        accent: 'violet',
+      },
+    });
+
+    expect(profile).toMatchObject({
+      trainerName: 'Natan',
+      trainerTitle: 'Explorador de Zhoulia',
+      accent: 'violet',
+      personal: {
+        age: 29,
+        height: '1,94 m',
+        appearance: 'Casaco escuro e mochila de campo.',
+        bio: 'Coleciona registros e rotas.',
+      },
+    });
   });
 
   it('projects authoritative journey reads without inventing unsupported profile fields', () => {
@@ -102,6 +137,7 @@ describe('createJourneyProfileView', () => {
           typeNames: [],
           level: 12,
           currentHp: 31,
+          shiny: false,
           slotNo: 1,
         },
       ],

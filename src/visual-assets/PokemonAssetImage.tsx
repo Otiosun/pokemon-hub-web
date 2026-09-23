@@ -7,18 +7,21 @@ import {
   type ImgHTMLAttributes,
 } from 'react';
 import {
-  getPokemonSpeciesVisualAssets,
+  getPokemonImageSources,
+  type PokemonImageRole,
   type PokemonVisualVariant,
 } from './pokemonVisualRegistry';
 import './pokemon-asset-image.css';
 
-export type PokemonImageRole = 'official-artwork' | 'home-artwork' | 'icon' | 'portrait';
+export type { PokemonImageRole } from './pokemonVisualRegistry';
 
 type PokemonAssetImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'onError' | 'role'> & {
   dex: number;
   assetRole: PokemonImageRole;
   fallbackLabel?: string;
   variant?: PokemonVisualVariant;
+  formSlug?: string;
+  speciesSlug?: string;
   onResolved?: (sourceRole: PokemonImageRole | 'placeholder') => void;
 };
 
@@ -53,38 +56,6 @@ const ALPHA_THRESHOLD = 12;
 const ALPHA_PADDING_RATIO = 0.035;
 const ALPHA_FILL_RATIO = 0.94;
 const alphaBoundsCache = new Map<string, Promise<PokemonAlphaBounds | null>>();
-
-function sourceOrder(
-  dex: number,
-  assetRole: PokemonImageRole,
-  variant: PokemonVisualVariant,
-) {
-  const visual = getPokemonSpeciesVisualAssets(dex, variant);
-  const sources: Record<PokemonImageRole, Array<{ role: PokemonImageRole; src: string }>> = {
-    'official-artwork': [
-      { role: 'official-artwork', src: visual.artworkOfficial },
-      { role: 'home-artwork', src: visual.artworkHome },
-      { role: 'icon', src: visual.icon },
-    ],
-    'home-artwork': [
-      { role: 'home-artwork', src: visual.artworkHome },
-      { role: 'official-artwork', src: visual.artworkOfficial },
-      { role: 'icon', src: visual.icon },
-    ],
-    icon: [
-      { role: 'icon', src: visual.icon },
-      { role: 'home-artwork', src: visual.artworkHome },
-      { role: 'official-artwork', src: visual.artworkOfficial },
-    ],
-    portrait: [
-      { role: 'portrait', src: visual.portrait },
-      { role: 'home-artwork', src: visual.artworkHome },
-      { role: 'official-artwork', src: visual.artworkOfficial },
-      { role: 'icon', src: visual.icon },
-    ],
-  };
-  return sources[assetRole];
-}
 
 function shouldNormalizeAlpha(assetRole: PokemonImageRole) {
   return assetRole === 'official-artwork' || assetRole === 'home-artwork';
@@ -235,6 +206,8 @@ export function PokemonAssetImage({
   assetRole,
   fallbackLabel = '?',
   variant = 'regular',
+  formSlug,
+  speciesSlug,
   className = '',
   onResolved,
   alt,
@@ -242,10 +215,10 @@ export function PokemonAssetImage({
   ...imageProps
 }: PokemonAssetImageProps) {
   const sources = useMemo(
-    () => sourceOrder(dex, assetRole, variant),
-    [assetRole, dex, variant],
+    () => getPokemonImageSources(dex, assetRole, variant, formSlug, speciesSlug),
+    [assetRole, dex, formSlug, speciesSlug, variant],
   );
-  const sourceKey = `${dex}:${assetRole}:${variant}`;
+  const sourceKey = `${dex}:${assetRole}:${variant}:${speciesSlug ?? 'species-unknown'}:${formSlug ?? 'form-unknown'}`;
   const [selection, setSelection] = useState<SourceSelection>({ key: sourceKey, index: 0 });
   const sourceIndex = selection.key === sourceKey ? selection.index : 0;
   const source = sources[sourceIndex];
@@ -315,7 +288,10 @@ export function PokemonAssetImage({
       alt={alt}
       style={normalizedStyle}
       data-asset-role={source.role}
+      data-asset-provider={source.provider}
       data-pokemon-variant={variant}
+      data-pokemon-species={speciesSlug ?? 'unspecified'}
+      data-pokemon-form={formSlug ?? 'unspecified'}
       data-alpha-normalized={alphaTransform ? 'true' : undefined}
       onLoad={(event) => {
         const loadedSource = source.src;

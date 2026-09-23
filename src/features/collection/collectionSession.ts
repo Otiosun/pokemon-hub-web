@@ -3,7 +3,7 @@ import {
   type CollectionFilterState,
 } from './collectionFilters';
 
-export type CollectionMode = 'all' | 'boxes' | 'favorites';
+export type CollectionMode = 'all' | 'boxes';
 
 type CollectionSession = {
   mode: CollectionMode;

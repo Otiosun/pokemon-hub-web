@@ -112,7 +112,10 @@
 
 .hub-menu-panel {
   width: min(590px, 100%);
+  max-width: none;
   max-height: min(760px, calc(100svh - 36px));
+  margin: 0;
+  padding: 0;
   overflow: auto;
   overscroll-behavior: contain;
   border: 1px solid rgba(222, 240, 241, 0.16);

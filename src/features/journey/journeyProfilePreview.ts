@@ -1,4 +1,7 @@
-import type { PlayerPortalProfile } from '../../player-api/playerPortalClient';
+import {
+  DEFAULT_PLAYER_PORTAL_PROFILE_CUSTOMIZATION,
+  type PlayerPortalProfile,
+} from '../../player-api/playerPortalClient';
 import { ADVANCED_SHOWCASE_JOURNEY, isAdvancedShowcaseActive } from '../../showcase/advancedShowcase';
 
 export type JourneyPersonalProfile = {
@@ -23,11 +26,15 @@ export type JourneyLeadPokemonView = {
   nickname: string;
   level: number;
   types: string[];
+  shiny: boolean;
+  formSlug: string | null;
+  speciesSlug: string | null;
 };
 
 export type JourneyProfilePreview = {
   trainerName: string;
   trainerTitle: string;
+  accent: 'teal' | 'gold' | 'violet' | 'crimson' | 'blue';
   trainerId: string | null;
   publicVerificationId: string | null;
   originRegion: string | null;
@@ -60,6 +67,9 @@ function resolveLeadPokemon(playerProfile: PlayerPortalProfile | null): JourneyL
     nickname: lead.displayName,
     level: lead.level,
     types: [...lead.typeNames],
+    shiny: lead.shiny,
+    formSlug: lead.formSlug ?? null,
+    speciesSlug: lead.speciesSlug ?? null,
   };
 }
 
@@ -71,11 +81,14 @@ export function createJourneyProfileView(
     registeredSpeciesCount: null,
   },
 ): JourneyProfilePreview {
+  const customization =
+    playerProfile?.profileCustomization ?? DEFAULT_PLAYER_PORTAL_PROFILE_CUSTOMIZATION;
   const baseProfile: JourneyProfilePreview = {
     trainerName: playerProfile?.trainerName?.trim() || 'Treinador',
-    trainerTitle: playerProfile
-      ? `Treinador · Nv. ${playerProfile.trainerLevel}`
-      : 'Registro não conectado',
+    trainerTitle:
+      customization.title ??
+      (playerProfile ? `Treinador · Nv. ${playerProfile.trainerLevel}` : 'Registro não conectado'),
+    accent: customization.accent,
     trainerId: null,
     publicVerificationId: null,
     originRegion: playerProfile?.originRegionName ?? null,
@@ -87,10 +100,10 @@ export function createJourneyProfileView(
     teamSize: playerProfile?.team.length ?? null,
     progressionPoints: playerProfile?.progressionPoints ?? null,
     personal: {
-      age: null,
-      height: null,
-      appearance: null,
-      bio: null,
+      age: customization.age,
+      height: customization.height,
+      appearance: customization.appearance,
+      bio: customization.bio,
     },
   };
 
@@ -104,7 +117,6 @@ export function createJourneyProfileView(
     badges: ADVANCED_SHOWCASE_JOURNEY.badges.map((badge) => ({ ...badge })),
     ownedPokemonCount: ADVANCED_SHOWCASE_JOURNEY.ownedPokemonCount,
     registeredSpeciesCount: ADVANCED_SHOWCASE_JOURNEY.registeredSpeciesCount,
-    personal: { ...ADVANCED_SHOWCASE_JOURNEY.personal },
   };
 }
 

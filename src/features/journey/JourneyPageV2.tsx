@@ -1,11 +1,20 @@
 import { useEffect, useState } from 'react';
 import { HubModuleHeader } from '../../components/HubModuleHeader';
-import type { PlayerPortalLocation } from '../../player-api/playerPortalClient';
-import type { PlayerPortalBrowserSessionState } from '../../player-api/playerPortalBrowserSession';
+import {
+  DEFAULT_PLAYER_PORTAL_PROFILE_CUSTOMIZATION,
+  type PlayerPortalLocation,
+  type PlayerPortalProfileCustomization,
+} from '../../player-api/playerPortalClient';
+import {
+  publishPlayerPortalProfileUpdate,
+  type PlayerPortalBrowserSessionState,
+} from '../../player-api/playerPortalBrowserSession';
+import { updatePlayerPortalProfileCustomization } from '../../player-api/playerPortalProfileCustomizationClient';
 import { useOwnedPokemonCollection } from '../collection/useOwnedPokemonCollection';
+import { usePlayerPortalMoveChoices } from '../collection/usePlayerPortalMoveChoices';
 import { usePlayerPortalPokedex } from '../pokedex/usePlayerPortalPokedex';
 import { isAdvancedShowcaseActive } from '../../showcase/advancedShowcase';
-import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
+import { OwnedPokemonImage } from '../../visual-assets/PokemonPreviewImage';
 import {
   createJourneyProfileView,
   type JourneyBadgePreview,
@@ -31,6 +40,67 @@ const profileImagePreviewUrls: Record<ProfileImageSlot, string | null> = {
   cover: null,
   avatar: null,
 };
+
+
+type ProfileCustomizationDraft = {
+  title: string;
+  bio: string;
+  appearance: string;
+  age: string;
+  height: string;
+  accent: PlayerPortalProfileCustomization['accent'];
+};
+
+const PROFILE_ACCENTS: ReadonlyArray<{
+  id: PlayerPortalProfileCustomization['accent'];
+  label: string;
+}> = [
+  { id: 'teal', label: 'VERDE' },
+  { id: 'gold', label: 'OURO' },
+  { id: 'violet', label: 'VIOLETA' },
+  { id: 'crimson', label: 'CARMESIM' },
+  { id: 'blue', label: 'AZUL' },
+];
+
+function customizationDraft(
+  value: PlayerPortalProfileCustomization,
+): ProfileCustomizationDraft {
+  return {
+    title: value.title ?? '',
+    bio: value.bio ?? '',
+    appearance: value.appearance ?? '',
+    age: value.age === null ? '' : String(value.age),
+    height: value.height ?? '',
+    accent: value.accent,
+  };
+}
+
+function nullableTrimmed(value: string) {
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function customizationFromDraft(
+  draft: ProfileCustomizationDraft,
+): PlayerPortalProfileCustomization | null {
+  const rawAge = draft.age.trim();
+  const age = rawAge === '' ? null : Number(rawAge);
+  if (
+    age !== null &&
+    (!Number.isInteger(age) || age < 1 || age > 150)
+  ) {
+    return null;
+  }
+
+  return {
+    title: nullableTrimmed(draft.title),
+    bio: nullableTrimmed(draft.bio),
+    appearance: nullableTrimmed(draft.appearance),
+    age,
+    height: nullableTrimmed(draft.height),
+    accent: draft.accent,
+  };
+}
 
 function EditIcon() {
   return (
@@ -63,15 +133,6 @@ function BagIcon() {
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M7 9h10l2 11H5L7 9Z" />
       <path d="M9 9V6.5a3 3 0 0 1 6 0V9" />
-    </svg>
-  );
-}
-
-function MoveIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M5 19 19 5M8 5h11v11" />
-      <path d="M5 10v9h9" />
     </svg>
   );
 }
@@ -219,6 +280,7 @@ export function JourneyPageV2({
   const locationState = usePlayerPortalLocation();
   const battleState = usePlayerPortalBattle();
   const ownedPokemonState = useOwnedPokemonCollection();
+  const moveChoices = usePlayerPortalMoveChoices();
   const pokedexState = usePlayerPortalPokedex();
   const profile = createJourneyProfileView(
     authoritativeProfile,
@@ -240,7 +302,16 @@ export function JourneyPageV2({
   const presentation = sessionPresentation(playerPortalSession);
   const cover = useImagePreview('cover');
   const avatar = useImagePreview('avatar');
+  const currentCustomization =
+    authoritativeProfile?.profileCustomization ??
+    DEFAULT_PLAYER_PORTAL_PROFILE_CUSTOMIZATION;
   const [editing, setEditing] = useState(false);
+  const [profileDraft, setProfileDraft] = useState<ProfileCustomizationDraft>(() =>
+    customizationDraft(currentCustomization),
+  );
+  const [profileSaveStatus, setProfileSaveStatus] =
+    useState<'idle' | 'saving'>('idle');
+  const [profileEditError, setProfileEditError] = useState<string | null>(null);
   const [showShareCard, setShowShareCard] = useState(false);
   const isZhoulia = profile.originRegion?.trim().toLowerCase() === 'zhoulia';
   const [hasEmittedTrainerCard, setHasEmittedTrainerCard] = useState(() =>
@@ -251,6 +322,8 @@ export function JourneyPageV2({
   const canEditCover = showcase;
   const canEditAvatar = showcase || (isZhoulia && Boolean(profile.publicVerificationId));
   const canEditProfileImages = canEditCover || canEditAvatar;
+  const canEditCustomization = playerPortalSession.status === 'authenticated';
+  const canEditProfile = canEditCustomization || canEditProfileImages;
   const trainerCardReadiness = isZhoulia
     ? getTrainerCardEmissionReadiness(profile, avatar.url)
     : { ready: true, missing: [] as TrainerCardMissingField[] };
@@ -267,6 +340,9 @@ export function JourneyPageV2({
     locationState.status === 'loading' && playerPortalSession.status === 'authenticated'
       ? 'Carregando…'
       : displayValue(profile.currentLocation, 'Não disponível');
+  const pendingMoveChoices =
+    moveChoices.state.status === 'authenticated' ? moveChoices.state.choices : [];
+  const firstPendingMove = pendingMoveChoices[0] ?? null;
 
   useEffect(() => {
     if (!isZhoulia || !profile.trainerId) return;
@@ -277,6 +353,43 @@ export function JourneyPageV2({
     window.addEventListener(TRAINER_CARD_EMITTED_EVENT, onEmitted);
     return () => window.removeEventListener(TRAINER_CARD_EMITTED_EVENT, onEmitted);
   }, [isZhoulia, profile.trainerId]);
+
+  const beginProfileEditing = () => {
+    setProfileDraft(customizationDraft(currentCustomization));
+    setProfileEditError(null);
+    setEditing(true);
+  };
+
+  const cancelProfileEditing = () => {
+    if (profileSaveStatus === 'saving') return;
+    setProfileDraft(customizationDraft(currentCustomization));
+    setProfileEditError(null);
+    setEditing(false);
+  };
+
+  const saveProfileCustomization = async () => {
+    const customization = customizationFromDraft(profileDraft);
+    if (!customization) {
+      setProfileEditError('Use uma idade inteira entre 1 e 150, ou deixe o campo vazio.');
+      return;
+    }
+
+    setProfileSaveStatus('saving');
+    setProfileEditError(null);
+    try {
+      const result = await updatePlayerPortalProfileCustomization(customization);
+      if (result.status !== 'authenticated') {
+        setProfileEditError('Abra novamente o Hub pelo WhatsApp para salvar o perfil.');
+        return;
+      }
+      publishPlayerPortalProfileUpdate(result.profile);
+      setEditing(false);
+    } catch {
+      setProfileEditError('Não foi possível salvar a personalização agora.');
+    } finally {
+      setProfileSaveStatus('idle');
+    }
+  };
 
   const openTrainerCard = () => {
     setTrainerCardError(null);
@@ -298,7 +411,11 @@ export function JourneyPageV2({
       />
 
       <div className="journey-profile-shell">
-        <section className="journey-license" aria-labelledby="journey-trainer-name">
+        <section
+          className="journey-license"
+          data-profile-accent={profile.accent}
+          aria-labelledby="journey-trainer-name"
+        >
           <div className="journey-license-rail" aria-hidden="true">
             <span>PKM</span>
           </div>
@@ -311,13 +428,14 @@ export function JourneyPageV2({
             {profile.trainerId ? (
               <div className="journey-license-id">ID PÚBLICO {profile.trainerId}</div>
             ) : null}
-            {canEditProfileImages ? (
+            {canEditProfile ? (
               <button
                 className="journey-edit-toggle"
                 type="button"
-                onClick={() => setEditing((value) => !value)}
+                disabled={profileSaveStatus === 'saving'}
+                onClick={editing ? cancelProfileEditing : beginProfileEditing}
               >
-                {editing ? 'CONCLUIR' : 'EDITAR'}
+                {editing ? 'CANCELAR' : 'EDITAR'}
               </button>
             ) : null}
           </div>
@@ -372,7 +490,7 @@ export function JourneyPageV2({
 
             <div className="journey-identity-copy">
               <h1 id="journey-trainer-name">{profile.trainerName}</h1>
-              <span className="journey-trainer-title">— {presentation.subtitle}</span>
+              <span className="journey-trainer-title">— {profile.trainerTitle}</span>
             </div>
 
             <div className="journey-league-seal" aria-hidden="true">
@@ -381,6 +499,139 @@ export function JourneyPageV2({
               <small>TRAINER REGISTRY</small>
             </div>
           </div>
+
+          {editing && canEditCustomization ? (
+            <section className="journey-profile-editor" aria-label="Personalizar perfil">
+              <header>
+                <div>
+                  <span>PERSONALIZAÇÃO</span>
+                  <strong>Seu perfil no Beyond</strong>
+                </div>
+                <small>Nome, região, nível e progresso continuam ligados ao registro oficial.</small>
+              </header>
+
+              <div className="journey-profile-editor-grid">
+                <label className="is-wide">
+                  <span>TÍTULO PÚBLICO</span>
+                  <input
+                    value={profileDraft.title}
+                    maxLength={60}
+                    placeholder="Ex.: Explorador de Zhoulia"
+                    onChange={(event) =>
+                      setProfileDraft((current) => ({
+                        ...current,
+                        title: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+                <label>
+                  <span>IDADE</span>
+                  <input
+                    value={profileDraft.age}
+                    inputMode="numeric"
+                    placeholder="—"
+                    onChange={(event) =>
+                      setProfileDraft((current) => ({
+                        ...current,
+                        age: event.target.value.replace(/[^0-9]/g, '').slice(0, 3),
+                      }))
+                    }
+                  />
+                </label>
+                <label>
+                  <span>ALTURA</span>
+                  <input
+                    value={profileDraft.height}
+                    maxLength={32}
+                    placeholder="Ex.: 1,80 m"
+                    onChange={(event) =>
+                      setProfileDraft((current) => ({
+                        ...current,
+                        height: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+                <label className="is-wide">
+                  <span>APARÊNCIA ATUAL</span>
+                  <textarea
+                    value={profileDraft.appearance}
+                    maxLength={500}
+                    rows={3}
+                    placeholder="Como seu treinador está se apresentando agora?"
+                    onChange={(event) =>
+                      setProfileDraft((current) => ({
+                        ...current,
+                        appearance: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+                <label className="is-wide">
+                  <span>DESCRIÇÃO / BIO</span>
+                  <textarea
+                    value={profileDraft.bio}
+                    maxLength={500}
+                    rows={4}
+                    placeholder="Uma descrição curta do seu treinador."
+                    onChange={(event) =>
+                      setProfileDraft((current) => ({
+                        ...current,
+                        bio: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+              </div>
+
+              <fieldset className="journey-profile-accent">
+                <legend>COR DO PERFIL</legend>
+                {PROFILE_ACCENTS.map((accent) => (
+                  <button
+                    key={accent.id}
+                    type="button"
+                    data-accent={accent.id}
+                    className={profileDraft.accent === accent.id ? 'is-active' : undefined}
+                    aria-pressed={profileDraft.accent === accent.id}
+                    onClick={() =>
+                      setProfileDraft((current) => ({
+                        ...current,
+                        accent: accent.id,
+                      }))
+                    }
+                  >
+                    <i aria-hidden="true" />
+                    {accent.label}
+                  </button>
+                ))}
+              </fieldset>
+
+              {profileEditError ? (
+                <p className="journey-profile-editor-error" role="alert">
+                  {profileEditError}
+                </p>
+              ) : null}
+
+              <footer>
+                <button
+                  type="button"
+                  disabled={profileSaveStatus === 'saving'}
+                  onClick={cancelProfileEditing}
+                >
+                  DESCARTAR
+                </button>
+                <button
+                  type="button"
+                  className="is-save"
+                  disabled={profileSaveStatus === 'saving'}
+                  onClick={() => void saveProfileCustomization()}
+                >
+                  {profileSaveStatus === 'saving' ? 'SALVANDO…' : 'SALVAR PERFIL'}
+                </button>
+              </footer>
+            </section>
+          ) : null}
 
           <div className="journey-location-grid">
             <div>
@@ -450,7 +701,10 @@ export function JourneyPageV2({
                   </div>
                 </div>
                 {activePlayer && activePlayer.moves.length > 0 ? (
-                  <div className="journey-battle-moves" aria-label="Movimentos do Pokémon ativo">
+                  <section
+                    className="journey-battle-moves"
+                    aria-label="Movimentos do Pokémon ativo"
+                  >
                     {activePlayer.moves.map((move) => (
                       <span key={move.slotNo}>
                         <strong>{move.displayName ?? '—'}</strong>
@@ -461,7 +715,7 @@ export function JourneyPageV2({
                         </small>
                       </span>
                     ))}
-                  </div>
+                  </section>
                 ) : null}
                 <footer>
                   <span>ACOMPANHAMENTO</span>
@@ -483,8 +737,11 @@ export function JourneyPageV2({
                 <small>Nv. {profile.leadPokemon.level}</small>
               </div>
               <div className="journey-partner-portrait" aria-hidden="true">
-                <PokemonAssetImage
+                <OwnedPokemonImage
                   dex={profile.leadPokemon.dex}
+                  shiny={profile.leadPokemon.shiny}
+                  formSlug={profile.leadPokemon.formSlug}
+                  speciesSlug={profile.leadPokemon.speciesSlug}
                   assetRole="home-artwork"
                   alt=""
                   loading="eager"
@@ -553,18 +810,29 @@ export function JourneyPageV2({
           </span>
         </a>
 
-        <a className="journey-share-action" href="/jornada/movimentos">
-          <span className="journey-share-action-icon">
-            <MoveIcon />
-          </span>
-          <span className="journey-share-action-copy">
-            <strong>MOVIMENTOS</strong>
-            <small>Resolver aprendizados pendentes dos seus Pokémon</small>
-          </span>
-          <span className="journey-share-action-chevron">
-            <ChevronIcon />
-          </span>
-        </a>
+        {firstPendingMove ? (
+          <a
+            className="journey-share-action is-attention"
+            href={`/pokemon/${firstPendingMove.pokemonInstanceId}?focus=moves`}
+            data-hub-parent="/jornada"
+          >
+            <span className="journey-share-action-icon" aria-hidden="true">!</span>
+            <span className="journey-share-action-copy">
+              <strong>
+                {pendingMoveChoices.length} DECISÃO
+                {pendingMoveChoices.length === 1 ? '' : 'ÕES'} DE GOLPE
+              </strong>
+              <small>
+                {moveChoices.state.status === 'authenticated' && moveChoices.state.blockedByBattle
+                  ? 'Finalize a batalha ativa para alterar o moveset'
+                  : `${firstPendingMove.pokemonDisplayName} quer aprender ${firstPendingMove.moveDisplayName}`}
+              </small>
+            </span>
+            <span className="journey-share-action-chevron">
+              <ChevronIcon />
+            </span>
+          </a>
+        ) : null}
 
         {hasPersonalDetails ? (
           <details className="journey-profile-details">

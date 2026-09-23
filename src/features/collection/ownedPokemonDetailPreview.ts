@@ -77,7 +77,6 @@ function collectionContextSequence(returnHref: string) {
   const needle = normalize(session.query);
   const base = OWNED_POKEMON_PREVIEW.filter((pokemon) => {
     if (speciesDex && pokemon.dex !== speciesDex) return false;
-    if (session.mode === 'favorites' && !pokemon.favorite) return false;
     if (!needle) return true;
     return normalize(pokemon.nickname).includes(needle) || normalize(pokemon.species).includes(needle);
   });
@@ -99,18 +98,15 @@ export function getOwnedPokemonDetailPreview(instanceId: string): OwnedPokemonDe
 }
 
 export function getOwnedPokemonNeighbours(instanceId: string, returnHref = '/pokemon') {
-  const contextual = collectionContextSequence(returnHref);
-  const containsCurrent = contextual.some((item) => item.instanceId === instanceId);
-  if (isJourneyLeadContext(returnHref) && !containsCurrent) {
+  const sequence = collectionContextSequence(returnHref);
+  const containsCurrent = sequence.some((item) => item.instanceId === instanceId);
+  if (!containsCurrent || sequence.length <= 1) {
     return { previous: null, next: null };
   }
-  const sequence = containsCurrent ? contextual : [...OWNED_POKEMON_PREVIEW];
-
-  if (sequence.length <= 1) return { previous: null, next: null };
 
   const index = sequence.findIndex((item) => item.instanceId === instanceId);
   if (index < 0) return { previous: null, next: null };
-  const previous = sequence[(index - 1 + sequence.length) % sequence.length] ?? null;
-  const next = sequence[(index + 1) % sequence.length] ?? null;
+  const previous = index > 0 ? sequence[index - 1] ?? null : null;
+  const next = index < sequence.length - 1 ? sequence[index + 1] ?? null : null;
   return { previous, next };
 }

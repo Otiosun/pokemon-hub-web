@@ -7,7 +7,7 @@ import {
 
 describe('pokedex index session', () => {
   it('preserves filters and deep scroll so a species record can return to the same index context', () => {
-    rememberPokedexIndexFilters('char', 'Kanto', 'Avistados', 'Shiny', 'fire');
+    rememberPokedexIndexFilters('char', 'Kanto', 'Avistados', 'Shiny', 'shiny', 'fire');
     rememberPokedexIndexScroll(2847.6);
 
     expect(readPokedexIndexSession()).toEqual({
@@ -15,6 +15,7 @@ describe('pokedex index session', () => {
       region: 'Kanto',
       discovery: 'Avistados',
       shiny: 'Shiny',
+      visualVariant: 'shiny',
       typeSlug: 'fire',
       scrollY: 2848,
     });

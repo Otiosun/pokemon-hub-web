@@ -4,6 +4,8 @@ import { getPlayerPortalPokemon, type PlayerPortalPokemon } from './playerPortal
 const pokemon: PlayerPortalPokemon = {
   pokemonInstanceId: '11111111-1111-4111-8111-111111111111',
   formId: '22222222-2222-4222-8222-222222222222',
+  formSlug: 'default',
+  speciesSlug: 'charmander',
   displayName: 'Charmander',
   nationalDex: 4,
   typeNames: ['Fire'],
@@ -62,6 +64,15 @@ describe('getPlayerPortalPokemon', () => {
     const fetcher = vi.fn(async () => new Response('{"error":"UNAUTHENTICATED"}', { status: 401 }));
 
     await expect(getPlayerPortalPokemon(fetcher)).resolves.toEqual({ status: 'unauthenticated' });
+  });
+
+  it('rejects malformed visual identity slugs from upstream data', async () => {
+    const malformed = { ...pokemon, formSlug: '../attack' };
+    const fetcher = vi.fn(
+      async () => new Response(JSON.stringify({ pokemon: [malformed] }), { status: 200 }),
+    );
+
+    await expect(getPlayerPortalPokemon(fetcher)).rejects.toThrow('Invalid player portal response');
   });
 
   it('rejects malformed ownership and placement data instead of trusting arbitrary JSON', async () => {

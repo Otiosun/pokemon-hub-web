@@ -1,15 +1,35 @@
 import type { ComponentProps } from 'react';
 import { PokemonAssetImage } from './PokemonAssetImage';
+import type { PokemonVisualVariant } from './pokemonVisualRegistry';
 
-type PokemonImageProps = Omit<ComponentProps<typeof PokemonAssetImage>, 'variant'>;
+type PokemonImageProps = Omit<
+  ComponentProps<typeof PokemonAssetImage>,
+  'variant' | 'formSlug' | 'speciesSlug'
+>;
 
-export function SpeciesPokemonImage(props: PokemonImageProps) {
-  return <PokemonAssetImage {...props} variant="regular" />;
+export function SpeciesPokemonImage({
+  variant = 'regular',
+  ...props
+}: PokemonImageProps & { variant?: PokemonVisualVariant }) {
+  return <PokemonAssetImage {...props} variant={variant} />;
 }
 
 export function OwnedPokemonImage({
   shiny,
+  formSlug,
+  speciesSlug,
   ...props
-}: PokemonImageProps & { shiny: boolean }) {
-  return <PokemonAssetImage {...props} variant={shiny ? 'shiny' : 'regular'} />;
+}: PokemonImageProps & {
+  shiny: boolean;
+  formSlug?: string | null;
+  speciesSlug?: string | null;
+}) {
+  return (
+    <PokemonAssetImage
+      {...props}
+      {...(formSlug !== null && formSlug !== undefined ? { formSlug } : {})}
+      {...(speciesSlug !== null && speciesSlug !== undefined ? { speciesSlug } : {})}
+      variant={shiny ? 'shiny' : 'regular'}
+    />
+  );
 }

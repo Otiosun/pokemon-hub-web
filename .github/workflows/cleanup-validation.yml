@@ -3,7 +3,7 @@ name: Cleanup validation
 on:
   pull_request:
     branches:
-      - feat/pokemon-detail-v1
+      - main
 
 concurrency:
   group: cleanup-validation-${{ github.event.pull_request.number }}

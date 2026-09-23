@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { PokemonAssetImage } from '../../visual-assets/PokemonAssetImage';
+import { OwnedPokemonImage } from '../../visual-assets/PokemonPreviewImage';
 import type { JourneyBadgePreview, JourneyProfilePreview } from './journeyProfilePreview';
 import { KantoLeagueSeal, KantoTrainerPlaceholder } from './kantoLeagueVisualKit';
 import { ShareTrainerCardZhoulia } from './ShareTrainerCardZhoulia';
@@ -155,9 +155,9 @@ export function ShareTrainerCardV2({
 
   return (
     <div className="journey-card-v2-backdrop">
-      <section
+      <dialog
+        open
         className="journey-card-v2-dialog"
-        role="dialog"
         aria-modal="true"
         aria-label={`Trainer Card de ${originRegion}`}
       >
@@ -213,8 +213,11 @@ export function ShareTrainerCardV2({
           {profile.leadPokemon ? (
             <aside className="journey-card-v2-partner" aria-label={`Parceiro ${profile.leadPokemon.nickname}`}>
               <div className="journey-card-v2-partner-art">
-                <PokemonAssetImage
+                <OwnedPokemonImage
                   dex={profile.leadPokemon.dex}
+                  shiny={profile.leadPokemon.shiny}
+                  formSlug={profile.leadPokemon.formSlug}
+                  speciesSlug={profile.leadPokemon.speciesSlug}
                   assetRole="home-artwork"
                   alt={profile.leadPokemon.nickname}
                   loading="eager"
@@ -231,7 +234,7 @@ export function ShareTrainerCardV2({
             <BadgeStrip badges={profile.badges} />
           </section>
         </article>
-      </section>
+      </dialog>
     </div>
   );
 }

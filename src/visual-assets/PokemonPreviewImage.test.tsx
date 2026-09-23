@@ -7,6 +7,15 @@ describe('Pokemon preview context', () => {
     expect(element.props.variant).toBe('regular');
   });
 
+  it('allows Pokedex/species surfaces to request shiny explicitly', () => {
+    const shiny = SpeciesPokemonImage({
+      dex: 197,
+      assetRole: 'official-artwork',
+      variant: 'shiny',
+    });
+    expect(shiny.props.variant).toBe('shiny');
+  });
+
   it('binds owned previews to the instance shiny flag', () => {
     const shiny = OwnedPokemonImage({
       dex: 197,
