@@ -7,7 +7,8 @@ export type ProductRouteChunk =
   | 'pokedex-species'
   | 'box'
   | 'owned-pokemon'
-  | 'team';
+  | 'team'
+  | 'admin';
 
 const PRODUCT_ROUTE_LOADERS: Record<ProductRouteChunk, () => Promise<unknown>> = {
   journey: () => import('../features/journey/JourneyPage'),
@@ -17,6 +18,7 @@ const PRODUCT_ROUTE_LOADERS: Record<ProductRouteChunk, () => Promise<unknown>> =
   box: () => import('../features/collection/OwnedPokemonCollectionPage'),
   'owned-pokemon': () => import('../features/collection/OwnedPokemonDetailPage'),
   team: () => import('../features/team/TeamPage'),
+  admin: () => import('../features/admin/AdminPage'),
 };
 
 const warmedChunks = new Map<ProductRouteChunk, Promise<unknown>>();
@@ -37,6 +39,7 @@ export function productRouteChunk(path: string): ProductRouteChunk | null {
   if (normalized === '/pokedex') return 'pokedex-index';
   if (normalized === '/pokemon') return 'box';
   if (normalized === '/team') return 'team';
+  if (normalized === '/admin') return 'admin';
   if (/^\/pokedex\/\d+$/.test(normalized)) return 'pokedex-species';
   if (/^\/pokemon\/[^/]+$/.test(normalized)) return 'owned-pokemon';
   return null;
