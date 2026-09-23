@@ -407,7 +407,7 @@ export function PokedexIndexPage() {
         {pokedexState.status === 'unauthenticated' ? (
           <div className="pokedex-index-empty">
             <strong>ABRA SEU HUB PELO WHATSAPP</strong>
-            <span>Use /hub para carregar o seu registro de treinador.</span>
+            <span>Use /site no privado do bot para carregar o seu registro de treinador.</span>
           </div>
         ) : pokedexState.status === 'unavailable' ? (
           <div className="pokedex-index-empty">
@@ -432,12 +432,13 @@ export function PokedexIndexPage() {
               const playerState = getAuthoritativePokedexSpeciesState(pokedexByDex.get(item.dex));
               const discovered = playerState.discovery !== 'unknown';
               const hasShiny = shinyDexes.has(item.dex);
-              const shinyVisualLocked = visualVariant === 'shiny' && discovered && !hasShiny;
+              const cardVisualVariant = shiny === 'Shiny' ? 'shiny' : visualVariant;
+              const shinyVisualLocked = cardVisualVariant === 'shiny' && discovered && !hasShiny;
               const paddedDex = String(item.dex).padStart(3, '0');
               const displayName = discovered ? item.name || `#${paddedDex}` : '???';
               return (
                 <a
-                  className={`pokedex-index-card is-${playerState.discovery}${hasShiny ? ' is-shiny-seen' : ''}${visualVariant === 'shiny' && hasShiny ? ' is-shiny-visual' : ''}`}
+                  className={`pokedex-index-card is-${playerState.discovery}${hasShiny ? ' is-shiny-seen' : ''}${cardVisualVariant === 'shiny' && hasShiny ? ' is-shiny-visual' : ''}`}
                   key={item.dex}
                   href={`/pokedex/${paddedDex}`}
                   aria-label={discovered ? `Abrir registro de ${displayName}, número ${item.dex}${hasShiny ? ', shiny registrado' : ''}` : `Abrir registro desconhecido número ${item.dex}`}
@@ -464,7 +465,7 @@ export function PokedexIndexPage() {
                         <SpeciesPokemonImage
                           dex={item.dex}
                           assetRole="official-artwork"
-                          variant={visualVariant === 'shiny' ? 'shiny' : 'regular'}
+                          variant={cardVisualVariant}
                           alt=""
                           aria-hidden="true"
                           loading="lazy"
