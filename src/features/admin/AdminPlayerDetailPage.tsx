@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { HubMenuTrigger } from '../../components/HubNavigation';
 import { AdminPlayerAdjustments } from './AdminPlayerAdjustments';
 import { SpeciesPokemonImage } from '../../visual-assets/PokemonPreviewImage';
@@ -29,36 +29,45 @@ function EmptyValue({ value }: { value: string | null | undefined }) {
 export function AdminPlayerDetailPage({ playerId }: { playerId: string }) {
   const admin = usePlayerPortalAdmin();
   const [player, setPlayer] = useState<AdminPlayer360 | null>(null);
-  const [reloadVersion, setReloadVersion] = useState(0);
   const [loadState, setLoadState] = useState<'loading' | 'ready' | 'not-found' | 'error'>('loading');
   const canReadPlayers =
     admin.status === 'admin' && admin.admin.capabilities.includes('player.read');
 
-  useEffect(() => {
-    if (!canReadPlayers) return;
-    let active = true;
-    setLoadState('loading');
-    void getAdminPlayer(playerId)
-      .then((result) => {
-        if (!active) return;
+  const loadPlayer = useCallback(
+    async (signal?: AbortSignal) => {
+      setLoadState('loading');
+      try {
+        const result = await getAdminPlayer(playerId);
+        if (signal?.aborted) return;
         if (result.status === 'not-found') {
+          setPlayer(null);
           setLoadState('not-found');
           return;
         }
         if (result.status !== 'ok') {
+          setPlayer(null);
           setLoadState('error');
           return;
         }
         setPlayer(result.player);
         setLoadState('ready');
-      })
-      .catch(() => {
-        if (active) setLoadState('error');
-      });
+      } catch {
+        if (signal?.aborted) return;
+        setPlayer(null);
+        setLoadState('error');
+      }
+    },
+    [playerId],
+  );
+
+  useEffect(() => {
+    if (!canReadPlayers) return;
+    const controller = new AbortController();
+    void loadPlayer(controller.signal);
     return () => {
-      active = false;
+      controller.abort();
     };
-  }, [canReadPlayers, playerId, reloadVersion]);
+  }, [canReadPlayers, loadPlayer]);
 
   if (admin.status === 'loading') {
     return (
@@ -259,7 +268,9 @@ export function AdminPlayerDetailPage({ playerId }: { playerId: string }) {
           capabilities={admin.status === 'admin' ? admin.admin.capabilities : []}
           inventory={player.inventory}
           wallets={player.wallets}
-          onApplied={() => setReloadVersion((current) => current + 1)}
+          onApplied={() => {
+            void loadPlayer();
+          }}
         />
       </section>
     </main>
