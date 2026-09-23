@@ -226,6 +226,12 @@
 .hub-menu-tile.is-pokedex { --tile-accent: #ed535b; }
 .hub-menu-tile.is-box { --tile-accent: #62c4d0; }
 .hub-menu-tile.is-store { --tile-accent: #b026ff; }
+.hub-menu-tile.is-admin { --tile-accent: #e04a56; }
+
+.hub-menu-admin-icon {
+  font: 800 0.72rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+}
 
 .hub-menu-tile::after {
   content: '';
