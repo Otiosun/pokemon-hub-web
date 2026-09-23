@@ -361,7 +361,6 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
   const modelSelected = visualMode === 'model' && modelCapability !== 'unsupported';
   const wants3d = discovered && modelSelected;
   const modelCanRender = wants3d && modelCapability === 'ready';
-  const showing3d = modelCanRender && modelReady;
   const waitingFor3d =
     wants3d &&
     (modelCapability === 'checking' || (modelCapability === 'ready' && !modelReady));
