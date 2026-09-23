@@ -8,9 +8,7 @@ import productIntegritySource from './productIntegrity.ts?raw';
 const hubApiModules = import.meta.glob('../../api/hub/**/*.ts');
 
 const ALLOWED_HUB_API_MODULES = [
-  '../../api/hub/admin/players.ts',
-  '../../api/hub/admin/players/[playerId].ts',
-  '../../api/hub/admin/self.ts',
+  '../../api/hub/admin/[...path].ts',
   '../../api/hub/auth/exchange.ts',
   '../../api/hub/player/battle.ts',
   '../../api/hub/player/inventory.ts',
