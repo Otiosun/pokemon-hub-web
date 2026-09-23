@@ -13,7 +13,7 @@ const MODULES = [
     id: 'pokemon',
     title: 'POKÉMON',
     detail: 'Roster, edição, movimentos, efeitos e ciclo de vida.',
-    prefixes: ['pokemon.', 'effect.'],
+    prefixes: ['pokemon.', 'effect.', 'effects.'],
   },
   {
     id: 'economy',
@@ -37,7 +37,7 @@ const MODULES = [
     id: 'security',
     title: 'ADMINISTRAÇÃO',
     detail: 'Auditoria, cargos, capacidades e operações sensíveis.',
-    prefixes: ['audit.', 'admin_', 'admin.'],
+    prefixes: ['audit.', 'admin_', 'admin.', 'community.', 'batch.', 'UAT_'],
   },
 ] as const;
 
