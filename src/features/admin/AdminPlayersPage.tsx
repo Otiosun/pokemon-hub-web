@@ -70,9 +70,29 @@ export function AdminPlayersPage() {
 
   useEffect(() => {
     if (!canReadPlayers) return;
-    void runSearch(false, null);
-    // First administrative slice intentionally loads only when authorization is proven.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    let active = true;
+    setSearchState('loading');
+    void searchAdminPlayers({ limit: 25 })
+      .then((result) => {
+        if (!active) return;
+        if (result.status !== 'ok') {
+          setPlayers([]);
+          setNextCursor(null);
+          setSearchState('error');
+          return;
+        }
+        setPlayers(result.players);
+        setNextCursor(result.nextCursor);
+        setSearchState('idle');
+      })
+      .catch(() => {
+        if (active) setSearchState('error');
+      });
+
+    return () => {
+      active = false;
+    };
   }, [canReadPlayers]);
 
   if (admin.status === 'loading') {
