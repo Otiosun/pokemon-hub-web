@@ -37,8 +37,9 @@ describe('product integrity routing', () => {
     });
   });
 
-  it('keeps Champion Store as a player-facing product route', () => {
+  it('keeps Champion Store and the capability-gated admin shell as product routes', () => {
     expect(resolveProductRoute('/champion-store')).toEqual({ kind: 'route' });
+    expect(resolveProductRoute('/admin')).toEqual({ kind: 'route' });
   });
 
   it('keeps legitimate owned-Pokémon instance routes available', () => {
