@@ -288,7 +288,7 @@ function PortalStateMessage({ status }: { status: 'loading' | 'unauthenticated' 
         : 'NÃO FOI POSSÍVEL CARREGAR SEU REGISTRO';
   const detail =
     status === 'unauthenticated'
-      ? 'Use /hub para acessar a Pokédex vinculada ao seu treinador.'
+      ? 'Use /site no privado do bot para acessar a Pokédex vinculada ao seu treinador.'
       : status === 'unavailable'
         ? 'Tente novamente em instantes.'
         : 'Sincronizando sua Pokédex.';
@@ -358,13 +358,13 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
         return false;
       }
     })();
-  const wants3d = discovered && visualMode === 'model';
+  const modelSelected = visualMode === 'model' && modelCapability !== 'unsupported';
+  const wants3d = discovered && modelSelected;
   const modelCanRender = wants3d && modelCapability === 'ready';
   const showing3d = modelCanRender && modelReady;
   const waitingFor3d =
     wants3d &&
     (modelCapability === 'checking' || (modelCapability === 'ready' && !modelReady));
-  const modelUnavailable = wants3d && modelCapability === 'unsupported';
   const modelFailed = wants3d && modelCapability === 'failed';
 
   const chooseVisualVariant = (variant: PokemonVisualVariant) => {
@@ -546,16 +546,16 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
               >
                 <button
                   type="button"
-                  className={visualMode === 'artwork' ? 'is-active' : undefined}
-                  aria-pressed={visualMode === 'artwork'}
+                  className={!modelSelected ? 'is-active' : undefined}
+                  aria-pressed={!modelSelected}
                   onClick={() => chooseVisualMode('artwork')}
                 >
                   2D
                 </button>
                 <button
                   type="button"
-                  className={visualMode === 'model' ? 'is-active' : undefined}
-                  aria-pressed={visualMode === 'model'}
+                  className={modelSelected ? 'is-active' : undefined}
+                  aria-pressed={modelSelected}
                   disabled={modelCapability === 'unsupported'}
                   onClick={() => chooseVisualMode('model')}
                 >
@@ -566,7 +566,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
 
             {discovered && (
               <div
-                className={`pokedex-species-artwork-slot${artworkReady ? ' is-ready' : ''}${showing3d ? ' is-hidden' : ''}`}
+                className={`pokedex-species-artwork-slot${artworkReady ? ' is-ready' : ''}${wants3d ? ' is-hidden' : ''}`}
               >
                 <SpeciesPokemonImage
                   key={artworkKey}
@@ -602,25 +602,21 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
               </div>
             )}
 
-            {(waitingFor3d || modelUnavailable || modelFailed) && (
+            {(waitingFor3d || modelFailed) && (
               <div className="pokedex-species-model-loading" role="status">
                 <span>
                   {modelFailed
                     ? 'NÃO FOI POSSÍVEL ABRIR O MODELO 3D'
-                    : modelUnavailable
-                      ? 'MODELO 3D INDISPONÍVEL'
-                      : 'PREPARANDO MODELO 3D'}
+                    : 'PREPARANDO MODELO 3D'}
                 </span>
-                {(modelUnavailable || modelFailed) && (
+                {modelFailed && (
                   <div className="pokedex-species-model-actions">
-                    {modelFailed ? (
-                      <button
-                        type="button"
-                        onClick={() => setModelRetryNonce((current) => current + 1)}
-                      >
-                        TENTAR NOVAMENTE
-                      </button>
-                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => setModelRetryNonce((current) => current + 1)}
+                    >
+                      TENTAR NOVAMENTE
+                    </button>
                     <button type="button" onClick={() => chooseVisualMode('artwork')}>
                       VER 2D
                     </button>
