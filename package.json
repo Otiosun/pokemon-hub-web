@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "vite",
     "prepare:field-dex-preview": "node scripts/run-generations-player-preview.mjs",
-    "build": "biome lint scripts/prepare-generations-for-build.mjs scripts/prepare-generations-for-build.test.mjs && mkdir -p dist && printf '<!doctype html><title>diag</title>' > dist/index.html",
+    "build": "biome lint 'api/hub/admin/[...path].ts' src/navigation/hubScopeBoundary.test.ts src/player-api/adminProxyBoundary.test.ts && mkdir -p dist && printf '<!doctype html><title>diag</title>' > dist/index.html",
     "preview": "vite preview",
     "deploy:cf": "wrangler deploy",
     "check": "biome lint --max-diagnostics=500 .",
