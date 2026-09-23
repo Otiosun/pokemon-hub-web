@@ -12,40 +12,36 @@ export type PlayerPortalAdminState =
   | { status: 'unavailable'; admin: null }
   | { status: 'admin'; admin: PlayerPortalAdminAccess };
 
-let cachedAuthorizedState: PlayerPortalAdminState | null = null;
-let pending: Promise<PlayerPortalAdminState> | null = null;
+const pendingByPlayerId = new Map<string, Promise<PlayerPortalAdminState>>();
 
-async function loadAdminState(): Promise<PlayerPortalAdminState> {
-  if (
-    cachedAuthorizedState?.status === 'admin' ||
-    cachedAuthorizedState?.status === 'not-admin'
-  ) {
-    return cachedAuthorizedState;
-  }
-  if (pending) return pending;
+function loadAdminState(playerId: string): Promise<PlayerPortalAdminState> {
+  const existing = pendingByPlayerId.get(playerId);
+  if (existing) return existing;
 
-  pending = getPlayerPortalAdmin()
+  const pending = getPlayerPortalAdmin()
     .then((result): PlayerPortalAdminState => {
       if (result.status === 'admin') return { status: 'admin', admin: result.admin };
       return { status: result.status, admin: null };
     })
     .catch((): PlayerPortalAdminState => ({ status: 'unavailable', admin: null }))
-    .then((state) => {
-      if (state.status === 'admin' || state.status === 'not-admin') {
-        cachedAuthorizedState = state;
+    .finally(() => {
+      if (pendingByPlayerId.get(playerId) === pending) {
+        pendingByPlayerId.delete(playerId);
       }
-      pending = null;
-      return state;
     });
 
+  pendingByPlayerId.set(playerId, pending);
   return pending;
 }
 
 export function usePlayerPortalAdmin(): PlayerPortalAdminState {
   const session = usePlayerPortalBrowserSession();
-  const [state, setState] = useState<PlayerPortalAdminState>(
-    cachedAuthorizedState ?? { status: 'loading', admin: null },
-  );
+  const [state, setState] = useState<PlayerPortalAdminState>({
+    status: 'loading',
+    admin: null,
+  });
+
+  const playerId = session.status === 'authenticated' ? session.profile.playerId : null;
 
   useEffect(() => {
     let active = true;
@@ -57,21 +53,22 @@ export function usePlayerPortalAdmin(): PlayerPortalAdminState {
       };
     }
 
-    if (session.status !== 'authenticated') {
+    if (session.status !== 'authenticated' || playerId === null) {
       setState({ status: 'unauthenticated', admin: null });
       return () => {
         active = false;
       };
     }
 
-    void loadAdminState().then((next) => {
+    setState({ status: 'loading', admin: null });
+    void loadAdminState(playerId).then((next) => {
       if (active) setState(next);
     });
 
     return () => {
       active = false;
     };
-  }, [session.status]);
+  }, [playerId, session.status]);
 
   return state;
 }
