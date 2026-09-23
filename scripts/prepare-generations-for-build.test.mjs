@@ -8,17 +8,7 @@ describe('Generations deployment build mode', () => {
     expect(generationsBuildMode({})).toBe('full');
   });
 
-  it('keeps real Cloudflare Workers builds on the complete catalog gate', () => {
-    expect(
-      generationsBuildMode({
-        WORKERS_CI: '1',
-        WORKERS_CI_BRANCH: 'feat/admin-player-adjustments-v2',
-        WORKERS_CI_BUILD_UUID: 'db1aaf55-b8e1-49aa-ae1f-c780312e2195',
-      }),
-    ).toBe('full');
-  });
-
-  it('skips expensive catalog regeneration on synthetic branch previews', () => {
+  it('skips expensive catalog regeneration on branch previews', () => {
     expect(
       generationsBuildMode({
         WORKERS_CI: '1',
