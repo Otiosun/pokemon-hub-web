@@ -296,10 +296,16 @@ export function PokedexIndexPage() {
     if (!selected && discovery === 'Desconhecidos') setDiscovery('Todos');
   };
 
+  const chooseShinyFilter = (nextShiny: PokedexShinyFilter) => {
+    setShiny(nextShiny);
+    setVisualVariant(nextShiny === 'Shiny' ? 'shiny' : 'regular');
+  };
+
   const clearFilters = () => {
     setRegion('Todos');
     setDiscovery('Todos');
     setShiny('Todos');
+    setVisualVariant('regular');
     setTypeSlug(null);
   };
 
@@ -392,7 +398,7 @@ export function PokedexIndexPage() {
               </button>
             ) : null}
             {shiny !== 'Todos' ? (
-              <button type="button" onClick={() => setShiny('Todos')} aria-label="Remover filtro shiny">
+              <button type="button" onClick={() => chooseShinyFilter('Todos')} aria-label="Remover filtro shiny">
                 Shiny registrado<span aria-hidden="true">×</span>
               </button>
             ) : null}
@@ -558,7 +564,7 @@ export function PokedexIndexPage() {
                       className={shiny === item ? 'is-active' : undefined}
                       aria-pressed={shiny === item}
                       disabled={item === 'Shiny' && !shinyReady}
-                      onClick={() => setShiny(item)}
+                      onClick={() => chooseShinyFilter(item)}
                     >
                       {item === 'Shiny' ? 'Registrado' : 'Todos'}
                     </button>
