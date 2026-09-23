@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { HubMenuTrigger } from '../../components/HubNavigation';
 import { AdminPlayerAdjustments } from './AdminPlayerAdjustments';
+import { AdminPokemonOperations } from './AdminPokemonOperations';
 import { SpeciesPokemonImage } from '../../visual-assets/PokemonPreviewImage';
 import {
   getAdminPlayer,
@@ -227,6 +228,15 @@ export function AdminPlayerDetailPage({ playerId }: { playerId: string }) {
             ))}
           </div>
         </section>
+
+        <AdminPokemonOperations
+          playerId={player.player.id}
+          capabilities={admin.status === 'admin' ? admin.admin.capabilities : []}
+          pokemon={player.pokemon}
+          onApplied={() => {
+            void loadPlayer();
+          }}
+        />
 
         <section className="admin-player-live-grid">
           <article className="admin-player-panel">
