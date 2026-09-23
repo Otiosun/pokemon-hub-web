@@ -7,6 +7,7 @@ import {
   loadNationalDexCatalog,
   type NationalDexSpeciesItem,
 } from './nationalDexRuntime';
+import { resolvePokedexIndexCardVisual } from './pokedexIndexVisual';
 import {
   readPokedexIndexSession,
   rememberPokedexIndexFilters,
@@ -432,7 +433,8 @@ export function PokedexIndexPage() {
               const playerState = getAuthoritativePokedexSpeciesState(pokedexByDex.get(item.dex));
               const discovered = playerState.discovery !== 'unknown';
               const hasShiny = shinyDexes.has(item.dex);
-              const shinyVisualLocked = visualVariant === 'shiny' && discovered && !hasShiny;
+              const cardVisual = resolvePokedexIndexCardVisual(visualVariant, hasShiny);
+              const shinyVisualLocked = discovered && cardVisual.locked;
               const paddedDex = String(item.dex).padStart(3, '0');
               const displayName = discovered ? item.name || `#${paddedDex}` : '???';
               return (
@@ -464,7 +466,7 @@ export function PokedexIndexPage() {
                         <SpeciesPokemonImage
                           dex={item.dex}
                           assetRole="official-artwork"
-                          variant={visualVariant === 'shiny' ? 'shiny' : 'regular'}
+                          variant={cardVisual.variant}
                           alt=""
                           aria-hidden="true"
                           loading="lazy"
