@@ -41,6 +41,10 @@ describe('product integrity routing', () => {
     expect(resolveProductRoute('/champion-store')).toEqual({ kind: 'route' });
   });
 
+  it('recognizes the admin shell route while authorization remains a separate server boundary', () => {
+    expect(resolveProductRoute('/admin')).toEqual({ kind: 'route' });
+  });
+
   it('keeps legitimate owned-Pokémon instance routes available', () => {
     expect(resolveProductRoute('/pokemon/owned-charmander-01')).toEqual({ kind: 'route' });
   });
