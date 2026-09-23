@@ -62,7 +62,9 @@
   margin-top: 6px;
 }
 
-/* Species artwork sizing/visibility is owned by pokedex-species.css. */\n\n/* FIELD DEX 3D: never flash official/HOME artwork before WebGL. */
+/* Species artwork sizing/visibility is owned by pokedex-species.css. */
+
+/* FIELD DEX 3D: never flash official/HOME artwork before WebGL. */
 .dex-page .dex-art {
   display: none;
 }
