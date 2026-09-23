@@ -37,10 +37,15 @@ describe('consolidated admin proxy boundary', () => {
         '/v1/hub/admin/players/11111111-1111-4111-8111-111111111111/adjustments',
       allowedMethod: 'POST',
     });
-    expect(resolveAdminProxyRoute(new URL('https://hub.test/api/hub/admin/operations'))).toEqual({
+    expect(resolveAdminProxyRoute(new URL('https://hub.test/api/hub/admin/operations'), 'GET')).toEqual({
       upstreamPath: '/v1/hub/admin/operations',
-      allowedMethod: ['GET', 'POST'],
+      allowedMethod: 'GET',
     });
+    expect(resolveAdminProxyRoute(new URL('https://hub.test/api/hub/admin/operations'), 'POST')).toEqual({
+      upstreamPath: '/v1/hub/admin/operations',
+      allowedMethod: 'POST',
+    });
+    expect(resolveAdminProxyRoute(new URL('https://hub.test/api/hub/admin/operations'), 'DELETE')).toBeNull();
     expect(
       resolveAdminProxyRoute(
         new URL(
