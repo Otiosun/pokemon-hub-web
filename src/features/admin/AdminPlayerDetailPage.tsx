@@ -230,6 +230,7 @@ export function AdminPlayerDetailPage({ playerId }: { playerId: string }) {
         </section>
 
         <AdminPokemonOperations
+          key={player.pokemon.map((entry) => `${entry.id}:${entry.revision}`).join('|')}
           playerId={player.player.id}
           capabilities={admin.status === 'admin' ? admin.admin.capabilities : []}
           pokemon={player.pokemon}
