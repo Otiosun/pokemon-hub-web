@@ -39,6 +39,12 @@ const InventoryPage = lazy(() =>
 const AdminPage = lazy(() =>
   import('./features/admin/AdminPage').then((module) => ({ default: module.AdminPage })),
 );
+const AdminPlayersPage = lazy(() =>
+  import('./features/admin/AdminPlayersPage').then((module) => ({ default: module.AdminPlayersPage })),
+);
+const AdminPlayerDetailPage = lazy(() =>
+  import('./features/admin/AdminPlayerDetailPage').then((module) => ({ default: module.AdminPlayerDetailPage })),
+);
 
 type ChampionStoreOffer = {
   code: string;
@@ -429,6 +435,10 @@ function getPokedexDex(path: string) {
   return Number.parseInt(raw, 10);
 }
 
+function getAdminPlayerId(path: string) {
+  return path.split('/').filter(Boolean)[2] ?? '';
+}
+
 function resetRecordViewport() {
   requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
 }
@@ -661,6 +671,31 @@ export function App() {
       document.removeEventListener('click', onDocumentClick);
     };
   }, []);
+
+  if (path === '/admin/players' || path === '/admin/players/') {
+    return (
+      <HubFrame active={null} destinations={hubDestinations}>
+        <Suspense fallback={<RouteFallback module="journey" label="ABRINDO PLAYER 360" />}>
+          <AdminPlayersPage />
+        </Suspense>
+      </HubFrame>
+    );
+  }
+
+  if (
+    /^\/admin\/players\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\/?$/i.test(
+      path,
+    )
+  ) {
+    const playerId = getAdminPlayerId(path);
+    return (
+      <HubFrame active={null} destinations={hubDestinations}>
+        <Suspense fallback={<RouteFallback module="journey" label="ABRINDO FICHA OPERACIONAL" />}>
+          <AdminPlayerDetailPage key={playerId} playerId={playerId} />
+        </Suspense>
+      </HubFrame>
+    );
+  }
 
   if (path === '/admin' || path === '/admin/') {
     return (
