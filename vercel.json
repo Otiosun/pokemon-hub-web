@@ -4,11 +4,28 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/research/generations/:path*",
+      "destination": "https://pokemon-hub-fl2z3ww41-bellcranel1921-4681s-projects.vercel.app/research/generations/:path*"
+    },
+    {
+      "source": "/research/draco/:path*",
+      "destination": "https://pokemon-hub-fl2z3ww41-bellcranel1921-4681s-projects.vercel.app/research/draco/:path*"
+    },
+    {
       "source": "/:path((?!api/).*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
+    {
+      "source": "/research/:path*",
+      "headers": [
+        {
+          "key": "x-vercel-enable-rewrite-caching",
+          "value": "1"
+        }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [
