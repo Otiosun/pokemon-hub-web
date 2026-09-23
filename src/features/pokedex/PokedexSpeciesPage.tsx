@@ -421,6 +421,14 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
   }, [activeRecord.slug, discovered, modelCapability]);
 
   useEffect(() => {
+    if (visualMode !== 'model' || modelCapability !== 'unsupported') return;
+    // Fall back only for the current record. Keep the persisted 3D preference so
+    // the next species can still use a verified model when one exists.
+    setModelReady(false);
+    setVisualMode('artwork');
+  }, [modelCapability, visualMode]);
+
+  useEffect(() => {
     const controller = new AbortController();
     setArtworkReadyKey(null);
     setVisualVariant('regular');
