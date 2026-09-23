@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "vite",
     "prepare:field-dex-preview": "node scripts/run-generations-player-preview.mjs",
-    "build": "biome lint src/features/admin/AdminPlayerAdjustments.tsx src/features/admin/AdminPlayerDetailPage.tsx src/player-api/playerPortalAdminPlayersClient.ts src/player-api/playerPortalAdminPlayersClient.test.ts && mkdir -p dist && printf '<!doctype html><title>diag</title>' > dist/index.html",
+    "build": "biome lint src/features/admin/admin-player360.css && mkdir -p dist && printf '<!doctype html><title>diag</title>' > dist/index.html",
     "preview": "vite preview",
     "deploy:cf": "wrangler deploy",
     "check": "biome lint --max-diagnostics=500 .",
