@@ -180,6 +180,38 @@ export type AdminPlayerDetailResult =
   | { status: 'ok'; player: AdminPlayer360 }
   | { status: 'unauthenticated' | 'forbidden' | 'not-found' };
 
+export type AdminPlayerAdjustmentInput =
+  | {
+      requestId: string;
+      kind: 'INVENTORY';
+      itemId: string;
+      delta: string;
+      reason: string;
+    }
+  | {
+      requestId: string;
+      kind: 'WALLET';
+      currencyId: string;
+      delta: string;
+      reason: string;
+    }
+  | {
+      requestId: string;
+      kind: 'PROGRESSION';
+      delta: string;
+      reason: string;
+    };
+
+export type AdminPlayerAdjustmentResult =
+  | {
+      status: 'ok';
+      operationId: string;
+      replayed: boolean;
+      result: Record<string, unknown> | null;
+    }
+  | { status: 'unauthenticated' | 'forbidden' }
+  | { status: 'rejected'; code: string };
+
 type Fetcher = typeof fetch;
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -318,4 +350,56 @@ export async function getAdminPlayer(
   }
 
   return { status: 'ok', player: body.player };
+}
+
+
+export async function adjustAdminPlayer(
+  playerId: string,
+  input: AdminPlayerAdjustmentInput,
+  fetcher: Fetcher = fetch,
+): Promise<AdminPlayerAdjustmentResult> {
+  if (!UUID_PATTERN.test(playerId)) throw new Error('Invalid admin player id');
+  if (!UUID_PATTERN.test(input.requestId)) throw new Error('Invalid admin adjustment request id');
+
+  const response = await fetcher(
+    `/api/hub/admin/players/${encodeURIComponent(playerId)}/adjustments`,
+    {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        accept: 'application/json',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(input),
+    },
+  );
+
+  const denied = statusFromResponse(response);
+  if (denied) return { status: denied };
+
+  const body = await response.json().catch(() => null) as unknown;
+  if (!response.ok) {
+    const code = isRecord(body) && typeof body.error === 'string'
+      ? body.error
+      : `HTTP_${response.status}`;
+    return { status: 'rejected', code };
+  }
+
+  if (
+    !isRecord(body) ||
+    typeof body.operationId !== 'string' ||
+    !UUID_PATTERN.test(body.operationId) ||
+    body.status !== 'APPLIED' ||
+    typeof body.replayed !== 'boolean' ||
+    !(body.result === null || isRecord(body.result))
+  ) {
+    throw new Error('Invalid admin player adjustment response');
+  }
+
+  return {
+    status: 'ok',
+    operationId: body.operationId,
+    replayed: body.replayed,
+    result: body.result,
+  };
 }
