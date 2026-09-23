@@ -10,6 +10,7 @@ import {
 } from 'react';
 import type { HubDestinations, HubSection } from '../navigation/hubNavigationSession';
 import { preloadProductRoute } from '../navigation/productRoutePreload';
+import { usePlayerPortalAdmin } from '../player-api/usePlayerPortalAdmin';
 import './hub-navigation.css';
 import './hub-navigation-pokedex-compact.css';
 
@@ -108,6 +109,9 @@ export function HubMenuTrigger() {
 
 export function HubNavigation({ active, destinations, children }: HubNavigationProps) {
   const [open, setOpen] = useState(false);
+  const adminState = usePlayerPortalAdmin();
+  const adminVisible = adminState.status === 'admin';
+  const adminSelected = window.location.pathname.replace(/\/+$/, '') === '/admin';
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDialogElement>(null);
 
@@ -153,6 +157,7 @@ export function HubNavigation({ active, destinations, children }: HubNavigationP
   const openMenu = () => {
     if (open) return;
     for (const item of NAV_ITEMS) warmProductPath(destinations[item.id]);
+    if (adminVisible) warmProductPath('/admin');
     window.history.pushState({ ...currentHistoryState(), hubMenu: true }, '', window.location.href);
     setOpen(true);
   };
@@ -239,7 +244,7 @@ export function HubNavigation({ active, destinations, children }: HubNavigationP
                   </span>
                   <div>
                     <strong>POKÉMON BEYOND</strong>
-                    <span>JORNADA · POKÉDEX · BOX · STORE</span>
+                    <span>{adminVisible ? 'JORNADA · POKÉDEX · BOX · STORE · ADM' : 'JORNADA · POKÉDEX · BOX · STORE'}</span>
                   </div>
                 </div>
                 <button type="button" className="hub-menu-close" onClick={closeMenu} aria-label="Fechar menu">
@@ -284,6 +289,30 @@ export function HubNavigation({ active, destinations, children }: HubNavigationP
                     </a>
                   );
                 })}
+                {adminVisible ? (
+                  <a
+                    className={`hub-menu-tile is-admin${adminSelected ? ' is-active' : ''}`}
+                    href="/admin"
+                    aria-current={adminSelected ? 'page' : undefined}
+                    data-hub-primary="admin"
+                    onClick={() => setOpen(false)}
+                    onFocus={() => warmProductPath('/admin')}
+                    onPointerDown={() => warmProductPath('/admin')}
+                    onPointerEnter={() => warmProductPath('/admin')}
+                  >
+                    <span className="hub-menu-tile-icon hub-menu-admin-icon" aria-hidden="true">
+                      ADM
+                    </span>
+                    <span className="hub-menu-tile-copy">
+                      <strong>CENTRAL ADM</strong>
+                      <small>Operações, jogadores, conteúdo e auditoria</small>
+                    </span>
+                    <span className="hub-menu-tile-end">
+                      {adminSelected ? <small>ATUAL</small> : null}
+                      <span aria-hidden="true">›</span>
+                    </span>
+                  </a>
+                ) : null}
               </nav>
 
               <footer className="hub-menu-foot">
