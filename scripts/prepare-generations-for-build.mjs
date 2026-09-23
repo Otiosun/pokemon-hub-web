@@ -4,6 +4,11 @@ export function generationsBuildMode(env = process.env) {
   const explicit = env.GENERATIONS_BUILD_MODE?.trim().toLowerCase();
   if (explicit === 'full' || explicit === 'skip') return explicit;
 
+  // A real Cloudflare Workers Build has a build UUID. Keep those builds
+  // fail-closed by generating the complete 3D catalog even for PR branches.
+  if (env.WORKERS_CI === '1' && env.WORKERS_CI_BUILD_UUID?.trim()) return 'full';
+
+  // Synthetic/local branch checks may skip the expensive catalog regeneration.
   if (env.WORKERS_CI === '1') {
     const branch = env.WORKERS_CI_BRANCH?.trim();
     if (branch && branch !== 'main') return 'skip';
