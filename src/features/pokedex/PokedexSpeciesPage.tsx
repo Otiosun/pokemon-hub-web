@@ -288,7 +288,7 @@ function PortalStateMessage({ status }: { status: 'loading' | 'unauthenticated' 
         : 'NÃO FOI POSSÍVEL CARREGAR SEU REGISTRO';
   const detail =
     status === 'unauthenticated'
-      ? 'Use /hub para acessar a Pokédex vinculada ao seu treinador.'
+      ? 'Use /site para acessar a Pokédex vinculada ao seu treinador.'
       : status === 'unavailable'
         ? 'Tente novamente em instantes.'
         : 'Sincronizando sua Pokédex.';
@@ -566,7 +566,7 @@ export function PokedexSpeciesPage({ dex }: { dex: number }) {
 
             {discovered && (
               <div
-                className={`pokedex-species-artwork-slot${artworkReady ? ' is-ready' : ''}${showing3d ? ' is-hidden' : ''}`}
+                className={`pokedex-species-artwork-slot${artworkReady ? ' is-ready' : ''}${wants3d ? ' is-hidden' : ''}`}
               >
                 <SpeciesPokemonImage
                   key={artworkKey}
