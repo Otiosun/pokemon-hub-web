@@ -114,7 +114,7 @@ function frameModel(runtime: Runtime, model: Group) {
   const fitHeight = (Math.max(size.y, 0.01) * 0.5) / Math.tan(verticalFov / 2);
   const fitWidth = (Math.max(size.x, 0.01) * 0.5) / Math.tan(horizontalFov / 2);
   const depthAllowance = Math.max(size.z, maxDimension * 0.14) * 0.5;
-  const aspectMargin = camera.aspect < 0.72 ? 1.34 : camera.aspect < 1 ? 1.25 : 1.16;
+  const aspectMargin = camera.aspect < 0.72 ? 1.58 : camera.aspect < 1 ? 1.44 : 1.3;
   const distance = Math.max((Math.max(fitHeight, fitWidth) + depthAllowance) * aspectMargin, 0.8);
 
   const yaw = camera.aspect < 0.8 ? 0.08 : 0.12;
@@ -129,8 +129,8 @@ function frameModel(runtime: Runtime, model: Group) {
   camera.lookAt(center);
 
   controls.target.copy(center);
-  controls.minDistance = Math.max(distance * 0.9, maxDimension * 0.78);
-  controls.maxDistance = Math.max(distance * 1.42, maxDimension * 1.7);
+  controls.minDistance = Math.max(distance * 0.96, maxDimension * 0.86);
+  controls.maxDistance = Math.max(distance * 1.58, maxDimension * 1.9);
   controls.update();
 }
 
