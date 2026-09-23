@@ -171,9 +171,7 @@
   opacity: 0;
 }
 
-.pokedex-index-page .pokedex-index-sprite-wrap img {
-  scale: 0.9;
-}
+/* Index sprite sizing is owned by pokedex-index.css. */
 
 .pokedex-index-page .pokedex-index-card.is-caught .pokedex-index-sprite-wrap img {
   filter: saturate(0.96) contrast(1.01) drop-shadow(0 9px 15px rgba(0, 0, 0, 0.22));
@@ -266,10 +264,6 @@
 
   .pokedex-index-page .pokedex-index-sprite-wrap {
     min-height: 90px;
-  }
-
-  .pokedex-index-page .pokedex-index-sprite-wrap img {
-    scale: 0.86;
   }
 
   .hub-with-navigation .hub-menu-trigger {
