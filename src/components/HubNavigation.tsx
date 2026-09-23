@@ -111,7 +111,7 @@ export function HubNavigation({ active, destinations, children }: HubNavigationP
   const [open, setOpen] = useState(false);
   const adminState = usePlayerPortalAdmin();
   const adminVisible = adminState.status === 'admin';
-  const adminSelected = window.location.pathname.replace(/\/+$/, '') === '/admin';
+  const adminSelected = window.location.pathname.replace(/\/+$/, '').startsWith('/admin');
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDialogElement>(null);
 
