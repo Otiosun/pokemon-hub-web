@@ -12,6 +12,7 @@ import {
 } from './navigation/hubNavigationSession';
 import { resolveProductRoute } from './navigation/productIntegrity';
 import { preloadProductRoute } from './navigation/productRoutePreload';
+import { usePlayerPortalAdminAccess } from './player-api/playerPortalAdminBrowserAccess';
 import { usePlayerPortalBrowserSession } from './player-api/playerPortalBrowserSession';
 import './hub-route-fallback-v3.css';
 
@@ -35,6 +36,9 @@ const TeamPage = lazy(() =>
 );
 const InventoryPage = lazy(() =>
   import('./features/inventory/InventoryPage').then((module) => ({ default: module.InventoryPage })),
+);
+const AdminShellPage = lazy(() =>
+  import('./features/admin/AdminShellPage').then((module) => ({ default: module.AdminShellPage })),
 );
 
 type ChampionStoreOffer = {
@@ -342,13 +346,22 @@ function HubFrame({
   active,
   destinations,
   children,
+  showAdmin = false,
+  adminActive = false,
 }: {
   active: HubSection | null;
   destinations: HubDestinations;
   children: ReactNode;
+  showAdmin?: boolean;
+  adminActive?: boolean;
 }) {
   return (
-    <HubNavigation active={active} destinations={destinations}>
+    <HubNavigation
+      active={active}
+      destinations={destinations}
+      showAdmin={showAdmin}
+      adminActive={adminActive}
+    >
       {children}
     </HubNavigation>
   );
@@ -378,9 +391,15 @@ function RouteFallback({ label, module }: { label: string; module: FallbackModul
   );
 }
 
-function ProductNotFound({ destinations }: { destinations: HubDestinations }) {
+function ProductNotFound({
+  destinations,
+  showAdmin = false,
+}: {
+  destinations: HubDestinations;
+  showAdmin?: boolean;
+}) {
   return (
-    <HubFrame active={null} destinations={destinations}>
+    <HubFrame active={null} destinations={destinations} showAdmin={showAdmin}>
       <section className="hub-route-fallback hub-product-not-found" data-hub-fallback="journey">
         <div className="hub-route-fallback-head">
           <span className="hub-route-fallback-lens" aria-hidden="true" />
@@ -507,6 +526,8 @@ export function App() {
   const [path, setPath] = useState(getPath);
   const [hubDestinations, setHubDestinations] = useState(readHubDestinations);
   const playerPortalSession = usePlayerPortalBrowserSession();
+  const adminAccess = usePlayerPortalAdminAccess(playerPortalSession.status === 'authenticated');
+  const showAdmin = adminAccess.status === 'authorized';
 
   useEffect(() => {
     if (window.location.pathname === '/') {
@@ -659,9 +680,28 @@ export function App() {
     };
   }, []);
 
+  if (path === '/admin' || path === '/admin/') {
+    if (adminAccess.status !== 'authorized') {
+      return <ProductNotFound destinations={hubDestinations} showAdmin={showAdmin} />;
+    }
+
+    return (
+      <HubFrame
+        active={null}
+        destinations={hubDestinations}
+        showAdmin
+        adminActive
+      >
+        <Suspense fallback={<RouteFallback module="journey" label="ABRINDO CENTRAL ADM" />}>
+          <AdminShellPage admin={adminAccess.admin} />
+        </Suspense>
+      </HubFrame>
+    );
+  }
+
   if (path === '/champion-store' || path === '/champion-store/') {
     return (
-      <HubFrame active="store" destinations={hubDestinations}>
+      <HubFrame active="store" destinations={hubDestinations} showAdmin={showAdmin}>
         <ChampionStorePage />
       </HubFrame>
     );
@@ -669,7 +709,7 @@ export function App() {
 
   if (path === '/jornada/inventario' || path === '/jornada/inventario/') {
     return (
-      <HubFrame active="journey" destinations={hubDestinations}>
+      <HubFrame active="journey" destinations={hubDestinations} showAdmin={showAdmin}>
         <Suspense fallback={<RouteFallback module="journey" label="ABRINDO INVENTÁRIO" />}>
           <InventoryPage />
         </Suspense>
@@ -679,7 +719,7 @@ export function App() {
 
   if (path === '/jornada' || path === '/jornada/') {
     return (
-      <HubFrame active="journey" destinations={hubDestinations}>
+      <HubFrame active="journey" destinations={hubDestinations} showAdmin={showAdmin}>
         <Suspense fallback={<RouteFallback module="journey" label="RETOMANDO JORNADA" />}>
           <JourneyPage playerPortalSession={playerPortalSession} />
         </Suspense>
@@ -688,7 +728,7 @@ export function App() {
   }
   if (path === '/pokemon' || path === '/pokemon/') {
     return (
-      <HubFrame active="box" destinations={hubDestinations}>
+      <HubFrame active="box" destinations={hubDestinations} showAdmin={showAdmin}>
         <Suspense fallback={<RouteFallback module="box" label="ABRINDO BOX" />}>
           <OwnedPokemonCollectionPage />
         </Suspense>
@@ -697,7 +737,7 @@ export function App() {
   }
   if (path === '/team' || path === '/team/') {
     return (
-      <HubFrame active="box" destinations={hubDestinations}>
+      <HubFrame active="box" destinations={hubDestinations} showAdmin={showAdmin}>
         <Suspense fallback={<RouteFallback module="box" label="ABRINDO TIME" />}>
           <TeamPage playerPortalSession={playerPortalSession} />
         </Suspense>
@@ -708,7 +748,7 @@ export function App() {
     const historyState = (window.history.state ?? {}) as HubHistoryState;
     const instanceId = getPokemonRouteSlug(path);
     return (
-      <HubFrame active="box" destinations={hubDestinations}>
+      <HubFrame active="box" destinations={hubDestinations} showAdmin={showAdmin}>
         <Suspense fallback={<RouteFallback module="box" label="ABRINDO POKÉMON" />}>
           <OwnedPokemonDetailPage
             key={instanceId}
@@ -721,7 +761,7 @@ export function App() {
   }
   if (path.startsWith('/pokedex/') && resolveProductRoute(path).kind === 'route') {
     return (
-      <HubFrame active="pokedex" destinations={hubDestinations}>
+      <HubFrame active="pokedex" destinations={hubDestinations} showAdmin={showAdmin}>
         <Suspense fallback={<RouteFallback module="pokedex" label="ABRINDO REGISTRO" />}>
           <PokedexSpeciesPage dex={getPokedexDex(path)} />
         </Suspense>
@@ -730,7 +770,7 @@ export function App() {
   }
   if (path === '/pokedex' || path === '/pokedex/') {
     return (
-      <HubFrame active="pokedex" destinations={hubDestinations}>
+      <HubFrame active="pokedex" destinations={hubDestinations} showAdmin={showAdmin}>
         <Suspense fallback={<RouteFallback module="pokedex" label="PREPARANDO ÍNDICE" />}>
           <PokedexIndexPage />
         </Suspense>
@@ -738,5 +778,5 @@ export function App() {
     );
   }
 
-  return <ProductNotFound destinations={hubDestinations} />;
+  return <ProductNotFound destinations={hubDestinations} showAdmin={showAdmin} />;
 }
