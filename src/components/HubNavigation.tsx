@@ -19,10 +19,12 @@ type HubNavigationProps = {
   active: HubSection | null;
   destinations: HubDestinations;
   children: ReactNode;
+  showAdmin?: boolean;
+  adminActive?: boolean;
 };
 
 type NavItem = {
-  id: HubSection;
+  id: HubSection | 'admin';
   label: string;
   description: string;
   asset: string;
@@ -70,6 +72,13 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
+const ADMIN_NAV_ITEM: NavItem = {
+  id: 'admin',
+  label: 'CENTRAL ADM',
+  description: 'Ferramentas administrativas autorizadas',
+  asset: HUB_BRAND_ASSET,
+};
+
 function warmProductPath(path: string) {
   const pending = preloadProductRoute(path);
   if (pending) void pending.catch(() => undefined);
@@ -106,23 +115,34 @@ export function HubMenuTrigger() {
   );
 }
 
-export function HubNavigation({ active, destinations, children }: HubNavigationProps) {
+export function HubNavigation({
+  active,
+  destinations,
+  children,
+  showAdmin = false,
+  adminActive = false,
+}: HubNavigationProps) {
   const [open, setOpen] = useState(false);
+  const visibleNavItems = showAdmin ? [...NAV_ITEMS, ADMIN_NAV_ITEM] : NAV_ITEMS;
+  const destinationFor = (item: NavItem) =>
+    item.id === 'admin' ? '/admin' : destinations[item.id];
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
-    const prioritySection = active ?? 'journey';
-    warmProductPath(destinations[prioritySection]);
-    const preloadTimers = NAV_ITEMS
-      .filter((item) => item.id !== prioritySection)
-      .map((item, index) =>
-        window.setTimeout(() => warmProductPath(destinations[item.id]), 1800 + index * 900),
+    const priorityPath = adminActive ? '/admin' : destinations[active ?? 'journey'];
+    warmProductPath(priorityPath);
+    const items = showAdmin ? [...NAV_ITEMS, ADMIN_NAV_ITEM] : NAV_ITEMS;
+    const preloadTimers = items
+      .map((item) => (item.id === 'admin' ? '/admin' : destinations[item.id]))
+      .filter((destination) => destination !== priorityPath)
+      .map((destination, index) =>
+        window.setTimeout(() => warmProductPath(destination), 1800 + index * 900),
       );
     return () => {
       for (const timer of preloadTimers) window.clearTimeout(timer);
     };
-  }, [active, destinations]);
+  }, [active, adminActive, destinations, showAdmin]);
 
   useEffect(() => {
     const onPopState = () => {
@@ -152,7 +172,7 @@ export function HubNavigation({ active, destinations, children }: HubNavigationP
 
   const openMenu = () => {
     if (open) return;
-    for (const item of NAV_ITEMS) warmProductPath(destinations[item.id]);
+    for (const item of visibleNavItems) warmProductPath(destinationFor(item));
     window.history.pushState({ ...currentHistoryState(), hubMenu: true }, '', window.location.href);
     setOpen(true);
   };
@@ -239,7 +259,7 @@ export function HubNavigation({ active, destinations, children }: HubNavigationP
                   </span>
                   <div>
                     <strong>POKÉMON BEYOND</strong>
-                    <span>JORNADA · POKÉDEX · BOX · STORE</span>
+                    <span>{showAdmin ? 'JORNADA · POKÉDEX · BOX · STORE · ADM' : 'JORNADA · POKÉDEX · BOX · STORE'}</span>
                   </div>
                 </div>
                 <button type="button" className="hub-menu-close" onClick={closeMenu} aria-label="Fechar menu">
@@ -248,14 +268,15 @@ export function HubNavigation({ active, destinations, children }: HubNavigationP
               </header>
 
               <nav className="hub-menu-grid" aria-label="Destinos principais">
-                {NAV_ITEMS.map((item) => {
-                  const selected = active === item.id;
-                  const warmRoute = () => warmProductPath(destinations[item.id]);
+                {visibleNavItems.map((item) => {
+                  const selected = item.id === 'admin' ? adminActive : active === item.id;
+                  const destination = destinationFor(item);
+                  const warmRoute = () => warmProductPath(destination);
                   return (
                     <a
                       key={item.id}
                       className={`hub-menu-tile is-${item.id}${selected ? ' is-active' : ''}`}
-                      href={destinations[item.id]}
+                      href={destination}
                       aria-current={selected ? 'page' : undefined}
                       data-hub-primary={item.id}
                       onClick={(event) => {
