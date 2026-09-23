@@ -504,3 +504,200 @@
     grid-column: auto;
   }
 }
+
+
+.admin-player-adjustments {
+  margin-bottom: 10px;
+  padding: 16px;
+  border: 1px solid rgba(201, 157, 85, 0.24);
+  border-left: 3px solid #c99d55;
+  border-radius: 10px;
+  background: #111718;
+}
+
+.admin-player-adjustments > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 13px;
+}
+
+.admin-player-adjustments > header > div {
+  display: grid;
+  gap: 3px;
+}
+
+.admin-player-adjustments > header span,
+.admin-player-adjustments > header small,
+.admin-player-adjustments form label > span,
+.admin-adjustment-submit span {
+  font: 700 0.56rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.07em;
+}
+
+.admin-player-adjustments > header span {
+  color: #c99d55;
+}
+
+.admin-player-adjustments > header strong {
+  color: #e7eded;
+}
+
+.admin-player-adjustments > header small {
+  color: #766a58;
+}
+
+.admin-player-adjustments > nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.admin-player-adjustments > nav button {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid rgba(218, 229, 230, 0.09);
+  border-radius: 6px;
+  background: #0e1415;
+  color: #738487;
+  cursor: pointer;
+  font: 800 0.58rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+.admin-player-adjustments > nav button.is-active {
+  border-color: rgba(201, 157, 85, 0.36);
+  background: rgba(201, 157, 85, 0.08);
+  color: #e0bb79;
+}
+
+.admin-player-adjustments form {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.7fr) minmax(0, 1fr);
+  gap: 9px;
+}
+
+.admin-player-adjustments form label {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+
+.admin-player-adjustments form label > span {
+  color: #6f8083;
+}
+
+.admin-player-adjustments input,
+.admin-player-adjustments select,
+.admin-player-adjustments textarea {
+  width: 100%;
+  border: 1px solid rgba(215, 232, 233, 0.09);
+  border-radius: 7px;
+  background: #0d1314;
+  color: #e3eded;
+  font: inherit;
+}
+
+.admin-player-adjustments input,
+.admin-player-adjustments select {
+  min-height: 42px;
+  padding: 0 11px;
+}
+
+.admin-player-adjustments textarea {
+  min-height: 82px;
+  resize: vertical;
+  padding: 10px 11px;
+}
+
+.admin-player-adjustments label.is-reason {
+  grid-column: 1 / -1;
+}
+
+.admin-adjustment-submit {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 4px;
+}
+
+.admin-adjustment-submit > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.admin-adjustment-submit span {
+  color: #a28b67;
+}
+
+.admin-adjustment-submit small {
+  color: #67777a;
+}
+
+.admin-adjustment-submit button {
+  min-height: 42px;
+  flex: none;
+  padding: 0 14px;
+  border: 1px solid rgba(201, 157, 85, 0.34);
+  border-radius: 7px;
+  background: rgba(201, 157, 85, 0.1);
+  color: #e4bd7a;
+  cursor: pointer;
+  font: 800 0.62rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.06em;
+}
+
+.admin-adjustment-submit button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.admin-adjustment-feedback {
+  margin: 12px 0 0;
+  padding: 9px 10px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+}
+
+.admin-adjustment-feedback.is-success {
+  background: rgba(103, 200, 158, 0.08);
+  color: #88d7b3;
+}
+
+.admin-adjustment-feedback.is-error {
+  background: rgba(224, 108, 116, 0.08);
+  color: #e38a91;
+}
+
+.admin-player-adjustments.is-disabled {
+  border-left-color: #5d686a;
+}
+
+.admin-player-adjustments.is-disabled p {
+  margin: 0;
+  color: #768689;
+}
+
+@media (max-width: 620px) {
+  .admin-player-adjustments form {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-player-adjustments label.is-reason,
+  .admin-adjustment-submit {
+    grid-column: auto;
+  }
+
+  .admin-adjustment-submit {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-adjustment-submit button {
+    width: 100%;
+  }
+}
