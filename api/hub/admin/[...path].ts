@@ -6,7 +6,7 @@ const UUID_PATTERN =
 
 type AdminProxyRoute = {
   upstreamPath: `/v1/hub/${string}`;
-  allowedMethod: 'GET' | 'POST' | 'PUT';
+  allowedMethod: 'GET' | 'POST' | 'PUT' | readonly ['GET', 'POST'];
 };
 
 export function resolveAdminProxyRoute(url: URL): AdminProxyRoute | null {
@@ -21,6 +21,32 @@ export function resolveAdminProxyRoute(url: URL): AdminProxyRoute | null {
     return {
       upstreamPath: `/v1/hub/admin/players${url.search}`,
       allowedMethod: 'GET',
+    };
+  }
+
+  if (url.pathname === '/api/hub/admin/operations') {
+    return {
+      upstreamPath: '/v1/hub/admin/operations',
+      allowedMethod: ['GET', 'POST'] as const,
+    };
+  }
+
+  const operationActionMatch = url.pathname.match(
+    /^\/api\/hub\/admin\/operations\/([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\/(simulate|confirm|approve|apply)$/i,
+  );
+  const operationId = operationActionMatch?.[1];
+  const operationAction = operationActionMatch?.[2]?.toLowerCase();
+  if (
+    operationId !== undefined &&
+    UUID_PATTERN.test(operationId) &&
+    (operationAction === 'simulate' ||
+      operationAction === 'confirm' ||
+      operationAction === 'approve' ||
+      operationAction === 'apply')
+  ) {
+    return {
+      upstreamPath: `/v1/hub/admin/operations/${operationId}/${operationAction}`,
+      allowedMethod: 'POST',
     };
   }
 
@@ -64,10 +90,17 @@ export default {
     const route = resolveAdminProxyRoute(new URL(request.url));
     if (route === null) return Promise.resolve(jsonNotFound());
 
+    const allowedMethod = Array.isArray(route.allowedMethod)
+      ? route.allowedMethod.includes(request.method as 'GET' | 'POST')
+        ? (request.method as 'GET' | 'POST')
+        : null
+      : route.allowedMethod;
+    if (allowedMethod === null) return Promise.resolve(jsonNotFound());
+
     return proxyPlayerPortalRequest(request, {
       baseUrl: readPlayerPortalApiBaseUrl(),
       upstreamPath: route.upstreamPath,
-      allowedMethod: route.allowedMethod,
+      allowedMethod,
     });
   },
 };
