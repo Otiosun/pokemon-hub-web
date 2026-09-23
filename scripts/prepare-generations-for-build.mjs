@@ -4,12 +4,14 @@ export function generationsBuildMode(env = process.env) {
   const explicit = env.GENERATIONS_BUILD_MODE?.trim().toLowerCase();
   if (explicit === 'full' || explicit === 'skip') return explicit;
 
+  // Vercel serves the immutable Gen I-III catalog through external rewrites.
+  // Keep application deploys independent from the expensive 386-model rebuild.
+  if (env.VERCEL === '1') return 'skip';
+
   if (env.WORKERS_CI === '1') {
     const branch = env.WORKERS_CI_BRANCH?.trim();
     if (branch && branch !== 'main') return 'skip';
   }
-
-  if (env.VERCEL_ENV === 'preview') return 'skip';
 
   return 'full';
 }
