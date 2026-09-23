@@ -170,6 +170,11 @@
   opacity: 0;
 }
 
+.owned-detail-visual.is-3d .owned-detail-artwork {
+  opacity: 0;
+  transition: none;
+}
+
 .owned-detail-artwork img {
   width: min(84%, 610px);
   height: 100%;

@@ -91,6 +91,7 @@
 .pokedex-species-artwork-slot.is-hidden {
   opacity: 0;
   pointer-events: none;
+  transition: none;
 }
 
 .pokedex-species-artwork-slot::before {

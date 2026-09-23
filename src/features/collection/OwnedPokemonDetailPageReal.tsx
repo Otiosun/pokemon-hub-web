@@ -193,9 +193,10 @@ export function OwnedPokemonDetailPage({
 
   useEffect(() => {
     if (modelCapability !== 'unsupported' || visualMode !== '3d') return;
+    // Fall back only for this record. Keep the user's persisted 3D preference so
+    // the next owned Pokémon can still use a verified model when one exists.
     setViewerReady(false);
     setVisualMode('2d');
-    rememberOwnedPokemonVisualPreference('2d');
   }, [modelCapability, visualMode]);
 
   if (collection.status === 'loading') {
@@ -317,7 +318,7 @@ export function OwnedPokemonDetailPage({
 
           <div className={`owned-detail-visual${visualMode === '3d' ? ' is-3d' : ''}`}>
             <div
-              className={`owned-detail-artwork${visualMode === '3d' && viewerReady ? ' is-hidden' : ''}`}
+              className={`owned-detail-artwork${visualMode === '3d' ? ' is-hidden' : ''}`}
             >
               {record.dex !== null ? (
                 <OwnedPokemonImage
@@ -348,7 +349,6 @@ export function OwnedPokemonDetailPage({
                     setViewerReady(false);
                     setModelCapability('failed');
                     setVisualMode('2d');
-                    rememberOwnedPokemonVisualPreference('2d');
                   }}
                 />
               </div>
