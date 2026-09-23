@@ -6,6 +6,7 @@ describe('product route preload classification', () => {
     expect(productRouteChunk('/pokedex/25')).toBe('pokedex-species');
     expect(productRouteChunk('/pokemon/owned-charmander-01')).toBe('owned-pokemon');
     expect(productRouteChunk('/team')).toBe('team');
+    expect(productRouteChunk('/admin')).toBe('admin');
   });
 
   it('keeps primary roots distinct', () => {

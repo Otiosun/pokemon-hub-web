@@ -62,41 +62,7 @@
   margin-top: 6px;
 }
 
-.pokedex-species-artwork-slot {
-  position: absolute;
-  z-index: 2;
-  inset: 0;
-  pointer-events: none;
-}
-
-.pokedex-species-artwork-slot::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 45%;
-  width: 92px;
-  height: 92px;
-  transform: translate(-50%, -50%);
-  border: 1px solid rgba(135, 225, 231, 0.12);
-  border-radius: 50%;
-  box-shadow:
-    0 0 0 22px rgba(135, 225, 231, 0.018),
-    inset 0 0 0 1px rgba(135, 225, 231, 0.035);
-  transition: opacity 120ms ease;
-}
-
-.pokedex-species-stage.is-artwork-ready .pokedex-species-artwork-slot::before {
-  opacity: 0;
-}
-
-.pokedex-species-artwork-slot .pokedex-species-artwork {
-  opacity: 0;
-  transition: opacity 120ms ease;
-}
-
-.pokedex-species-stage.is-artwork-ready .pokedex-species-artwork {
-  opacity: 1;
-}
+/* Species artwork sizing/visibility is owned by pokedex-species.css. */
 
 /* FIELD DEX 3D: never flash official/HOME artwork before WebGL. */
 .dex-page .dex-art {
@@ -205,9 +171,7 @@
   opacity: 0;
 }
 
-.pokedex-index-page .pokedex-index-sprite-wrap img {
-  scale: 0.9;
-}
+/* Index sprite sizing is owned by pokedex-index.css. */
 
 .pokedex-index-page .pokedex-index-card.is-caught .pokedex-index-sprite-wrap img {
   filter: saturate(0.96) contrast(1.01) drop-shadow(0 9px 15px rgba(0, 0, 0, 0.22));
@@ -300,10 +264,6 @@
 
   .pokedex-index-page .pokedex-index-sprite-wrap {
     min-height: 90px;
-  }
-
-  .pokedex-index-page .pokedex-index-sprite-wrap img {
-    scale: 0.86;
   }
 
   .hub-with-navigation .hub-menu-trigger {

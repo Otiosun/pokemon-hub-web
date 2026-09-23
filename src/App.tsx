@@ -36,6 +36,9 @@ const TeamPage = lazy(() =>
 const InventoryPage = lazy(() =>
   import('./features/inventory/InventoryPage').then((module) => ({ default: module.InventoryPage })),
 );
+const AdminPage = lazy(() =>
+  import('./features/admin/AdminPage').then((module) => ({ default: module.AdminPage })),
+);
 
 type ChampionStoreOffer = {
   code: string;
@@ -658,6 +661,16 @@ export function App() {
       document.removeEventListener('click', onDocumentClick);
     };
   }, []);
+
+  if (path === '/admin' || path === '/admin/') {
+    return (
+      <HubFrame active={null} destinations={hubDestinations}>
+        <Suspense fallback={<RouteFallback module="journey" label="VALIDANDO CENTRAL ADM" />}>
+          <AdminPage />
+        </Suspense>
+      </HubFrame>
+    );
+  }
 
   if (path === '/champion-store' || path === '/champion-store/') {
     return (

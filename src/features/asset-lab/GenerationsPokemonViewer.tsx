@@ -114,7 +114,9 @@ function frameModel(runtime: Runtime, model: Group) {
   const fitHeight = (Math.max(size.y, 0.01) * 0.5) / Math.tan(verticalFov / 2);
   const fitWidth = (Math.max(size.x, 0.01) * 0.5) / Math.tan(horizontalFov / 2);
   const depthAllowance = Math.max(size.z, maxDimension * 0.14) * 0.5;
-  const aspectMargin = camera.aspect < 0.72 ? 1.34 : camera.aspect < 1 ? 1.25 : 1.16;
+  // Keep a real safety border around animated extremities. The old fit was
+  // visually tight enough to clip wings, flames and shells after resize/swap.
+  const aspectMargin = camera.aspect < 0.72 ? 1.44 : camera.aspect < 1 ? 1.34 : 1.24;
   const distance = Math.max((Math.max(fitHeight, fitWidth) + depthAllowance) * aspectMargin, 0.8);
 
   const yaw = camera.aspect < 0.8 ? 0.08 : 0.12;

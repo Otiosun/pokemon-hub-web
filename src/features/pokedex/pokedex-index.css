@@ -141,9 +141,9 @@
 }
 
 .pokedex-index-toolbar {
-  position: sticky;
+  position: relative;
   z-index: 12;
-  top: 68px;
+  top: auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
@@ -800,6 +800,7 @@
   }
 
   .pokedex-index-toolbar {
+    position: sticky;
     top: 64px;
   }
 
