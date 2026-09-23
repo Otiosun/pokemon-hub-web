@@ -6,10 +6,10 @@ const UUID_PATTERN =
 
 type AdminProxyRoute = {
   upstreamPath: `/v1/hub/${string}`;
-  allowedMethod: 'GET' | 'POST' | 'PUT' | readonly ['GET', 'POST'];
+  allowedMethod: 'GET' | 'POST' | 'PUT';
 };
 
-export function resolveAdminProxyRoute(url: URL): AdminProxyRoute | null {
+export function resolveAdminProxyRoute(url: URL, requestMethod = 'GET'): AdminProxyRoute | null {
   if (url.pathname === '/api/hub/admin/self') {
     return {
       upstreamPath: '/v1/hub/admin/self',
@@ -24,10 +24,13 @@ export function resolveAdminProxyRoute(url: URL): AdminProxyRoute | null {
     };
   }
 
-  if (url.pathname === '/api/hub/admin/operations') {
+  if (
+    url.pathname === '/api/hub/admin/operations' &&
+    (requestMethod === 'GET' || requestMethod === 'POST')
+  ) {
     return {
       upstreamPath: '/v1/hub/admin/operations',
-      allowedMethod: ['GET', 'POST'] as const,
+      allowedMethod: requestMethod,
     };
   }
 
@@ -87,20 +90,13 @@ function jsonNotFound(): Response {
 
 export default {
   fetch(request: Request): Promise<Response> {
-    const route = resolveAdminProxyRoute(new URL(request.url));
+    const route = resolveAdminProxyRoute(new URL(request.url), request.method);
     if (route === null) return Promise.resolve(jsonNotFound());
-
-    const allowedMethod = Array.isArray(route.allowedMethod)
-      ? route.allowedMethod.includes(request.method as 'GET' | 'POST')
-        ? (request.method as 'GET' | 'POST')
-        : null
-      : route.allowedMethod;
-    if (allowedMethod === null) return Promise.resolve(jsonNotFound());
 
     return proxyPlayerPortalRequest(request, {
       baseUrl: readPlayerPortalApiBaseUrl(),
       upstreamPath: route.upstreamPath,
-      allowedMethod,
+      allowedMethod: route.allowedMethod,
     });
   },
 };
