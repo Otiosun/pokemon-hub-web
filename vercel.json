@@ -36,6 +36,6 @@
     }
   ],
   "env": {
-    "PLAYER_PORTAL_API_BASE_URL": "https://pokemon-rpg-player-api-rc-current-staging.up.railway.app"
+    "PLAYER_PORTAL_API_BASE_URL": "https://pokemon-api.otiosunbots.xyz"
   }
 }
