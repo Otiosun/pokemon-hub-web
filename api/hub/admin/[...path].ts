@@ -9,7 +9,7 @@ type AdminProxyRoute = {
   allowedMethod: 'GET' | 'POST' | 'PUT';
 };
 
-export function resolveAdminProxyRoute(url: URL): AdminProxyRoute | null {
+export function resolveAdminProxyRoute(url: URL, requestMethod = 'GET'): AdminProxyRoute | null {
   if (url.pathname === '/api/hub/admin/self') {
     return {
       upstreamPath: '/v1/hub/admin/self',
@@ -21,6 +21,35 @@ export function resolveAdminProxyRoute(url: URL): AdminProxyRoute | null {
     return {
       upstreamPath: `/v1/hub/admin/players${url.search}`,
       allowedMethod: 'GET',
+    };
+  }
+
+  if (
+    url.pathname === '/api/hub/admin/operations' &&
+    (requestMethod === 'GET' || requestMethod === 'POST')
+  ) {
+    return {
+      upstreamPath: '/v1/hub/admin/operations',
+      allowedMethod: requestMethod,
+    };
+  }
+
+  const operationActionMatch = url.pathname.match(
+    /^\/api\/hub\/admin\/operations\/([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\/(simulate|confirm|approve|apply)$/i,
+  );
+  const operationId = operationActionMatch?.[1];
+  const operationAction = operationActionMatch?.[2]?.toLowerCase();
+  if (
+    operationId !== undefined &&
+    UUID_PATTERN.test(operationId) &&
+    (operationAction === 'simulate' ||
+      operationAction === 'confirm' ||
+      operationAction === 'approve' ||
+      operationAction === 'apply')
+  ) {
+    return {
+      upstreamPath: `/v1/hub/admin/operations/${operationId}/${operationAction}`,
+      allowedMethod: 'POST',
     };
   }
 
@@ -61,7 +90,7 @@ function jsonNotFound(): Response {
 
 export default {
   fetch(request: Request): Promise<Response> {
-    const route = resolveAdminProxyRoute(new URL(request.url));
+    const route = resolveAdminProxyRoute(new URL(request.url), request.method);
     if (route === null) return Promise.resolve(jsonNotFound());
 
     return proxyPlayerPortalRequest(request, {
