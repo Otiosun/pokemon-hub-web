@@ -9,36 +9,47 @@ const MODULES = [
     detail: 'Perfis, acesso, progressão, localização e suporte.',
     prefixes: ['player.', 'progression.', 'pokedex.'],
     href: '/admin/players',
+    cta: 'ABRIR PLAYER 360',
   },
   {
     id: 'pokemon',
     title: 'POKÉMON',
     detail: 'Roster, edição, movimentos, efeitos e ciclo de vida.',
     prefixes: ['pokemon.', 'effect.', 'effects.'],
+    href: null,
+    cta: 'INTERFACE EM CONSTRUÇÃO',
   },
   {
     id: 'economy',
     title: 'ECONOMIA',
-    detail: 'Inventário, wallet, recompensas e ajustes.',
-    prefixes: ['inventory.', 'wallet.', 'economy.', 'reward.'],
+    detail: 'Ajustes individuais e recompensas em massa com preview.',
+    prefixes: ['inventory.', 'wallet.', 'economy.', 'reward.', 'batch.', 'progression.'],
+    href: '/admin/rewards',
+    cta: 'ABRIR RECOMPENSAS',
   },
   {
     id: 'world',
     title: 'MUNDO E BATALHA',
     detail: 'Encontros, batalhas, regiões e correções operacionais.',
     prefixes: ['world.', 'encounter.', 'battle.'],
+    href: null,
+    cta: 'INTERFACE EM CONSTRUÇÃO',
   },
   {
     id: 'content',
     title: 'CONTEÚDO',
     detail: 'Drafts, validação, publicação e rollback de releases.',
     prefixes: ['content.'],
+    href: null,
+    cta: 'INTERFACE EM CONSTRUÇÃO',
   },
   {
     id: 'security',
     title: 'ADMINISTRAÇÃO',
     detail: 'Auditoria, cargos, capacidades e operações sensíveis.',
     prefixes: ['audit.', 'admin_', 'admin.', 'community.', 'batch.', 'UAT_'],
+    href: null,
+    cta: 'INTERFACE EM CONSTRUÇÃO',
   },
 ] as const;
 
@@ -123,14 +134,12 @@ export function AdminPage() {
                 <p>{module.detail}</p>
                 <footer>
                   <span>{grants.length} permissões</span>
-                  <small>
-                    {'href' in module && module.href && available ? 'ABRIR PLAYER 360' : 'INTERFACE EM CONSTRUÇÃO'}
-                  </small>
+                  <small>{module.href && available ? module.cta : 'INTERFACE EM CONSTRUÇÃO'}</small>
                 </footer>
               </>
             );
 
-            return 'href' in module && module.href && available ? (
+            return module.href && available ? (
               <a key={module.id} className={`${className} is-link`} href={module.href}>
                 {content}
               </a>
