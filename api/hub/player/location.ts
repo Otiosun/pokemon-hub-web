@@ -5,7 +5,7 @@ export default {
   fetch(request: Request): Promise<Response> {
     return proxyPlayerPortalRequest(request, {
       baseUrl: readPlayerPortalApiBaseUrl(),
-      upstreamPath: '/v1/hub/player/location',
+      upstreamPath: '/v1/hub/world/location',
       allowedMethod: 'GET',
     });
   },
