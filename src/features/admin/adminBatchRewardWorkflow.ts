@@ -10,6 +10,11 @@ export type AdminBatchRewardTarget =
   | { kind: 'PLAYER_IDS'; playerIds: string[] }
   | { kind: 'PLAYER_FILTER'; status: AdminPlayerStatus };
 
+export type AdminBatchReward =
+  | { kind: 'TRAINER_PROGRESSION'; delta: string }
+  | { kind: 'WALLET'; currencyId: string; delta: string }
+  | { kind: 'ITEM'; itemId: string; delta: string };
+
 export type AdminBatchRewardPreview = {
   batchId: string;
   targetCount: number;
@@ -58,12 +63,12 @@ function deniedOrRejected<T>(
 export function buildBatchRewardPreviewRequest(input: {
   requestId: string;
   target: AdminBatchRewardTarget;
-  delta: string;
+  reward: AdminBatchReward;
   reason: string;
   chunkSize?: number;
 }): { ok: true; request: AdminOperationPrepareInput } | { ok: false; message: string } {
   const reason = input.reason.trim();
-  const delta = input.delta.trim();
+  const delta = input.reward.delta.trim();
   if (!UUID_PATTERN.test(input.requestId)) {
     return { ok: false, message: 'Identificador de requisição inválido.' };
   }
@@ -90,6 +95,21 @@ export function buildBatchRewardPreviewRequest(input: {
     };
   }
 
+  let action: Record<string, unknown>;
+  if (input.reward.kind === 'TRAINER_PROGRESSION') {
+    action = { kind: 'TRAINER_PROGRESSION_ADJUST', delta };
+  } else if (input.reward.kind === 'WALLET') {
+    if (!UUID_PATTERN.test(input.reward.currencyId)) {
+      return { ok: false, message: 'Selecione uma moeda válida.' };
+    }
+    action = { kind: 'WALLET_ADJUST', currencyId: input.reward.currencyId, delta };
+  } else {
+    if (!UUID_PATTERN.test(input.reward.itemId)) {
+      return { ok: false, message: 'Selecione um item válido.' };
+    }
+    action = { kind: 'INVENTORY_ADJUST', itemId: input.reward.itemId, delta };
+  }
+
   const chunkSize = input.chunkSize ?? 25;
   if (!Number.isInteger(chunkSize) || chunkSize < 1 || chunkSize > 100) {
     return { ok: false, message: 'O tamanho do lote deve estar entre 1 e 100.' };
@@ -102,10 +122,7 @@ export function buildBatchRewardPreviewRequest(input: {
       operationType: 'batch.preview',
       input: {
         selector,
-        action: {
-          kind: 'TRAINER_PROGRESSION_ADJUST',
-          delta,
-        },
+        action,
         chunkSize,
       },
       reason,
