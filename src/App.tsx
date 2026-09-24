@@ -45,6 +45,9 @@ const AdminPlayersPage = lazy(() =>
 const AdminPlayerDetailPage = lazy(() =>
   import('./features/admin/AdminPlayerDetailPage').then((module) => ({ default: module.AdminPlayerDetailPage })),
 );
+const AdminBatchRewardsPage = lazy(() =>
+  import('./features/admin/AdminBatchRewardsPage').then((module) => ({ default: module.AdminBatchRewardsPage })),
+);
 
 type ChampionStoreOffer = {
   code: string;
@@ -671,6 +674,16 @@ export function App() {
       document.removeEventListener('click', onDocumentClick);
     };
   }, []);
+
+  if (path === '/admin/rewards' || path === '/admin/rewards/') {
+    return (
+      <HubFrame active={null} destinations={hubDestinations}>
+        <Suspense fallback={<RouteFallback module="journey" label="ABRINDO RECOMPENSAS EM MASSA" />}>
+          <AdminBatchRewardsPage />
+        </Suspense>
+      </HubFrame>
+    );
+  }
 
   if (path === '/admin/players' || path === '/admin/players/') {
     return (

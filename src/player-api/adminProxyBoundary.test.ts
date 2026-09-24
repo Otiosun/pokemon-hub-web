@@ -15,6 +15,10 @@ describe('consolidated admin proxy boundary', () => {
       upstreamPath: '/v1/hub/admin/players?q=Nat&status=ACTIVE',
       allowedMethod: 'GET',
     });
+    expect(resolveAdminProxyRoute(new URL('https://hub.test/api/hub/admin/reward-catalog'))).toEqual({
+      upstreamPath: '/v1/hub/admin/reward-catalog',
+      allowedMethod: 'GET',
+    });
     expect(
       resolveAdminProxyRoute(
         new URL(

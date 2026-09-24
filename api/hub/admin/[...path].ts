@@ -24,6 +24,13 @@ export function resolveAdminProxyRoute(url: URL, requestMethod = 'GET'): AdminPr
     };
   }
 
+  if (url.pathname === '/api/hub/admin/reward-catalog') {
+    return {
+      upstreamPath: '/v1/hub/admin/reward-catalog',
+      allowedMethod: 'GET',
+    };
+  }
+
   if (
     url.pathname === '/api/hub/admin/operations' &&
     (requestMethod === 'GET' || requestMethod === 'POST')
