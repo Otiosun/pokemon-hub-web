@@ -1,21 +1,40 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import locationRoute from '../../api/hub/player/location';
 
-const originalBaseUrl = process.env.PLAYER_PORTAL_API_BASE_URL;
+function runtimeEnvironment(): Record<string, unknown> {
+  const runtimeProcess = Reflect.get(globalThis, 'process');
+  if (typeof runtimeProcess !== 'object' || runtimeProcess === null) {
+    throw new Error('process is unavailable in the test runtime');
+  }
+
+  const environment = Reflect.get(runtimeProcess, 'env');
+  if (typeof environment !== 'object' || environment === null) {
+    throw new Error('process.env is unavailable in the test runtime');
+  }
+
+  return environment as Record<string, unknown>;
+}
+
+const originalBaseUrl = runtimeEnvironment().PLAYER_PORTAL_API_BASE_URL;
 
 afterEach(() => {
   vi.unstubAllGlobals();
 
+  const environment = runtimeEnvironment();
   if (originalBaseUrl === undefined) {
-    delete process.env.PLAYER_PORTAL_API_BASE_URL;
+    Reflect.deleteProperty(environment, 'PLAYER_PORTAL_API_BASE_URL');
   } else {
-    process.env.PLAYER_PORTAL_API_BASE_URL = originalBaseUrl;
+    Reflect.set(environment, 'PLAYER_PORTAL_API_BASE_URL', originalBaseUrl);
   }
 });
 
 describe('Hub location proxy contract', () => {
   it('targets the V23 canonical world location route', async () => {
-    process.env.PLAYER_PORTAL_API_BASE_URL = 'https://player-api.example.test';
+    Reflect.set(
+      runtimeEnvironment(),
+      'PLAYER_PORTAL_API_BASE_URL',
+      'https://player-api.example.test',
+    );
 
     const fetcher = vi.fn(
       async () =>
