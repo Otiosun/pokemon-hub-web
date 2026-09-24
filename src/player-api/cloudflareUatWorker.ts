@@ -1,7 +1,9 @@
 import type { PlayerPortalFetcher } from './playerPortalClient';
 import { proxyPlayerPortalRequest } from './playerPortalProxy';
 
+const LEGACY_UAT_HOST = 'feat-player-api-v1-pokemon-hub-web.natanaelgames19.workers.dev';
 const PREVIEW_HOST_SUFFIX = '-pokemon-hub-web.natanaelgames19.workers.dev';
+const LEGACY_PLAYER_API_URL = 'https://stadium-mathematics-disks-honolulu.trycloudflare.com';
 const PLAYER_PORTAL_API_URL = 'https://pokemon-api.otiosunbots.xyz';
 
 type CloudflareUatAssets = {
@@ -17,7 +19,38 @@ type HubUatRoute = {
   allowedMethod: 'GET' | 'POST' | 'PUT';
 };
 
-const HUB_UAT_ROUTES: Readonly<Record<string, HubUatRoute>> = {
+const LEGACY_HUB_UAT_ROUTES: Readonly<Record<string, HubUatRoute>> = {
+  '/api/hub/auth/exchange': {
+    upstreamPath: '/v1/hub/auth/exchange',
+    allowedMethod: 'POST',
+  },
+  '/api/hub/player/self': {
+    upstreamPath: '/v1/hub/player/self',
+    allowedMethod: 'GET',
+  },
+  '/api/hub/player/pokemon': {
+    upstreamPath: '/v1/hub/player/pokemon',
+    allowedMethod: 'GET',
+  },
+  '/api/hub/player/pokedex': {
+    upstreamPath: '/v1/hub/player/pokedex',
+    allowedMethod: 'GET',
+  },
+  '/api/hub/player/location': {
+    upstreamPath: '/v1/hub/player/location',
+    allowedMethod: 'GET',
+  },
+  '/api/hub/player/roster': {
+    upstreamPath: '/v1/hub/player/roster',
+    allowedMethod: 'PUT',
+  },
+  '/api/hub/player/profile-customization': {
+    upstreamPath: '/v1/hub/player/profile-customization',
+    allowedMethod: 'PUT',
+  },
+};
+
+const PREVIEW_HUB_ROUTES: Readonly<Record<string, HubUatRoute>> = {
   '/api/hub/auth/exchange': {
     upstreamPath: '/v1/hub/auth/exchange',
     allowedMethod: 'POST',
@@ -64,8 +97,8 @@ const HUB_UAT_ROUTES: Readonly<Record<string, HubUatRoute>> = {
   },
 };
 
-function isCloudflarePreviewHost(hostname: string): boolean {
-  return hostname.endsWith(PREVIEW_HOST_SUFFIX);
+function isPreviewHost(hostname: string): boolean {
+  return hostname !== LEGACY_UAT_HOST && hostname.endsWith(PREVIEW_HOST_SUFFIX);
 }
 
 export async function handleCloudflareUatRequest(
@@ -79,17 +112,21 @@ export async function handleCloudflareUatRequest(
     return env.ASSETS.fetch(request);
   }
 
-  if (!isCloudflarePreviewHost(url.hostname)) {
+  const legacyRequest = url.hostname === LEGACY_UAT_HOST;
+  const previewRequest = isPreviewHost(url.hostname);
+
+  if (!legacyRequest && !previewRequest) {
     return jsonNotFound();
   }
 
-  const route = HUB_UAT_ROUTES[url.pathname];
+  const routes = legacyRequest ? LEGACY_HUB_UAT_ROUTES : PREVIEW_HUB_ROUTES;
+  const route = routes[url.pathname];
   if (route === undefined) {
     return jsonNotFound();
   }
 
   return proxyPlayerPortalRequest(request, {
-    baseUrl: PLAYER_PORTAL_API_URL,
+    baseUrl: legacyRequest ? LEGACY_PLAYER_API_URL : PLAYER_PORTAL_API_URL,
     upstreamPath: route.upstreamPath,
     allowedMethod: route.allowedMethod,
     fetcher: upstreamFetcher,
