@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { handleCloudflareUatRequest } from './cloudflareUatWorker';
 
-const UAT_HOST = 'feat-player-api-v1-pokemon-hub-web.natanaelgames19.workers.dev';
+const UAT_HOST = 'uat-hub-v23-live-pokemon-hub-web.natanaelgames19.workers.dev';
 
 function assetsFetcher() {
   return {
@@ -13,9 +13,7 @@ describe('Cloudflare UAT Hub worker', () => {
   it('proxies Hub API requests only on the canonical UAT branch alias', async () => {
     const assets = assetsFetcher();
     const upstream = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-      expect(String(input)).toBe(
-        'https://stadium-mathematics-disks-honolulu.trycloudflare.com/v1/hub/player/self',
-      );
+      expect(String(input)).toBe('https://pokemon-api.otiosunbots.xyz/v1/hub/player/self');
       expect(init?.method).toBe('GET');
       return new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), {
         status: 401,
@@ -34,12 +32,10 @@ describe('Cloudflare UAT Hub worker', () => {
     expect(assets.fetch).not.toHaveBeenCalled();
   });
 
-  it('proxies the read-only Journey location without exposing gameplay actions', async () => {
+  it('maps Journey location to the V23 world location route', async () => {
     const assets = assetsFetcher();
     const upstream = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-      expect(String(input)).toBe(
-        'https://stadium-mathematics-disks-honolulu.trycloudflare.com/v1/hub/player/location',
-      );
+      expect(String(input)).toBe('https://pokemon-api.otiosunbots.xyz/v1/hub/world/location');
       expect(init?.method).toBe('GET');
       return new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), {
         status: 401,
@@ -57,13 +53,11 @@ describe('Cloudflare UAT Hub worker', () => {
     expect(assets.fetch).not.toHaveBeenCalled();
   });
 
-  it('proxies authenticated profile customization without exposing gameplay mutation routes', async () => {
+  it('proxies inventory through the named Player Portal tunnel', async () => {
     const assets = assetsFetcher();
     const upstream = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-      expect(String(input)).toBe(
-        'https://stadium-mathematics-disks-honolulu.trycloudflare.com/v1/hub/player/profile-customization',
-      );
-      expect(init?.method).toBe('PUT');
+      expect(String(input)).toBe('https://pokemon-api.otiosunbots.xyz/v1/hub/player/inventory');
+      expect(init?.method).toBe('GET');
       return new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), {
         status: 401,
         headers: { 'content-type': 'application/json' },
@@ -71,18 +65,7 @@ describe('Cloudflare UAT Hub worker', () => {
     });
 
     const response = await handleCloudflareUatRequest(
-      new Request(`https://${UAT_HOST}/api/hub/player/profile-customization`, {
-        method: 'PUT',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          title: null,
-          bio: null,
-          appearance: null,
-          age: null,
-          height: null,
-          accent: 'crimson',
-        }),
-      }),
+      new Request(`https://${UAT_HOST}/api/hub/player/inventory`),
       { ASSETS: assets },
       upstream,
     );
@@ -91,7 +74,7 @@ describe('Cloudflare UAT Hub worker', () => {
     expect(assets.fetch).not.toHaveBeenCalled();
   });
 
-  it('never exposes staging Hub API from non-UAT hosts', async () => {
+  it('never exposes UAT Hub API from non-UAT hosts', async () => {
     const assets = assetsFetcher();
     const upstream = vi.fn(async () => new Response('unexpected'));
 
