@@ -86,11 +86,14 @@ export function AdminBatchRewardsPage() {
     capabilities.includes('player.read') &&
     (canUseProgression || canUseWallet || canUseItem);
 
-  const rewardKinds = [
-    ...(canUseProgression ? ([{ value: 'PROGRESSION', label: 'PROGRESSÃO' }] as const) : []),
-    ...(canUseWallet ? ([{ value: 'WALLET', label: 'DINHEIRO' }] as const) : []),
-    ...(canUseItem ? ([{ value: 'ITEM', label: 'ITEM' }] as const) : []),
-  ];
+  const rewardKinds = useMemo(
+    () => [
+      ...(canUseProgression ? ([{ value: 'PROGRESSION', label: 'PROGRESSÃO' }] as const) : []),
+      ...(canUseWallet ? ([{ value: 'WALLET', label: 'DINHEIRO' }] as const) : []),
+      ...(canUseItem ? ([{ value: 'ITEM', label: 'ITEM' }] as const) : []),
+    ],
+    [canUseItem, canUseProgression, canUseWallet],
+  );
 
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
 
@@ -159,7 +162,7 @@ export function AdminBatchRewardsPage() {
     if (rewardKind === 'ITEM' && canUseItem) return;
     const first = rewardKinds[0]?.value;
     if (first) setRewardKind(first);
-  }, [canUseItem, canUseProgression, canUseWallet, rewardKind]);
+  }, [canUseItem, canUseProgression, canUseWallet, rewardKind, rewardKinds]);
 
   const search = async (event: FormEvent) => {
     event.preventDefault();
