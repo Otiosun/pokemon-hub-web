@@ -31,7 +31,7 @@ describe('admin batch reward workflow', () => {
       buildBatchRewardPreviewRequest({
         requestId,
         target: { kind: 'PLAYER_IDS', playerIds: [playerId, playerId] },
-        delta: '50',
+        reward: { kind: 'TRAINER_PROGRESSION', delta: '50' },
         reason: 'Evento semanal',
       }),
     ).toEqual({
@@ -49,12 +49,62 @@ describe('admin batch reward workflow', () => {
     });
   });
 
+  it('builds wallet and inventory actions with catalog ids', () => {
+    expect(
+      buildBatchRewardPreviewRequest({
+        requestId,
+        target: { kind: 'PLAYER_IDS', playerIds: [playerId] },
+        reward: {
+          kind: 'WALLET',
+          currencyId: '55555555-5555-4555-8555-555555555555',
+          delta: '1000',
+        },
+        reason: 'Premiação',
+      }),
+    ).toMatchObject({
+      ok: true,
+      request: {
+        input: {
+          action: {
+            kind: 'WALLET_ADJUST',
+            currencyId: '55555555-5555-4555-8555-555555555555',
+            delta: '1000',
+          },
+        },
+      },
+    });
+
+    expect(
+      buildBatchRewardPreviewRequest({
+        requestId,
+        target: { kind: 'PLAYER_IDS', playerIds: [playerId] },
+        reward: {
+          kind: 'ITEM',
+          itemId: '66666666-6666-4666-8666-666666666666',
+          delta: '2',
+        },
+        reason: 'Kit de evento',
+      }),
+    ).toMatchObject({
+      ok: true,
+      request: {
+        input: {
+          action: {
+            kind: 'INVENTORY_ADJUST',
+            itemId: '66666666-6666-4666-8666-666666666666',
+            delta: '2',
+          },
+        },
+      },
+    });
+  });
+
   it('builds a status-filter preview and rejects zero/no-target payloads', () => {
     expect(
       buildBatchRewardPreviewRequest({
         requestId,
         target: { kind: 'PLAYER_FILTER', status: 'ACTIVE' },
-        delta: '-10',
+        reward: { kind: 'TRAINER_PROGRESSION', delta: '-10' },
         reason: 'Correção',
       }),
     ).toMatchObject({
@@ -71,7 +121,7 @@ describe('admin batch reward workflow', () => {
       buildBatchRewardPreviewRequest({
         requestId,
         target: { kind: 'PLAYER_IDS', playerIds: [] },
-        delta: '10',
+        reward: { kind: 'TRAINER_PROGRESSION', delta: '10' },
         reason: 'Evento',
       }),
     ).toEqual({ ok: false, message: 'Selecione pelo menos um jogador.' });
@@ -80,7 +130,7 @@ describe('admin batch reward workflow', () => {
       buildBatchRewardPreviewRequest({
         requestId,
         target: { kind: 'PLAYER_IDS', playerIds: [playerId] },
-        delta: '0',
+        reward: { kind: 'TRAINER_PROGRESSION', delta: '0' },
         reason: 'Evento',
       }),
     ).toEqual({ ok: false, message: 'Informe um delta inteiro diferente de zero.' });
@@ -104,7 +154,7 @@ describe('admin batch reward workflow', () => {
     const built = buildBatchRewardPreviewRequest({
       requestId,
       target: { kind: 'PLAYER_IDS', playerIds: [playerId] },
-      delta: '25',
+      reward: { kind: 'TRAINER_PROGRESSION', delta: '25' },
       reason: 'Recompensa',
     });
     if (!built.ok) throw new Error(built.message);
