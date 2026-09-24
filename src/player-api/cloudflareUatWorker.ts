@@ -1,7 +1,7 @@
 import type { PlayerPortalFetcher } from './playerPortalClient';
 import { proxyPlayerPortalRequest } from './playerPortalProxy';
 
-const UAT_HOST = 'feat-player-api-v1-pokemon-hub-web.natanaelgames19.workers.dev';
+const UAT_HOST = 'uat-cf-named-api-pokemon-hub-web.natanaelgames19.workers.dev';
 const STAGING_PLAYER_API_URL = 'https://pokemon-api.otiosunbots.xyz';
 
 type CloudflareUatAssets = {

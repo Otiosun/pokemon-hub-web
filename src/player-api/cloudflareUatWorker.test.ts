@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { handleCloudflareUatRequest } from './cloudflareUatWorker';
 
-const UAT_HOST = 'feat-player-api-v1-pokemon-hub-web.natanaelgames19.workers.dev';
+const UAT_HOST = 'uat-cf-named-api-pokemon-hub-web.natanaelgames19.workers.dev';
 
 function assetsFetcher() {
   return {
