@@ -38,7 +38,7 @@ describe('Cloudflare UAT Hub worker', () => {
     const assets = assetsFetcher();
     const upstream = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       expect(String(input)).toBe(
-        'https://pokemon-api.otiosunbots.xyz/v1/hub/player/location',
+        'https://pokemon-api.otiosunbots.xyz/v1/hub/world/location',
       );
       expect(init?.method).toBe('GET');
       return new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), {
