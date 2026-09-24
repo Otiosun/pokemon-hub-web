@@ -2,7 +2,7 @@ import type { PlayerPortalFetcher } from './playerPortalClient';
 import { proxyPlayerPortalRequest } from './playerPortalProxy';
 
 const UAT_HOST = 'feat-player-api-v1-pokemon-hub-web.natanaelgames19.workers.dev';
-const STAGING_PLAYER_API_URL = 'https://stadium-mathematics-disks-honolulu.trycloudflare.com';
+const STAGING_PLAYER_API_URL = 'https://pokemon-api.otiosunbots.xyz';
 
 type CloudflareUatAssets = {
   fetch(request: Request): Promise<Response>;

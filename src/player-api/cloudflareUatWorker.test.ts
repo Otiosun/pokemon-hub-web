@@ -14,7 +14,7 @@ describe('Cloudflare UAT Hub worker', () => {
     const assets = assetsFetcher();
     const upstream = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       expect(String(input)).toBe(
-        'https://stadium-mathematics-disks-honolulu.trycloudflare.com/v1/hub/player/self',
+        'https://pokemon-api.otiosunbots.xyz/v1/hub/player/self',
       );
       expect(init?.method).toBe('GET');
       return new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), {
@@ -38,7 +38,7 @@ describe('Cloudflare UAT Hub worker', () => {
     const assets = assetsFetcher();
     const upstream = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       expect(String(input)).toBe(
-        'https://stadium-mathematics-disks-honolulu.trycloudflare.com/v1/hub/player/location',
+        'https://pokemon-api.otiosunbots.xyz/v1/hub/player/location',
       );
       expect(init?.method).toBe('GET');
       return new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), {
@@ -61,7 +61,7 @@ describe('Cloudflare UAT Hub worker', () => {
     const assets = assetsFetcher();
     const upstream = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       expect(String(input)).toBe(
-        'https://stadium-mathematics-disks-honolulu.trycloudflare.com/v1/hub/player/profile-customization',
+        'https://pokemon-api.otiosunbots.xyz/v1/hub/player/profile-customization',
       );
       expect(init?.method).toBe('PUT');
       return new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), {
