@@ -140,6 +140,7 @@ export type AdminPlayer360 = {
     id: string;
     status: string;
     areaId: string;
+    revision: string;
     createdAt: string;
     updatedAt: string;
   } | null;
@@ -257,6 +258,40 @@ function isSearchItem(value: unknown): value is AdminPlayerSearchItem {
   );
 }
 
+function isActiveEncounter(value: unknown): value is AdminPlayer360['activeEncounter'] {
+  if (value === null) return true;
+  return (
+    isRecord(value) &&
+    typeof value.id === 'string' &&
+    UUID_PATTERN.test(value.id) &&
+    typeof value.status === 'string' &&
+    typeof value.areaId === 'string' &&
+    typeof value.revision === 'string' &&
+    /^(0|[1-9][0-9]*)$/.test(value.revision) &&
+    typeof value.createdAt === 'string' &&
+    typeof value.updatedAt === 'string'
+  );
+}
+
+function isActiveBattle(value: unknown): value is AdminPlayer360['activeBattle'] {
+  if (value === null) return true;
+  return (
+    isRecord(value) &&
+    typeof value.id === 'string' &&
+    UUID_PATTERN.test(value.id) &&
+    typeof value.status === 'string' &&
+    typeof value.battleType === 'string' &&
+    isStringOrNull(value.encounterId) &&
+    typeof value.turnNumber === 'number' &&
+    Number.isInteger(value.turnNumber) &&
+    typeof value.version === 'string' &&
+    /^(0|[1-9][0-9]*)$/.test(value.version) &&
+    typeof value.createdAt === 'string' &&
+    typeof value.updatedAt === 'string' &&
+    isStringOrNull(value.endedAt)
+  );
+}
+
 function isPlayer360(value: unknown): value is AdminPlayer360 {
   if (!isRecord(value) || !isRecord(value.player) || !isRecord(value.profile)) return false;
   if (!isRecord(value.progression) || !isRecord(value.onboarding) || !isRecord(value.pokedex)) {
@@ -280,6 +315,8 @@ function isPlayer360(value: unknown): value is AdminPlayer360 {
     typeof value.pokedex.speciesSeen === 'number' &&
     typeof value.pokedex.speciesCaught === 'number' &&
     Array.isArray(value.pokedex.entries) &&
+    isActiveEncounter(value.activeEncounter) &&
+    isActiveBattle(value.activeBattle) &&
     Array.isArray(value.effects) &&
     Array.isArray(value.recentActivity) &&
     Array.isArray(value.unsupportedSections)

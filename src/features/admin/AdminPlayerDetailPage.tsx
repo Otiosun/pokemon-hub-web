@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { HubMenuTrigger } from '../../components/HubNavigation';
 import { AdminPlayerAdjustments } from './AdminPlayerAdjustments';
 import { AdminPokemonOperations } from './AdminPokemonOperations';
+import { AdminRepairOperations } from './AdminRepairOperations';
 import { SpeciesPokemonImage } from '../../visual-assets/PokemonPreviewImage';
 import {
   getAdminPlayer,
@@ -246,6 +247,7 @@ export function AdminPlayerDetailPage({ playerId }: { playerId: string }) {
               <dl>
                 <div><dt>Status</dt><dd>{player.activeEncounter.status}</dd></div>
                 <div><dt>Área</dt><dd>{player.activeEncounter.areaId}</dd></div>
+                <div><dt>Revision</dt><dd>{player.activeEncounter.revision}</dd></div>
                 <div><dt>ID</dt><dd>{player.activeEncounter.id}</dd></div>
               </dl>
             ) : <small>Nenhum encontro ativo.</small>}
@@ -257,10 +259,22 @@ export function AdminPlayerDetailPage({ playerId }: { playerId: string }) {
                 <div><dt>Status</dt><dd>{player.activeBattle.status}</dd></div>
                 <div><dt>Tipo</dt><dd>{player.activeBattle.battleType}</dd></div>
                 <div><dt>Turno</dt><dd>{player.activeBattle.turnNumber}</dd></div>
+                <div><dt>Version</dt><dd>{player.activeBattle.version}</dd></div>
               </dl>
             ) : <small>Nenhuma batalha ativa.</small>}
           </article>
         </section>
+
+        <AdminRepairOperations
+          key={`${player.activeBattle?.id ?? 'no-battle'}:${player.activeBattle?.version ?? '0'}:${player.activeEncounter?.id ?? 'no-encounter'}:${player.activeEncounter?.revision ?? '0'}`}
+          playerId={player.player.id}
+          capabilities={admin.status === 'admin' ? admin.admin.capabilities : []}
+          activeBattle={player.activeBattle}
+          activeEncounter={player.activeEncounter}
+          onApplied={() => {
+            void loadPlayer();
+          }}
+        />
 
         <section className="admin-player-activity">
           <header><span>ATIVIDADE RECENTE</span><strong>{player.recentActivity.length}</strong></header>
