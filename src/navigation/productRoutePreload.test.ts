@@ -8,6 +8,7 @@ describe('product route preload classification', () => {
     expect(productRouteChunk('/team')).toBe('team');
     expect(productRouteChunk('/admin')).toBe('admin');
     expect(productRouteChunk('/admin/players')).toBe('admin-players');
+    expect(productRouteChunk('/admin/rewards')).toBe('admin-rewards');
     expect(
       productRouteChunk('/admin/players/11111111-1111-4111-8111-111111111111'),
     ).toBe('admin-player');
