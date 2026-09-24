@@ -140,6 +140,7 @@ export type AdminPlayer360 = {
     id: string;
     status: string;
     areaId: string;
+    revision: string;
     createdAt: string;
     updatedAt: string;
   } | null;
