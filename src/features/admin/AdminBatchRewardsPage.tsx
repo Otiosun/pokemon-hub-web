@@ -5,6 +5,11 @@ import {
   type AdminPlayerSearchItem,
   type AdminPlayerStatus,
 } from '../../player-api/playerPortalAdminPlayersClient';
+import {
+  getAdminRewardCatalog,
+  type AdminRewardCatalogCurrency,
+  type AdminRewardCatalogItem,
+} from '../../player-api/playerPortalAdminRewardCatalogClient';
 import { usePlayerPortalAdmin } from '../../player-api/usePlayerPortalAdmin';
 import {
   buildBatchRewardExecuteRequest,
@@ -17,6 +22,7 @@ import './admin-page.css';
 import './admin-batch-rewards.css';
 
 type TargetMode = 'SELECTED' | 'STATUS';
+type RewardKind = 'PROGRESSION' | 'WALLET' | 'ITEM';
 
 const STATUS_OPTIONS: Array<{ value: AdminPlayerStatus; label: string }> = [
   { value: 'ACTIVE', label: 'ATIVOS' },
@@ -44,7 +50,13 @@ export function AdminBatchRewardsPage() {
   const [players, setPlayers] = useState<AdminPlayerSearchItem[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchState, setSearchState] = useState<'idle' | 'loading' | 'error'>('idle');
+  const [rewardKind, setRewardKind] = useState<RewardKind>('PROGRESSION');
   const [delta, setDelta] = useState('');
+  const [currencyId, setCurrencyId] = useState('');
+  const [itemId, setItemId] = useState('');
+  const [catalogItems, setCatalogItems] = useState<AdminRewardCatalogItem[]>([]);
+  const [catalogCurrencies, setCatalogCurrencies] = useState<AdminRewardCatalogCurrency[]>([]);
+  const [catalogState, setCatalogState] = useState<'idle' | 'loading' | 'error'>('idle');
   const [reason, setReason] = useState('');
   const [preview, setPreview] = useState<AdminBatchRewardPreview | null>(null);
   const [previewRequestId, setPreviewRequestId] = useState<string | null>(null);
@@ -59,11 +71,26 @@ export function AdminBatchRewardsPage() {
   >({ kind: 'idle' });
 
   const capabilities = admin.status === 'admin' ? admin.admin.capabilities : [];
+  const canUseProgression = capabilities.includes('progression.adjust');
+  const canUseWallet =
+    capabilities.includes('wallet.adjust') &&
+    capabilities.includes('economy.read') &&
+    capabilities.includes('inventory.read');
+  const canUseItem =
+    capabilities.includes('inventory.adjust') &&
+    capabilities.includes('inventory.read') &&
+    capabilities.includes('economy.read');
   const canUseBatch =
     capabilities.includes('batch.preview') &&
     capabilities.includes('batch.execute.low_risk') &&
-    capabilities.includes('progression.adjust') &&
-    capabilities.includes('player.read');
+    capabilities.includes('player.read') &&
+    (canUseProgression || canUseWallet || canUseItem);
+
+  const rewardKinds = [
+    ...(canUseProgression ? ([{ value: 'PROGRESSION', label: 'PROGRESSÃO' }] as const) : []),
+    ...(canUseWallet ? ([{ value: 'WALLET', label: 'DINHEIRO' }] as const) : []),
+    ...(canUseItem ? ([{ value: 'ITEM', label: 'ITEM' }] as const) : []),
+  ];
 
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
 
@@ -97,6 +124,42 @@ export function AdminBatchRewardsPage() {
       active = false;
     };
   }, [canUseBatch, targetMode]);
+
+  useEffect(() => {
+    if (!canUseBatch || (!canUseWallet && !canUseItem)) return;
+    let active = true;
+    setCatalogState('loading');
+    void getAdminRewardCatalog()
+      .then((result) => {
+        if (!active) return;
+        if (result.status !== 'ok') {
+          setCatalogItems([]);
+          setCatalogCurrencies([]);
+          setCatalogState('error');
+          return;
+        }
+        setCatalogItems(result.items);
+        setCatalogCurrencies(result.currencies);
+        setCurrencyId((current) => current || result.currencies[0]?.currencyId || '');
+        setItemId((current) => current || result.items[0]?.itemId || '');
+        setCatalogState('idle');
+      })
+      .catch(() => {
+        if (active) setCatalogState('error');
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [canUseBatch, canUseItem, canUseWallet]);
+
+  useEffect(() => {
+    if (rewardKind === 'PROGRESSION' && canUseProgression) return;
+    if (rewardKind === 'WALLET' && canUseWallet) return;
+    if (rewardKind === 'ITEM' && canUseItem) return;
+    const first = rewardKinds[0]?.value;
+    if (first) setRewardKind(first);
+  }, [canUseItem, canUseProgression, canUseWallet, rewardKind]);
 
   const search = async (event: FormEvent) => {
     event.preventDefault();
@@ -150,7 +213,12 @@ export function AdminBatchRewardsPage() {
         targetMode === 'SELECTED'
           ? { kind: 'PLAYER_IDS', playerIds: selectedIds }
           : { kind: 'PLAYER_FILTER', status: filterStatus },
-      delta,
+      reward:
+        rewardKind === 'PROGRESSION'
+          ? { kind: 'TRAINER_PROGRESSION', delta }
+          : rewardKind === 'WALLET'
+            ? { kind: 'WALLET', currencyId, delta }
+            : { kind: 'ITEM', itemId, delta },
       reason,
     });
 
@@ -257,14 +325,14 @@ export function AdminBatchRewardsPage() {
             <span className="admin-kicker">LIVE OPS · R3 NA EXECUÇÃO</span>
             <h1>Recompensa em massa</h1>
             <p>
-              Distribua progressão para vários jogadores sem repetir comandos. Primeiro o sistema
-              congela os alvos e mostra o preview; a execução só fica disponível depois.
+              Distribua progressão, dinheiro ou itens para vários jogadores sem repetir comandos.
+              Primeiro o sistema congela os alvos e mostra o preview; a execução só fica disponível depois.
             </p>
           </div>
           <div className="admin-batch-badge">
             <span>MODO ATUAL</span>
-            <strong>PROGRESSÃO</strong>
-            <small>itens e wallet entram no mesmo motor depois</small>
+            <strong>{rewardKind === 'PROGRESSION' ? 'PROGRESSÃO' : rewardKind === 'WALLET' ? 'DINHEIRO' : 'ITEM'}</strong>
+            <small>mesmo motor de preview, confirmação e auditoria</small>
           </div>
         </header>
 
@@ -347,20 +415,79 @@ export function AdminBatchRewardsPage() {
         </section>
 
         <section className="admin-batch-builder">
-          <header><span>02 · RECOMPENSA</span><strong>PROGRESSÃO</strong></header>
+          <header>
+            <span>02 · RECOMPENSA</span>
+            <strong>{rewardKind === 'PROGRESSION' ? 'PROGRESSÃO' : rewardKind === 'WALLET' ? 'DINHEIRO' : 'ITEM'}</strong>
+          </header>
+
+          <div className="admin-batch-mode">
+            {rewardKinds.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                className={rewardKind === option.value ? 'is-active' : ''}
+                onClick={() => {
+                  setRewardKind(option.value);
+                  invalidatePreview();
+                }}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
           <div className="admin-batch-fields">
+            {rewardKind === 'WALLET' ? (
+              <label>
+                <span>MOEDA</span>
+                <select
+                  value={currencyId}
+                  disabled={catalogState === 'loading'}
+                  onChange={(event) => {
+                    setCurrencyId(event.target.value);
+                    invalidatePreview();
+                  }}
+                >
+                  {catalogCurrencies.map((currency) => (
+                    <option key={currency.currencyId} value={currency.currencyId}>
+                      {currency.displayName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : rewardKind === 'ITEM' ? (
+              <label>
+                <span>ITEM</span>
+                <select
+                  value={itemId}
+                  disabled={catalogState === 'loading'}
+                  onChange={(event) => {
+                    setItemId(event.target.value);
+                    invalidatePreview();
+                  }}
+                >
+                  {catalogItems.map((item) => (
+                    <option key={item.itemId} value={item.itemId}>
+                      {item.displayName} · {item.itemKind}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+
             <label>
-              <span>DELTA DE PONTOS</span>
+              <span>{rewardKind === 'PROGRESSION' ? 'DELTA DE PONTOS' : 'QUANTIDADE'}</span>
               <input
                 value={delta}
                 inputMode="numeric"
-                placeholder="+50 ou -20"
+                placeholder={rewardKind === 'PROGRESSION' ? '+50 ou -20' : '+1 ou -1'}
                 onChange={(event) => {
                   setDelta(event.target.value);
                   invalidatePreview();
                 }}
               />
             </label>
+
             <label className="is-reason">
               <span>MOTIVO ADMINISTRATIVO</span>
               <textarea
@@ -374,10 +501,22 @@ export function AdminBatchRewardsPage() {
               />
             </label>
           </div>
+
+          {catalogState === 'error' && rewardKind !== 'PROGRESSION' ? (
+            <p className="admin-batch-message is-error">
+              Falha ao carregar o catálogo real de recompensas.
+            </p>
+          ) : null}
+
           <button
             className="admin-batch-preview-button"
             type="button"
-            disabled={state.kind === 'previewing' || state.kind === 'executing'}
+            disabled={
+              state.kind === 'previewing' ||
+              state.kind === 'executing' ||
+              (rewardKind === 'WALLET' && !currencyId) ||
+              (rewardKind === 'ITEM' && !itemId)
+            }
             onClick={() => void previewBatch()}
           >
             {state.kind === 'previewing' ? 'GERANDO PREVIEW…' : 'GERAR PREVIEW'}
@@ -392,7 +531,16 @@ export function AdminBatchRewardsPage() {
             </header>
             <div className="admin-batch-preview-grid">
               <article><span>JOGADORES</span><strong>{preview.targetCount}</strong></article>
-              <article><span>DELTA</span><strong>{delta}</strong></article>
+              <article>
+                <span>RECOMPENSA</span>
+                <strong>
+                  {rewardKind === 'PROGRESSION'
+                    ? delta
+                    : rewardKind === 'WALLET'
+                      ? `${delta} · ${catalogCurrencies.find((currency) => currency.currencyId === currencyId)?.displayName ?? 'moeda'}`
+                      : `${delta} × ${catalogItems.find((item) => item.itemId === itemId)?.displayName ?? 'item'}`}
+                </strong>
+              </article>
               <article><span>CHUNKS</span><strong>{preview.estimatedChunks}</strong></article>
               <article><span>TAMANHO</span><strong>{preview.chunkSize}</strong></article>
             </div>
