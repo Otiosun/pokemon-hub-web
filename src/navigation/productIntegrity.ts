@@ -53,7 +53,9 @@ export function resolveProductRoute(path: string): ProductRouteResolution {
 
   if (/^\/pokemon\/[^/]+$/.test(normalized)) return { kind: 'route' };
 
-  if (normalized === '/admin/players') return { kind: 'route' };
+  if (normalized === '/admin/players' || normalized === '/admin/rewards') {
+    return { kind: 'route' };
+  }
   if (
     /^\/admin\/players\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
       normalized,
