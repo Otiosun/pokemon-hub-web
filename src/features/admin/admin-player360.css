@@ -770,3 +770,34 @@
   }
 }
 
+
+
+.admin-repair-target {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding: 10px 11px;
+  border: 1px solid rgba(224, 108, 116, 0.14);
+  border-radius: 7px;
+  background: rgba(224, 108, 116, 0.035);
+}
+
+.admin-repair-target > span {
+  color: #8e7376;
+  font: 800 0.55rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.07em;
+}
+
+.admin-repair-target > strong {
+  color: #d9e2e3;
+  font-size: 0.78rem;
+}
+
+.admin-repair-target > small {
+  color: #a88386;
+  line-height: 1.45;
+}
+
+.admin-repair-operations {
+  border-left-color: #d36f76;
+}
