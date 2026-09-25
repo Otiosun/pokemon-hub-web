@@ -57,7 +57,7 @@ describe('admin batch reward workflow', () => {
         reward: {
           kind: 'WALLET',
           currencyId: '55555555-5555-4555-8555-555555555555',
-          delta: '1000',
+          delta: '+1000',
         },
         reason: 'Premiação',
       }),
