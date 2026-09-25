@@ -31,6 +31,24 @@ export function resolveAdminProxyRoute(url: URL, requestMethod = 'GET'): AdminPr
     };
   }
 
+  if (url.pathname === '/api/hub/admin/team') {
+    return {
+      upstreamPath: '/v1/hub/admin/team',
+      allowedMethod: 'GET',
+    };
+  }
+
+  const teamCapabilityMatch = url.pathname.match(
+    /^\/api\/hub\/admin\/team\/([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\/capabilities$/i,
+  );
+  const teamPrincipalId = teamCapabilityMatch?.[1];
+  if (teamPrincipalId !== undefined && UUID_PATTERN.test(teamPrincipalId)) {
+    return {
+      upstreamPath: `/v1/hub/admin/team/${teamPrincipalId}/capabilities`,
+      allowedMethod: 'PUT',
+    };
+  }
+
   if (
     url.pathname === '/api/hub/admin/operations' &&
     (requestMethod === 'GET' || requestMethod === 'POST')
