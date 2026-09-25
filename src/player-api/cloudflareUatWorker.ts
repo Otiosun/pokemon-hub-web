@@ -1,8 +1,8 @@
 import type { PlayerPortalFetcher } from './playerPortalClient';
 import { proxyPlayerPortalRequest } from './playerPortalProxy';
 
-const UAT_HOST = 'feat-player-api-v1-pokemon-hub-web.natanaelgames19.workers.dev';
-const STAGING_PLAYER_API_URL = 'https://stadium-mathematics-disks-honolulu.trycloudflare.com';
+const UAT_HOST = 'uat-hub-v23-live-pokemon-hub-web.natanaelgames19.workers.dev';
+const PLAYER_PORTAL_API_URL = 'https://pokemon-api.otiosunbots.xyz';
 
 type CloudflareUatAssets = {
   fetch(request: Request): Promise<Response>;
@@ -34,8 +34,20 @@ const HUB_UAT_ROUTES: Readonly<Record<string, HubUatRoute>> = {
     upstreamPath: '/v1/hub/player/pokedex',
     allowedMethod: 'GET',
   },
+  '/api/hub/player/inventory': {
+    upstreamPath: '/v1/hub/player/inventory',
+    allowedMethod: 'GET',
+  },
+  '/api/hub/player/battle': {
+    upstreamPath: '/v1/hub/player/battle',
+    allowedMethod: 'GET',
+  },
+  '/api/hub/player/move-choices': {
+    upstreamPath: '/v1/hub/player/move-choices',
+    allowedMethod: 'GET',
+  },
   '/api/hub/player/location': {
-    upstreamPath: '/v1/hub/player/location',
+    upstreamPath: '/v1/hub/world/location',
     allowedMethod: 'GET',
   },
   '/api/hub/player/roster': {
@@ -69,7 +81,7 @@ export async function handleCloudflareUatRequest(
   }
 
   return proxyPlayerPortalRequest(request, {
-    baseUrl: STAGING_PLAYER_API_URL,
+    baseUrl: PLAYER_PORTAL_API_URL,
     upstreamPath: route.upstreamPath,
     allowedMethod: route.allowedMethod,
     fetcher: upstreamFetcher,
