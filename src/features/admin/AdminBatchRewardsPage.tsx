@@ -243,7 +243,9 @@ export function AdminBatchRewardsPage() {
           ? { kind: 'TRAINER_PROGRESSION', delta }
           : rewardKind === 'WALLET'
             ? { kind: 'WALLET', currencyId, delta }
-            : { kind: 'ITEM', itemId, delta },
+            : rewardKind === 'ITEM'
+              ? { kind: 'ITEM', itemId, delta }
+              : { kind: 'POKEDEX_SEEN', speciesId, shiny: shinySeen },
       reason,
     });
 
