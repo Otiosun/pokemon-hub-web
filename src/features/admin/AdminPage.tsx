@@ -49,7 +49,7 @@ const MODULES = [
     detail: 'Auditoria, cargos, capacidades e operações sensíveis.',
     prefixes: ['audit.', 'admin_', 'admin.', 'community.', 'batch.', 'UAT_'],
     href: null,
-    cta: 'INTERFACE EM CONSTRUÇÃO',
+    cta: 'GERENCIAR PODERES',
   },
 ] as const;
 
@@ -123,7 +123,9 @@ export function AdminPage() {
         <section className="admin-module-grid" aria-label="Módulos administrativos">
           {MODULES.map((module) => {
             const grants = relevantCapabilities(capabilities, module.prefixes);
-            const available = grants.length > 0;
+            const ownerTeamModule = module.id === 'security' && state.admin.owner;
+            const href = ownerTeamModule ? '/admin/team' : module.href;
+            const available = ownerTeamModule || grants.length > 0;
             const className = `admin-module-card${available ? ' is-authorized' : ' is-unavailable'}`;
             const content = (
               <>
@@ -134,13 +136,13 @@ export function AdminPage() {
                 <p>{module.detail}</p>
                 <footer>
                   <span>{grants.length} permissões</span>
-                  <small>{module.href && available ? module.cta : 'INTERFACE EM CONSTRUÇÃO'}</small>
+                  <small>{href && available ? module.cta : 'INTERFACE EM CONSTRUÇÃO'}</small>
                 </footer>
               </>
             );
 
-            return module.href && available ? (
-              <a key={module.id} className={`${className} is-link`} href={module.href}>
+            return href && available ? (
+              <a key={module.id} className={`${className} is-link`} href={href}>
                 {content}
               </a>
             ) : (
