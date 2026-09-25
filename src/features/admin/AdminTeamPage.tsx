@@ -111,9 +111,10 @@ export function AdminTeamPage() {
   const [reason, setReason] = useState('');
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const owner = admin.status === 'admin' && admin.admin.owner;
 
   useEffect(() => {
-    if (admin.status !== 'admin' || !admin.admin.owner) {
+    if (admin.status !== 'admin' || !owner) {
       if (admin.status !== 'loading') setLoadState('forbidden');
       return;
     }
@@ -140,18 +141,9 @@ export function AdminTeamPage() {
     return () => {
       active = false;
     };
-  }, [admin.status, admin.status === 'admin' ? admin.admin.owner : false]);
+  }, [admin.status, owner]);
 
   const selected = principals.find((principal) => principal.principalId === selectedId) ?? null;
-
-  useEffect(() => {
-    if (selected) {
-      setDraft(new Set(selected.capabilities));
-      setReason('');
-      setSaveState('idle');
-      setMessage('');
-    }
-  }, [selectedId]);
 
   const grouped = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase('pt-BR');
@@ -185,7 +177,7 @@ export function AdminTeamPage() {
       </main>
     );
   }
-  if (loadState === 'forbidden' || admin.status !== 'admin' || !admin.admin.owner) {
+  if (loadState === 'forbidden' || admin.status !== 'admin' || !owner) {
     return <HiddenAdminRoute />;
   }
 
