@@ -1,5 +1,6 @@
 export type PlayerPortalAdminAccess = {
   principalId: string;
+  owner: boolean;
   capabilities: string[];
 };
 
@@ -19,6 +20,7 @@ function isAdminAccess(value: unknown): value is PlayerPortalAdminAccess {
     isRecord(value) &&
     typeof value.principalId === 'string' &&
     /^[0-9a-f-]{36}$/i.test(value.principalId) &&
+    typeof value.owner === 'boolean' &&
     Array.isArray(value.capabilities) &&
     value.capabilities.every(
       (capability) => typeof capability === 'string' && capability.trim().length > 0,
