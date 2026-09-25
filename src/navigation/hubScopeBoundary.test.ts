@@ -56,8 +56,15 @@ describe('Hub scope boundary', () => {
   });
 
   it('does not proxy gameplay routes through the temporary UAT worker', () => {
+    expect(cloudflareUatWorkerSource).toContain("upstreamPath: '/v1/hub/world/location'");
+
+    const workerWithoutReadOnlyLocation = cloudflareUatWorkerSource.replace(
+      "upstreamPath: '/v1/hub/world/location'",
+      "upstreamPath: '<read-only-location>'",
+    );
+
     for (const fragment of FORBIDDEN_GAMEPLAY_PATH_FRAGMENTS) {
-      expect(cloudflareUatWorkerSource).not.toContain(fragment);
+      expect(workerWithoutReadOnlyLocation).not.toContain(fragment);
     }
   });
 

@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 
 export function generationsBuildMode(env = process.env) {
   const explicit = env.GENERATIONS_BUILD_MODE?.trim().toLowerCase();
@@ -23,17 +24,22 @@ function runFullBuild() {
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
 
-if (generationsBuildMode() === 'skip') {
-  console.log(
-    'PLAYER_PREVIEW_3D_COVERAGE',
-    JSON.stringify({
-      mode: 'preview-skip',
-      branch:
-        process.env.WORKERS_CI_BRANCH ??
-        process.env.VERCEL_GIT_COMMIT_REF ??
-        null,
-    }),
-  );
-} else {
-  runFullBuild();
+const isDirectExecution =
+  process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isDirectExecution) {
+  if (generationsBuildMode() === 'skip') {
+    console.log(
+      'PLAYER_PREVIEW_3D_COVERAGE',
+      JSON.stringify({
+        mode: 'preview-skip',
+        branch:
+          process.env.WORKERS_CI_BRANCH ??
+          process.env.VERCEL_GIT_COMMIT_REF ??
+          null,
+      }),
+    );
+  } else {
+    runFullBuild();
+  }
 }
