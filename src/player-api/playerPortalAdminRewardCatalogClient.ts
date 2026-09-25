@@ -97,8 +97,8 @@ export async function getAdminRewardCatalog(
     !body.items.every(isItem) ||
     !Array.isArray(body.currencies) ||
     !body.currencies.every(isCurrency) ||
-    !Array.isArray(body.species) ||
-    !body.species.every(isSpecies)
+    (body.species !== undefined &&
+      (!Array.isArray(body.species) || !body.species.every(isSpecies)))
   ) {
     throw new Error('Invalid admin reward catalog response');
   }
@@ -107,6 +107,6 @@ export async function getAdminRewardCatalog(
     status: 'ok',
     items: body.items,
     currencies: body.currencies,
-    species: body.species,
+    species: Array.isArray(body.species) ? body.species : [],
   };
 }
