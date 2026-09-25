@@ -9,6 +9,7 @@ import {
   getAdminRewardCatalog,
   type AdminRewardCatalogCurrency,
   type AdminRewardCatalogItem,
+  type AdminRewardCatalogSpecies,
 } from '../../player-api/playerPortalAdminRewardCatalogClient';
 import { usePlayerPortalAdmin } from '../../player-api/usePlayerPortalAdmin';
 import {
@@ -22,7 +23,7 @@ import './admin-page.css';
 import './admin-batch-rewards.css';
 
 type TargetMode = 'SELECTED' | 'STATUS';
-type RewardKind = 'PROGRESSION' | 'WALLET' | 'ITEM';
+type RewardKind = 'PROGRESSION' | 'WALLET' | 'ITEM' | 'POKEDEX_SEEN';
 
 const STATUS_OPTIONS: Array<{ value: AdminPlayerStatus; label: string }> = [
   { value: 'ACTIVE', label: 'ATIVOS' },
@@ -65,8 +66,11 @@ export function AdminBatchRewardsPage() {
   const [delta, setDelta] = useState('');
   const [currencyId, setCurrencyId] = useState('');
   const [itemId, setItemId] = useState('');
+  const [speciesId, setSpeciesId] = useState('');
+  const [shinySeen, setShinySeen] = useState(false);
   const [catalogItems, setCatalogItems] = useState<AdminRewardCatalogItem[]>([]);
   const [catalogCurrencies, setCatalogCurrencies] = useState<AdminRewardCatalogCurrency[]>([]);
+  const [catalogSpecies, setCatalogSpecies] = useState<AdminRewardCatalogSpecies[]>([]);
   const [catalogState, setCatalogState] = useState<'idle' | 'loading' | 'error'>('idle');
   const [reason, setReason] = useState('');
   const [preview, setPreview] = useState<AdminBatchRewardPreview | null>(null);
@@ -91,19 +95,22 @@ export function AdminBatchRewardsPage() {
     capabilities.includes('inventory.adjust') &&
     capabilities.includes('inventory.read') &&
     capabilities.includes('economy.read');
+  const canUsePokedexSeen =
+    capabilities.includes('pokedex.seen.grant') && capabilities.includes('pokedex.read');
   const canUseBatch =
     capabilities.includes('batch.preview') &&
     capabilities.includes('batch.execute.low_risk') &&
     capabilities.includes('player.read') &&
-    (canUseProgression || canUseWallet || canUseItem);
+    (canUseProgression || canUseWallet || canUseItem || canUsePokedexSeen);
 
   const rewardKinds = useMemo(
     () => [
       ...(canUseProgression ? ([{ value: 'PROGRESSION', label: 'PROGRESSÃO' }] as const) : []),
       ...(canUseWallet ? ([{ value: 'WALLET', label: 'DINHEIRO' }] as const) : []),
       ...(canUseItem ? ([{ value: 'ITEM', label: 'ITEM' }] as const) : []),
+      ...(canUsePokedexSeen ? ([{ value: 'POKEDEX_SEEN', label: 'POKÉDEX · VISTO' }] as const) : []),
     ],
-    [canUseItem, canUseProgression, canUseWallet],
+    [canUseItem, canUsePokedexSeen, canUseProgression, canUseWallet],
   );
 
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
@@ -140,7 +147,7 @@ export function AdminBatchRewardsPage() {
   }, [canUseBatch, targetMode]);
 
   useEffect(() => {
-    if (!canUseBatch || (!canUseWallet && !canUseItem)) return;
+    if (!canUseBatch || (!canUseWallet && !canUseItem && !canUsePokedexSeen)) return;
     let active = true;
     setCatalogState('loading');
     void getAdminRewardCatalog()
@@ -149,13 +156,16 @@ export function AdminBatchRewardsPage() {
         if (result.status !== 'ok') {
           setCatalogItems([]);
           setCatalogCurrencies([]);
+          setCatalogSpecies([]);
           setCatalogState('error');
           return;
         }
         setCatalogItems(result.items);
         setCatalogCurrencies(result.currencies);
+        setCatalogSpecies(result.species);
         setCurrencyId((current) => current || result.currencies[0]?.currencyId || '');
         setItemId((current) => current || result.items[0]?.itemId || '');
+        setSpeciesId((current) => current || result.species[0]?.speciesId || '');
         setCatalogState('idle');
       })
       .catch(() => {
@@ -165,15 +175,16 @@ export function AdminBatchRewardsPage() {
     return () => {
       active = false;
     };
-  }, [canUseBatch, canUseItem, canUseWallet]);
+  }, [canUseBatch, canUseItem, canUsePokedexSeen, canUseWallet]);
 
   useEffect(() => {
     if (rewardKind === 'PROGRESSION' && canUseProgression) return;
     if (rewardKind === 'WALLET' && canUseWallet) return;
     if (rewardKind === 'ITEM' && canUseItem) return;
+    if (rewardKind === 'POKEDEX_SEEN' && canUsePokedexSeen) return;
     const first = rewardKinds[0]?.value;
     if (first) setRewardKind(first);
-  }, [canUseItem, canUseProgression, canUseWallet, rewardKind, rewardKinds]);
+  }, [canUseItem, canUsePokedexSeen, canUseProgression, canUseWallet, rewardKind, rewardKinds]);
 
   const search = async (event: FormEvent) => {
     event.preventDefault();
