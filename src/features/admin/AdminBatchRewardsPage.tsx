@@ -30,6 +30,17 @@ const STATUS_OPTIONS: Array<{ value: AdminPlayerStatus; label: string }> = [
   { value: 'ARCHIVED', label: 'ARQUIVADOS' },
 ];
 
+function batchFailureCodeSummary(failures: Array<Record<string, unknown>>): string {
+  const counts = new Map<string, number>();
+  for (const failure of failures) {
+    const code = typeof failure.errorCode === 'string' ? failure.errorCode : 'UNKNOWN';
+    counts.set(code, (counts.get(code) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([code, count]) => `${code} ×${count}`)
+    .join(' · ');
+}
+
 function HiddenAdminRoute() {
   return (
     <main className="admin-page admin-page-hidden">
@@ -287,7 +298,7 @@ export function AdminBatchRewardsPage() {
           text:
             result.value.failureCount === 0
               ? `Concluído: ${result.value.successCount}/${result.value.targetCount} jogadores atualizados.`
-              : `Concluído com erros: ${result.value.successCount} sucessos e ${result.value.failureCount} falhas.`,
+              : `Concluído com erros: ${result.value.successCount} sucessos e ${result.value.failureCount} falhas. ${batchFailureCodeSummary(result.value.failures)}`,
         });
         return;
       }
