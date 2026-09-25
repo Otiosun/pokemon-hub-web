@@ -88,13 +88,9 @@ export function AdminBatchRewardsPage() {
   const capabilities = admin.status === 'admin' ? admin.admin.capabilities : [];
   const canUseProgression = capabilities.includes('progression.adjust');
   const canUseWallet =
-    capabilities.includes('wallet.adjust') &&
-    capabilities.includes('economy.read') &&
-    capabilities.includes('inventory.read');
+    capabilities.includes('wallet.adjust') && capabilities.includes('economy.read');
   const canUseItem =
-    capabilities.includes('inventory.adjust') &&
-    capabilities.includes('inventory.read') &&
-    capabilities.includes('economy.read');
+    capabilities.includes('inventory.adjust') && capabilities.includes('inventory.read');
   const canUsePokedexSeen =
     capabilities.includes('pokedex.seen.grant') && capabilities.includes('pokedex.read');
   const canUseBatch =
