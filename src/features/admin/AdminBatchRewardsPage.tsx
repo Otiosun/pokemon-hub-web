@@ -358,7 +358,13 @@ export function AdminBatchRewardsPage() {
           </div>
           <div className="admin-batch-badge">
             <span>MODO ATUAL</span>
-            <strong>{rewardKind === 'PROGRESSION' ? 'PROGRESSÃO' : rewardKind === 'WALLET' ? 'DINHEIRO' : 'ITEM'}</strong>
+            <strong>{rewardKind === 'PROGRESSION'
+              ? 'PROGRESSÃO'
+              : rewardKind === 'WALLET'
+                ? 'DINHEIRO'
+                : rewardKind === 'ITEM'
+                  ? 'ITEM'
+                  : 'POKÉDEX · VISTO'}</strong>
             <small>mesmo motor de preview, confirmação e auditoria</small>
           </div>
         </header>
@@ -444,7 +450,13 @@ export function AdminBatchRewardsPage() {
         <section className="admin-batch-builder">
           <header>
             <span>02 · RECOMPENSA</span>
-            <strong>{rewardKind === 'PROGRESSION' ? 'PROGRESSÃO' : rewardKind === 'WALLET' ? 'DINHEIRO' : 'ITEM'}</strong>
+            <strong>{rewardKind === 'PROGRESSION'
+              ? 'PROGRESSÃO'
+              : rewardKind === 'WALLET'
+                ? 'DINHEIRO'
+                : rewardKind === 'ITEM'
+                  ? 'ITEM'
+                  : 'POKÉDEX · VISTO'}</strong>
           </header>
 
           <div className="admin-batch-mode">
@@ -500,20 +512,55 @@ export function AdminBatchRewardsPage() {
                   ))}
                 </select>
               </label>
+            ) : rewardKind === 'POKEDEX_SEEN' ? (
+              <>
+                <label>
+                  <span>ESPÉCIE</span>
+                  <select
+                    value={speciesId}
+                    disabled={catalogState === 'loading'}
+                    onChange={(event) => {
+                      setSpeciesId(event.target.value);
+                      invalidatePreview();
+                    }}
+                  >
+                    {catalogSpecies.map((species) => (
+                      <option key={species.speciesId} value={species.speciesId}>
+                        #{String(species.nationalDex).padStart(3, '0')} · {species.displayName}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>REGISTRO</span>
+                  <select
+                    value={shinySeen ? 'SHINY' : 'NORMAL'}
+                    onChange={(event) => {
+                      setShinySeen(event.target.value === 'SHINY');
+                      invalidatePreview();
+                    }}
+                  >
+                    <option value="NORMAL">VISTO</option>
+                    <option value="SHINY">VISTO · SHINY</option>
+                  </select>
+                </label>
+              </>
             ) : null}
 
-            <label>
-              <span>{rewardKind === 'PROGRESSION' ? 'DELTA DE PONTOS' : 'QUANTIDADE'}</span>
-              <input
-                value={delta}
-                inputMode="numeric"
-                placeholder={rewardKind === 'PROGRESSION' ? '+50 ou -20' : '+1 ou -1'}
-                onChange={(event) => {
-                  setDelta(event.target.value);
-                  invalidatePreview();
-                }}
-              />
-            </label>
+            {rewardKind !== 'POKEDEX_SEEN' ? (
+              <label>
+                <span>{rewardKind === 'PROGRESSION' ? 'DELTA DE PONTOS' : 'QUANTIDADE'}</span>
+                <input
+                  value={delta}
+                  inputMode="numeric"
+                  placeholder={rewardKind === 'PROGRESSION' ? '+50 ou -20' : '+1 ou -1'}
+                  onChange={(event) => {
+                    setDelta(event.target.value);
+                    invalidatePreview();
+                  }}
+                />
+              </label>
+            ) : null}
 
             <label className="is-reason">
               <span>MOTIVO ADMINISTRATIVO</span>
@@ -542,7 +589,8 @@ export function AdminBatchRewardsPage() {
               state.kind === 'previewing' ||
               state.kind === 'executing' ||
               (rewardKind === 'WALLET' && !currencyId) ||
-              (rewardKind === 'ITEM' && !itemId)
+              (rewardKind === 'ITEM' && !itemId) ||
+              (rewardKind === 'POKEDEX_SEEN' && !speciesId)
             }
             onClick={() => void previewBatch()}
           >
@@ -565,7 +613,9 @@ export function AdminBatchRewardsPage() {
                     ? delta
                     : rewardKind === 'WALLET'
                       ? `${delta} · ${catalogCurrencies.find((currency) => currency.currencyId === currencyId)?.displayName ?? 'moeda'}`
-                      : `${delta} × ${catalogItems.find((item) => item.itemId === itemId)?.displayName ?? 'item'}`}
+                      : rewardKind === 'ITEM'
+                        ? `${delta} × ${catalogItems.find((item) => item.itemId === itemId)?.displayName ?? 'item'}`
+                        : `${shinySeen ? 'VISTO · SHINY' : 'VISTO'} · ${catalogSpecies.find((species) => species.speciesId === speciesId)?.displayName ?? 'espécie'}`}
                 </strong>
               </article>
               <article><span>CHUNKS</span><strong>{preview.estimatedChunks}</strong></article>
