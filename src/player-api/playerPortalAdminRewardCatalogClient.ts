@@ -12,11 +12,19 @@ export type AdminRewardCatalogCurrency = {
   allowsNegative: boolean;
 };
 
+export type AdminRewardCatalogSpecies = {
+  speciesId: string;
+  nationalDex: number;
+  slug: string;
+  displayName: string;
+};
+
 export type AdminRewardCatalogResult =
   | {
       status: 'ok';
       items: AdminRewardCatalogItem[];
       currencies: AdminRewardCatalogCurrency[];
+      species: AdminRewardCatalogSpecies[];
     }
   | { status: 'unauthenticated' | 'forbidden' };
 
@@ -56,6 +64,21 @@ function isCurrency(value: unknown): value is AdminRewardCatalogCurrency {
   );
 }
 
+function isSpecies(value: unknown): value is AdminRewardCatalogSpecies {
+  return (
+    isRecord(value) &&
+    typeof value.speciesId === 'string' &&
+    UUID_PATTERN.test(value.speciesId) &&
+    typeof value.nationalDex === 'number' &&
+    Number.isSafeInteger(value.nationalDex) &&
+    value.nationalDex > 0 &&
+    typeof value.slug === 'string' &&
+    value.slug.length > 0 &&
+    typeof value.displayName === 'string' &&
+    value.displayName.length > 0
+  );
+}
+
 export async function getAdminRewardCatalog(
   fetcher: Fetcher = fetch,
 ): Promise<AdminRewardCatalogResult> {
@@ -73,7 +96,9 @@ export async function getAdminRewardCatalog(
     !Array.isArray(body.items) ||
     !body.items.every(isItem) ||
     !Array.isArray(body.currencies) ||
-    !body.currencies.every(isCurrency)
+    !body.currencies.every(isCurrency) ||
+    !Array.isArray(body.species) ||
+    !body.species.every(isSpecies)
   ) {
     throw new Error('Invalid admin reward catalog response');
   }
@@ -82,5 +107,6 @@ export async function getAdminRewardCatalog(
     status: 'ok',
     items: body.items,
     currencies: body.currencies,
+    species: body.species,
   };
 }
