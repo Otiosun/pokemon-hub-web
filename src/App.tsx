@@ -48,6 +48,9 @@ const AdminPlayerDetailPage = lazy(() =>
 const AdminBatchRewardsPage = lazy(() =>
   import('./features/admin/AdminBatchRewardsPage').then((module) => ({ default: module.AdminBatchRewardsPage })),
 );
+const AdminTeamPage = lazy(() =>
+  import('./features/admin/AdminTeamPage').then((module) => ({ default: module.AdminTeamPage })),
+);
 
 type ChampionStoreOffer = {
   code: string;
@@ -674,6 +677,16 @@ export function App() {
       document.removeEventListener('click', onDocumentClick);
     };
   }, []);
+
+  if (path === '/admin/team' || path === '/admin/team/') {
+    return (
+      <HubFrame active={null} destinations={hubDestinations}>
+        <Suspense fallback={<RouteFallback module="journey" label="ABRINDO EQUIPE ADMINISTRATIVA" />}>
+          <AdminTeamPage />
+        </Suspense>
+      </HubFrame>
+    );
+  }
 
   if (path === '/admin/rewards' || path === '/admin/rewards/') {
     return (
