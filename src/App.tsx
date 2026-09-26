@@ -36,6 +36,18 @@ const TeamPage = lazy(() =>
 const InventoryPage = lazy(() =>
   import('./features/inventory/InventoryPage').then((module) => ({ default: module.InventoryPage })),
 );
+const SystemsPage = lazy(() =>
+  import('./features/systems/SystemsPage').then((module) => ({ default: module.SystemsPage })),
+);
+const ProfessionsPage = lazy(() =>
+  import('./features/systems/SystemsPage').then((module) => ({ default: module.ProfessionsPage })),
+);
+const ProgressionPage = lazy(() =>
+  import('./features/systems/SystemsPage').then((module) => ({ default: module.ProgressionPage })),
+);
+const TrainingPage = lazy(() =>
+  import('./features/systems/SystemsPage').then((module) => ({ default: module.TrainingPage })),
+);
 const AdminPage = lazy(() =>
   import('./features/admin/AdminPage').then((module) => ({ default: module.AdminPage })),
 );
@@ -754,6 +766,46 @@ export function App() {
       <HubFrame active={null} destinations={hubDestinations}>
         <Suspense fallback={<RouteFallback module="journey" label="VALIDANDO CENTRAL ADM" />}>
           <AdminPage />
+        </Suspense>
+      </HubFrame>
+    );
+  }
+
+  if (path === '/sistemas/profissoes' || path === '/sistemas/profissoes/') {
+    return (
+      <HubFrame active={null} destinations={hubDestinations}>
+        <Suspense fallback={<RouteFallback module="journey" label="ABRINDO PROFISSÕES" />}>
+          <ProfessionsPage />
+        </Suspense>
+      </HubFrame>
+    );
+  }
+
+  if (path === '/sistemas/progressao' || path === '/sistemas/progressao/') {
+    return (
+      <HubFrame active={null} destinations={hubDestinations}>
+        <Suspense fallback={<RouteFallback module="journey" label="ABRINDO PROGRESSÃO" />}>
+          <ProgressionPage />
+        </Suspense>
+      </HubFrame>
+    );
+  }
+
+  if (path === '/sistemas/treinamentos' || path === '/sistemas/treinamentos/') {
+    return (
+      <HubFrame active={null} destinations={hubDestinations}>
+        <Suspense fallback={<RouteFallback module="journey" label="ABRINDO TREINAMENTOS" />}>
+          <TrainingPage />
+        </Suspense>
+      </HubFrame>
+    );
+  }
+
+  if (path === '/sistemas' || path === '/sistemas/') {
+    return (
+      <HubFrame active={null} destinations={hubDestinations}>
+        <Suspense fallback={<RouteFallback module="journey" label="ABRINDO SISTEMAS" />}>
+          <SystemsPage />
         </Suspense>
       </HubFrame>
     );
