@@ -30,7 +30,7 @@ const ADMIN_COMMANDS: readonly GuideCommand[] = [
     title: 'Dar ou retirar dinheiro',
     description: 'Cria um preview auditado para um ou vários jogadores. Nada muda antes da confirmação.',
     section: 'ADM',
-    required: ['wallet.adjust', 'player.read', 'batch.preview', 'batch.execute.low_risk'],
+    required: ['wallet.adjust', 'economy.read', 'player.read', 'batch.preview', 'batch.execute.low_risk'],
     note: 'Responda ao preview com /adm confirmar para aplicar.',
   },
   {
