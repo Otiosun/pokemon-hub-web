@@ -3,14 +3,12 @@ import appSource from '../App.tsx?raw';
 import playerPortalClientSource from '../player-api/playerPortalClient.ts?raw';
 import cloudflareUatWorkerSource from '../player-api/cloudflareUatWorker.ts?raw';
 import playerBattleProxySource from '../../api/hub/player/battle.ts?raw';
-import adminOperationActionProxySource from '../../api/hub/admin/operations/[operationId]/[action].ts?raw';
 import productIntegritySource from './productIntegrity.ts?raw';
 
 const hubApiModules = import.meta.glob('../../api/hub/**/*.ts');
 
 const ALLOWED_HUB_API_MODULES = [
   '../../api/hub/admin/[...path].ts',
-  '../../api/hub/admin/operations/[operationId]/[action].ts',
   '../../api/hub/auth/exchange.ts',
   '../../api/hub/player/battle.ts',
   '../../api/hub/player/inventory.ts',
@@ -40,13 +38,6 @@ const FORBIDDEN_GAMEPLAY_PATH_FRAGMENTS = [
 describe('Hub scope boundary', () => {
   it('exposes only companion/admin reads, auth, profile customization, roster organization and move learning through the same-origin Hub API', () => {
     expect(Object.keys(hubApiModules).sort()).toEqual([...ALLOWED_HUB_API_MODULES].sort());
-  });
-
-  it('keeps explicit nested admin operation actions inside the admin-only boundary', () => {
-    expect(adminOperationActionProxySource).toContain('/v1/hub/admin/operations/');
-    expect(adminOperationActionProxySource).toContain("allowedMethod: 'POST'");
-    expect(adminOperationActionProxySource).not.toContain('/v1/hub/world/');
-    expect(adminOperationActionProxySource).not.toContain('/v1/hub/battle/');
   });
 
   it('does not retain world travel or gameplay contracts in the browser client', () => {
