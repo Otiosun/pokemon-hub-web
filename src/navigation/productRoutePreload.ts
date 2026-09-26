@@ -13,7 +13,8 @@ export type ProductRouteChunk =
   | 'admin-player'
   | 'admin-rewards'
   | 'admin-team'
-  | 'admin-content';
+  | 'admin-content'
+  | 'admin-audit';
 
 const PRODUCT_ROUTE_LOADERS: Record<ProductRouteChunk, () => Promise<unknown>> = {
   journey: () => import('../features/journey/JourneyPage'),
@@ -29,6 +30,7 @@ const PRODUCT_ROUTE_LOADERS: Record<ProductRouteChunk, () => Promise<unknown>> =
   'admin-rewards': () => import('../features/admin/AdminBatchRewardsPage'),
   'admin-team': () => import('../features/admin/AdminTeamPage'),
   'admin-content': () => import('../features/admin/AdminContentPage'),
+  'admin-audit': () => import('../features/admin/AdminAuditPage'),
 };
 
 const warmedChunks = new Map<ProductRouteChunk, Promise<unknown>>();
@@ -54,6 +56,7 @@ export function productRouteChunk(path: string): ProductRouteChunk | null {
   if (normalized === '/admin/rewards') return 'admin-rewards';
   if (normalized === '/admin/team') return 'admin-team';
   if (normalized === '/admin/content') return 'admin-content';
+  if (normalized === '/admin/audit') return 'admin-audit';
   if (/^\/admin\/players\/[^/]+$/.test(normalized)) return 'admin-player';
   if (/^\/pokedex\/\d+$/.test(normalized)) return 'pokedex-species';
   if (/^\/pokemon\/[^/]+$/.test(normalized)) return 'owned-pokemon';
