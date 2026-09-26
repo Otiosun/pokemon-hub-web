@@ -157,6 +157,7 @@ export type AdminPlayer360 = {
   } | null;
   effects: Array<{
     id: string;
+    effectId: string;
     effectSlug: string;
     playerId: string | null;
     pokemonInstanceId: string | null;
