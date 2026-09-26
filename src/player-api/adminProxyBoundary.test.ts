@@ -82,11 +82,26 @@ describe('consolidated admin proxy boundary', () => {
       '/api/hub/admin/players/not-a-uuid/adjustments',
       '/api/hub/admin/operations/not-a-uuid/confirm',
       '/api/hub/admin/operations/22222222-2222-4222-8222-222222222222/delete',
-      '/api/hub/admin/operations?operationId=not-a-uuid&action=simulate',
-      '/api/hub/admin/operations?operationId=22222222-2222-4222-8222-222222222222&action=delete',
       '/api/hub/admin/battle/action',
     ]) {
       expect(resolveAdminProxyRoute(new URL(`https://hub.test${path}`))).toBeNull();
     }
+
+    expect(
+      resolveAdminProxyRoute(
+        new URL(
+          'https://hub.test/api/hub/admin/operations?operationId=not-a-uuid&action=simulate',
+        ),
+        'POST',
+      ),
+    ).toBeNull();
+    expect(
+      resolveAdminProxyRoute(
+        new URL(
+          'https://hub.test/api/hub/admin/operations?operationId=22222222-2222-4222-8222-222222222222&action=delete',
+        ),
+        'POST',
+      ),
+    ).toBeNull();
   });
 });
