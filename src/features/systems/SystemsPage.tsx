@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 import { HubModuleHeader } from '../../components/HubModuleHeader';
 import './systems.css';
 
+// Public, shareable systems surface. Keep independent from trainer authentication.
+
 type Profession = {
   id: string;
   name: string;
