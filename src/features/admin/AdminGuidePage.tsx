@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { HubMenuTrigger } from '../../components/HubNavigation';
 import { usePlayerPortalAdmin } from '../../player-api/usePlayerPortalAdmin';
 import './admin-page.css';
@@ -220,6 +220,8 @@ const PLAYER_COMMANDS: readonly GuideCommand[] = [
   { command: '/sair', title: 'Sair do serviço', description: 'Sai do Poké Mart, Centro Pokémon ou outro serviço ativo.', section: 'JOGADOR' },
 ];
 
+const ALL_COMMANDS: readonly GuideCommand[] = [...ADMIN_COMMANDS, ...PLAYER_COMMANDS];
+
 const MODULES: readonly GuideModule[] = [
   {
     title: 'JOGADORES · PLAYER 360',
@@ -359,25 +361,21 @@ export function AdminGuidePage() {
   if (admin.status !== 'admin') return <HiddenAdminRoute />;
 
   const capabilities = admin.admin.capabilities;
-  const allCommands = [...ADMIN_COMMANDS, ...PLAYER_COMMANDS];
-
-  const commands = useMemo(() => {
-    const needle = query.trim().toLocaleLowerCase('pt-BR');
-    return allCommands.filter((entry) => {
-      if (section !== 'TODOS' && entry.section !== section) return false;
-      if (onlyMine && entry.section !== 'JOGADOR' && !hasCapabilities(capabilities, entry.required)) {
-        return false;
-      }
-      if (!needle) return true;
-      return [
-        entry.command,
-        entry.title,
-        entry.description,
-        entry.note ?? '',
-        ...(entry.aliases ?? []),
-      ].some((value) => value.toLocaleLowerCase('pt-BR').includes(needle));
-    });
-  }, [capabilities, onlyMine, query, section]);
+  const needle = query.trim().toLocaleLowerCase('pt-BR');
+  const commands = ALL_COMMANDS.filter((entry) => {
+    if (section !== 'TODOS' && entry.section !== section) return false;
+    if (onlyMine && entry.section !== 'JOGADOR' && !hasCapabilities(capabilities, entry.required)) {
+      return false;
+    }
+    if (!needle) return true;
+    return [
+      entry.command,
+      entry.title,
+      entry.description,
+      entry.note ?? '',
+      ...(entry.aliases ?? []),
+    ].some((value) => value.toLocaleLowerCase('pt-BR').includes(needle));
+  });
 
   const modules = MODULES.filter((module) =>
     module.ownerOnly ? admin.admin.owner : matchesPrefixes(capabilities, module.prefixes),
