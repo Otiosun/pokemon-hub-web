@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { HubMenuTrigger } from '../../components/HubNavigation';
 import { AdminPlayerAdjustments } from './AdminPlayerAdjustments';
 import { AdminPokemonOperations } from './AdminPokemonOperations';
+import { AdminPokemonGrantAndEffects } from './AdminPokemonGrantAndEffects';
 import { AdminRepairOperations } from './AdminRepairOperations';
 import { SpeciesPokemonImage } from '../../visual-assets/PokemonPreviewImage';
 import {
@@ -235,6 +236,16 @@ export function AdminPlayerDetailPage({ playerId }: { playerId: string }) {
           playerId={player.player.id}
           capabilities={admin.status === 'admin' ? admin.admin.capabilities : []}
           pokemon={player.pokemon}
+          onApplied={() => {
+            void loadPlayer();
+          }}
+        />
+
+        <AdminPokemonGrantAndEffects
+          playerId={player.player.id}
+          capabilities={admin.status === 'admin' ? admin.admin.capabilities : []}
+          pokemon={player.pokemon}
+          effects={player.effects}
           onApplied={() => {
             void loadPlayer();
           }}
