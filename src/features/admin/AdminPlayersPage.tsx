@@ -185,8 +185,8 @@ export function AdminPlayersPage() {
                 <div className="admin-player-row-main">
                   <span className="admin-player-status-dot" data-status={player.status} />
                   <div>
-                    <strong>{player.trainerName ?? 'Treinador sem nome'}</strong>
-                    <small>{player.playerId}</small>
+                    <strong>{player.trainerName}</strong>
+                    <small>{player.status === 'SUSPENDED' ? 'ACESSO SUSPENSO' : 'JOGADOR APROVADO'}</small>
                   </div>
                 </div>
                 <div className="admin-player-row-metric">
