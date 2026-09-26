@@ -57,6 +57,13 @@ export function resolveAdminProxyRoute(url: URL, requestMethod = 'GET'): AdminPr
     };
   }
 
+  if (url.pathname === '/api/hub/admin/audit' && requestMethod === 'GET') {
+    return {
+      upstreamPath: `/v1/hub/admin/audit${url.search}`,
+      allowedMethod: 'GET',
+    };
+  }
+
   if (url.pathname === '/api/hub/admin/team') {
     const rewrittenPrincipalId = url.searchParams.get('principalId');
     const rewrittenAction = url.searchParams.get('action')?.toLowerCase();
