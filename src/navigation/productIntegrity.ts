@@ -44,6 +44,10 @@ export function resolveProductRoute(path: string): ProductRouteResolution {
     normalized === '/pokemon' ||
     normalized === '/team' ||
     normalized === '/champion-store' ||
+    normalized === '/sistemas' ||
+    normalized === '/sistemas/profissoes' ||
+    normalized === '/sistemas/progressao' ||
+    normalized === '/sistemas/treinamentos' ||
     normalized === '/admin'
   ) {
     return { kind: 'route' };
