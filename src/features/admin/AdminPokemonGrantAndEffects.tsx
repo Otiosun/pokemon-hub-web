@@ -171,6 +171,31 @@ export function AdminPokemonGrantAndEffects({
         ? { placementKind: 'TEAM' as const, boxNo: null, slotNo: parsedSlotNo }
         : { placementKind: 'BOX' as const, boxNo: parsedBoxNo, slotNo: parsedSlotNo };
 
+    const form = forms.find((entry) => entry.formId === formId);
+    const nature = natures.find((entry) => entry.natureId === natureId);
+    const ability = abilities.find((entry) => entry.abilityId === abilityId);
+    const destination =
+      target.placementKind === 'TEAM'
+        ? `Time · slot ${target.slotNo}`
+        : `Box ${target.boxNo} · slot ${target.slotNo}`;
+    const confirmed = window.confirm(
+      [
+        'Revisar entrega de Pokémon',
+        '',
+        `Pokémon: ${form?.displayName ?? 'Selecionado'}`,
+        `Nível: ${parsedLevel}`,
+        `Nickname: ${nickname.trim() || 'sem nickname'}`,
+        `Shiny: ${shiny ? 'sim' : 'não'}`,
+        `Gênero: ${gender || 'automático / não definido'}`,
+        `Nature: ${nature?.slug ?? 'automática'}`,
+        `Ability: ${ability?.slug ?? 'automática'}`,
+        `Destino: ${destination}`,
+        '',
+        `Motivo: ${createReason.trim()}`,
+      ].join('\n'),
+    );
+    if (!confirmed) return;
+
     setCreateState({ kind: 'busy', text: 'PREPARANDO ENTREGA…' });
     try {
       const result = await runAdminPokemonOperation({
@@ -399,7 +424,7 @@ export function AdminPokemonGrantAndEffects({
             disabled={createState.kind === 'busy' || !forms.length}
             onClick={() => void grantPokemon()}
           >
-            {createState.kind === 'busy' ? createState.text : 'DAR POKÉMON'}
+            {createState.kind === 'busy' ? createState.text : 'REVISAR E DAR'}
           </button>
           {createState.text && createState.kind !== 'busy' ? (
             <p className={`admin-adjustment-feedback is-${createState.kind}`}>{createState.text}</p>
