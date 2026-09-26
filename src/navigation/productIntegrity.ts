@@ -57,7 +57,8 @@ export function resolveProductRoute(path: string): ProductRouteResolution {
     normalized === '/admin/players' ||
     normalized === '/admin/rewards' ||
     normalized === '/admin/team' ||
-    normalized === '/admin/content'
+    normalized === '/admin/content' ||
+    normalized === '/admin/audit'
   ) {
     return { kind: 'route' };
   }
