@@ -3,6 +3,7 @@ export type AdminTeamPrincipal = {
   displayName: string;
   status: 'ACTIVE' | 'DISABLED';
   owner: boolean;
+  receptionStaff: boolean;
   revision: string;
   capabilities: string[];
 };
@@ -35,6 +36,7 @@ function isPrincipal(value: unknown): value is AdminTeamPrincipal {
     typeof value.displayName === 'string' &&
     (value.status === 'ACTIVE' || value.status === 'DISABLED') &&
     typeof value.owner === 'boolean' &&
+    typeof value.receptionStaff === 'boolean' &&
     typeof value.revision === 'string' &&
     /^\d+$/.test(value.revision) &&
     Array.isArray(value.capabilities) &&
@@ -111,6 +113,67 @@ export async function replaceAdminTeamCapabilities(
   const body = (await response.json()) as unknown;
   if (!isRecord(body) || !isPrincipal(body.principal)) {
     throw new Error('Invalid admin team update response');
+  }
+  return { status: 'ok', principal: body.principal };
+}
+
+export async function addAdminTeamPrincipal(
+  input: {
+    playerId: string;
+    capabilities?: string[];
+    reason: string;
+    receptionStaff: boolean;
+  },
+  fetcher: Fetcher = fetch,
+): Promise<AdminTeamUpdateResult> {
+  const response = await fetcher('/api/hub/admin/team', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { accept: 'application/json', 'content-type': 'application/json' },
+    body: JSON.stringify({
+      playerId: input.playerId,
+      capabilities: input.capabilities ?? [],
+      reason: input.reason,
+      receptionStaff: input.receptionStaff,
+    }),
+  });
+  if (response.status === 401) return { status: 'unauthenticated' };
+  if (response.status === 403) return { status: 'forbidden' };
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as unknown;
+    const code = isRecord(body) && typeof body.error === 'string' ? body.error : 'ADMIN_TEAM_REJECTED';
+    return { status: 'rejected', code };
+  }
+  const body = (await response.json()) as unknown;
+  if (!isRecord(body) || !isPrincipal(body.principal)) {
+    throw new Error('Invalid admin team create response');
+  }
+  return { status: 'ok', principal: body.principal };
+}
+
+export async function setAdminTeamReceptionStaff(
+  input: { principalId: string; active: boolean; reason: string },
+  fetcher: Fetcher = fetch,
+): Promise<AdminTeamUpdateResult> {
+  const response = await fetcher(
+    `/api/hub/admin/team/${encodeURIComponent(input.principalId)}/reception-staff`,
+    {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { accept: 'application/json', 'content-type': 'application/json' },
+      body: JSON.stringify({ active: input.active, reason: input.reason }),
+    },
+  );
+  if (response.status === 401) return { status: 'unauthenticated' };
+  if (response.status === 403) return { status: 'forbidden' };
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as unknown;
+    const code = isRecord(body) && typeof body.error === 'string' ? body.error : 'ADMIN_TEAM_REJECTED';
+    return { status: 'rejected', code };
+  }
+  const body = (await response.json()) as unknown;
+  if (!isRecord(body) || !isPrincipal(body.principal)) {
+    throw new Error('Invalid Reception staff update response');
   }
   return { status: 'ok', principal: body.principal };
 }
