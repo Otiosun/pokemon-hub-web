@@ -62,26 +62,31 @@ export function resolveAdminProxyRoute(url: URL, requestMethod = 'GET'): AdminPr
     const rewrittenAction = url.searchParams.get('action')?.toLowerCase();
 
     if (rewrittenPrincipalId !== null || rewrittenAction !== undefined) {
-      if (
-        rewrittenPrincipalId === null ||
-        !UUID_PATTERN.test(rewrittenPrincipalId) ||
-        rewrittenAction !== 'capabilities' ||
-        requestMethod !== 'PUT'
-      ) {
+      if (rewrittenPrincipalId === null || !UUID_PATTERN.test(rewrittenPrincipalId)) {
         return null;
       }
-
-      return {
-        upstreamPath: `/v1/hub/admin/team/${rewrittenPrincipalId}/capabilities`,
-        allowedMethod: 'PUT',
-      };
+      if (rewrittenAction === 'capabilities' && requestMethod === 'PUT') {
+        return {
+          upstreamPath: `/v1/hub/admin/team/${rewrittenPrincipalId}/capabilities`,
+          allowedMethod: 'PUT',
+        };
+      }
+      if (rewrittenAction === 'reception-staff' && requestMethod === 'PUT') {
+        return {
+          upstreamPath: `/v1/hub/admin/team/${rewrittenPrincipalId}/reception-staff`,
+          allowedMethod: 'PUT',
+        };
+      }
+      return null;
     }
 
-    if (requestMethod !== 'GET') return null;
-    return {
-      upstreamPath: '/v1/hub/admin/team',
-      allowedMethod: 'GET',
-    };
+    if (requestMethod === 'GET' || requestMethod === 'POST') {
+      return {
+        upstreamPath: '/v1/hub/admin/team',
+        allowedMethod: requestMethod,
+      };
+    }
+    return null;
   }
 
   const teamCapabilityMatch = url.pathname.match(
