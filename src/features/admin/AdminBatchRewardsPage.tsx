@@ -43,6 +43,21 @@ function batchFailureCodeSummary(failures: Array<Record<string, unknown>>): stri
     .join(' · ');
 }
 
+function adminBatchErrorMessage(stage: 'preview' | 'execute', code: string): string {
+  if (code === 'HTTP_404') {
+    return 'A Central não encontrou a etapa seguinte da operação. Atualize a página e tente novamente.';
+  }
+  if (code === 'ADMIN_BATCH_UNEXPECTED_APPROVAL_GATE') {
+    return 'Esta recompensa exige uma aprovação administrativa adicional.';
+  }
+  if (code === 'ADMIN_BATCH_INVALID_RESULT') {
+    return 'A Central recebeu uma resposta inválida e não aplicou a recompensa.';
+  }
+  return stage === 'preview'
+    ? 'Não foi possível preparar a revisão da recompensa.'
+    : 'Não foi possível concluir a recompensa.';
+}
+
 function HiddenAdminRoute() {
   return (
     <main className="admin-page admin-page-hidden">
@@ -255,7 +270,7 @@ export function AdminBatchRewardsPage() {
     }
 
     if (previewRequestId === null) setPreviewRequestId(requestId);
-    setState({ kind: 'previewing', text: 'CONGELANDO ALVOS E GERANDO PREVIEW…' });
+    setState({ kind: 'previewing', text: 'PREPARANDO REVISÃO…' });
 
     try {
       const result = await runBatchRewardPreview(built.request);
@@ -265,7 +280,7 @@ export function AdminBatchRewardsPage() {
         setExecuteRequestId(null);
         setState({
           kind: 'previewed',
-          text: 'Preview congelado. Revise a quantidade de jogadores antes de executar.',
+          text: 'Revisão pronta. Confira os jogadores e a recompensa antes de confirmar.',
         });
         return;
       }
@@ -276,7 +291,7 @@ export function AdminBatchRewardsPage() {
         text:
           result.status === 'denied'
             ? 'Sua sessão não possui autorização para criar este lote.'
-            : `Preview rejeitado: ${result.code}`,
+            : adminBatchErrorMessage('preview', result.code),
       });
     } catch {
       setState({
@@ -322,7 +337,7 @@ export function AdminBatchRewardsPage() {
         text:
           result.status === 'denied'
             ? 'Sua sessão não possui autorização para executar este lote.'
-            : `Execução rejeitada: ${result.code}`,
+            : adminBatchErrorMessage('execute', result.code),
       });
     } catch {
       setState({
@@ -349,15 +364,14 @@ export function AdminBatchRewardsPage() {
 
         <header className="admin-batch-heading">
           <div>
-            <span className="admin-kicker">LIVE OPS · R3 NA EXECUÇÃO</span>
-            <h1>Recompensa em massa</h1>
+            <span className="admin-kicker">CENTRAL ADM · RECOMPENSAS</span>
+            <h1>Dar recompensa</h1>
             <p>
-              Escolha quem recebe, o que será alterado e confira tudo antes de aplicar.
-              Nada é executado enquanto você estiver apenas no preview.
+              Escolha quem recebe, defina a recompensa e confira tudo antes de enviar.
             </p>
           </div>
           <div className="admin-batch-badge">
-            <span>MODO ATUAL</span>
+            <span>RECOMPENSA</span>
             <strong>{rewardKind === 'PROGRESSION'
               ? 'PROGRESSÃO'
               : rewardKind === 'WALLET'
@@ -365,12 +379,12 @@ export function AdminBatchRewardsPage() {
                 : rewardKind === 'ITEM'
                   ? 'ITEM'
                   : 'POKÉDEX · VISTO'}</strong>
-            <small>revise antes de aplicar</small>
+            <small>nenhuma alteração antes da confirmação</small>
           </div>
         </header>
 
         <section className="admin-batch-builder">
-          <header><span>01 · ALVOS</span><strong>{targetMode === 'SELECTED' ? selectedIds.length : filterStatus}</strong></header>
+          <header><span>01 · QUEM RECEBE</span><strong>{targetMode === 'SELECTED' ? selectedIds.length : filterStatus}</strong></header>
           <nav className="admin-batch-mode">
             <button
               type="button"
@@ -380,7 +394,7 @@ export function AdminBatchRewardsPage() {
                 invalidatePreview();
               }}
             >
-              SELECIONAR JOGADORES
+              ESCOLHER JOGADORES
             </button>
             <button
               type="button"
@@ -390,7 +404,7 @@ export function AdminBatchRewardsPage() {
                 invalidatePreview();
               }}
             >
-              FILTRO POR STATUS
+              TODOS POR STATUS
             </button>
           </nav>
 
@@ -422,7 +436,6 @@ export function AdminBatchRewardsPage() {
                         <strong>{player.trainerName ?? 'Treinador sem nome'}</strong>
                         <small>Lv. {player.trainerLevel} · {player.insigniaPoints} pontos</small>
                       </span>
-                      <code>{player.playerId.slice(0, 8)}</code>
                     </label>
                   ))}
                 </div>
@@ -442,14 +455,14 @@ export function AdminBatchRewardsPage() {
                   <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
               </select>
-              <small>O backend limita o snapshot a no máximo 1000 jogadores.</small>
+              <small>A recompensa será preparada para os jogadores com este status.</small>
             </label>
           )}
         </section>
 
         <section className="admin-batch-builder">
           <header>
-            <span>02 · RECOMPENSA</span>
+            <span>02 · O QUE RECEBEM</span>
             <strong>{rewardKind === 'PROGRESSION'
               ? 'PROGRESSÃO'
               : rewardKind === 'WALLET'
@@ -596,7 +609,7 @@ export function AdminBatchRewardsPage() {
             ) : null}
 
             <label className="is-reason">
-              <span>MOTIVO · FICA NO HISTÓRICO</span>
+              <span>MOTIVO · PARA O HISTÓRICO</span>
               <textarea
                 value={reason}
                 maxLength={2000}
@@ -627,18 +640,17 @@ export function AdminBatchRewardsPage() {
             }
             onClick={() => void previewBatch()}
           >
-            {state.kind === 'previewing' ? 'GERANDO PREVIEW…' : 'GERAR PREVIEW'}
+            {state.kind === 'previewing' ? 'PREPARANDO…' : 'REVISAR RECOMPENSA'}
           </button>
         </section>
 
         {preview ? (
           <section className="admin-batch-preview">
             <header>
-              <div><span>03 · PREVIEW CONGELADO</span><strong>{preview.targetCount} ALVOS</strong></div>
-              <small>batch {preview.batchId.slice(0, 8)} · rev. {preview.revision}</small>
+              <div><span>03 · REVISÃO</span><strong>{preview.targetCount} JOGADORES</strong></div>
             </header>
             <div className="admin-batch-preview-grid">
-              <article><span>JOGADORES</span><strong>{preview.targetCount}</strong></article>
+              <article><span>QUEM RECEBE</span><strong>{preview.targetCount} jogador{preview.targetCount === 1 ? '' : 'es'}</strong></article>
               <article>
                 <span>RECOMPENSA</span>
                 <strong>
@@ -651,21 +663,19 @@ export function AdminBatchRewardsPage() {
                         : `${shinySeen ? 'VISTO · SHINY' : 'VISTO'} · ${catalogSpecies.find((species) => species.speciesId === speciesId)?.displayName ?? 'espécie'}`}
                 </strong>
               </article>
-              <article><span>CHUNKS</span><strong>{preview.estimatedChunks}</strong></article>
-              <article><span>TAMANHO</span><strong>{preview.chunkSize}</strong></article>
+
             </div>
             {preview.sampleTargetIds.length ? (
               <div className="admin-batch-sample">
-                <span>AMOSTRA DO SNAPSHOT</span>
+                <span>JOGADORES DA REVISÃO</span>
                 {preview.sampleTargetIds.map((id) => <code key={id}>{previewName(id)}</code>)}
               </div>
             ) : null}
             <div className="admin-batch-confirm">
               <div>
-                <strong>CONFIRMAR EXECUÇÃO</strong>
+                <strong>CONFIRMAR RECOMPENSA</strong>
                 <p>
-                  Esta ação usa exatamente o snapshot acima. Mudanças posteriores na busca não
-                  alteram este lote.
+                  Confira os jogadores e a recompensa acima. Só depois confirme o envio.
                 </p>
               </div>
               <button
@@ -673,7 +683,7 @@ export function AdminBatchRewardsPage() {
                 disabled={state.kind === 'executing' || state.kind === 'success'}
                 onClick={() => void executeBatch()}
               >
-                {state.kind === 'executing' ? 'EXECUTANDO…' : 'EXECUTAR RECOMPENSA'}
+                {state.kind === 'executing' ? 'ENVIANDO…' : 'CONFIRMAR E ENVIAR'}
               </button>
             </div>
           </section>
