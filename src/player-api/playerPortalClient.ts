@@ -207,7 +207,7 @@ export type PlayerPortalProfile = {
   originRegionId: string | null;
   originRegionName: string | null;
   locale: string | null;
-  profession: TrainerProfession | null;
+  profession?: TrainerProfession | null;
   trainerLevel: number;
   progressionPoints: string;
   onboardingState:
@@ -465,6 +465,7 @@ export function isPlayerPortalProfile(value: unknown): value is PlayerPortalProf
     return false;
   }
   if (
+    value.profession !== undefined &&
     value.profession !== null &&
     (typeof value.profession !== 'string' ||
       !TRAINER_PROFESSIONS.has(value.profession as TrainerProfession))
