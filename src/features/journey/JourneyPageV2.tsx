@@ -508,12 +508,13 @@ export function JourneyPageV2({
 
             <div className="journey-identity-copy">
               <h1 id="journey-trainer-name">{profile.trainerName}</h1>
-              <span className="journey-trainer-title">
-                — {profile.trainerTitle}
-                {professionLabel(authoritativeProfile?.profession)
-                  ? ` · ${professionLabel(authoritativeProfile?.profession)}`
-                  : ''}
-              </span>
+              <span className="journey-trainer-title">— {profile.trainerTitle}</span>
+              {professionLabel(authoritativeProfile?.profession) ? (
+                <span className="journey-trainer-profession">
+                  <small>PROFISSÃO</small>
+                  <strong>{professionLabel(authoritativeProfile?.profession)}</strong>
+                </span>
+              ) : null}
             </div>
 
             <div className="journey-league-seal" aria-hidden="true">
