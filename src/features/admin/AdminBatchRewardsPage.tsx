@@ -549,9 +549,8 @@ export function AdminBatchRewardsPage() {
 
             {rewardKind !== 'POKEDEX_SEEN' ? (
               <div className="admin-batch-amount">
-                <span className="admin-batch-field-label">O QUE FAZER</span>
                 <fieldset className="admin-batch-direction">
-                  <legend className="sr-only">Tipo de alteração</legend>
+                  <legend className="admin-batch-field-label">O QUE FAZER</legend>
                   <button
                     type="button"
                     className={direction === 'ADD' ? 'is-active' : ''}
