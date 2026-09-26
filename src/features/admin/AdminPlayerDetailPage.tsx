@@ -4,6 +4,7 @@ import { AdminPlayerAdjustments } from './AdminPlayerAdjustments';
 import { AdminPokemonOperations } from './AdminPokemonOperations';
 import { AdminPokemonGrantAndEffects } from './AdminPokemonGrantAndEffects';
 import { AdminRepairOperations } from './AdminRepairOperations';
+import { AdminBattleCorrection } from './AdminBattleCorrection';
 import { SpeciesPokemonImage } from '../../visual-assets/PokemonPreviewImage';
 import {
   getAdminPlayer,
@@ -282,6 +283,16 @@ export function AdminPlayerDetailPage({ playerId }: { playerId: string }) {
           capabilities={admin.status === 'admin' ? admin.admin.capabilities : []}
           activeBattle={player.activeBattle}
           activeEncounter={player.activeEncounter}
+          onApplied={() => {
+            void loadPlayer();
+          }}
+        />
+
+        <AdminBattleCorrection
+          playerId={player.player.id}
+          capabilities={admin.status === 'admin' ? admin.admin.capabilities : []}
+          activeBattle={player.activeBattle}
+          pokemon={player.pokemon}
           onApplied={() => {
             void loadPlayer();
           }}
