@@ -19,12 +19,29 @@ export type AdminRewardCatalogSpecies = {
   displayName: string;
 };
 
+export type AdminRewardCatalogForm = {
+  formId: string;
+  speciesId: string;
+  nationalDex: number;
+  speciesSlug: string;
+  formSlug: string;
+  displayName: string;
+};
+
+export type AdminRewardCatalogEffect = {
+  effectId: string;
+  slug: string;
+  scope: 'PLAYER' | 'POKEMON' | 'BATTLE_PARTICIPANT' | 'AREA';
+};
+
 export type AdminRewardCatalogResult =
   | {
       status: 'ok';
       items: AdminRewardCatalogItem[];
       currencies: AdminRewardCatalogCurrency[];
       species: AdminRewardCatalogSpecies[];
+      forms: AdminRewardCatalogForm[];
+      effects: AdminRewardCatalogEffect[];
     }
   | { status: 'unauthenticated' | 'forbidden' };
 
@@ -79,6 +96,39 @@ function isSpecies(value: unknown): value is AdminRewardCatalogSpecies {
   );
 }
 
+function isForm(value: unknown): value is AdminRewardCatalogForm {
+  return (
+    isRecord(value) &&
+    typeof value.formId === 'string' &&
+    UUID_PATTERN.test(value.formId) &&
+    typeof value.speciesId === 'string' &&
+    UUID_PATTERN.test(value.speciesId) &&
+    typeof value.nationalDex === 'number' &&
+    Number.isSafeInteger(value.nationalDex) &&
+    value.nationalDex > 0 &&
+    typeof value.speciesSlug === 'string' &&
+    value.speciesSlug.length > 0 &&
+    typeof value.formSlug === 'string' &&
+    value.formSlug.length > 0 &&
+    typeof value.displayName === 'string' &&
+    value.displayName.length > 0
+  );
+}
+
+function isEffect(value: unknown): value is AdminRewardCatalogEffect {
+  return (
+    isRecord(value) &&
+    typeof value.effectId === 'string' &&
+    UUID_PATTERN.test(value.effectId) &&
+    typeof value.slug === 'string' &&
+    value.slug.length > 0 &&
+    (value.scope === 'PLAYER' ||
+      value.scope === 'POKEMON' ||
+      value.scope === 'BATTLE_PARTICIPANT' ||
+      value.scope === 'AREA')
+  );
+}
+
 export async function getAdminRewardCatalog(
   fetcher: Fetcher = fetch,
 ): Promise<AdminRewardCatalogResult> {
@@ -98,7 +148,11 @@ export async function getAdminRewardCatalog(
     !Array.isArray(body.currencies) ||
     !body.currencies.every(isCurrency) ||
     (body.species !== undefined &&
-      (!Array.isArray(body.species) || !body.species.every(isSpecies)))
+      (!Array.isArray(body.species) || !body.species.every(isSpecies))) ||
+    (body.forms !== undefined &&
+      (!Array.isArray(body.forms) || !body.forms.every(isForm))) ||
+    (body.effects !== undefined &&
+      (!Array.isArray(body.effects) || !body.effects.every(isEffect)))
   ) {
     throw new Error('Invalid admin reward catalog response');
   }
@@ -108,5 +162,7 @@ export async function getAdminRewardCatalog(
     items: body.items,
     currencies: body.currencies,
     species: Array.isArray(body.species) ? body.species : [],
+    forms: Array.isArray(body.forms) ? body.forms : [],
+    effects: Array.isArray(body.effects) ? body.effects : [],
   };
 }
