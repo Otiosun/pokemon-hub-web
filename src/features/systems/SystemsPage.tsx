@@ -258,16 +258,18 @@ export function ProgressionPage() {
 
       <section className="systems-section">
         <header><span>TABELA</span><h2>XP PARA O PRÓXIMO NÍVEL</h2></header>
-        <div className="xp-table" role="table" aria-label="XP por nível">
-          {XP_LEVELS.map(([from, to, xp]) => (
-            <div role="row" key={from}>
-              <span role="cell">Nv. {from}</span>
-              <b aria-hidden="true">→</b>
-              <span role="cell">Nv. {to}</span>
-              <strong role="cell">{xp} XP</strong>
-            </div>
-          ))}
-        </div>
+        <table className="xp-table" aria-label="XP por nível">
+          <tbody>
+            {XP_LEVELS.map(([from, to, xp]) => (
+              <tr key={from}>
+                <td>Nv. {from}</td>
+                <td aria-hidden="true">→</td>
+                <td>Nv. {to}</td>
+                <td><strong>{xp} XP</strong></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </section>
     </main>
   );
