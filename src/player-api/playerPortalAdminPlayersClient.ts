@@ -154,6 +154,22 @@ export type AdminPlayer360 = {
     createdAt: string;
     updatedAt: string;
     endedAt: string | null;
+    participants: Array<{
+      participantId: string;
+      pokemonInstanceId: string | null;
+      level: number;
+      currentHp: number;
+      maxHp: number;
+      majorStatus: {
+        key: 'BURN' | 'POISON' | 'BAD_POISON' | 'PARALYSIS' | 'SLEEP' | 'FREEZE';
+        counter: number | null;
+      } | null;
+      moves: Array<{
+        slotNo: number;
+        ppCurrent: number | null;
+        maxPp: number | null;
+      }>;
+    }>;
   } | null;
   effects: Array<{
     id: string;
