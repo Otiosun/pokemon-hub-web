@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { HubMenuTrigger } from '../../components/HubNavigation';
 import {
   getAdminRewardCatalog,
@@ -95,7 +95,7 @@ export function AdminContentPage() {
     [releases, selectedId],
   );
 
-  const reload = async () => {
+  const reload = useCallback(async () => {
     setLoadState('loading');
     try {
       const result = await getAdminRewardCatalog();
@@ -113,12 +113,12 @@ export function AdminContentPage() {
     } catch {
       setLoadState('error');
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (!canSee) return;
     void reload();
-  }, [canSee]);
+  }, [canSee, reload]);
 
   if (admin.status === 'loading') {
     return (
