@@ -4,6 +4,14 @@ import './admin-page.css';
 
 const MODULES = [
   {
+    id: 'guide',
+    title: 'MANUAL DO ADM',
+    detail: 'Guia interativo do site e de todos os comandos do bot.',
+    prefixes: [],
+    href: '/admin/guia',
+    cta: 'ABRIR MANUAL',
+  },
+  {
     id: 'players',
     title: 'JOGADORES',
     detail: 'Perfis, acesso, progressão, localização e suporte.',
@@ -131,9 +139,10 @@ export function AdminPage() {
         <section className="admin-module-grid" aria-label="Módulos administrativos">
           {MODULES.map((module) => {
             const grants = relevantCapabilities(capabilities, module.prefixes);
+            const alwaysAvailable = module.id === 'guide';
             const ownerTeamModule = module.id === 'security' && state.admin.owner;
             const href = ownerTeamModule ? '/admin/team' : module.href;
-            const available = ownerTeamModule || grants.length > 0;
+            const available = alwaysAvailable || ownerTeamModule || grants.length > 0;
             const className = `admin-module-card${available ? ' is-authorized' : ' is-unavailable'}`;
             const content = (
               <>
@@ -143,7 +152,7 @@ export function AdminPage() {
                 </header>
                 <p>{module.detail}</p>
                 <footer>
-                  <span>{grants.length} permissões</span>
+                  <span>{module.id === 'guide' ? 'Guia da equipe' : `${grants.length} permissões`}</span>
                   <small>{href && available ? module.cta : module.id === 'content' ? 'AINDA NÃO DISPONÍVEL NA CENTRAL' : 'SEM INTERFACE WEB'}</small>
                 </footer>
               </>
