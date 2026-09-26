@@ -49,6 +49,27 @@ export function resolveAdminProxyRoute(url: URL, requestMethod = 'GET'): AdminPr
     };
   }
 
+  if (url.pathname === '/api/hub/admin/operations' && requestMethod === 'POST') {
+    const rewrittenOperationId = url.searchParams.get('operationId');
+    const rewrittenOperationAction = url.searchParams.get('action')?.toLowerCase();
+    if (rewrittenOperationId !== null || rewrittenOperationAction !== undefined) {
+      if (
+        rewrittenOperationId === null ||
+        !UUID_PATTERN.test(rewrittenOperationId) ||
+        (rewrittenOperationAction !== 'simulate' &&
+          rewrittenOperationAction !== 'confirm' &&
+          rewrittenOperationAction !== 'approve' &&
+          rewrittenOperationAction !== 'apply')
+      ) {
+        return null;
+      }
+      return {
+        upstreamPath: `/v1/hub/admin/operations/${rewrittenOperationId}/${rewrittenOperationAction}`,
+        allowedMethod: 'POST',
+      };
+    }
+  }
+
   if (
     url.pathname === '/api/hub/admin/operations' &&
     (requestMethod === 'GET' || requestMethod === 'POST')
