@@ -44,6 +44,7 @@ describe('product integrity routing', () => {
     expect(resolveProductRoute('/admin/rewards')).toEqual({ kind: 'route' });
     expect(resolveProductRoute('/admin/team')).toEqual({ kind: 'route' });
     expect(resolveProductRoute('/admin/content')).toEqual({ kind: 'route' });
+    expect(resolveProductRoute('/admin/audit')).toEqual({ kind: 'route' });
     expect(
       resolveProductRoute('/admin/players/11111111-1111-4111-8111-111111111111'),
     ).toEqual({ kind: 'route' });
