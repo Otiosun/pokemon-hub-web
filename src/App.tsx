@@ -51,6 +51,9 @@ const AdminBatchRewardsPage = lazy(() =>
 const AdminTeamPage = lazy(() =>
   import('./features/admin/AdminTeamPage').then((module) => ({ default: module.AdminTeamPage })),
 );
+const AdminContentPage = lazy(() =>
+  import('./features/admin/AdminContentPage').then((module) => ({ default: module.AdminContentPage })),
+);
 
 type ChampionStoreOffer = {
   code: string;
@@ -677,6 +680,16 @@ export function App() {
       document.removeEventListener('click', onDocumentClick);
     };
   }, []);
+
+  if (path === '/admin/content' || path === '/admin/content/') {
+    return (
+      <HubFrame active={null} destinations={hubDestinations}>
+        <Suspense fallback={<RouteFallback module="journey" label="ABRINDO CONTEÚDO" />}>
+          <AdminContentPage />
+        </Suspense>
+      </HubFrame>
+    );
+  }
 
   if (path === '/admin/team' || path === '/admin/team/') {
     return (
