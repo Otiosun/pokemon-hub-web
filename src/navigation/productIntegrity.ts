@@ -62,7 +62,8 @@ export function resolveProductRoute(path: string): ProductRouteResolution {
     normalized === '/admin/rewards' ||
     normalized === '/admin/team' ||
     normalized === '/admin/content' ||
-    normalized === '/admin/audit'
+    normalized === '/admin/audit' ||
+    normalized === '/admin/guia'
   ) {
     return { kind: 'route' };
   }
