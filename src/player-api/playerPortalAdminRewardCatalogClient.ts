@@ -34,6 +34,19 @@ export type AdminRewardCatalogEffect = {
   scope: 'PLAYER' | 'POKEMON' | 'BATTLE_PARTICIPANT' | 'AREA';
 };
 
+export type AdminRewardCatalogRelease = {
+  releaseId: string;
+  releaseNo: string;
+  name: string;
+  status: 'DRAFT' | 'VALIDATED' | 'PUBLISHED' | 'ARCHIVED';
+  revision: string;
+  parentReleaseId: string | null;
+  defaultRulesetId: string;
+  active: boolean;
+  createdAt: string;
+  publishedAt: string | null;
+};
+
 export type AdminRewardCatalogResult =
   | {
       status: 'ok';
@@ -42,6 +55,7 @@ export type AdminRewardCatalogResult =
       species: AdminRewardCatalogSpecies[];
       forms: AdminRewardCatalogForm[];
       effects: AdminRewardCatalogEffect[];
+      releases: AdminRewardCatalogRelease[];
     }
   | { status: 'unauthenticated' | 'forbidden' };
 
@@ -129,6 +143,31 @@ function isEffect(value: unknown): value is AdminRewardCatalogEffect {
   );
 }
 
+function isRelease(value: unknown): value is AdminRewardCatalogRelease {
+  return (
+    isRecord(value) &&
+    typeof value.releaseId === 'string' &&
+    UUID_PATTERN.test(value.releaseId) &&
+    typeof value.releaseNo === 'string' &&
+    /^\d+$/.test(value.releaseNo) &&
+    typeof value.name === 'string' &&
+    value.name.length > 0 &&
+    (value.status === 'DRAFT' ||
+      value.status === 'VALIDATED' ||
+      value.status === 'PUBLISHED' ||
+      value.status === 'ARCHIVED') &&
+    typeof value.revision === 'string' &&
+    /^\d+$/.test(value.revision) &&
+    (value.parentReleaseId === null ||
+      (typeof value.parentReleaseId === 'string' && UUID_PATTERN.test(value.parentReleaseId))) &&
+    typeof value.defaultRulesetId === 'string' &&
+    UUID_PATTERN.test(value.defaultRulesetId) &&
+    typeof value.active === 'boolean' &&
+    typeof value.createdAt === 'string' &&
+    (value.publishedAt === null || typeof value.publishedAt === 'string')
+  );
+}
+
 export async function getAdminRewardCatalog(
   fetcher: Fetcher = fetch,
 ): Promise<AdminRewardCatalogResult> {
@@ -152,7 +191,9 @@ export async function getAdminRewardCatalog(
     (body.forms !== undefined &&
       (!Array.isArray(body.forms) || !body.forms.every(isForm))) ||
     (body.effects !== undefined &&
-      (!Array.isArray(body.effects) || !body.effects.every(isEffect)))
+      (!Array.isArray(body.effects) || !body.effects.every(isEffect))) ||
+    (body.releases !== undefined &&
+      (!Array.isArray(body.releases) || !body.releases.every(isRelease)))
   ) {
     throw new Error('Invalid admin reward catalog response');
   }
@@ -164,5 +205,6 @@ export async function getAdminRewardCatalog(
     species: Array.isArray(body.species) ? body.species : [],
     forms: Array.isArray(body.forms) ? body.forms : [],
     effects: Array.isArray(body.effects) ? body.effects : [],
+    releases: Array.isArray(body.releases) ? body.releases : [],
   };
 }
