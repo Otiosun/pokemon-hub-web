@@ -24,6 +24,7 @@ import './admin-batch-rewards.css';
 
 type TargetMode = 'SELECTED' | 'STATUS';
 type RewardKind = 'PROGRESSION' | 'WALLET' | 'ITEM' | 'POKEDEX_SEEN';
+type RewardDirection = 'ADD' | 'REMOVE';
 
 const STATUS_OPTIONS: Array<{ value: AdminPlayerStatus; label: string }> = [
   { value: 'ACTIVE', label: 'ATIVOS' },
@@ -63,7 +64,8 @@ export function AdminBatchRewardsPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchState, setSearchState] = useState<'idle' | 'loading' | 'error'>('idle');
   const [rewardKind, setRewardKind] = useState<RewardKind>('PROGRESSION');
-  const [delta, setDelta] = useState('');
+  const [amount, setAmount] = useState('');
+  const [direction, setDirection] = useState<RewardDirection>('ADD');
   const [currencyId, setCurrencyId] = useState('');
   const [itemId, setItemId] = useState('');
   const [speciesId, setSpeciesId] = useState('');
@@ -110,6 +112,8 @@ export function AdminBatchRewardsPage() {
   );
 
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const signedDelta = direction === 'REMOVE' ? `-${amount}` : amount;
+  const displayDelta = amount ? `${direction === 'REMOVE' ? '−' : '+'}${amount}` : '—';
 
   const invalidatePreview = () => {
     setPreview(null);
@@ -236,11 +240,11 @@ export function AdminBatchRewardsPage() {
           : { kind: 'PLAYER_FILTER', status: filterStatus },
       reward:
         rewardKind === 'PROGRESSION'
-          ? { kind: 'TRAINER_PROGRESSION', delta }
+          ? { kind: 'TRAINER_PROGRESSION', delta: signedDelta }
           : rewardKind === 'WALLET'
-            ? { kind: 'WALLET', currencyId, delta }
+            ? { kind: 'WALLET', currencyId, delta: signedDelta }
             : rewardKind === 'ITEM'
-              ? { kind: 'ITEM', itemId, delta }
+              ? { kind: 'ITEM', itemId, delta: signedDelta }
               : { kind: 'POKEDEX_SEEN', speciesId, shiny: shinySeen },
       reason,
     });
@@ -348,8 +352,8 @@ export function AdminBatchRewardsPage() {
             <span className="admin-kicker">LIVE OPS · R3 NA EXECUÇÃO</span>
             <h1>Recompensa em massa</h1>
             <p>
-              Distribua progressão, dinheiro ou itens para vários jogadores sem repetir comandos.
-              Primeiro o sistema congela os alvos e mostra o preview; a execução só fica disponível depois.
+              Escolha quem recebe, o que será alterado e confira tudo antes de aplicar.
+              Nada é executado enquanto você estiver apenas no preview.
             </p>
           </div>
           <div className="admin-batch-badge">
@@ -361,7 +365,7 @@ export function AdminBatchRewardsPage() {
                 : rewardKind === 'ITEM'
                   ? 'ITEM'
                   : 'POKÉDEX · VISTO'}</strong>
-            <small>mesmo motor de preview, confirmação e auditoria</small>
+            <small>revise antes de aplicar</small>
           </div>
         </header>
 
@@ -544,22 +548,55 @@ export function AdminBatchRewardsPage() {
             ) : null}
 
             {rewardKind !== 'POKEDEX_SEEN' ? (
-              <label>
-                <span>{rewardKind === 'PROGRESSION' ? 'DELTA DE PONTOS' : 'QUANTIDADE'}</span>
-                <input
-                  value={delta}
-                  inputMode="numeric"
-                  placeholder={rewardKind === 'PROGRESSION' ? '+50 ou -20' : '+1 ou -1'}
-                  onChange={(event) => {
-                    setDelta(event.target.value);
-                    invalidatePreview();
-                  }}
-                />
-              </label>
+              <div className="admin-batch-amount">
+                <span className="admin-batch-field-label">O QUE FAZER</span>
+                <div className="admin-batch-direction" role="group" aria-label="Tipo de alteração">
+                  <button
+                    type="button"
+                    className={direction === 'ADD' ? 'is-active' : ''}
+                    onClick={() => {
+                      setDirection('ADD');
+                      invalidatePreview();
+                    }}
+                  >
+                    + DAR
+                  </button>
+                  <button
+                    type="button"
+                    className={direction === 'REMOVE' ? 'is-active is-remove' : 'is-remove'}
+                    onClick={() => {
+                      setDirection('REMOVE');
+                      invalidatePreview();
+                    }}
+                  >
+                    − REMOVER
+                  </button>
+                </div>
+                <label>
+                  <span>{rewardKind === 'PROGRESSION' ? 'QUANTIDADE DE PONTOS' : 'QUANTIDADE'}</span>
+                  <input
+                    value={amount}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder={rewardKind === 'PROGRESSION' ? '50' : '1'}
+                    onChange={(event) => {
+                      setAmount(event.target.value.replace(/\D/g, ''));
+                      invalidatePreview();
+                    }}
+                  />
+                </label>
+                <small className="admin-batch-change-preview">
+                  {amount
+                    ? direction === 'ADD'
+                      ? `Será adicionado: +${amount}`
+                      : `Será removido: −${amount}`
+                    : 'Digite somente o número. O sinal é aplicado automaticamente.'}
+                </small>
+              </div>
             ) : null}
 
             <label className="is-reason">
-              <span>MOTIVO ADMINISTRATIVO</span>
+              <span>MOTIVO · FICA NO HISTÓRICO</span>
               <textarea
                 value={reason}
                 maxLength={2000}
@@ -606,11 +643,11 @@ export function AdminBatchRewardsPage() {
                 <span>RECOMPENSA</span>
                 <strong>
                   {rewardKind === 'PROGRESSION'
-                    ? delta
+                    ? displayDelta
                     : rewardKind === 'WALLET'
-                      ? `${delta} · ${catalogCurrencies.find((currency) => currency.currencyId === currencyId)?.displayName ?? 'moeda'}`
+                      ? `${displayDelta} · ${catalogCurrencies.find((currency) => currency.currencyId === currencyId)?.displayName ?? 'moeda'}`
                       : rewardKind === 'ITEM'
-                        ? `${delta} × ${catalogItems.find((item) => item.itemId === itemId)?.displayName ?? 'item'}`
+                        ? `${displayDelta} × ${catalogItems.find((item) => item.itemId === itemId)?.displayName ?? 'item'}`
                         : `${shinySeen ? 'VISTO · SHINY' : 'VISTO'} · ${catalogSpecies.find((species) => species.speciesId === speciesId)?.displayName ?? 'espécie'}`}
                 </strong>
               </article>
