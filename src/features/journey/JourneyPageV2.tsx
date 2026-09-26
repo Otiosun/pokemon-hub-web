@@ -337,10 +337,11 @@ export function JourneyPageV2({
   );
   const [trainerCardError, setTrainerCardError] = useState<string | null>(null);
   const imageError = cover.error ?? avatar.error;
-  const canEditCover = showcase;
-  const canEditAvatar = showcase || (isZhoulia && Boolean(profile.publicVerificationId));
-  const canEditProfileImages = canEditCover || canEditAvatar;
   const canEditCustomization = playerPortalSession.status === 'authenticated';
+  const canEditCover = showcase || canEditCustomization;
+  const canEditAvatar =
+    showcase || canEditCustomization || (isZhoulia && Boolean(profile.publicVerificationId));
+  const canEditProfileImages = canEditCover || canEditAvatar;
   const canEditProfile = canEditCustomization || canEditProfileImages;
   const trainerCardReadiness = isZhoulia
     ? getTrainerCardEmissionReadiness(profile, avatar.url)
