@@ -16,8 +16,8 @@ const MODULES = [
     title: 'POKÉMON',
     detail: 'Roster, edição, movimentos, efeitos e ciclo de vida.',
     prefixes: ['pokemon.', 'effect.', 'effects.'],
-    href: null,
-    cta: 'INTERFACE EM CONSTRUÇÃO',
+    href: '/admin/players',
+    cta: 'ESCOLHER JOGADOR',
   },
   {
     id: 'economy',
@@ -32,13 +32,13 @@ const MODULES = [
     title: 'MUNDO E BATALHA',
     detail: 'Encontros, batalhas, regiões e correções operacionais.',
     prefixes: ['world.', 'encounter.', 'battle.'],
-    href: null,
-    cta: 'INTERFACE EM CONSTRUÇÃO',
+    href: '/admin/players',
+    cta: 'ABRIR SUPORTE AO JOGADOR',
   },
   {
     id: 'content',
     title: 'CONTEÚDO',
-    detail: 'Drafts, validação, publicação e rollback de releases.',
+    detail: 'Drafts, validação, publicação e rollback de releases. Interface web ainda pendente.',
     prefixes: ['content.'],
     href: null,
     cta: 'INTERFACE EM CONSTRUÇÃO',
@@ -136,7 +136,7 @@ export function AdminPage() {
                 <p>{module.detail}</p>
                 <footer>
                   <span>{grants.length} permissões</span>
-                  <small>{href && available ? module.cta : 'INTERFACE EM CONSTRUÇÃO'}</small>
+                  <small>{href && available ? module.cta : module.id === 'content' ? 'AINDA NÃO DISPONÍVEL NA CENTRAL' : 'SEM INTERFACE WEB'}</small>
                 </footer>
               </>
             );
