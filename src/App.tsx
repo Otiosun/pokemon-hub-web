@@ -54,6 +54,9 @@ const AdminTeamPage = lazy(() =>
 const AdminContentPage = lazy(() =>
   import('./features/admin/AdminContentPage').then((module) => ({ default: module.AdminContentPage })),
 );
+const AdminAuditPage = lazy(() =>
+  import('./features/admin/AdminAuditPage').then((module) => ({ default: module.AdminAuditPage })),
+);
 
 type ChampionStoreOffer = {
   code: string;
@@ -680,6 +683,16 @@ export function App() {
       document.removeEventListener('click', onDocumentClick);
     };
   }, []);
+
+  if (path === '/admin/audit' || path === '/admin/audit/') {
+    return (
+      <HubFrame active={null} destinations={hubDestinations}>
+        <Suspense fallback={<RouteFallback module="journey" label="ABRINDO AUDITORIA" />}>
+          <AdminAuditPage />
+        </Suspense>
+      </HubFrame>
+    );
+  }
 
   if (path === '/admin/content' || path === '/admin/content/') {
     return (
