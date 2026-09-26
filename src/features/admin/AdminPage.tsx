@@ -38,10 +38,10 @@ const MODULES = [
   {
     id: 'content',
     title: 'CONTEÚDO',
-    detail: 'Drafts, validação, publicação e rollback de releases. Interface web ainda pendente.',
+    detail: 'Drafts, validação e publicação dos releases do RPG.',
     prefixes: ['content.'],
-    href: null,
-    cta: 'INTERFACE EM CONSTRUÇÃO',
+    href: '/admin/content',
+    cta: 'ABRIR CONTEÚDO',
   },
   {
     id: 'security',
