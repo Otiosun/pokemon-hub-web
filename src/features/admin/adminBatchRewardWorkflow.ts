@@ -76,7 +76,7 @@ export function buildBatchRewardPreviewRequest(input: {
   }
   if (!reason) return { ok: false, message: 'O motivo administrativo é obrigatório.' };
   if (rawDelta !== null && !SIGNED_DELTA.test(rawDelta)) {
-    return { ok: false, message: 'Informe um delta inteiro diferente de zero.' };
+    return { ok: false, message: 'Informe uma quantidade inteira maior que zero.' };
   }
 
   let selector: Record<string, unknown>;
