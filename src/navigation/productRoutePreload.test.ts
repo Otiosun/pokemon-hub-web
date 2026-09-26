@@ -6,6 +6,8 @@ describe('product route preload classification', () => {
     expect(productRouteChunk('/pokedex/25')).toBe('pokedex-species');
     expect(productRouteChunk('/pokemon/owned-charmander-01')).toBe('owned-pokemon');
     expect(productRouteChunk('/team')).toBe('team');
+    expect(productRouteChunk('/sistemas')).toBe('systems');
+    expect(productRouteChunk('/sistemas/profissoes')).toBe('systems');
     expect(productRouteChunk('/admin')).toBe('admin');
     expect(productRouteChunk('/admin/players')).toBe('admin-players');
     expect(productRouteChunk('/admin/rewards')).toBe('admin-rewards');

@@ -37,6 +37,13 @@ describe('product integrity routing', () => {
     });
   });
 
+  it('keeps the documented systems hub and its guides player-facing', () => {
+    expect(resolveProductRoute('/sistemas')).toEqual({ kind: 'route' });
+    expect(resolveProductRoute('/sistemas/profissoes')).toEqual({ kind: 'route' });
+    expect(resolveProductRoute('/sistemas/progressao')).toEqual({ kind: 'route' });
+    expect(resolveProductRoute('/sistemas/treinamentos')).toEqual({ kind: 'route' });
+  });
+
   it('keeps Champion Store and capability-gated admin tools as product routes', () => {
     expect(resolveProductRoute('/champion-store')).toEqual({ kind: 'route' });
     expect(resolveProductRoute('/admin')).toEqual({ kind: 'route' });

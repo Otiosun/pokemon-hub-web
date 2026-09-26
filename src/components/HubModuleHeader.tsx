@@ -1,7 +1,7 @@
 import { HubMenuTrigger } from './HubNavigation';
 import './hub-module-header.css';
 
-export type HubModule = 'journey' | 'pokedex' | 'pokemon' | 'team' | 'store';
+export type HubModule = 'journey' | 'pokedex' | 'pokemon' | 'team' | 'store' | 'systems';
 
 type HubModuleHeaderProps = {
   module: HubModule;
@@ -15,6 +15,7 @@ const MODULE_META: Record<HubModule, { label: string; href: string; ariaLabel?: 
   pokemon: { label: 'BOX', href: '/pokemon' },
   team: { label: 'BOX · TIME ATIVO', href: '/pokemon', ariaLabel: 'Abrir BOX' },
   store: { label: 'CHAMPION STORE', href: '/champion-store' },
+  systems: { label: 'SISTEMAS', href: '/sistemas' },
 };
 
 export function HubModuleHeader({ module, metaLabel, metaValue }: HubModuleHeaderProps) {
