@@ -8,6 +8,18 @@
       "destination": "/api/hub/admin/operations?operationId=:operationId&action=:action"
     },
     {
+      "source": "/api/hub/admin/players/:playerId/adjustments",
+      "destination": "/api/hub/admin/players?playerId=:playerId&action=adjustments"
+    },
+    {
+      "source": "/api/hub/admin/players/:playerId",
+      "destination": "/api/hub/admin/players?playerId=:playerId"
+    },
+    {
+      "source": "/api/hub/admin/team/:principalId/capabilities",
+      "destination": "/api/hub/admin/team?principalId=:principalId&action=capabilities"
+    },
+    {
       "source": "/:path((?!api/).*)",
       "destination": "/index.html"
     }
