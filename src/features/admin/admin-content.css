@@ -1,0 +1,94 @@
+.admin-content-shell { display:grid; gap:18px; }
+.admin-content-releases {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+  gap:10px;
+}
+.admin-content-releases button {
+  display:grid;
+  gap:6px;
+  min-height:108px;
+  padding:14px;
+  text-align:left;
+  border:1px solid rgba(215,230,231,.08);
+  border-radius:9px;
+  background:rgba(8,14,15,.78);
+  color:#dbe7e7;
+  cursor:pointer;
+}
+.admin-content-releases button span { color:#748689; font:700 .58rem 'IBM Plex Mono',monospace; }
+.admin-content-releases button strong { font-size:.92rem; }
+.admin-content-releases button small { color:#819194; line-height:1.4; }
+.admin-content-releases button.is-selected {
+  border-color:rgba(103,200,158,.38);
+  background:rgba(103,200,158,.07);
+}
+.admin-content-lifecycle,
+.admin-content-advanced {
+  display:grid;
+  gap:12px;
+  padding:16px;
+  border:1px solid rgba(215,230,231,.08);
+  border-radius:10px;
+  background:rgba(9,14,15,.76);
+}
+.admin-content-lifecycle > header {
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+}
+.admin-content-lifecycle > header > div { display:grid; gap:3px; }
+.admin-content-lifecycle > header span { color:#708184; font:700 .56rem 'IBM Plex Mono',monospace; }
+.admin-content-lifecycle > header strong { font-size:1rem; }
+.admin-content-lifecycle > header small { color:#819194; }
+.admin-content-lifecycle > header em {
+  padding:5px 8px;
+  border:1px solid rgba(103,200,158,.3);
+  border-radius:999px;
+  color:#9adbbd;
+  font:800 .57rem 'IBM Plex Mono',monospace;
+  font-style:normal;
+}
+.admin-content-lifecycle textarea,
+.admin-content-advanced textarea { min-height:78px; }
+.admin-content-advanced-toggle {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  width:100%;
+  min-height:44px;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:#dbe7e7;
+  cursor:pointer;
+}
+.admin-content-advanced-toggle span { font:800 .65rem 'IBM Plex Mono',monospace; }
+.admin-content-advanced-toggle strong { color:#8ba0a2; font:800 .58rem 'IBM Plex Mono',monospace; }
+.admin-content-advanced-body { display:grid; gap:14px; }
+.admin-content-advanced-body > nav { display:flex; flex-wrap:wrap; gap:6px; }
+.admin-content-advanced-body > nav button {
+  min-height:36px;
+  padding:0 11px;
+  border:1px solid rgba(215,230,231,.08);
+  border-radius:6px;
+  background:#0e1415;
+  color:#839397;
+  font:800 .59rem 'IBM Plex Mono',monospace;
+  cursor:pointer;
+}
+.admin-content-advanced-body > nav button.is-active {
+  border-color:rgba(103,200,158,.34);
+  color:#9bdcbe;
+}
+.admin-content-json textarea {
+  min-height:260px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:.72rem;
+  line-height:1.45;
+}
+@media (max-width:720px) {
+  .admin-content-lifecycle > header { flex-direction:column; }
+}
