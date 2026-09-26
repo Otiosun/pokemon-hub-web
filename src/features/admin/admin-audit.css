@@ -1,0 +1,211 @@
+.admin-audit-shell {
+  display: grid;
+  gap: 22px;
+}
+
+.admin-audit-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 24px;
+}
+
+.admin-audit-heading h1 {
+  margin: 7px 0 9px;
+  font: 760 clamp(2rem, 5vw, 3.6rem)/0.95 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: -0.045em;
+}
+
+.admin-audit-heading p {
+  max-width: 680px;
+  margin: 0;
+  color: #8d9b9d;
+  line-height: 1.55;
+}
+
+.admin-audit-count {
+  min-width: 170px;
+  display: grid;
+  gap: 3px;
+  padding: 14px 16px;
+  border: 1px solid rgba(103, 200, 158, 0.16);
+  border-left: 3px solid #68cb9f;
+  border-radius: 10px;
+  background: rgba(104, 203, 159, 0.025);
+}
+
+.admin-audit-count span,
+.admin-audit-count small,
+.admin-audit-filters,
+.admin-audit-card header,
+.admin-audit-card footer > span,
+.admin-audit-actor span {
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.admin-audit-count span,
+.admin-audit-count small {
+  color: #78898b;
+  font-size: 0.58rem;
+  letter-spacing: 0.07em;
+}
+
+.admin-audit-count strong {
+  color: #8be1b8;
+  font: 760 1.35rem 'Space Grotesk', system-ui, sans-serif;
+}
+
+.admin-audit-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 260px);
+  gap: 9px;
+}
+
+.admin-audit-filters input,
+.admin-audit-filters select {
+  min-height: 44px;
+  border: 1px solid rgba(205, 226, 227, 0.1);
+  border-radius: 8px;
+  background: #121718;
+  color: #dce7e7;
+  padding: 0 12px;
+  outline: none;
+}
+
+.admin-audit-filters input:focus,
+.admin-audit-filters select:focus {
+  border-color: rgba(103, 200, 158, 0.4);
+}
+
+.admin-audit-list {
+  display: grid;
+  gap: 9px;
+}
+
+.admin-audit-card {
+  display: grid;
+  gap: 15px;
+  padding: 16px 17px;
+  border: 1px solid rgba(205, 226, 227, 0.09);
+  border-radius: 11px;
+  background: #121718;
+}
+
+.admin-audit-card header,
+.admin-audit-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin-audit-card header {
+  color: #758689;
+  font-size: 0.56rem;
+  letter-spacing: 0.06em;
+}
+
+.admin-audit-card header > span {
+  color: #9fb0b2;
+  font-weight: 800;
+}
+
+.admin-audit-card header > span.is-status-applied,
+.admin-audit-card header > span.is-status-compensated {
+  color: #83d9b2;
+}
+
+.admin-audit-card header > span.is-status-failed,
+.admin-audit-card header > span.is-status-rejected {
+  color: #ef7d85;
+}
+
+.admin-audit-card header > span.is-status-pending_approval,
+.admin-audit-card header > span.is-status-pending_confirmation {
+  color: #e2bf72;
+}
+
+.admin-audit-main > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-audit-main > div:first-child strong {
+  font: 720 1rem 'Space Grotesk', system-ui, sans-serif;
+}
+
+.admin-audit-main > div:first-child small {
+  color: #7f8f91;
+}
+
+.admin-audit-actor {
+  min-width: 190px;
+  display: grid;
+  justify-items: end;
+  gap: 3px;
+}
+
+.admin-audit-actor span,
+.admin-audit-card footer > span {
+  color: #68787a;
+  font-size: 0.55rem;
+  letter-spacing: 0.06em;
+}
+
+.admin-audit-actor strong {
+  color: #cbd8d8;
+  font-size: 0.78rem;
+}
+
+.admin-audit-card footer {
+  display: grid;
+  gap: 5px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(205, 226, 227, 0.07);
+}
+
+.admin-audit-card footer p {
+  margin: 0;
+  color: #98a7a9;
+  line-height: 1.48;
+}
+
+.admin-audit-empty {
+  min-height: 180px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 5px;
+  border: 1px dashed rgba(205, 226, 227, 0.12);
+  border-radius: 10px;
+  color: #7c8d8f;
+}
+
+.admin-audit-empty small {
+  color: #637275;
+}
+
+.admin-audit-empty.is-error strong {
+  color: #ef7d85;
+}
+
+@media (max-width: 720px) {
+  .admin-audit-heading,
+  .admin-audit-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-audit-count {
+    min-width: 0;
+  }
+
+  .admin-audit-main {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-audit-actor {
+    min-width: 0;
+    justify-items: start;
+  }
+}
