@@ -1,11 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { HubMenuTrigger } from '../../components/HubNavigation';
 import {
+  addAdminTeamPrincipal,
   getAdminTeam,
   replaceAdminTeamCapabilities,
+  setAdminTeamReceptionStaff,
   type AdminTeamCapability,
   type AdminTeamPrincipal,
 } from '../../player-api/playerPortalAdminTeamClient';
+import {
+  searchAdminPlayers,
+  type AdminPlayerSearchItem,
+} from '../../player-api/playerPortalAdminPlayersClient';
 import { usePlayerPortalAdmin } from '../../player-api/usePlayerPortalAdmin';
 import './admin-page.css';
 import './admin-team.css';
@@ -111,6 +117,16 @@ export function AdminTeamPage() {
   const [reason, setReason] = useState('');
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const [addQuery, setAddQuery] = useState('');
+  const [addResults, setAddResults] = useState<AdminPlayerSearchItem[]>([]);
+  const [addPlayerId, setAddPlayerId] = useState('');
+  const [addReception, setAddReception] = useState(false);
+  const [addReason, setAddReason] = useState('');
+  const [addState, setAddState] = useState<'idle' | 'searching' | 'saving' | 'error' | 'success'>('idle');
+  const [addMessage, setAddMessage] = useState('');
+  const [staffReason, setStaffReason] = useState('');
+  const [staffState, setStaffState] = useState<'idle' | 'saving' | 'error' | 'success'>('idle');
+  const [staffMessage, setStaffMessage] = useState('');
   const owner = admin.status === 'admin' && admin.admin.owner;
 
   useEffect(() => {
@@ -201,6 +217,119 @@ export function AdminTeamPage() {
     setSaveState('idle');
   };
 
+  const searchPlayersForAdmin = async () => {
+    const query = addQuery.trim();
+    if (!query) {
+      setAddState('error');
+      setAddMessage('Digite o nome do treinador.');
+      return;
+    }
+    setAddState('searching');
+    setAddMessage('');
+    try {
+      const result = await searchAdminPlayers({ query, status: 'ACTIVE', limit: 20 });
+      if (result.status !== 'ok') {
+        setAddState('error');
+        setAddMessage('Não foi possível consultar os jogadores.');
+        return;
+      }
+      const existingNames = new Set(principals.map((principal) => principal.displayName.toLocaleLowerCase('pt-BR')));
+      const candidates = result.players.filter(
+        (player) =>
+          player.trainerName &&
+          !existingNames.has(player.trainerName.toLocaleLowerCase('pt-BR')),
+      );
+      setAddResults(candidates);
+      setAddPlayerId(candidates[0]?.playerId ?? '');
+      setAddState(candidates.length ? 'idle' : 'error');
+      setAddMessage(candidates.length ? '' : 'Nenhum jogador aprovado disponível para adicionar.');
+    } catch {
+      setAddState('error');
+      setAddMessage('Falha ao buscar jogadores.');
+    }
+  };
+
+  const addAdmin = async () => {
+    if (!addPlayerId || !addReason.trim()) {
+      setAddState('error');
+      setAddMessage(!addPlayerId ? 'Escolha um jogador aprovado.' : 'Informe o motivo.');
+      return;
+    }
+    setAddState('saving');
+    setAddMessage('');
+    try {
+      const result = await addAdminTeamPrincipal({
+        playerId: addPlayerId,
+        capabilities: [],
+        reason: addReason.trim(),
+        receptionStaff: addReception,
+      });
+      if (result.status !== 'ok') {
+        setAddState('error');
+        setAddMessage(
+          result.status === 'rejected'
+            ? `Não foi possível adicionar: ${result.code}`
+            : 'Você não possui autorização para adicionar administradores.',
+        );
+        return;
+      }
+      setPrincipals((current) => [...current, result.principal]);
+      setSelectedId(result.principal.principalId);
+      setDraft(new Set(result.principal.capabilities));
+      setAddQuery('');
+      setAddResults([]);
+      setAddPlayerId('');
+      setAddReception(false);
+      setAddReason('');
+      setAddState('success');
+      setAddMessage('Administrador criado. Agora escolha os poderes ao lado.');
+    } catch {
+      setAddState('error');
+      setAddMessage('Falha ao criar administrador.');
+    }
+  };
+
+  const toggleReceptionStaff = async () => {
+    if (!selected || !staffReason.trim()) {
+      setStaffState('error');
+      setStaffMessage('Informe o motivo da alteração da Recepção.');
+      return;
+    }
+    setStaffState('saving');
+    setStaffMessage('');
+    try {
+      const result = await setAdminTeamReceptionStaff({
+        principalId: selected.principalId,
+        active: !selected.receptionStaff,
+        reason: staffReason.trim(),
+      });
+      if (result.status !== 'ok') {
+        setStaffState('error');
+        setStaffMessage(
+          result.status === 'rejected'
+            ? `Alteração rejeitada: ${result.code}`
+            : 'Você não possui autorização para alterar a Recepção.',
+        );
+        return;
+      }
+      setPrincipals((current) =>
+        current.map((principal) =>
+          principal.principalId === result.principal.principalId ? result.principal : principal,
+        ),
+      );
+      setStaffReason('');
+      setStaffState('success');
+      setStaffMessage(
+        result.principal.receptionStaff
+          ? 'Administrador adicionado ao atendimento da Recepção.'
+          : 'Administrador removido do atendimento da Recepção.',
+      );
+    } catch {
+      setStaffState('error');
+      setStaffMessage('Falha ao atualizar o staff da Recepção.');
+    }
+  };
+
   const save = async () => {
     if (!selected || selected.owner || !reason.trim()) {
       setSaveState('error');
@@ -265,6 +394,60 @@ export function AdminTeamPage() {
           </div>
         </header>
 
+        <section className="admin-team-add">
+          <header>
+            <div>
+              <span className="admin-kicker">NOVO ADMINISTRADOR</span>
+              <h2>Adicionar jogador à equipe</h2>
+            </div>
+            <small>SOMENTE JOGADORES APROVADOS</small>
+          </header>
+          <div className="admin-team-add-search">
+            <input
+              value={addQuery}
+              placeholder="Nome do treinador"
+              onChange={(event) => setAddQuery(event.target.value)}
+            />
+            <button type="button" disabled={addState === 'searching'} onClick={() => void searchPlayersForAdmin()}>
+              {addState === 'searching' ? 'BUSCANDO…' : 'BUSCAR JOGADOR'}
+            </button>
+          </div>
+          {addResults.length ? (
+            <div className="admin-team-add-form">
+              <label>
+                <span>JOGADOR</span>
+                <select value={addPlayerId} onChange={(event) => setAddPlayerId(event.target.value)}>
+                  {addResults.map((player) => (
+                    <option key={player.playerId} value={player.playerId}>
+                      {player.trainerName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="admin-team-reception-check">
+                <input
+                  type="checkbox"
+                  checked={addReception}
+                  onChange={(event) => setAddReception(event.target.checked)}
+                />
+                <span>Também atender fichas da Recepção</span>
+              </label>
+              <textarea
+                value={addReason}
+                maxLength={2000}
+                placeholder="Motivo para adicionar este administrador"
+                onChange={(event) => setAddReason(event.target.value)}
+              />
+              <button type="button" disabled={addState === 'saving'} onClick={() => void addAdmin()}>
+                {addState === 'saving' ? 'ADICIONANDO…' : 'TORNAR ADMIN'}
+              </button>
+            </div>
+          ) : null}
+          {addMessage ? (
+            <p className={addState === 'success' ? 'is-success' : 'is-error'}>{addMessage}</p>
+          ) : null}
+        </section>
+
         <div className="admin-team-layout">
           <aside className="admin-team-people">
             <header><span>EQUIPE</span><strong>{principals.length}</strong></header>
@@ -294,6 +477,39 @@ export function AdminTeamPage() {
                     <strong>{selected.owner ? 'TODOS · PROTEGIDO' : draft.size}</strong>
                   </div>
                 </header>
+
+                <section className="admin-team-reception">
+                  <div>
+                    <span>RECEPÇÃO</span>
+                    <strong>{selected.receptionStaff ? 'ATENDENDO' : 'FORA DO STAFF'}</strong>
+                    <small>
+                      {selected.receptionStaff
+                        ? 'recebe menções de fichas para revisão'
+                        : 'não recebe roteamento de fichas'}
+                    </small>
+                  </div>
+                  <textarea
+                    value={staffReason}
+                    maxLength={2000}
+                    placeholder="Motivo da alteração de staff"
+                    onChange={(event) => setStaffReason(event.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className={selected.receptionStaff ? 'is-danger' : ''}
+                    disabled={staffState === 'saving'}
+                    onClick={() => void toggleReceptionStaff()}
+                  >
+                    {staffState === 'saving'
+                      ? 'SALVANDO…'
+                      : selected.receptionStaff
+                        ? 'REMOVER DA RECEPÇÃO'
+                        : 'ADICIONAR À RECEPÇÃO'}
+                  </button>
+                  {staffMessage ? (
+                    <p className={staffState === 'success' ? 'is-success' : 'is-error'}>{staffMessage}</p>
+                  ) : null}
+                </section>
 
                 {selected.owner ? (
                   <div className="admin-team-protected">
