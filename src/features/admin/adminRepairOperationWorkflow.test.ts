@@ -21,6 +21,7 @@ const battle = {
   createdAt: '2026-09-23T10:00:00.000Z',
   updatedAt: '2026-09-23T10:01:00.000Z',
   endedAt: null,
+  participants: [],
 } satisfies NonNullable<AdminPlayer360['activeBattle']>;
 
 const encounter = {
