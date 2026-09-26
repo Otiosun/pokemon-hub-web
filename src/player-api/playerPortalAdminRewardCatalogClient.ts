@@ -26,6 +26,17 @@ export type AdminRewardCatalogForm = {
   speciesSlug: string;
   formSlug: string;
   displayName: string;
+  abilityIds: string[];
+};
+
+export type AdminRewardCatalogAbility = {
+  abilityId: string;
+  slug: string;
+};
+
+export type AdminRewardCatalogNature = {
+  natureId: string;
+  slug: string;
 };
 
 export type AdminRewardCatalogEffect = {
@@ -54,6 +65,8 @@ export type AdminRewardCatalogResult =
       currencies: AdminRewardCatalogCurrency[];
       species: AdminRewardCatalogSpecies[];
       forms: AdminRewardCatalogForm[];
+      abilities: AdminRewardCatalogAbility[];
+      natures: AdminRewardCatalogNature[];
       effects: AdminRewardCatalogEffect[];
       releases: AdminRewardCatalogRelease[];
     }
@@ -125,7 +138,30 @@ function isForm(value: unknown): value is AdminRewardCatalogForm {
     typeof value.formSlug === 'string' &&
     value.formSlug.length > 0 &&
     typeof value.displayName === 'string' &&
-    value.displayName.length > 0
+    value.displayName.length > 0 &&
+    (value.abilityIds === undefined ||
+      (Array.isArray(value.abilityIds) &&
+        value.abilityIds.every((abilityId) => typeof abilityId === 'string' && UUID_PATTERN.test(abilityId))))
+  );
+}
+
+function isAbility(value: unknown): value is AdminRewardCatalogAbility {
+  return (
+    isRecord(value) &&
+    typeof value.abilityId === 'string' &&
+    UUID_PATTERN.test(value.abilityId) &&
+    typeof value.slug === 'string' &&
+    value.slug.length > 0
+  );
+}
+
+function isNature(value: unknown): value is AdminRewardCatalogNature {
+  return (
+    isRecord(value) &&
+    typeof value.natureId === 'string' &&
+    UUID_PATTERN.test(value.natureId) &&
+    typeof value.slug === 'string' &&
+    value.slug.length > 0
   );
 }
 
@@ -190,6 +226,10 @@ export async function getAdminRewardCatalog(
       (!Array.isArray(body.species) || !body.species.every(isSpecies))) ||
     (body.forms !== undefined &&
       (!Array.isArray(body.forms) || !body.forms.every(isForm))) ||
+    (body.abilities !== undefined &&
+      (!Array.isArray(body.abilities) || !body.abilities.every(isAbility))) ||
+    (body.natures !== undefined &&
+      (!Array.isArray(body.natures) || !body.natures.every(isNature))) ||
     (body.effects !== undefined &&
       (!Array.isArray(body.effects) || !body.effects.every(isEffect))) ||
     (body.releases !== undefined &&
@@ -203,7 +243,11 @@ export async function getAdminRewardCatalog(
     items: body.items,
     currencies: body.currencies,
     species: Array.isArray(body.species) ? body.species : [],
-    forms: Array.isArray(body.forms) ? body.forms : [],
+    forms: Array.isArray(body.forms)
+      ? body.forms.map((form) => ({ ...form, abilityIds: form.abilityIds ?? [] }))
+      : [],
+    abilities: Array.isArray(body.abilities) ? body.abilities : [],
+    natures: Array.isArray(body.natures) ? body.natures : [],
     effects: Array.isArray(body.effects) ? body.effects : [],
     releases: Array.isArray(body.releases) ? body.releases : [],
   };
