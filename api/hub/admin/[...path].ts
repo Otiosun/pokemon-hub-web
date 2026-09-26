@@ -18,6 +18,32 @@ export function resolveAdminProxyRoute(url: URL, requestMethod = 'GET'): AdminPr
   }
 
   if (url.pathname === '/api/hub/admin/players') {
+    const rewrittenPlayerId = url.searchParams.get('playerId');
+    const rewrittenAction = url.searchParams.get('action')?.toLowerCase();
+
+    if (rewrittenPlayerId !== null || rewrittenAction !== undefined) {
+      if (rewrittenPlayerId === null || !UUID_PATTERN.test(rewrittenPlayerId)) {
+        return null;
+      }
+
+      if (rewrittenAction === undefined && requestMethod === 'GET') {
+        return {
+          upstreamPath: `/v1/hub/admin/players/${rewrittenPlayerId}`,
+          allowedMethod: 'GET',
+        };
+      }
+
+      if (rewrittenAction === 'adjustments' && requestMethod === 'POST') {
+        return {
+          upstreamPath: `/v1/hub/admin/players/${rewrittenPlayerId}/adjustments`,
+          allowedMethod: 'POST',
+        };
+      }
+
+      return null;
+    }
+
+    if (requestMethod !== 'GET') return null;
     return {
       upstreamPath: `/v1/hub/admin/players${url.search}`,
       allowedMethod: 'GET',
@@ -32,6 +58,26 @@ export function resolveAdminProxyRoute(url: URL, requestMethod = 'GET'): AdminPr
   }
 
   if (url.pathname === '/api/hub/admin/team') {
+    const rewrittenPrincipalId = url.searchParams.get('principalId');
+    const rewrittenAction = url.searchParams.get('action')?.toLowerCase();
+
+    if (rewrittenPrincipalId !== null || rewrittenAction !== undefined) {
+      if (
+        rewrittenPrincipalId === null ||
+        !UUID_PATTERN.test(rewrittenPrincipalId) ||
+        rewrittenAction !== 'capabilities' ||
+        requestMethod !== 'PUT'
+      ) {
+        return null;
+      }
+
+      return {
+        upstreamPath: `/v1/hub/admin/team/${rewrittenPrincipalId}/capabilities`,
+        allowedMethod: 'PUT',
+      };
+    }
+
+    if (requestMethod !== 'GET') return null;
     return {
       upstreamPath: '/v1/hub/admin/team',
       allowedMethod: 'GET',
