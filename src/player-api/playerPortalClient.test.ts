@@ -18,6 +18,7 @@ const profile: PlayerPortalProfile = {
   originRegionId: '22222222-2222-4222-8222-222222222222',
   originRegionName: 'Kanto',
   locale: 'pt-BR',
+  profession: 'PESQUISADOR',
   trainerLevel: 7,
   progressionPoints: '1234',
   onboardingState: 'COMPLETE',
@@ -81,6 +82,34 @@ describe('getPlayerPortalSelf', () => {
       });
     },
   );
+
+  it('accepts pre-profession profiles while validating a profession when present', async () => {
+    const legacyProfile = { ...profile };
+    delete legacyProfile.profession;
+    const legacyFetcher = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ profile: legacyProfile }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+    );
+    await expect(getPlayerPortalSelf(legacyFetcher)).resolves.toEqual({
+      status: 'authenticated',
+      profile: legacyProfile,
+    });
+
+    const malformedProfession = { ...profile, profession: 'ASTRONAUTA' };
+    const malformedFetcher = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ profile: malformedProfession }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+    );
+    await expect(getPlayerPortalSelf(malformedFetcher)).rejects.toThrow(
+      'Invalid player portal response',
+    );
+  });
 
   it('rejects malformed successful payloads instead of trusting arbitrary JSON', async () => {
     const fetcher = vi.fn(
