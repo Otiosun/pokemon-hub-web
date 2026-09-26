@@ -155,14 +155,13 @@ export function AdminPage() {
 
         <section className="admin-capabilities">
           <header>
-            <span>PERMISSÕES EFETIVAS</span>
+            <span>ACESSO DA SESSÃO</span>
             <strong>{capabilities.length}</strong>
           </header>
-          <div>
-            {capabilities.map((capability) => (
-              <code key={capability}>{capability}</code>
-            ))}
-          </div>
+          <p>
+            A Central mostra apenas os módulos e ações liberados para esta conta.
+            A gestão detalhada de poderes fica restrita aos donos protegidos.
+          </p>
         </section>
       </section>
     </main>
