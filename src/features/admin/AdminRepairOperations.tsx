@@ -91,7 +91,7 @@ export function AdminRepairOperations({
         setPendingRequestId(null);
         setState({
           kind: 'approval',
-          text: `Operação ${result.operationId} aguarda aprovação independente.`,
+          text: 'Este reparo aguarda aprovação de outro administrador.',
         });
         return;
       }
@@ -114,10 +114,10 @@ export function AdminRepairOperations({
   const target =
     activeAction === 'BATTLE_CANCEL'
       ? activeBattle
-        ? `${activeBattle.battleType} · ${activeBattle.status} · v${activeBattle.version}`
+        ? `${activeBattle.battleType} · ${activeBattle.status}`
         : 'sem batalha'
       : activeEncounter
-        ? `${activeEncounter.status} · rev. ${activeEncounter.revision}`
+        ? activeEncounter.status
         : 'sem encontro';
 
   return (
@@ -127,7 +127,7 @@ export function AdminRepairOperations({
           <span>REPARAR</span>
           <strong>FLUXOS TRAVADOS</strong>
         </div>
-        <small>R3 · CONFIRMAÇÃO · REVISION LOCK</small>
+        <small>OPERAÇÃO SENSÍVEL · AUDITADA</small>
       </header>
 
       <nav aria-label="Reparo administrativo">

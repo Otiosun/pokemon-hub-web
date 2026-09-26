@@ -13,7 +13,8 @@ export type AdminBatchRewardTarget =
 export type AdminBatchReward =
   | { kind: 'TRAINER_PROGRESSION'; delta: string }
   | { kind: 'WALLET'; currencyId: string; delta: string }
-  | { kind: 'ITEM'; itemId: string; delta: string };
+  | { kind: 'ITEM'; itemId: string; delta: string }
+  | { kind: 'POKEDEX_SEEN'; speciesId: string; shiny: boolean };
 
 export type AdminBatchRewardPreview = {
   batchId: string;
@@ -43,7 +44,7 @@ export type AdminBatchRewardRunResult<T> =
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const SIGNED_DELTA = /^-?[1-9][0-9]*$/;
+const SIGNED_DELTA = /^[+-]?[1-9][0-9]*$/;
 const WHOLE_NUMBER = /^(0|[1-9][0-9]*)$/;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -68,13 +69,14 @@ export function buildBatchRewardPreviewRequest(input: {
   chunkSize?: number;
 }): { ok: true; request: AdminOperationPrepareInput } | { ok: false; message: string } {
   const reason = input.reason.trim();
-  const delta = input.reward.delta.trim();
+  const rawDelta = input.reward.kind === 'POKEDEX_SEEN' ? null : input.reward.delta.trim();
+  const delta = rawDelta?.startsWith('+') ? rawDelta.slice(1) : rawDelta;
   if (!UUID_PATTERN.test(input.requestId)) {
     return { ok: false, message: 'Identificador de requisição inválido.' };
   }
   if (!reason) return { ok: false, message: 'O motivo administrativo é obrigatório.' };
-  if (!SIGNED_DELTA.test(delta)) {
-    return { ok: false, message: 'Informe um delta inteiro diferente de zero.' };
+  if (rawDelta !== null && !SIGNED_DELTA.test(rawDelta)) {
+    return { ok: false, message: 'Informe uma quantidade inteira maior que zero.' };
   }
 
   let selector: Record<string, unknown>;
@@ -103,11 +105,20 @@ export function buildBatchRewardPreviewRequest(input: {
       return { ok: false, message: 'Selecione uma moeda válida.' };
     }
     action = { kind: 'WALLET_ADJUST', currencyId: input.reward.currencyId, delta };
-  } else {
+  } else if (input.reward.kind === 'ITEM') {
     if (!UUID_PATTERN.test(input.reward.itemId)) {
       return { ok: false, message: 'Selecione um item válido.' };
     }
     action = { kind: 'INVENTORY_ADJUST', itemId: input.reward.itemId, delta };
+  } else {
+    if (!UUID_PATTERN.test(input.reward.speciesId)) {
+      return { ok: false, message: 'Selecione uma espécie válida.' };
+    }
+    action = {
+      kind: 'POKEDEX_SEEN_GRANT',
+      speciesId: input.reward.speciesId,
+      shiny: input.reward.shiny,
+    };
   }
 
   const chunkSize = input.chunkSize ?? 25;

@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { HubMenuTrigger } from '../../components/HubNavigation';
 import { AdminPlayerAdjustments } from './AdminPlayerAdjustments';
 import { AdminPokemonOperations } from './AdminPokemonOperations';
+import { AdminPokemonGrantAndEffects } from './AdminPokemonGrantAndEffects';
 import { AdminRepairOperations } from './AdminRepairOperations';
+import { AdminBattleCorrection } from './AdminBattleCorrection';
 import { SpeciesPokemonImage } from '../../visual-assets/PokemonPreviewImage';
 import {
   getAdminPlayer,
@@ -105,7 +107,21 @@ export function AdminPlayerDetailPage({ playerId }: { playerId: string }) {
     );
   }
 
-  const trainerName = player.profile.trainerName ?? 'Treinador sem nome';
+  const trainerName = player.profile.trainerName;
+  if (!trainerName) {
+    return (
+      <main className="admin-page">
+        <header className="admin-topbar">
+          <div><small>CENTRAL ADM · PLAYER 360</small><strong>FICHA INCONSISTENTE</strong></div>
+          <HubMenuTrigger />
+        </header>
+        <section className="admin-loading is-error">
+          <strong>NOME APROVADO NÃO ENCONTRADO</strong>
+          <small>Este registro não deveria aparecer na lista normal de jogadores.</small>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="admin-page">
@@ -125,12 +141,12 @@ export function AdminPlayerDetailPage({ playerId }: { playerId: string }) {
           <div>
             <span className="admin-kicker">FICHA OPERACIONAL</span>
             <h1>{trainerName}</h1>
-            <p>{player.player.id}</p>
+            <p>Ficha operacional do jogador</p>
           </div>
           <div className="admin-player-hero-status">
             <span>STATUS</span>
             <strong>{player.player.status}</strong>
-            <small>rev. {player.player.revision}</small>
+            <small>{player.player.status === 'SUSPENDED' ? 'acesso interrompido' : 'acesso ao jogo liberado'}</small>
           </div>
         </header>
 
@@ -142,7 +158,7 @@ export function AdminPlayerDetailPage({ playerId }: { playerId: string }) {
           <article>
             <span>LOCALIZAÇÃO</span>
             <strong>{player.location ? 'REGISTRADA' : 'SEM LOCAL'}</strong>
-            <small>{player.location?.areaId ?? '—'}</small>
+            <small>{player.location ? 'posição atual vinculada' : 'sem posição atual'}</small>
           </article>
           <article>
             <span>POKÉDEX</span>
@@ -240,15 +256,23 @@ export function AdminPlayerDetailPage({ playerId }: { playerId: string }) {
           }}
         />
 
+        <AdminPokemonGrantAndEffects
+          playerId={player.player.id}
+          capabilities={admin.status === 'admin' ? admin.admin.capabilities : []}
+          pokemon={player.pokemon}
+          effects={player.effects}
+          onApplied={() => {
+            void loadPlayer();
+          }}
+        />
+
         <section className="admin-player-live-grid">
           <article className="admin-player-panel">
             <header><span>ENCONTRO ATIVO</span></header>
             {player.activeEncounter ? (
               <dl>
                 <div><dt>Status</dt><dd>{player.activeEncounter.status}</dd></div>
-                <div><dt>Área</dt><dd>{player.activeEncounter.areaId}</dd></div>
-                <div><dt>Revision</dt><dd>{player.activeEncounter.revision}</dd></div>
-                <div><dt>ID</dt><dd>{player.activeEncounter.id}</dd></div>
+                <div><dt>Situação</dt><dd>Encontro em andamento</dd></div>
               </dl>
             ) : <small>Nenhum encontro ativo.</small>}
           </article>
@@ -259,7 +283,6 @@ export function AdminPlayerDetailPage({ playerId }: { playerId: string }) {
                 <div><dt>Status</dt><dd>{player.activeBattle.status}</dd></div>
                 <div><dt>Tipo</dt><dd>{player.activeBattle.battleType}</dd></div>
                 <div><dt>Turno</dt><dd>{player.activeBattle.turnNumber}</dd></div>
-                <div><dt>Version</dt><dd>{player.activeBattle.version}</dd></div>
               </dl>
             ) : <small>Nenhuma batalha ativa.</small>}
           </article>
@@ -271,6 +294,16 @@ export function AdminPlayerDetailPage({ playerId }: { playerId: string }) {
           capabilities={admin.status === 'admin' ? admin.admin.capabilities : []}
           activeBattle={player.activeBattle}
           activeEncounter={player.activeEncounter}
+          onApplied={() => {
+            void loadPlayer();
+          }}
+        />
+
+        <AdminBattleCorrection
+          playerId={player.player.id}
+          capabilities={admin.status === 'admin' ? admin.admin.capabilities : []}
+          activeBattle={player.activeBattle}
+          pokemon={player.pokemon}
           onApplied={() => {
             void loadPlayer();
           }}

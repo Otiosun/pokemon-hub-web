@@ -9,6 +9,7 @@ import {
   getAdminRewardCatalog,
   type AdminRewardCatalogCurrency,
   type AdminRewardCatalogItem,
+  type AdminRewardCatalogSpecies,
 } from '../../player-api/playerPortalAdminRewardCatalogClient';
 import { usePlayerPortalAdmin } from '../../player-api/usePlayerPortalAdmin';
 import {
@@ -22,13 +23,40 @@ import './admin-page.css';
 import './admin-batch-rewards.css';
 
 type TargetMode = 'SELECTED' | 'STATUS';
-type RewardKind = 'PROGRESSION' | 'WALLET' | 'ITEM';
+type RewardKind = 'PROGRESSION' | 'WALLET' | 'ITEM' | 'POKEDEX_SEEN';
+type RewardDirection = 'ADD' | 'REMOVE';
 
 const STATUS_OPTIONS: Array<{ value: AdminPlayerStatus; label: string }> = [
   { value: 'ACTIVE', label: 'ATIVOS' },
   { value: 'SUSPENDED', label: 'SUSPENSOS' },
   { value: 'ARCHIVED', label: 'ARQUIVADOS' },
 ];
+
+function batchFailureCodeSummary(failures: Array<Record<string, unknown>>): string {
+  const counts = new Map<string, number>();
+  for (const failure of failures) {
+    const code = typeof failure.errorCode === 'string' ? failure.errorCode : 'UNKNOWN';
+    counts.set(code, (counts.get(code) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([code, count]) => `${code} ×${count}`)
+    .join(' · ');
+}
+
+function adminBatchErrorMessage(stage: 'preview' | 'execute', code: string): string {
+  if (code === 'HTTP_404') {
+    return 'A Central não encontrou a etapa seguinte da operação. Atualize a página e tente novamente.';
+  }
+  if (code === 'ADMIN_BATCH_UNEXPECTED_APPROVAL_GATE') {
+    return 'Esta recompensa exige uma aprovação administrativa adicional.';
+  }
+  if (code === 'ADMIN_BATCH_INVALID_RESULT') {
+    return 'A Central recebeu uma resposta inválida e não aplicou a recompensa.';
+  }
+  return stage === 'preview'
+    ? 'Não foi possível preparar a revisão da recompensa.'
+    : 'Não foi possível concluir a recompensa.';
+}
 
 function HiddenAdminRoute() {
   return (
@@ -51,11 +79,15 @@ export function AdminBatchRewardsPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchState, setSearchState] = useState<'idle' | 'loading' | 'error'>('idle');
   const [rewardKind, setRewardKind] = useState<RewardKind>('PROGRESSION');
-  const [delta, setDelta] = useState('');
+  const [amount, setAmount] = useState('');
+  const [direction, setDirection] = useState<RewardDirection>('ADD');
   const [currencyId, setCurrencyId] = useState('');
   const [itemId, setItemId] = useState('');
+  const [speciesId, setSpeciesId] = useState('');
+  const [shinySeen, setShinySeen] = useState(false);
   const [catalogItems, setCatalogItems] = useState<AdminRewardCatalogItem[]>([]);
   const [catalogCurrencies, setCatalogCurrencies] = useState<AdminRewardCatalogCurrency[]>([]);
+  const [catalogSpecies, setCatalogSpecies] = useState<AdminRewardCatalogSpecies[]>([]);
   const [catalogState, setCatalogState] = useState<'idle' | 'loading' | 'error'>('idle');
   const [reason, setReason] = useState('');
   const [preview, setPreview] = useState<AdminBatchRewardPreview | null>(null);
@@ -73,29 +105,30 @@ export function AdminBatchRewardsPage() {
   const capabilities = admin.status === 'admin' ? admin.admin.capabilities : [];
   const canUseProgression = capabilities.includes('progression.adjust');
   const canUseWallet =
-    capabilities.includes('wallet.adjust') &&
-    capabilities.includes('economy.read') &&
-    capabilities.includes('inventory.read');
+    capabilities.includes('wallet.adjust') && capabilities.includes('economy.read');
   const canUseItem =
-    capabilities.includes('inventory.adjust') &&
-    capabilities.includes('inventory.read') &&
-    capabilities.includes('economy.read');
+    capabilities.includes('inventory.adjust') && capabilities.includes('inventory.read');
+  const canUsePokedexSeen =
+    capabilities.includes('pokedex.seen.grant') && capabilities.includes('pokedex.read');
   const canUseBatch =
     capabilities.includes('batch.preview') &&
     capabilities.includes('batch.execute.low_risk') &&
     capabilities.includes('player.read') &&
-    (canUseProgression || canUseWallet || canUseItem);
+    (canUseProgression || canUseWallet || canUseItem || canUsePokedexSeen);
 
   const rewardKinds = useMemo(
     () => [
       ...(canUseProgression ? ([{ value: 'PROGRESSION', label: 'PROGRESSÃO' }] as const) : []),
       ...(canUseWallet ? ([{ value: 'WALLET', label: 'DINHEIRO' }] as const) : []),
       ...(canUseItem ? ([{ value: 'ITEM', label: 'ITEM' }] as const) : []),
+      ...(canUsePokedexSeen ? ([{ value: 'POKEDEX_SEEN', label: 'POKÉDEX · VISTO' }] as const) : []),
     ],
-    [canUseItem, canUseProgression, canUseWallet],
+    [canUseItem, canUsePokedexSeen, canUseProgression, canUseWallet],
   );
 
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const signedDelta = direction === 'REMOVE' ? `-${amount}` : amount;
+  const displayDelta = amount ? `${direction === 'REMOVE' ? '−' : '+'}${amount}` : '—';
 
   const invalidatePreview = () => {
     setPreview(null);
@@ -129,7 +162,7 @@ export function AdminBatchRewardsPage() {
   }, [canUseBatch, targetMode]);
 
   useEffect(() => {
-    if (!canUseBatch || (!canUseWallet && !canUseItem)) return;
+    if (!canUseBatch || (!canUseWallet && !canUseItem && !canUsePokedexSeen)) return;
     let active = true;
     setCatalogState('loading');
     void getAdminRewardCatalog()
@@ -138,13 +171,16 @@ export function AdminBatchRewardsPage() {
         if (result.status !== 'ok') {
           setCatalogItems([]);
           setCatalogCurrencies([]);
+          setCatalogSpecies([]);
           setCatalogState('error');
           return;
         }
         setCatalogItems(result.items);
         setCatalogCurrencies(result.currencies);
+        setCatalogSpecies(result.species);
         setCurrencyId((current) => current || result.currencies[0]?.currencyId || '');
         setItemId((current) => current || result.items[0]?.itemId || '');
+        setSpeciesId((current) => current || result.species[0]?.speciesId || '');
         setCatalogState('idle');
       })
       .catch(() => {
@@ -154,15 +190,16 @@ export function AdminBatchRewardsPage() {
     return () => {
       active = false;
     };
-  }, [canUseBatch, canUseItem, canUseWallet]);
+  }, [canUseBatch, canUseItem, canUsePokedexSeen, canUseWallet]);
 
   useEffect(() => {
     if (rewardKind === 'PROGRESSION' && canUseProgression) return;
     if (rewardKind === 'WALLET' && canUseWallet) return;
     if (rewardKind === 'ITEM' && canUseItem) return;
+    if (rewardKind === 'POKEDEX_SEEN' && canUsePokedexSeen) return;
     const first = rewardKinds[0]?.value;
     if (first) setRewardKind(first);
-  }, [canUseItem, canUseProgression, canUseWallet, rewardKind, rewardKinds]);
+  }, [canUseItem, canUsePokedexSeen, canUseProgression, canUseWallet, rewardKind, rewardKinds]);
 
   const search = async (event: FormEvent) => {
     event.preventDefault();
@@ -218,10 +255,12 @@ export function AdminBatchRewardsPage() {
           : { kind: 'PLAYER_FILTER', status: filterStatus },
       reward:
         rewardKind === 'PROGRESSION'
-          ? { kind: 'TRAINER_PROGRESSION', delta }
+          ? { kind: 'TRAINER_PROGRESSION', delta: signedDelta }
           : rewardKind === 'WALLET'
-            ? { kind: 'WALLET', currencyId, delta }
-            : { kind: 'ITEM', itemId, delta },
+            ? { kind: 'WALLET', currencyId, delta: signedDelta }
+            : rewardKind === 'ITEM'
+              ? { kind: 'ITEM', itemId, delta: signedDelta }
+              : { kind: 'POKEDEX_SEEN', speciesId, shiny: shinySeen },
       reason,
     });
 
@@ -231,7 +270,7 @@ export function AdminBatchRewardsPage() {
     }
 
     if (previewRequestId === null) setPreviewRequestId(requestId);
-    setState({ kind: 'previewing', text: 'CONGELANDO ALVOS E GERANDO PREVIEW…' });
+    setState({ kind: 'previewing', text: 'PREPARANDO REVISÃO…' });
 
     try {
       const result = await runBatchRewardPreview(built.request);
@@ -241,7 +280,7 @@ export function AdminBatchRewardsPage() {
         setExecuteRequestId(null);
         setState({
           kind: 'previewed',
-          text: 'Preview congelado. Revise a quantidade de jogadores antes de executar.',
+          text: 'Revisão pronta. Confira os jogadores e a recompensa antes de confirmar.',
         });
         return;
       }
@@ -252,7 +291,7 @@ export function AdminBatchRewardsPage() {
         text:
           result.status === 'denied'
             ? 'Sua sessão não possui autorização para criar este lote.'
-            : `Preview rejeitado: ${result.code}`,
+            : adminBatchErrorMessage('preview', result.code),
       });
     } catch {
       setState({
@@ -287,7 +326,7 @@ export function AdminBatchRewardsPage() {
           text:
             result.value.failureCount === 0
               ? `Concluído: ${result.value.successCount}/${result.value.targetCount} jogadores atualizados.`
-              : `Concluído com erros: ${result.value.successCount} sucessos e ${result.value.failureCount} falhas.`,
+              : `Concluído com erros: ${result.value.successCount} sucessos e ${result.value.failureCount} falhas. ${batchFailureCodeSummary(result.value.failures)}`,
         });
         return;
       }
@@ -298,7 +337,7 @@ export function AdminBatchRewardsPage() {
         text:
           result.status === 'denied'
             ? 'Sua sessão não possui autorização para executar este lote.'
-            : `Execução rejeitada: ${result.code}`,
+            : adminBatchErrorMessage('execute', result.code),
       });
     } catch {
       setState({
@@ -325,22 +364,27 @@ export function AdminBatchRewardsPage() {
 
         <header className="admin-batch-heading">
           <div>
-            <span className="admin-kicker">LIVE OPS · R3 NA EXECUÇÃO</span>
-            <h1>Recompensa em massa</h1>
+            <span className="admin-kicker">CENTRAL ADM · RECOMPENSAS</span>
+            <h1>Dar recompensa</h1>
             <p>
-              Distribua progressão, dinheiro ou itens para vários jogadores sem repetir comandos.
-              Primeiro o sistema congela os alvos e mostra o preview; a execução só fica disponível depois.
+              Escolha quem recebe, defina a recompensa e confira tudo antes de enviar.
             </p>
           </div>
           <div className="admin-batch-badge">
-            <span>MODO ATUAL</span>
-            <strong>{rewardKind === 'PROGRESSION' ? 'PROGRESSÃO' : rewardKind === 'WALLET' ? 'DINHEIRO' : 'ITEM'}</strong>
-            <small>mesmo motor de preview, confirmação e auditoria</small>
+            <span>RECOMPENSA</span>
+            <strong>{rewardKind === 'PROGRESSION'
+              ? 'PROGRESSÃO'
+              : rewardKind === 'WALLET'
+                ? 'DINHEIRO'
+                : rewardKind === 'ITEM'
+                  ? 'ITEM'
+                  : 'POKÉDEX · VISTO'}</strong>
+            <small>nenhuma alteração antes da confirmação</small>
           </div>
         </header>
 
         <section className="admin-batch-builder">
-          <header><span>01 · ALVOS</span><strong>{targetMode === 'SELECTED' ? selectedIds.length : filterStatus}</strong></header>
+          <header><span>01 · QUEM RECEBE</span><strong>{targetMode === 'SELECTED' ? selectedIds.length : filterStatus}</strong></header>
           <nav className="admin-batch-mode">
             <button
               type="button"
@@ -350,7 +394,7 @@ export function AdminBatchRewardsPage() {
                 invalidatePreview();
               }}
             >
-              SELECIONAR JOGADORES
+              ESCOLHER JOGADORES
             </button>
             <button
               type="button"
@@ -360,7 +404,7 @@ export function AdminBatchRewardsPage() {
                 invalidatePreview();
               }}
             >
-              FILTRO POR STATUS
+              TODOS POR STATUS
             </button>
           </nav>
 
@@ -392,7 +436,6 @@ export function AdminBatchRewardsPage() {
                         <strong>{player.trainerName ?? 'Treinador sem nome'}</strong>
                         <small>Lv. {player.trainerLevel} · {player.insigniaPoints} pontos</small>
                       </span>
-                      <code>{player.playerId.slice(0, 8)}</code>
                     </label>
                   ))}
                 </div>
@@ -412,15 +455,21 @@ export function AdminBatchRewardsPage() {
                   <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
               </select>
-              <small>O backend limita o snapshot a no máximo 1000 jogadores.</small>
+              <small>A recompensa será preparada para os jogadores com este status.</small>
             </label>
           )}
         </section>
 
         <section className="admin-batch-builder">
           <header>
-            <span>02 · RECOMPENSA</span>
-            <strong>{rewardKind === 'PROGRESSION' ? 'PROGRESSÃO' : rewardKind === 'WALLET' ? 'DINHEIRO' : 'ITEM'}</strong>
+            <span>02 · O QUE RECEBEM</span>
+            <strong>{rewardKind === 'PROGRESSION'
+              ? 'PROGRESSÃO'
+              : rewardKind === 'WALLET'
+                ? 'DINHEIRO'
+                : rewardKind === 'ITEM'
+                  ? 'ITEM'
+                  : 'POKÉDEX · VISTO'}</strong>
           </header>
 
           <div className="admin-batch-mode">
@@ -476,23 +525,91 @@ export function AdminBatchRewardsPage() {
                   ))}
                 </select>
               </label>
+            ) : rewardKind === 'POKEDEX_SEEN' ? (
+              <>
+                <label>
+                  <span>ESPÉCIE</span>
+                  <select
+                    value={speciesId}
+                    disabled={catalogState === 'loading'}
+                    onChange={(event) => {
+                      setSpeciesId(event.target.value);
+                      invalidatePreview();
+                    }}
+                  >
+                    {catalogSpecies.map((species) => (
+                      <option key={species.speciesId} value={species.speciesId}>
+                        #{String(species.nationalDex).padStart(3, '0')} · {species.displayName}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>REGISTRO</span>
+                  <select
+                    value={shinySeen ? 'SHINY' : 'NORMAL'}
+                    onChange={(event) => {
+                      setShinySeen(event.target.value === 'SHINY');
+                      invalidatePreview();
+                    }}
+                  >
+                    <option value="NORMAL">VISTO</option>
+                    <option value="SHINY">VISTO · SHINY</option>
+                  </select>
+                </label>
+              </>
             ) : null}
 
-            <label>
-              <span>{rewardKind === 'PROGRESSION' ? 'DELTA DE PONTOS' : 'QUANTIDADE'}</span>
-              <input
-                value={delta}
-                inputMode="numeric"
-                placeholder={rewardKind === 'PROGRESSION' ? '+50 ou -20' : '+1 ou -1'}
-                onChange={(event) => {
-                  setDelta(event.target.value);
-                  invalidatePreview();
-                }}
-              />
-            </label>
+            {rewardKind !== 'POKEDEX_SEEN' ? (
+              <div className="admin-batch-amount">
+                <fieldset className="admin-batch-direction">
+                  <legend className="admin-batch-field-label">O QUE FAZER</legend>
+                  <button
+                    type="button"
+                    className={direction === 'ADD' ? 'is-active' : ''}
+                    onClick={() => {
+                      setDirection('ADD');
+                      invalidatePreview();
+                    }}
+                  >
+                    + DAR
+                  </button>
+                  <button
+                    type="button"
+                    className={direction === 'REMOVE' ? 'is-active is-remove' : 'is-remove'}
+                    onClick={() => {
+                      setDirection('REMOVE');
+                      invalidatePreview();
+                    }}
+                  >
+                    − REMOVER
+                  </button>
+                </fieldset>
+                <label>
+                  <span>{rewardKind === 'PROGRESSION' ? 'QUANTIDADE DE PONTOS' : 'QUANTIDADE'}</span>
+                  <input
+                    value={amount}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder={rewardKind === 'PROGRESSION' ? '50' : '1'}
+                    onChange={(event) => {
+                      setAmount(event.target.value.replace(/\D/g, ''));
+                      invalidatePreview();
+                    }}
+                  />
+                </label>
+                <small className="admin-batch-change-preview">
+                  {amount
+                    ? direction === 'ADD'
+                      ? `Será adicionado: +${amount}`
+                      : `Será removido: −${amount}`
+                    : 'Digite somente o número. O sinal é aplicado automaticamente.'}
+                </small>
+              </div>
+            ) : null}
 
             <label className="is-reason">
-              <span>MOTIVO ADMINISTRATIVO</span>
+              <span>MOTIVO · PARA O HISTÓRICO</span>
               <textarea
                 value={reason}
                 maxLength={2000}
@@ -518,47 +635,47 @@ export function AdminBatchRewardsPage() {
               state.kind === 'previewing' ||
               state.kind === 'executing' ||
               (rewardKind === 'WALLET' && !currencyId) ||
-              (rewardKind === 'ITEM' && !itemId)
+              (rewardKind === 'ITEM' && !itemId) ||
+              (rewardKind === 'POKEDEX_SEEN' && !speciesId)
             }
             onClick={() => void previewBatch()}
           >
-            {state.kind === 'previewing' ? 'GERANDO PREVIEW…' : 'GERAR PREVIEW'}
+            {state.kind === 'previewing' ? 'PREPARANDO…' : 'REVISAR RECOMPENSA'}
           </button>
         </section>
 
         {preview ? (
           <section className="admin-batch-preview">
             <header>
-              <div><span>03 · PREVIEW CONGELADO</span><strong>{preview.targetCount} ALVOS</strong></div>
-              <small>batch {preview.batchId.slice(0, 8)} · rev. {preview.revision}</small>
+              <div><span>03 · REVISÃO</span><strong>{preview.targetCount} JOGADORES</strong></div>
             </header>
             <div className="admin-batch-preview-grid">
-              <article><span>JOGADORES</span><strong>{preview.targetCount}</strong></article>
+              <article><span>QUEM RECEBE</span><strong>{preview.targetCount} jogador{preview.targetCount === 1 ? '' : 'es'}</strong></article>
               <article>
                 <span>RECOMPENSA</span>
                 <strong>
                   {rewardKind === 'PROGRESSION'
-                    ? delta
+                    ? displayDelta
                     : rewardKind === 'WALLET'
-                      ? `${delta} · ${catalogCurrencies.find((currency) => currency.currencyId === currencyId)?.displayName ?? 'moeda'}`
-                      : `${delta} × ${catalogItems.find((item) => item.itemId === itemId)?.displayName ?? 'item'}`}
+                      ? `${displayDelta} · ${catalogCurrencies.find((currency) => currency.currencyId === currencyId)?.displayName ?? 'moeda'}`
+                      : rewardKind === 'ITEM'
+                        ? `${displayDelta} × ${catalogItems.find((item) => item.itemId === itemId)?.displayName ?? 'item'}`
+                        : `${shinySeen ? 'VISTO · SHINY' : 'VISTO'} · ${catalogSpecies.find((species) => species.speciesId === speciesId)?.displayName ?? 'espécie'}`}
                 </strong>
               </article>
-              <article><span>CHUNKS</span><strong>{preview.estimatedChunks}</strong></article>
-              <article><span>TAMANHO</span><strong>{preview.chunkSize}</strong></article>
+
             </div>
             {preview.sampleTargetIds.length ? (
               <div className="admin-batch-sample">
-                <span>AMOSTRA DO SNAPSHOT</span>
+                <span>JOGADORES DA REVISÃO</span>
                 {preview.sampleTargetIds.map((id) => <code key={id}>{previewName(id)}</code>)}
               </div>
             ) : null}
             <div className="admin-batch-confirm">
               <div>
-                <strong>CONFIRMAR EXECUÇÃO</strong>
+                <strong>CONFIRMAR RECOMPENSA</strong>
                 <p>
-                  Esta ação usa exatamente o snapshot acima. Mudanças posteriores na busca não
-                  alteram este lote.
+                  Confira os jogadores e a recompensa acima. Só depois confirme o envio.
                 </p>
               </div>
               <button
@@ -566,7 +683,7 @@ export function AdminBatchRewardsPage() {
                 disabled={state.kind === 'executing' || state.kind === 'success'}
                 onClick={() => void executeBatch()}
               >
-                {state.kind === 'executing' ? 'EXECUTANDO…' : 'EXECUTAR RECOMPENSA'}
+                {state.kind === 'executing' ? 'ENVIANDO…' : 'CONFIRMAR E ENVIAR'}
               </button>
             </div>
           </section>

@@ -22,6 +22,29 @@ describe('admin reward catalog client', () => {
               allowsNegative: false,
             },
           ],
+          forms: [
+            {
+              formId: '33333333-3333-4333-8333-333333333333',
+              speciesId: '44444444-4444-4444-8444-444444444444',
+              nationalDex: 7,
+              speciesSlug: 'squirtle',
+              formSlug: 'default',
+              displayName: 'Squirtle',
+              abilityIds: ['55555555-5555-4555-8555-555555555555'],
+            },
+          ],
+          abilities: [
+            {
+              abilityId: '55555555-5555-4555-8555-555555555555',
+              slug: 'torrent',
+            },
+          ],
+          natures: [
+            {
+              natureId: '66666666-6666-4666-8666-666666666666',
+              slug: 'modest',
+            },
+          ],
         }),
         { status: 200, headers: { 'content-type': 'application/json' } },
       ),
@@ -31,10 +54,42 @@ describe('admin reward catalog client', () => {
       status: 'ok',
       items: [{ slug: 'great-ball' }],
       currencies: [{ slug: 'poke-dollar' }],
+      forms: [{ displayName: 'Squirtle', abilityIds: ['55555555-5555-4555-8555-555555555555'] }],
+      abilities: [{ slug: 'torrent' }],
+      natures: [{ slug: 'modest' }],
     });
     expect(fetcher).toHaveBeenCalledWith('/api/hub/admin/reward-catalog', {
       credentials: 'include',
       headers: { accept: 'application/json' },
+    });
+  });
+
+  it('keeps new pokemon selector fields rollout-safe when an older backend omits them', async () => {
+    const fetcher = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          items: [],
+          currencies: [],
+          forms: [
+            {
+              formId: '33333333-3333-4333-8333-333333333333',
+              speciesId: '44444444-4444-4444-8444-444444444444',
+              nationalDex: 7,
+              speciesSlug: 'squirtle',
+              formSlug: 'default',
+              displayName: 'Squirtle',
+            },
+          ],
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      ),
+    );
+
+    await expect(getAdminRewardCatalog(fetcher as typeof fetch)).resolves.toMatchObject({
+      status: 'ok',
+      forms: [{ abilityIds: [] }],
+      abilities: [],
+      natures: [],
     });
   });
 

@@ -1,5 +1,6 @@
 export type PlayerPortalAdminAccess = {
   principalId: string;
+  owner: boolean;
   capabilities: string[];
 };
 
@@ -19,6 +20,7 @@ function isAdminAccess(value: unknown): value is PlayerPortalAdminAccess {
     isRecord(value) &&
     typeof value.principalId === 'string' &&
     /^[0-9a-f-]{36}$/i.test(value.principalId) &&
+    (value.owner === undefined || typeof value.owner === 'boolean') &&
     Array.isArray(value.capabilities) &&
     value.capabilities.every(
       (capability) => typeof capability === 'string' && capability.trim().length > 0,
@@ -45,5 +47,8 @@ export async function getPlayerPortalAdmin(
   if (body.admin === null) return { status: 'not-admin' };
   if (!isAdminAccess(body.admin)) throw new Error('Invalid admin portal response');
 
-  return { status: 'admin', admin: body.admin };
+  return {
+    status: 'admin',
+    admin: { ...body.admin, owner: body.admin.owner === true },
+  };
 }

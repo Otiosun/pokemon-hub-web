@@ -20,6 +20,53 @@ describe('consolidated admin proxy boundary', () => {
       allowedMethod: 'GET',
     });
     expect(
+      resolveAdminProxyRoute(new URL('https://hub.test/api/hub/admin/audit?limit=100')),
+    ).toEqual({
+      upstreamPath: '/v1/hub/admin/audit?limit=100',
+      allowedMethod: 'GET',
+    });
+    expect(
+      resolveAdminProxyRoute(
+        new URL('https://hub.test/api/hub/admin/audit?limit=100'),
+        'POST',
+      ),
+    ).toBeNull();
+    expect(
+      resolveAdminProxyRoute(
+        new URL(
+          'https://hub.test/api/hub/admin/players?playerId=11111111-1111-4111-8111-111111111111',
+        ),
+        'GET',
+      ),
+    ).toEqual({
+      upstreamPath: '/v1/hub/admin/players/11111111-1111-4111-8111-111111111111',
+      allowedMethod: 'GET',
+    });
+    expect(
+      resolveAdminProxyRoute(
+        new URL(
+          'https://hub.test/api/hub/admin/players?playerId=11111111-1111-4111-8111-111111111111&action=adjustments',
+        ),
+        'POST',
+      ),
+    ).toEqual({
+      upstreamPath:
+        '/v1/hub/admin/players/11111111-1111-4111-8111-111111111111/adjustments',
+      allowedMethod: 'POST',
+    });
+    expect(
+      resolveAdminProxyRoute(
+        new URL(
+          'https://hub.test/api/hub/admin/team?principalId=11111111-1111-4111-8111-111111111111&action=capabilities',
+        ),
+        'PUT',
+      ),
+    ).toEqual({
+      upstreamPath:
+        '/v1/hub/admin/team/11111111-1111-4111-8111-111111111111/capabilities',
+      allowedMethod: 'PUT',
+    });
+    expect(
       resolveAdminProxyRoute(
         new URL(
           'https://hub.test/api/hub/admin/players/11111111-1111-4111-8111-111111111111',
@@ -61,6 +108,18 @@ describe('consolidated admin proxy boundary', () => {
         '/v1/hub/admin/operations/22222222-2222-4222-8222-222222222222/confirm',
       allowedMethod: 'POST',
     });
+    expect(
+      resolveAdminProxyRoute(
+        new URL(
+          'https://hub.test/api/hub/admin/operations?operationId=22222222-2222-4222-8222-222222222222&action=simulate',
+        ),
+        'POST',
+      ),
+    ).toEqual({
+      upstreamPath:
+        '/v1/hub/admin/operations/22222222-2222-4222-8222-222222222222/simulate',
+      allowedMethod: 'POST',
+    });
   });
 
   it('rejects malformed and unregistered admin routes instead of generic passthrough', () => {
@@ -74,5 +133,44 @@ describe('consolidated admin proxy boundary', () => {
     ]) {
       expect(resolveAdminProxyRoute(new URL(`https://hub.test${path}`))).toBeNull();
     }
+
+    expect(
+      resolveAdminProxyRoute(
+        new URL(
+          'https://hub.test/api/hub/admin/operations?operationId=not-a-uuid&action=simulate',
+        ),
+        'POST',
+      ),
+    ).toBeNull();
+    expect(
+      resolveAdminProxyRoute(
+        new URL(
+          'https://hub.test/api/hub/admin/operations?operationId=22222222-2222-4222-8222-222222222222&action=delete',
+        ),
+        'POST',
+      ),
+    ).toBeNull();
+    expect(
+      resolveAdminProxyRoute(
+        new URL('https://hub.test/api/hub/admin/players?playerId=not-a-uuid'),
+        'GET',
+      ),
+    ).toBeNull();
+    expect(
+      resolveAdminProxyRoute(
+        new URL(
+          'https://hub.test/api/hub/admin/players?playerId=11111111-1111-4111-8111-111111111111&action=delete',
+        ),
+        'POST',
+      ),
+    ).toBeNull();
+    expect(
+      resolveAdminProxyRoute(
+        new URL(
+          'https://hub.test/api/hub/admin/team?principalId=11111111-1111-4111-8111-111111111111&action=capabilities',
+        ),
+        'POST',
+      ),
+    ).toBeNull();
   });
 });

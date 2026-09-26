@@ -37,6 +37,7 @@ describe('player portal admin client', () => {
       status: 'admin',
       admin: {
         principalId: '00000000-0000-4000-8000-000000000042',
+        owner: false,
         capabilities: ['player.read', 'pokemon.read', 'admin.role.assign'],
       },
     });

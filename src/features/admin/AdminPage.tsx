@@ -16,8 +16,8 @@ const MODULES = [
     title: 'POKÉMON',
     detail: 'Roster, edição, movimentos, efeitos e ciclo de vida.',
     prefixes: ['pokemon.', 'effect.', 'effects.'],
-    href: null,
-    cta: 'INTERFACE EM CONSTRUÇÃO',
+    href: '/admin/players',
+    cta: 'ESCOLHER JOGADOR',
   },
   {
     id: 'economy',
@@ -32,24 +32,32 @@ const MODULES = [
     title: 'MUNDO E BATALHA',
     detail: 'Encontros, batalhas, regiões e correções operacionais.',
     prefixes: ['world.', 'encounter.', 'battle.'],
-    href: null,
-    cta: 'INTERFACE EM CONSTRUÇÃO',
+    href: '/admin/players',
+    cta: 'ABRIR SUPORTE AO JOGADOR',
   },
   {
     id: 'content',
     title: 'CONTEÚDO',
-    detail: 'Drafts, validação, publicação e rollback de releases.',
+    detail: 'Drafts, validação e publicação dos releases do RPG.',
     prefixes: ['content.'],
-    href: null,
-    cta: 'INTERFACE EM CONSTRUÇÃO',
+    href: '/admin/content',
+    cta: 'ABRIR CONTEÚDO',
+  },
+  {
+    id: 'audit',
+    title: 'AUDITORIA',
+    detail: 'Histórico recente das ações administrativas, responsáveis e justificativas.',
+    prefixes: ['audit.', 'admin_operation.'],
+    href: '/admin/audit',
+    cta: 'ABRIR AUDITORIA',
   },
   {
     id: 'security',
     title: 'ADMINISTRAÇÃO',
-    detail: 'Auditoria, cargos, capacidades e operações sensíveis.',
-    prefixes: ['audit.', 'admin_', 'admin.', 'community.', 'batch.', 'UAT_'],
+    detail: 'Equipe, capacidades e operações sensíveis.',
+    prefixes: ['admin_', 'admin.', 'community.', 'batch.', 'UAT_'],
     href: null,
-    cta: 'INTERFACE EM CONSTRUÇÃO',
+    cta: 'GERENCIAR PODERES',
   },
 ] as const;
 
@@ -123,7 +131,9 @@ export function AdminPage() {
         <section className="admin-module-grid" aria-label="Módulos administrativos">
           {MODULES.map((module) => {
             const grants = relevantCapabilities(capabilities, module.prefixes);
-            const available = grants.length > 0;
+            const ownerTeamModule = module.id === 'security' && state.admin.owner;
+            const href = ownerTeamModule ? '/admin/team' : module.href;
+            const available = ownerTeamModule || grants.length > 0;
             const className = `admin-module-card${available ? ' is-authorized' : ' is-unavailable'}`;
             const content = (
               <>
@@ -134,13 +144,13 @@ export function AdminPage() {
                 <p>{module.detail}</p>
                 <footer>
                   <span>{grants.length} permissões</span>
-                  <small>{module.href && available ? module.cta : 'INTERFACE EM CONSTRUÇÃO'}</small>
+                  <small>{href && available ? module.cta : module.id === 'content' ? 'AINDA NÃO DISPONÍVEL NA CENTRAL' : 'SEM INTERFACE WEB'}</small>
                 </footer>
               </>
             );
 
-            return module.href && available ? (
-              <a key={module.id} className={`${className} is-link`} href={module.href}>
+            return href && available ? (
+              <a key={module.id} className={`${className} is-link`} href={href}>
                 {content}
               </a>
             ) : (
@@ -153,14 +163,13 @@ export function AdminPage() {
 
         <section className="admin-capabilities">
           <header>
-            <span>PERMISSÕES EFETIVAS</span>
+            <span>ACESSO DA SESSÃO</span>
             <strong>{capabilities.length}</strong>
           </header>
-          <div>
-            {capabilities.map((capability) => (
-              <code key={capability}>{capability}</code>
-            ))}
-          </div>
+          <p>
+            A Central mostra apenas os módulos e ações liberados para esta conta.
+            A gestão detalhada de poderes fica restrita aos donos protegidos.
+          </p>
         </section>
       </section>
     </main>
