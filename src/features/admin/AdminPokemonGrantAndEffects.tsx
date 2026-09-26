@@ -46,32 +46,64 @@ function resultMessage(
   return { kind: 'error', text: `Operação rejeitada: ${result.code}` };
 }
 
-function humanizeSlug(value: string) {
+function humanizeSlug(value: string): string {
   return value
     .replace(/[-_]+/g, ' ')
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+function genderLabel(gender: PokemonGender): string {
+  if (gender === 'M') return 'Masculino';
+  if (gender === 'F') return 'Feminino';
+  if (gender === 'GENDERLESS') return 'Sem gênero';
+  return 'Automático / não definido';
+}
+
+function buildTarget(
+  placementKind: PlacementKind,
+  boxNo: string,
+  slotNo: string,
+): CreateTarget | null {
+  const parsedSlot = Number(slotNo);
+  if (!Number.isInteger(parsedSlot) || parsedSlot < 1) return null;
+  if (placementKind === 'TEAM') {
+    if (parsedSlot > 6) return null;
+    return { placementKind: 'TEAM', boxNo: null, slotNo: parsedSlot };
+  }
+
+  const parsedBox = Number(boxNo);
+  if (
+    !Number.isInteger(parsedBox) ||
+    parsedBox < 1 ||
+    parsedBox > 10_000 ||
+    parsedSlot > 1_000_000
+  ) {
+    return null;
+  }
+  return { placementKind: 'BOX', boxNo: parsedBox, slotNo: parsedSlot };
+}
+
 function suggestedPlacement(pokemon: readonly AdminPlayerPokemon[]): CreateTarget {
-  const occupiedTeam = new Set(
-    pokemon
-      .filter((entry) => entry.status === 'ACTIVE' && entry.placement?.kind === 'TEAM')
-      .map((entry) => entry.placement?.slotNo),
-  );
+  const occupiedTeam = new Set<number>();
+  for (const entry of pokemon) {
+    if (entry.status === 'ACTIVE' && entry.placement?.kind === 'TEAM') {
+      occupiedTeam.add(entry.placement.slotNo);
+    }
+  }
   for (let slotNo = 1; slotNo <= 6; slotNo += 1) {
     if (!occupiedTeam.has(slotNo)) return { placementKind: 'TEAM', boxNo: null, slotNo };
   }
 
-  const occupiedBoxOne = new Set(
-    pokemon
-      .filter(
-        (entry) =>
-          entry.status === 'ACTIVE' &&
-          entry.placement?.kind === 'BOX' &&
-          entry.placement.boxNo === 1,
-      )
-      .map((entry) => entry.placement?.slotNo),
-  );
+  const occupiedBoxOne = new Set<number>();
+  for (const entry of pokemon) {
+    if (
+      entry.status === 'ACTIVE' &&
+      entry.placement?.kind === 'BOX' &&
+      entry.placement.boxNo === 1
+    ) {
+      occupiedBoxOne.add(entry.placement.slotNo);
+    }
+  }
   let slotNo = 1;
   while (occupiedBoxOne.has(slotNo)) slotNo += 1;
   return { placementKind: 'BOX', boxNo: 1, slotNo };
@@ -133,15 +165,13 @@ export function AdminPokemonGrantAndEffects({
     () => pokemon.filter((entry) => entry.status === 'ACTIVE'),
     [pokemon],
   );
-  const occupiedTeamSlots = useMemo(
-    () =>
-      new Set(
-        activePokemon
-          .filter((entry) => entry.placement?.kind === 'TEAM')
-          .map((entry) => entry.placement?.slotNo),
-      ),
-    [activePokemon],
-  );
+  const occupiedTeamSlots = useMemo(() => {
+    const occupied = new Set<number>();
+    for (const entry of activePokemon) {
+      if (entry.placement?.kind === 'TEAM') occupied.add(entry.placement.slotNo);
+    }
+    return occupied;
+  }, [activePokemon]);
   const [pokemonId, setPokemonId] = useState(activePokemon[0]?.id ?? '');
   const selectedPokemon =
     activePokemon.find((entry) => entry.id === pokemonId) ?? activePokemon[0];
@@ -189,7 +219,8 @@ export function AdminPokemonGrantAndEffects({
   }, [abilityId, formAbilities]);
 
   useEffect(() => {
-    if (!selectedPokemon && activePokemon[0]) setPokemonId(activePokemon[0].id);
+    const firstActivePokemon = activePokemon[0];
+    if (!selectedPokemon && firstActivePokemon) setPokemonId(firstActivePokemon.id);
   }, [activePokemon, selectedPokemon]);
 
   useEffect(() => {
@@ -197,18 +228,7 @@ export function AdminPokemonGrantAndEffects({
   }, [pokemonEffects]);
 
   useEffect(() => {
-    const parsedSlot = Number(slotNo);
-    const parsedBox = Number(boxNo);
-    const currentTarget: CreateTarget | null =
-      placementKind === 'TEAM' && Number.isInteger(parsedSlot) && parsedSlot >= 1 && parsedSlot <= 6
-        ? { placementKind: 'TEAM', boxNo: null, slotNo: parsedSlot }
-        : placementKind === 'BOX' &&
-            Number.isInteger(parsedBox) &&
-            parsedBox >= 1 &&
-            Number.isInteger(parsedSlot) &&
-            parsedSlot >= 1
-          ? { placementKind: 'BOX', boxNo: parsedBox, slotNo: parsedSlot }
-          : null;
+    const currentTarget = buildTarget(placementKind, boxNo, slotNo);
     if (currentTarget !== null && !placementOccupied(activePokemon, currentTarget)) return;
 
     const next = suggestedPlacement(activePokemon);
@@ -219,24 +239,8 @@ export function AdminPokemonGrantAndEffects({
 
   if (!canCreate && !canEffects) return null;
 
-  const parseCreateTarget = (): CreateTarget | null => {
-    const parsedSlot = Number(slotNo);
-    if (!Number.isInteger(parsedSlot) || parsedSlot < 1) return null;
-    if (placementKind === 'TEAM') {
-      if (parsedSlot > 6) return null;
-      return { placementKind: 'TEAM', boxNo: null, slotNo: parsedSlot };
-    }
-    const parsedBox = Number(boxNo);
-    if (
-      !Number.isInteger(parsedBox) ||
-      parsedBox < 1 ||
-      parsedBox > 10_000 ||
-      parsedSlot > 1_000_000
-    ) {
-      return null;
-    }
-    return { placementKind: 'BOX', boxNo: parsedBox, slotNo: parsedSlot };
-  };
+  const parseCreateTarget = (): CreateTarget | null =>
+    buildTarget(placementKind, boxNo, slotNo);
 
   const validateCreate = () => {
     const parsedLevel = Number(level);
@@ -426,13 +430,7 @@ export function AdminPokemonGrantAndEffects({
                 <div>
                   <dt>Gênero</dt>
                   <dd>
-                    {gender === 'M'
-                      ? 'Masculino'
-                      : gender === 'F'
-                        ? 'Feminino'
-                        : gender === 'GENDERLESS'
-                          ? 'Sem gênero'
-                          : 'Automático / não definido'}
+                    {genderLabel(gender)}
                   </dd>
                 </div>
                 <div>
