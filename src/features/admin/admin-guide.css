@@ -1,0 +1,275 @@
+.admin-guide-shell {
+  display: grid;
+  gap: 24px;
+}
+
+.admin-guide-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: end;
+}
+
+.admin-guide-heading h1,
+.admin-guide-section h2 {
+  margin: 6px 0 0;
+}
+
+.admin-guide-heading p {
+  max-width: 760px;
+  margin: 10px 0 0;
+  opacity: 0.78;
+  line-height: 1.6;
+}
+
+.admin-guide-access {
+  min-width: 190px;
+  padding: 18px;
+  border: 1px solid var(--admin-border, rgba(255, 255, 255, 0.12));
+  border-radius: 16px;
+  display: grid;
+  gap: 4px;
+}
+
+.admin-guide-access span,
+.admin-guide-access small {
+  opacity: 0.65;
+}
+
+.admin-guide-access strong {
+  font-size: 32px;
+}
+
+.admin-guide-start {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-guide-start article {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid var(--admin-border, rgba(255, 255, 255, 0.12));
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.admin-guide-start article > span {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-weight: 800;
+}
+
+.admin-guide-start div {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-guide-start small {
+  opacity: 0.68;
+  line-height: 1.35;
+}
+
+.admin-guide-section {
+  display: grid;
+  gap: 16px;
+}
+
+.admin-guide-section > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: end;
+}
+
+.admin-guide-section > header small {
+  opacity: 0.62;
+}
+
+.admin-guide-modules {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admin-guide-module {
+  padding: 18px;
+  border: 1px solid var(--admin-border, rgba(255, 255, 255, 0.12));
+  border-radius: 16px;
+  display: grid;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.admin-guide-module p {
+  margin: 6px 0 0;
+  opacity: 0.74;
+  line-height: 1.5;
+}
+
+.admin-guide-module ol {
+  margin: 0;
+  padding-left: 22px;
+  display: grid;
+  gap: 8px;
+  line-height: 1.45;
+}
+
+.admin-guide-module a {
+  justify-self: start;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid currentColor;
+}
+
+.admin-guide-tools {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 220px auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.admin-guide-tools input,
+.admin-guide-tools select {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border, rgba(255, 255, 255, 0.14));
+  background: rgba(0, 0, 0, 0.22);
+  color: inherit;
+  padding: 0 12px;
+}
+
+.admin-guide-tools label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.admin-guide-tools label input {
+  width: auto;
+  min-height: 0;
+}
+
+.admin-guide-command-list {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-guide-command {
+  border: 1px solid var(--admin-border, rgba(255, 255, 255, 0.12));
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.admin-guide-command > header {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--admin-border, rgba(255, 255, 255, 0.09));
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.admin-guide-command > header span {
+  opacity: 0.62;
+}
+
+.admin-guide-command-body {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+  gap: 18px;
+  align-items: center;
+}
+
+.admin-guide-command h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.admin-guide-command p {
+  margin: 6px 0;
+  opacity: 0.74;
+  line-height: 1.45;
+}
+
+.admin-guide-command small {
+  display: block;
+  margin-top: 4px;
+  opacity: 0.6;
+}
+
+.admin-guide-command-code {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.admin-guide-command-code code {
+  min-width: 0;
+  flex: 1;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.28);
+  font-size: 12px;
+}
+
+.admin-guide-command-code button {
+  min-height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--admin-border, rgba(255, 255, 255, 0.18));
+  background: transparent;
+  color: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-guide-safety {
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid var(--admin-border, rgba(255, 255, 255, 0.12));
+  display: grid;
+  gap: 6px;
+}
+
+.admin-guide-safety p {
+  margin: 0;
+  opacity: 0.74;
+  line-height: 1.55;
+}
+
+@media (max-width: 900px) {
+  .admin-guide-heading,
+  .admin-guide-section > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-guide-start,
+  .admin-guide-modules {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-guide-tools {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-guide-command-body {
+    grid-template-columns: 1fr;
+  }
+}
