@@ -4,6 +4,10 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/api/hub/admin/operations/:operationId/:action",
+      "destination": "/api/hub/admin/operations?operationId=:operationId&action=:action"
+    },
+    {
       "source": "/:path((?!api/).*)",
       "destination": "/index.html"
     }
