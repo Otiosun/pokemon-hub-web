@@ -133,7 +133,7 @@ describe('admin batch reward workflow', () => {
         reward: { kind: 'TRAINER_PROGRESSION', delta: '0' },
         reason: 'Evento',
       }),
-    ).toEqual({ ok: false, message: 'Informe um delta inteiro diferente de zero.' });
+    ).toEqual({ ok: false, message: 'Informe uma quantidade inteira maior que zero.' });
   });
 
   it('runs preview READY -> APPLIED and validates the immutable snapshot result', async () => {
