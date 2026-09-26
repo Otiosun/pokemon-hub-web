@@ -801,3 +801,46 @@
 .admin-repair-operations {
   border-left-color: #d36f76;
 }
+
+.admin-pokemon-grant-effects { display:grid; gap:18px; }
+.admin-operation-block {
+  display:grid;
+  gap:12px;
+  padding:16px;
+  border:1px solid rgba(215,230,231,.08);
+  border-radius:10px;
+  background:rgba(10,16,17,.72);
+}
+.admin-operation-block > header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.admin-operation-block > header span { color:#7f9093; font-size:.72rem; }
+.admin-operation-fields {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.admin-operation-fields .is-reason { grid-column:1 / -1; }
+.admin-operation-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.admin-operation-block button {
+  min-height:42px;
+  padding:0 14px;
+  border:1px solid rgba(109,202,160,.25);
+  border-radius:7px;
+  background:rgba(109,202,160,.08);
+  color:#a8dfc5;
+  font:800 .66rem 'IBM Plex Mono',monospace;
+  cursor:pointer;
+}
+.admin-operation-block button.is-danger {
+  border-color:rgba(224,108,116,.28);
+  background:rgba(224,108,116,.08);
+  color:#e99ca2;
+}
+.admin-operation-block button:disabled { opacity:.45; cursor:not-allowed; }
+@media (max-width:720px) {
+  .admin-operation-fields { grid-template-columns:1fr; }
+}
