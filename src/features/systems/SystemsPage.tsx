@@ -136,6 +136,7 @@ const PROFESSIONS: readonly Profession[] = [
       'O documento prevê itens exclusivos, treinamentos especiais e acesso privilegiado a áreas e oportunidades de alto nível.',
     ],
     artSrc: '/systems-doc/20-profissao-campeao.jpg',
+    price: '50 $',
   },
   {
     id: 'COLECIONADOR_TCG',
