@@ -112,6 +112,7 @@ export function HubNavigation({ active, destinations, children }: HubNavigationP
   const adminState = usePlayerPortalAdmin();
   const adminVisible = adminState.status === 'admin';
   const adminSelected = window.location.pathname.replace(/\/+$/, '').startsWith('/admin');
+  const systemsSelected = window.location.pathname.replace(/\/+$/, '').startsWith('/sistemas');
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDialogElement>(null);
 
@@ -157,6 +158,7 @@ export function HubNavigation({ active, destinations, children }: HubNavigationP
   const openMenu = () => {
     if (open) return;
     for (const item of NAV_ITEMS) warmProductPath(destinations[item.id]);
+    warmProductPath('/sistemas');
     if (adminVisible) warmProductPath('/admin');
     window.history.pushState({ ...currentHistoryState(), hubMenu: true }, '', window.location.href);
     setOpen(true);
@@ -244,7 +246,7 @@ export function HubNavigation({ active, destinations, children }: HubNavigationP
                   </span>
                   <div>
                     <strong>POKÉMON BEYOND</strong>
-                    <span>{adminVisible ? 'JORNADA · POKÉDEX · BOX · STORE · ADM' : 'JORNADA · POKÉDEX · BOX · STORE'}</span>
+                    <span>{adminVisible ? 'JORNADA · POKÉDEX · BOX · STORE · SISTEMAS · ADM' : 'JORNADA · POKÉDEX · BOX · STORE · SISTEMAS'}</span>
                   </div>
                 </div>
                 <button type="button" className="hub-menu-close" onClick={closeMenu} aria-label="Fechar menu">
@@ -289,6 +291,28 @@ export function HubNavigation({ active, destinations, children }: HubNavigationP
                     </a>
                   );
                 })}
+                <a
+                  className={`hub-menu-tile is-systems${systemsSelected ? ' is-active' : ''}`}
+                  href="/sistemas"
+                  aria-current={systemsSelected ? 'page' : undefined}
+                  data-hub-primary="systems"
+                  onClick={() => setOpen(false)}
+                  onFocus={() => warmProductPath('/sistemas')}
+                  onPointerDown={() => warmProductPath('/sistemas')}
+                  onPointerEnter={() => warmProductPath('/sistemas')}
+                >
+                  <span className="hub-menu-tile-icon hub-menu-admin-icon" aria-hidden="true">
+                    SYS
+                  </span>
+                  <span className="hub-menu-tile-copy">
+                    <strong>SISTEMAS</strong>
+                    <small>Profissões, progressão e treinamentos</small>
+                  </span>
+                  <span className="hub-menu-tile-end">
+                    {systemsSelected ? <small>ATUAL</small> : null}
+                    <span aria-hidden="true">›</span>
+                  </span>
+                </a>
                 {adminVisible ? (
                   <a
                     className={`hub-menu-tile is-admin${adminSelected ? ' is-active' : ''}`}
