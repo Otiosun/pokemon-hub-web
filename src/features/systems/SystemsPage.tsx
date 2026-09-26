@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { HubModuleHeader } from '../../components/HubModuleHeader';
 import './systems.css';
 
@@ -493,7 +494,7 @@ function EditorialBlock({
   title: string;
   art: string;
   reversed?: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <article className={`systems-feature systems-longform-block ${reversed ? 'is-reversed' : ''}`}>
