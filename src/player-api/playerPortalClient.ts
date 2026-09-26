@@ -157,6 +157,31 @@ export type PlayerPortalLocation = {
   connections: PlayerPortalLocationConnection[];
 };
 
+export type TrainerProfession =
+  | 'CRIADOR'
+  | 'PESQUISADOR'
+  | 'EXPLORADOR'
+  | 'RANGER'
+  | 'PESCADOR'
+  | 'ARTESAO'
+  | 'COORDENADOR'
+  | 'FOTOGRAFO'
+  | 'CAMPEAO'
+  | 'COLECIONADOR_TCG';
+
+const TRAINER_PROFESSIONS = new Set<TrainerProfession>([
+  'CRIADOR',
+  'PESQUISADOR',
+  'EXPLORADOR',
+  'RANGER',
+  'PESCADOR',
+  'ARTESAO',
+  'COORDENADOR',
+  'FOTOGRAFO',
+  'CAMPEAO',
+  'COLECIONADOR_TCG',
+]);
+
 export type PlayerPortalProfileCustomization = {
   title: string | null;
   bio: string | null;
@@ -182,6 +207,7 @@ export type PlayerPortalProfile = {
   originRegionId: string | null;
   originRegionName: string | null;
   locale: string | null;
+  profession: TrainerProfession | null;
   trainerLevel: number;
   progressionPoints: string;
   onboardingState:
@@ -435,6 +461,13 @@ export function isPlayerPortalProfile(value: unknown): value is PlayerPortalProf
     !isNullableUuid(value.originRegionId) ||
     !isNullableDisplayString(value.originRegionName) ||
     !isNullableString(value.locale)
+  ) {
+    return false;
+  }
+  if (
+    value.profession !== null &&
+    (typeof value.profession !== 'string' ||
+      !TRAINER_PROFESSIONS.has(value.profession as TrainerProfession))
   ) {
     return false;
   }
