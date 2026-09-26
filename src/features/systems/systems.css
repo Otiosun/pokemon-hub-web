@@ -224,29 +224,30 @@
 }
 
 .xp-table {
+  width: 100%;
+  border-collapse: collapse;
   border: 1px solid rgba(23,25,28,.14);
   background: rgba(255,255,255,.62);
 }
 
-.xp-table > div {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr 1.3fr;
-  align-items: center;
-  gap: 16px;
-  min-height: 48px;
-  padding: 0 18px;
+.xp-table td {
+  padding: 14px 18px;
 }
 
-.xp-table > div + div {
+.xp-table tr + tr td {
   border-top: 1px solid rgba(23,25,28,.09);
 }
 
-.xp-table b {
+.xp-table td:nth-child(2) {
+  width: 1%;
   color: #9d777b;
 }
 
-.xp-table strong {
+.xp-table td:last-child {
   text-align: right;
+}
+
+.xp-table strong {
   color: #7f2932;
 }
 
