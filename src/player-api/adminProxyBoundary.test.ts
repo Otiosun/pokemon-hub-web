@@ -20,6 +20,18 @@ describe('consolidated admin proxy boundary', () => {
       allowedMethod: 'GET',
     });
     expect(
+      resolveAdminProxyRoute(new URL('https://hub.test/api/hub/admin/audit?limit=100')),
+    ).toEqual({
+      upstreamPath: '/v1/hub/admin/audit?limit=100',
+      allowedMethod: 'GET',
+    });
+    expect(
+      resolveAdminProxyRoute(
+        new URL('https://hub.test/api/hub/admin/audit?limit=100'),
+        'POST',
+      ),
+    ).toBeNull();
+    expect(
       resolveAdminProxyRoute(
         new URL(
           'https://hub.test/api/hub/admin/players?playerId=11111111-1111-4111-8111-111111111111',
