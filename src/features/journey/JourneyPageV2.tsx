@@ -4,6 +4,7 @@ import {
   DEFAULT_PLAYER_PORTAL_PROFILE_CUSTOMIZATION,
   type PlayerPortalLocation,
   type PlayerPortalProfileCustomization,
+  type TrainerProfession,
 } from '../../player-api/playerPortalClient';
 import {
   publishPlayerPortalProfileUpdate,
@@ -32,6 +33,23 @@ import { usePlayerPortalLocation } from './usePlayerPortalLocation';
 import './journey-page.css';
 import './journey-page-review-fixes.css';
 import './journey-uat-polish.css';
+
+const PROFESSION_LABELS: Record<TrainerProfession, string> = {
+  CRIADOR: 'Criador',
+  PESQUISADOR: 'Pesquisador',
+  EXPLORADOR: 'Explorador',
+  RANGER: 'Ranger',
+  PESCADOR: 'Pescador',
+  ARTESAO: 'Artesão',
+  COORDENADOR: 'Coordenador',
+  FOTOGRAFO: 'Fotógrafo',
+  CAMPEAO: 'Campeão',
+  COLECIONADOR_TCG: 'Colecionador — TCG',
+};
+
+function professionLabel(value: TrainerProfession | null | undefined) {
+  return value ? PROFESSION_LABELS[value] : null;
+}
 
 const MAX_PROFILE_IMAGE_BYTES = 8 * 1024 * 1024;
 type ProfileImageSlot = 'cover' | 'avatar';
@@ -490,7 +508,12 @@ export function JourneyPageV2({
 
             <div className="journey-identity-copy">
               <h1 id="journey-trainer-name">{profile.trainerName}</h1>
-              <span className="journey-trainer-title">— {profile.trainerTitle}</span>
+              <span className="journey-trainer-title">
+                — {profile.trainerTitle}
+                {professionLabel(authoritativeProfile?.profession)
+                  ? ` · ${professionLabel(authoritativeProfile?.profession)}`
+                  : ''}
+              </span>
             </div>
 
             <div className="journey-league-seal" aria-hidden="true">
