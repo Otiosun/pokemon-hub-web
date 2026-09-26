@@ -4,6 +4,10 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/api/hub/admin/team/:principalId/reception-staff",
+      "destination": "/api/hub/admin/team?principalId=:principalId&action=reception-staff"
+    },
+    {
       "source": "/api/hub/admin/operations/:operationId/:action",
       "destination": "/api/hub/admin/operations?operationId=:operationId&action=:action"
     },
