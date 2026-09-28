@@ -326,6 +326,7 @@ export function AdminPlayerDetailPage({ playerId }: { playerId: string }) {
           capabilities={admin.status === 'admin' ? admin.admin.capabilities : []}
           inventory={player.inventory}
           wallets={player.wallets}
+          pokemon={player.pokemon}
           onApplied={() => {
             void loadPlayer();
           }}

@@ -118,7 +118,7 @@ export function AdminBatchRewardsPage() {
 
   const rewardKinds = useMemo(
     () => [
-      ...(canUseProgression ? ([{ value: 'PROGRESSION', label: 'PROGRESSÃO' }] as const) : []),
+      ...(canUseProgression ? ([{ value: 'PROGRESSION', label: 'INSÍGNIAS' }] as const) : []),
       ...(canUseWallet ? ([{ value: 'WALLET', label: 'DINHEIRO' }] as const) : []),
       ...(canUseItem ? ([{ value: 'ITEM', label: 'ITEM' }] as const) : []),
       ...(canUsePokedexSeen ? ([{ value: 'POKEDEX_SEEN', label: 'POKÉDEX · VISTO' }] as const) : []),
@@ -373,7 +373,7 @@ export function AdminBatchRewardsPage() {
           <div className="admin-batch-badge">
             <span>RECOMPENSA</span>
             <strong>{rewardKind === 'PROGRESSION'
-              ? 'PROGRESSÃO'
+              ? 'INSÍGNIAS DO TREINADOR'
               : rewardKind === 'WALLET'
                 ? 'DINHEIRO'
                 : rewardKind === 'ITEM'
@@ -586,7 +586,7 @@ export function AdminBatchRewardsPage() {
                   </button>
                 </fieldset>
                 <label>
-                  <span>{rewardKind === 'PROGRESSION' ? 'QUANTIDADE DE PONTOS' : 'QUANTIDADE'}</span>
+                  <span>{rewardKind === 'PROGRESSION' ? 'PONTOS / INSÍGNIAS' : 'QUANTIDADE'}</span>
                   <input
                     value={amount}
                     inputMode="numeric"

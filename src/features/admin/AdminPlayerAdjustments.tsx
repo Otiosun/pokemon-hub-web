@@ -5,24 +5,27 @@ import {
   type AdminPlayerAdjustmentInput,
 } from '../../player-api/playerPortalAdminPlayersClient';
 
-type AdjustmentKind = 'PROGRESSION' | 'WALLET' | 'INVENTORY';
+type AdjustmentKind = 'PROGRESSION' | 'POKEMON_XP' | 'WALLET' | 'INVENTORY';
 
 type AdminPlayerAdjustmentsProps = {
   playerId: string;
   capabilities: readonly string[];
   inventory: AdminPlayer360['inventory'];
   wallets: AdminPlayer360['wallets'];
+  pokemon: AdminPlayer360['pokemon'];
   onApplied: () => void;
 };
 
 const KIND_CAPABILITY: Record<AdjustmentKind, string> = {
   PROGRESSION: 'progression.adjust',
+  POKEMON_XP: 'pokemon.edit.mechanics',
   WALLET: 'wallet.adjust',
   INVENTORY: 'inventory.adjust',
 };
 
 const KIND_LABEL: Record<AdjustmentKind, string> = {
-  PROGRESSION: 'PROGRESSÃO',
+  PROGRESSION: 'INSÍGNIAS',
+  POKEMON_XP: 'XP POKÉMON',
   WALLET: 'WALLET',
   INVENTORY: 'INVENTÁRIO',
 };
@@ -34,16 +37,19 @@ export function AdminPlayerAdjustments({
   capabilities,
   inventory,
   wallets,
+  pokemon,
   onApplied,
 }: AdminPlayerAdjustmentsProps) {
   const availableKinds = (Object.keys(KIND_CAPABILITY) as AdjustmentKind[]).filter((kind) =>
     capabilities.includes(KIND_CAPABILITY[kind]),
   );
+  const activePokemon = pokemon.filter((entry) => entry.status === 'ACTIVE');
   const [selectedKind, setSelectedKind] = useState<AdjustmentKind>('PROGRESSION');
   const [delta, setDelta] = useState('');
   const [reason, setReason] = useState('');
   const [itemId, setItemId] = useState('');
   const [currencyId, setCurrencyId] = useState('');
+  const [pokemonInstanceId, setPokemonInstanceId] = useState(activePokemon[0]?.id ?? '');
   const [pendingRequestId, setPendingRequestId] = useState<string | null>(null);
   const [state, setState] = useState<
     | { kind: 'idle' }
@@ -57,6 +63,11 @@ export function AdminPlayerAdjustments({
     : (availableKinds[0] ?? null);
   const resolvedItemId = itemId || inventory[0]?.itemId || '';
   const resolvedCurrencyId = currencyId || wallets[0]?.currencyId || '';
+  const resolvedPokemonId =
+    pokemonInstanceId && activePokemon.some((entry) => entry.id === pokemonInstanceId)
+      ? pokemonInstanceId
+      : (activePokemon[0]?.id ?? '');
+  const selectedPokemon = activePokemon.find((entry) => entry.id === resolvedPokemonId);
 
   if (activeKind === null) {
     return (
@@ -92,6 +103,10 @@ export function AdminPlayerAdjustments({
       setState({ kind: 'error', text: 'O jogador não possui wallet selecionável nesta ficha.' });
       return;
     }
+    if (activeKind === 'POKEMON_XP' && !resolvedPokemonId) {
+      setState({ kind: 'error', text: 'Selecione um Pokémon ativo para receber ou perder XP.' });
+      return;
+    }
 
     const requestId = pendingRequestId ?? crypto.randomUUID();
     if (pendingRequestId === null) setPendingRequestId(requestId);
@@ -108,7 +123,9 @@ export function AdminPlayerAdjustments({
         ? { ...base, kind: 'INVENTORY', itemId: resolvedItemId }
         : activeKind === 'WALLET'
           ? { ...base, kind: 'WALLET', currencyId: resolvedCurrencyId }
-          : { ...base, kind: 'PROGRESSION' };
+          : activeKind === 'POKEMON_XP'
+            ? { ...base, kind: 'POKEMON_XP', pokemonInstanceId: resolvedPokemonId }
+            : { ...base, kind: 'PROGRESSION' };
 
     try {
       const result = await adjustAdminPlayer(playerId, input);
@@ -120,7 +137,9 @@ export function AdminPlayerAdjustments({
           kind: 'success',
           text: result.replayed
             ? 'Operação já aplicada anteriormente; replay seguro confirmado.'
-            : 'Ajuste aplicado e registrado na trilha administrativa.',
+            : activeKind === 'POKEMON_XP'
+              ? 'XP do Pokémon ajustado e registrado. Level up, golpes e evolução automática são processados em ganhos positivos.'
+              : 'Ajuste aplicado e registrado na trilha administrativa.',
         });
         onApplied();
         return;
@@ -203,6 +222,32 @@ export function AdminPlayerAdjustments({
           </label>
         ) : null}
 
+        {activeKind === 'POKEMON_XP' ? (
+          <label>
+            <span>POKÉMON</span>
+            <select
+              value={resolvedPokemonId}
+              onChange={(event) => {
+                setPokemonInstanceId(event.target.value);
+                setPendingRequestId(null);
+                setState({ kind: 'idle' });
+              }}
+            >
+              {activePokemon.map((entry) => (
+                <option key={entry.id} value={entry.id}>
+                  #{String(entry.nationalDex).padStart(3, '0')} · {entry.nickname ?? entry.speciesSlug} ·
+                  Lv. {entry.level} · XP {entry.xp}
+                </option>
+              ))}
+            </select>
+            <small>
+              {selectedPokemon
+                ? `Atual: Lv. ${selectedPokemon.level} · XP ${selectedPokemon.xp}`
+                : 'Nenhum Pokémon ativo.'}
+            </small>
+          </label>
+        ) : null}
+
         <label>
           <span>DELTA</span>
           <input
@@ -232,7 +277,13 @@ export function AdminPlayerAdjustments({
 
         <div className="admin-adjustment-submit">
           <div>
-            <span>{activeKind === 'PROGRESSION' ? 'PONTOS DO TREINADOR' : KIND_LABEL[activeKind]}</span>
+            <span>
+              {activeKind === 'PROGRESSION'
+                ? 'PONTOS / INSÍGNIAS DO TREINADOR'
+                : activeKind === 'POKEMON_XP'
+                  ? 'XP DO POKÉMON SELECIONADO'
+                  : KIND_LABEL[activeKind]}
+            </span>
             <small>
               {delta.trim() || '0'} · operação registrada com idempotência e auditoria
             </small>
@@ -242,6 +293,13 @@ export function AdminPlayerAdjustments({
           </button>
         </div>
       </form>
+
+      {activeKind === 'POKEMON_XP' ? (
+        <p className="admin-adjustment-note">
+          Ganho positivo usa a progressão normal de nível, golpes e evolução. Remoção de XP pode
+          reduzir nível, mas não desfaz evolução nem apaga golpes históricos.
+        </p>
+      ) : null}
 
       {state.kind === 'success' ? (
         <p className="admin-adjustment-feedback is-success">{state.text}</p>

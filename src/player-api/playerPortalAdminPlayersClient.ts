@@ -218,6 +218,13 @@ export type AdminPlayerAdjustmentInput =
       kind: 'PROGRESSION';
       delta: string;
       reason: string;
+    }
+  | {
+      requestId: string;
+      kind: 'POKEMON_XP';
+      pokemonInstanceId: string;
+      delta: string;
+      reason: string;
     };
 
 export type AdminPlayerAdjustmentResult =
