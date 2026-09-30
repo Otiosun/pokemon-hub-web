@@ -52,7 +52,9 @@ export function AdminPokemonGrantAndEffects({
   const [abilities, setAbilities] = useState<AdminRewardCatalogAbility[]>([]);
   const [natures, setNatures] = useState<AdminRewardCatalogNature[]>([]);
   const [effectCatalog, setEffectCatalog] = useState<AdminRewardCatalogEffect[]>([]);
-  const [catalogError, setCatalogError] = useState(false);
+  const [catalogError, setCatalogError] = useState<
+    null | 'unauthenticated' | 'forbidden' | 'unavailable'
+  >(null);
 
   const [formId, setFormId] = useState('');
   const [level, setLevel] = useState('5');
@@ -91,9 +93,10 @@ export function AdminPokemonGrantAndEffects({
       .then((result) => {
         if (!active) return;
         if (result.status !== 'ok') {
-          setCatalogError(true);
+          setCatalogError(result.status);
           return;
         }
+        setCatalogError(null);
         const availableForms = result.forms;
         const pokemonEffectsOnly = result.effects.filter((effect) => effect.scope === 'POKEMON');
         setForms(availableForms);
@@ -104,7 +107,7 @@ export function AdminPokemonGrantAndEffects({
         setEffectId((current) => current || pokemonEffectsOnly[0]?.effectId || '');
       })
       .catch(() => {
-        if (active) setCatalogError(true);
+        if (active) setCatalogError('unavailable');
       });
     return () => {
       active = false;
@@ -304,7 +307,11 @@ export function AdminPokemonGrantAndEffects({
 
       {catalogError ? (
         <p className="admin-adjustment-feedback is-error">
-          Não foi possível carregar o catálogo Pokémon da Central.
+          {catalogError === 'unauthenticated'
+            ? 'Sua sessão do Hub expirou. Gere um novo link com /site no WhatsApp e abra a Central novamente.'
+            : catalogError === 'forbidden'
+              ? 'Sua identidade administrativa não possui acesso ao catálogo Pokémon.'
+              : 'Não foi possível carregar o catálogo Pokémon da Central.'}
         </p>
       ) : null}
 

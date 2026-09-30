@@ -93,6 +93,13 @@ describe('admin reward catalog client', () => {
     });
   });
 
+  it('reports an expired Hub session separately from catalog authorization', async () => {
+    const expired = vi.fn(async () => new Response(null, { status: 401 }));
+    await expect(getAdminRewardCatalog(expired as typeof fetch)).resolves.toEqual({
+      status: 'unauthenticated',
+    });
+  });
+
   it('preserves authorization boundaries and rejects malformed catalog data', async () => {
     const denied = vi.fn(async () => new Response(null, { status: 403 }));
     await expect(getAdminRewardCatalog(denied as typeof fetch)).resolves.toEqual({
