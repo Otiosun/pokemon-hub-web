@@ -51,7 +51,7 @@ function refreshBrowserSession(): Promise<PlayerPortalSessionBootstrap> {
   return pending;
 }
 
-function bootstrapBrowserSession(): Promise<PlayerPortalSessionBootstrap> {
+export function bootstrapPlayerPortalBrowserSession(): Promise<PlayerPortalSessionBootstrap> {
   if (sharedBootstrap) return sharedBootstrap;
 
   const extracted = extractPlayerPortalTicketFromUrl(new URL(window.location.href));
@@ -59,8 +59,11 @@ function bootstrapBrowserSession(): Promise<PlayerPortalSessionBootstrap> {
     window.history.replaceState(window.history.state, '', extracted.cleanPath);
   }
 
-  sharedBootstrap = bootstrapPlayerPortalSession(extracted.ticket);
-  return sharedBootstrap;
+  const pending = bootstrapPlayerPortalSession(extracted.ticket).finally(() => {
+    if (sharedBootstrap === pending) sharedBootstrap = null;
+  });
+  sharedBootstrap = pending;
+  return pending;
 }
 
 export function usePlayerPortalBrowserSession(): PlayerPortalBrowserSessionState {
@@ -79,7 +82,7 @@ export function usePlayerPortalBrowserSession(): PlayerPortalBrowserSessionState
       };
     }
 
-    bootstrapBrowserSession()
+    bootstrapPlayerPortalBrowserSession()
       .then((next) => {
         if (!cancelled) setState(next);
       })
