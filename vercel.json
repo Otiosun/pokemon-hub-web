@@ -24,6 +24,26 @@
       "destination": "/api/hub/admin/team?principalId=:principalId&action=capabilities"
     },
     {
+      "source": "/champion-store/rotomdex-ultra.jpg",
+      "destination": "/champion-store/rotomdex-ultra.webp"
+    },
+    {
+      "source": "/champion-store/master-ball.jpg",
+      "destination": "/champion-store/master-ball.webp"
+    },
+    {
+      "source": "/champion-store/save-ash.jpg",
+      "destination": "/champion-store/save-ash.webp"
+    },
+    {
+      "source": "/champion-store/save-brock.jpg",
+      "destination": "/champion-store/save-brock.webp"
+    },
+    {
+      "source": "/champion-store/save-cynthia.jpg",
+      "destination": "/champion-store/save-cynthia.webp"
+    },
+    {
       "source": "/:path((?!api/).*)",
       "destination": "/index.html"
     }
