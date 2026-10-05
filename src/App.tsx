@@ -251,6 +251,8 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
     title: 'Pack Ultra',
     price: '25 $',
     category: 'POKÉ BALLS',
+    artSrc: 'https://archives.bulbagarden.net/media/upload/6/61/Ultra_Ball_PG.png',
+    artAlt: 'Ultra Ball em cena de Pokémon Generations representando o Pack Ultra',
     paragraphs: [
       '3× Ultra Balls.',
       'Um reforço direto para treinadores que querem aumentar suas chances em capturas mais difíceis.',
@@ -261,6 +263,8 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
     title: 'Pack Especial',
     price: '30 $',
     category: 'POKÉ BALLS',
+    artSrc: 'https://archives.bulbagarden.net/media/upload/f/f9/Various_Pok%C3%A9_Balls_XY079_1.png',
+    artAlt: 'Seleção de Poké Balls representando o Pack Especial',
     paragraphs: [
       '5× Poké Balls Especiais.',
       'Cinco Poké Balls selecionadas entre diferentes categorias disponíveis no sistema.',
@@ -271,6 +275,8 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
     title: 'Pack do Capturador',
     price: '65 $',
     category: 'POKÉ BALLS',
+    artSrc: 'https://archives.bulbagarden.net/media/upload/2/22/James_Pok%C3%A9_Ball_collection.png',
+    artAlt: 'Coleção de Poké Balls representando o Pack do Capturador',
     paragraphs: [
       '7× Poké Balls variadas.',
       'Um conjunto equilibrado para exploração e captura.',
@@ -283,6 +289,8 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
     title: 'Pack Noturno',
     price: '35 $',
     category: 'POKÉ BALLS',
+    artSrc: 'https://archives.bulbagarden.net/media/upload/d/d0/Dusk_Ball_anime.png',
+    artAlt: 'Dusk Ball em cena da animação representando o Pack Noturno',
     paragraphs: [
       '4× Dusk Balls.',
       'Ideal para treinadores que exploram áreas durante a noite ou em ambientes de pouca luminosidade.',
@@ -293,6 +301,8 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
     title: 'Pack Aquático',
     price: '20 $',
     category: 'POKÉ BALLS',
+    artSrc: 'https://archives.bulbagarden.net/media/upload/9/9e/Dive_Ball_anime.png',
+    artAlt: 'Dive Ball em cena da animação representando o Pack Aquático',
     paragraphs: [
       '4× Poké Balls temáticas.',
       'Uma seleção voltada para exploração de rios, lagos, mares e outras áreas aquáticas.',
@@ -314,6 +324,8 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
     title: 'Caixa do Colecionador',
     price: '70 $',
     category: 'POKÉ BALLS',
+    artSrc: 'https://archives.bulbagarden.net/media/upload/d/d4/Various_Pok%C3%A9_Balls_XY079_2.png',
+    artAlt: 'Coleção variada de Poké Balls representando a Caixa do Colecionador',
     paragraphs: ['8× Poké Balls + 1 Ball exclusiva.', 'Uma caixa especial para colecionadores.', 'Conteúdo:'],
     bullets: [
       '4× Poké Balls especiais',
