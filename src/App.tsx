@@ -79,8 +79,8 @@ type ChampionStoreOffer = {
   price: string;
   category: string;
   paragraphs: readonly string[];
-  artSrc: string;
-  artAlt: string;
+  artSrc?: string;
+  artAlt?: string;
   bullets?: readonly string[];
   variants?: readonly { label: string; price: string; description: string }[];
   duration?: string;
@@ -101,7 +101,7 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
   {
     code: 'Z',
     title: 'Movimento Z',
-    price: '40,00 $',
+    price: '30 $',
     category: 'MECÂNICA',
     artSrc: '/champion-store/z-move.jpg',
     artAlt: 'Arte de Movimento Z do catálogo Pokémon Beyond',
@@ -112,7 +112,7 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
   {
     code: 'GMAX',
     title: 'Gigantamax',
-    price: '60,00',
+    price: '50 $',
     category: 'MECÂNICA',
     artSrc: '/champion-store/gigantamax.jpg',
     artAlt: 'Arte de Gigantamax do catálogo Pokémon Beyond',
@@ -124,7 +124,7 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
   {
     code: 'LUCK',
     title: 'Benção da Sorte',
-    price: 'R$ 60,00',
+    price: '45 $',
     category: 'JORNADA',
     artSrc: '/champion-store/blessing-luck.jpg',
     artAlt: 'Arte de Benção da Sorte do catálogo Pokémon Beyond',
@@ -135,7 +135,7 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
   {
     code: 'SAVE+',
     title: 'Save Premium',
-    price: 'R$ 45,00',
+    price: '35 $',
     category: 'JORNADA',
     artSrc: '/champion-store/save-premium.jpg',
     artAlt: 'Arte de Save Premium do catálogo Pokémon Beyond',
@@ -198,6 +198,7 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
     artSrc: '/champion-store/pokemon-egg.jpg',
     artAlt: 'Arte de Ovo Pokémon do catálogo Pokémon Beyond',
     paragraphs: [
+      'Os Ovos Pokémon desta categoria contêm Fakemon: Pokémon originais criados pela administração e pela equipe do RPG.',
       'Receba um Ovo Pokémon misterioso e descubra qual Pokémon está esperando para nascer. Após receber o ovo, será necessário cuidar dele e percorrer a distância necessária para que aconteça a eclosão. O Pokémon que nascer poderá ser definido ou aleatório, de acordo com a categoria do ovo adquirido. Cada ovo possui possibilidades e raridades próprias, tornando cada eclosão uma nova descoberta.',
     ],
     variants: [
@@ -234,6 +235,171 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
       'O bônus será aplicado à experiência recebida pelas atividades elegíveis durante o período de duração da Gamepass.',
     ],
   },
+  {
+    code: 'RDX',
+    title: 'Rotomdex Ultra',
+    price: '45 $',
+    category: 'TECNOLOGIA',
+    artSrc: '/champion-store/rotomdex-ultra.jpg',
+    artAlt: 'Rotom representando a Rotomdex Ultra do catálogo Pokémon Beyond',
+    paragraphs: [
+      'A Rotomdex Ultra acompanha combates, pessoas e rotas e transmite ao treinador uma quantidade incomparável de informações. Seus sensores analisam continuamente o campo, os Pokémon e os treinadores envolvidos, revelando informações que normalmente permaneceriam ocultas. Ela é capaz até mesmo de calcular porcentagens de batalha e ler caminhos ocultos.',
+    ],
+  },
+  {
+    code: 'P-U',
+    title: 'Pack Ultra',
+    price: '25 $',
+    category: 'POKÉ BALLS',
+    paragraphs: [
+      '3× Ultra Balls.',
+      'Um reforço direto para treinadores que querem aumentar suas chances em capturas mais difíceis.',
+    ],
+  },
+  {
+    code: 'P-E',
+    title: 'Pack Especial',
+    price: '30 $',
+    category: 'POKÉ BALLS',
+    paragraphs: [
+      '5× Poké Balls Especiais.',
+      'Cinco Poké Balls selecionadas entre diferentes categorias disponíveis no sistema.',
+    ],
+  },
+  {
+    code: 'CAP',
+    title: 'Pack do Capturador',
+    price: '65 $',
+    category: 'POKÉ BALLS',
+    paragraphs: [
+      '7× Poké Balls variadas.',
+      'Um conjunto equilibrado para exploração e captura.',
+      'Conteúdo:',
+    ],
+    bullets: ['2× Great Ball', '2× Ultra Ball', '3× Poké Balls especiais'],
+  },
+  {
+    code: 'NOITE',
+    title: 'Pack Noturno',
+    price: '35 $',
+    category: 'POKÉ BALLS',
+    paragraphs: [
+      '4× Dusk Balls.',
+      'Ideal para treinadores que exploram áreas durante a noite ou em ambientes de pouca luminosidade.',
+    ],
+  },
+  {
+    code: 'AQUA',
+    title: 'Pack Aquático',
+    price: '20 $',
+    category: 'POKÉ BALLS',
+    paragraphs: [
+      '4× Poké Balls temáticas.',
+      'Uma seleção voltada para exploração de rios, lagos, mares e outras áreas aquáticas.',
+    ],
+  },
+  {
+    code: 'CUSTOM',
+    title: 'Poké Ball Personalizada',
+    price: '35 $',
+    category: 'POKÉ BALLS',
+    paragraphs: [
+      'Personalize uma Poké Ball de um Pokémon seu.',
+      'Escolha cores, símbolos, padrões e outros elementos visuais para criar uma Ball exclusiva.',
+      'Efeito: principalmente visual. Algumas personalizações podem receber uma pequena regra especial de captura aprovada pela administração.',
+    ],
+  },
+  {
+    code: 'COL',
+    title: 'Caixa do Colecionador',
+    price: '70 $',
+    category: 'POKÉ BALLS',
+    paragraphs: ['8× Poké Balls + 1 Ball exclusiva.', 'Uma caixa especial para colecionadores.', 'Conteúdo:'],
+    bullets: [
+      '4× Poké Balls especiais',
+      '4× Poké Balls de categorias variadas',
+      '1× Poké Ball exclusiva da Caixa do Colecionador',
+    ],
+  },
+  {
+    code: 'KIT',
+    title: 'Kit do Treinador',
+    price: '100 $',
+    category: 'POKÉ BALLS',
+    paragraphs: ['Conteúdo:'],
+    bullets: [
+      '4× Great Ball',
+      '4× Ultra Ball',
+      '4× Poké Balls especiais',
+      '2× Poké Ball Personalizada',
+    ],
+  },
+  {
+    code: 'MASTER',
+    title: 'Master Ball',
+    price: '100 $',
+    category: 'CAPTURA',
+    artSrc: '/champion-store/master-ball.jpg',
+    artAlt: 'Master Ball do catálogo Pokémon Beyond',
+    paragraphs: [
+      'A Poké Ball de maior prestígio entre os treinadores. Desenvolvida para realizar capturas sem margem para falhas, sua tecnologia garante que o Pokémon encontrado seja capturado imediatamente. Concede a captura garantida de qualquer Pokémon.',
+    ],
+  },
+  {
+    code: 'ASH',
+    title: 'Save Ash — O Sonho de um Campeão',
+    price: '50 $',
+    category: 'SAVE',
+    artSrc: '/champion-store/save-ash.jpg',
+    artAlt: 'Ash e Pikachu representando o Save Ash do catálogo Pokémon Beyond',
+    paragraphs: [
+      'Ash Ketchum percorreu regiões inteiras, enfrentou alguns dos maiores treinadores do mundo e construiu seu próprio caminho até o topo. Agora, parte dessa trajetória pode acompanhar você desde o primeiro passo da sua jornada.',
+      'O Save Ash é um pacote especial contendo conteúdos inspirados na trajetória de Ash, reunindo Pokémon e itens associados às suas principais aventuras para jogadores que querem começar sua jornada carregando o legado de um verdadeiro viajante.',
+      'Contém:',
+    ],
+    bullets: [
+      'Pokémon da jornada de Ash em nível inicial para desbloquear.',
+      'Conteúdos exclusivos do Save Ash.',
+      'Recursos destinados ao início da jornada.',
+      'Elementos especiais inspirados nas aventuras de Ash.',
+    ],
+  },
+  {
+    code: 'BROCK',
+    title: 'Save Brock',
+    price: '35 $',
+    category: 'SAVE',
+    artSrc: '/champion-store/save-brock.jpg',
+    artAlt: 'Brock e Onix representando o Save Brock do catálogo Pokémon Beyond',
+    paragraphs: [
+      'Brock é um dos grandes nomes de Kanto, conhecido por sua experiência e determinação como Líder de Ginásio. Agora, parte de seu legado pode acompanhar você desde o início da sua própria jornada.',
+      'O Save Brock reúne Pokémon e conteúdos inspirados em sua trajetória, perfeito para treinadores que desejam começar sua aventura carregando a força de uma verdadeira rocha.',
+      'Contém:',
+    ],
+    bullets: [
+      'Pokémon da jornada de Brock em nível inicial.',
+      'Conteúdos exclusivos do Save.',
+      'Recursos especiais para o início da jornada.',
+    ],
+  },
+  {
+    code: 'CYN',
+    title: 'Save Cynthia',
+    price: '45 $',
+    category: 'SAVE',
+    artSrc: '/champion-store/save-cynthia.jpg',
+    artAlt: 'Cynthia representando o Save Cynthia do catálogo Pokémon Beyond',
+    paragraphs: [
+      'Cynthia é uma das maiores Campeãs da história Pokémon, reconhecida por sua experiência, conhecimento e uma das equipes mais poderosas de Sinnoh. Agora, parte de seu legado pode acompanhar você desde o início da sua própria jornada.',
+      'O Save Cynthia reúne Pokémon e conteúdos inspirados em sua trajetória como Campeã, para aqueles que desejam começar sua aventura seguindo os passos de uma verdadeira lenda.',
+      'Contém:',
+    ],
+    bullets: [
+      'Pokémon da jornada de Cynthia em nível inicial.',
+      'Conteúdos exclusivos do Save.',
+      'Recursos especiais para o início da jornada.',
+    ],
+  },
 ];
 
 function hideMissingStoreArt(event: SyntheticEvent<HTMLImageElement>) {
@@ -243,7 +409,11 @@ function hideMissingStoreArt(event: SyntheticEvent<HTMLImageElement>) {
 function ChampionStorePage() {
   return (
     <main className="champion-store-page">
-      <HubModuleHeader module="store" metaLabel="GAMEPASSES" metaValue="10" />
+      <HubModuleHeader
+        module="store"
+        metaLabel="GAMEPASSES"
+        metaValue={String(CHAMPION_STORE_OFFERS.length).padStart(2, '0')}
+      />
 
       <section className="champion-store-intro">
         <header className="champion-store-title-block">
@@ -309,12 +479,14 @@ function ChampionStorePage() {
               </div>
             </header>
 
-            <img
-              className="champion-store-card-art"
-              src={offer.artSrc}
-              alt={offer.artAlt}
-              onError={hideMissingStoreArt}
-            />
+            {offer.artSrc ? (
+              <img
+                className="champion-store-card-art"
+                src={offer.artSrc}
+                alt={offer.artAlt ?? ''}
+                onError={hideMissingStoreArt}
+              />
+            ) : null}
 
             <div className="champion-store-card-body">
               <div className="champion-store-copy">
