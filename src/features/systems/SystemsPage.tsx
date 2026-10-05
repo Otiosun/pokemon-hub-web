@@ -122,7 +122,7 @@ const PROFESSIONS: readonly Profession[] = [
       'As fotografias podem ser adicionadas ao Álbum do Treinador.',
     ],
     artSrc: '/systems-doc/19-profissao-fotografo.jpg',
-    price: '50 $',
+    price: '35 $',
   },
   {
     id: 'CAMPEAO',
@@ -136,7 +136,7 @@ const PROFESSIONS: readonly Profession[] = [
       'O documento prevê itens exclusivos, treinamentos especiais e acesso privilegiado a áreas e oportunidades de alto nível.',
     ],
     artSrc: '/systems-doc/20-profissao-campeao.jpg',
-    price: '50 $',
+    price: '40 $',
   },
   {
     id: 'COLECIONADOR_TCG',
@@ -150,7 +150,7 @@ const PROFESSIONS: readonly Profession[] = [
       'Cartas raras e coleções avançadas podem desbloquear trocas e recompensas especiais.',
     ],
     artSrc: '/systems-doc/21-profissao-colecionador-tcg.jpg',
-    price: '50 $',
+    price: '35 $',
   },
 ];
 
