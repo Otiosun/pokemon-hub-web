@@ -1,0 +1,13 @@
+.store-cart-dismiss-layer {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: default;
+}
+
+.store-cart-panel {
+  position: relative;
+  z-index: 1;
+}
