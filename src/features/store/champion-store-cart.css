@@ -1,0 +1,431 @@
+.champion-store-cart-slot {
+  margin-top: 14px;
+  border-top: 1px solid rgba(220, 236, 238, 0.12);
+  padding-top: 14px;
+}
+
+.store-cart-card-control {
+  display: grid;
+  gap: 10px;
+}
+
+.store-cart-variant-field {
+  display: grid;
+  gap: 6px;
+}
+
+.store-cart-variant-field > span {
+  color: rgba(225, 237, 239, 0.58);
+  font: 700 0.58rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.12em;
+}
+
+.store-cart-variant-field select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid rgba(220, 236, 238, 0.16);
+  border-left: 3px solid rgba(176, 38, 255, 0.62);
+  border-radius: 4px;
+  background: #101617;
+  color: #edf5f5;
+  font: 650 0.78rem 'Space Grotesk', system-ui, sans-serif;
+}
+
+.store-cart-add-button {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 14px;
+  border: 1px solid rgba(214, 234, 236, 0.18);
+  border-left: 3px solid #a73be3;
+  border-radius: 4px;
+  background: rgba(176, 38, 255, 0.075);
+  color: #f0f5f5;
+  cursor: pointer;
+  font: 750 0.68rem 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: 0.08em;
+}
+
+.store-cart-add-button:hover:not(:disabled),
+.store-cart-add-button:focus-visible {
+  border-color: rgba(197, 100, 247, 0.58);
+  background: rgba(176, 38, 255, 0.13);
+}
+
+.store-cart-add-button:focus-visible,
+.store-cart-trigger:focus-visible,
+.store-cart-close:focus-visible,
+.store-cart-line-actions button:focus-visible,
+.store-cart-footer-actions button:focus-visible,
+.store-cart-variant-field select:focus-visible {
+  outline: 3px solid rgba(147, 220, 228, 0.82);
+  outline-offset: 2px;
+}
+
+.store-cart-add-button:disabled {
+  cursor: default;
+  opacity: 0.58;
+}
+
+.store-cart-add-button strong {
+  min-width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(230, 240, 242, 0.19);
+  background: rgba(255, 255, 255, 0.045);
+  font: 750 0.66rem 'IBM Plex Mono', monospace;
+}
+
+.store-cart-trigger {
+  position: fixed;
+  z-index: 108;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  min-width: 172px;
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 2px 12px;
+  padding: 9px 12px 9px 15px;
+  border: 1px solid rgba(223, 239, 241, 0.19);
+  border-left: 4px solid #b026ff;
+  border-bottom: 3px solid rgba(114, 202, 211, 0.7);
+  border-radius: 6px;
+  background: rgba(10, 15, 17, 0.96);
+  color: #eff6f6;
+  box-shadow: 0 15px 38px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+.store-cart-trigger > span {
+  justify-self: start;
+  font: 800 0.68rem 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: 0.1em;
+}
+
+.store-cart-trigger > strong {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  min-width: 35px;
+  min-height: 35px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(229, 240, 242, 0.18);
+  background: rgba(176, 38, 255, 0.13);
+  font: 800 0.76rem 'IBM Plex Mono', monospace;
+}
+
+.store-cart-trigger > small {
+  justify-self: start;
+  color: #9fb0b2;
+  font: 650 0.64rem 'IBM Plex Mono', monospace;
+}
+
+.store-cart-backdrop {
+  position: fixed;
+  z-index: 220;
+  inset: 0;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(3, 6, 7, 0.7);
+  backdrop-filter: blur(5px);
+}
+
+.store-cart-panel {
+  width: min(470px, 100%);
+  min-height: 100svh;
+  max-height: 100svh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  border-left: 1px solid rgba(223, 239, 241, 0.16);
+  border-top: 4px solid #b026ff;
+  background: #0d1214;
+  color: #edf5f5;
+  box-shadow: -22px 0 60px rgba(0, 0, 0, 0.44);
+}
+
+.store-cart-panel-header {
+  min-height: 86px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: max(16px, env(safe-area-inset-top)) 18px 14px;
+  border-bottom: 1px solid rgba(221, 237, 239, 0.12);
+}
+
+.store-cart-panel-header > div {
+  display: grid;
+  gap: 5px;
+}
+
+.store-cart-panel-header small {
+  color: #aab9bb;
+  font: 650 0.58rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.12em;
+}
+
+.store-cart-panel-header h2 {
+  margin: 0;
+  font: 780 1.28rem 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: 0.08em;
+}
+
+.store-cart-close {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(222, 239, 241, 0.16);
+  border-radius: 50%;
+  background: transparent;
+  color: #eaf3f3;
+  cursor: pointer;
+  font-size: 1.5rem;
+}
+
+.store-cart-panel-body {
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 8px 18px 20px;
+}
+
+.store-cart-line {
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(222, 239, 241, 0.11);
+}
+
+.store-cart-line-heading {
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+}
+
+.store-cart-line-heading > span {
+  min-height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(197, 100, 247, 0.33);
+  border-left-width: 3px;
+  color: #d7afea;
+  font: 750 0.62rem 'IBM Plex Mono', monospace;
+}
+
+.store-cart-line-heading > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.store-cart-line-heading strong {
+  font: 720 0.86rem 'Space Grotesk', system-ui, sans-serif;
+}
+
+.store-cart-line-heading small {
+  color: #8fa0a2;
+  font: 600 0.63rem 'IBM Plex Mono', monospace;
+}
+
+.store-cart-price-warning,
+.store-cart-global-warning {
+  margin: 10px 0 0;
+  padding-left: 10px;
+  border-left: 2px solid #e8b85a;
+  color: #d9c49b;
+  font: 650 0.61rem/1.55 'IBM Plex Mono', monospace;
+  letter-spacing: 0.02em;
+}
+
+.store-cart-line-actions {
+  display: grid;
+  grid-template-columns: auto minmax(90px, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin-top: 13px;
+}
+
+.store-cart-line-actions > strong {
+  justify-self: end;
+  font: 760 0.8rem 'IBM Plex Mono', monospace;
+}
+
+.store-cart-stepper {
+  display: grid;
+  grid-template-columns: 34px 38px 34px;
+  min-height: 34px;
+  border: 1px solid rgba(220, 237, 239, 0.15);
+}
+
+.store-cart-stepper button,
+.store-cart-remove {
+  border: 0;
+  background: rgba(255, 255, 255, 0.025);
+  color: #edf5f5;
+  cursor: pointer;
+}
+
+.store-cart-stepper button:disabled {
+  cursor: default;
+  opacity: 0.32;
+}
+
+.store-cart-stepper output {
+  display: grid;
+  place-items: center;
+  border-right: 1px solid rgba(220, 237, 239, 0.11);
+  border-left: 1px solid rgba(220, 237, 239, 0.11);
+  font: 700 0.68rem 'IBM Plex Mono', monospace;
+}
+
+.store-cart-single {
+  min-width: 36px;
+  color: #95a6a8;
+  font: 700 0.67rem 'IBM Plex Mono', monospace;
+}
+
+.store-cart-remove {
+  padding: 6px 0 6px 8px;
+  color: #a7b5b7;
+  font: 700 0.55rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+}
+
+.store-cart-remove:hover {
+  color: #f17f88;
+}
+
+.store-cart-empty {
+  min-height: 42vh;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.store-cart-empty > span {
+  color: #a44bd4;
+  font-size: 2.1rem;
+}
+
+.store-cart-empty strong {
+  font: 760 0.82rem 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: 0.1em;
+}
+
+.store-cart-empty p {
+  max-width: 240px;
+  margin: 0;
+  color: #839496;
+  font: 600 0.68rem/1.55 'IBM Plex Mono', monospace;
+}
+
+.store-cart-panel-footer {
+  padding: 14px 18px max(16px, env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(223, 239, 241, 0.13);
+  background: #0a0f11;
+}
+
+.store-cart-global-warning {
+  margin: 0 0 12px;
+}
+
+.store-cart-total {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 13px;
+}
+
+.store-cart-total span {
+  color: #91a2a4;
+  font: 700 0.58rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.11em;
+}
+
+.store-cart-total strong {
+  font: 780 1.12rem 'Space Grotesk', system-ui, sans-serif;
+}
+
+.store-cart-footer-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.store-cart-footer-actions button {
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  font: 750 0.6rem 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: 0.08em;
+}
+
+.store-cart-footer-actions button:disabled {
+  cursor: default;
+  opacity: 0.34;
+}
+
+.store-cart-copy {
+  border: 1px solid rgba(114, 202, 211, 0.38);
+  border-left: 3px solid #72cad3;
+  background: rgba(114, 202, 211, 0.07);
+  color: #eaf5f5;
+}
+
+.store-cart-clear {
+  border: 1px solid rgba(224, 74, 86, 0.26);
+  background: transparent;
+  color: #b7c1c2;
+}
+
+.store-cart-clear.is-confirming {
+  border-color: rgba(236, 90, 101, 0.66);
+  color: #f08c94;
+}
+
+.store-cart-checkout-note {
+  display: block;
+  margin-top: 10px;
+  color: #728285;
+  font: 550 0.55rem/1.45 'IBM Plex Mono', monospace;
+}
+
+@media (max-width: 620px) {
+  .store-cart-trigger {
+    min-width: 158px;
+    right: max(10px, env(safe-area-inset-right));
+    bottom: max(10px, env(safe-area-inset-bottom));
+  }
+
+  .store-cart-panel {
+    width: 100%;
+    border-left: 0;
+  }
+
+  .store-cart-panel-body,
+  .store-cart-panel-footer {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .store-cart-line-actions {
+    grid-template-columns: auto 1fr;
+  }
+
+  .store-cart-remove {
+    grid-column: 1 / -1;
+    justify-self: start;
+    padding-left: 0;
+  }
+}
