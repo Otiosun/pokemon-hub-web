@@ -114,7 +114,8 @@ function CartLine({
 
       <div className="store-cart-line-actions">
         {resolved.maxQuantity > 1 ? (
-          <div className="store-cart-stepper" role="group" aria-label={`Quantidade de ${title}`}>
+          <fieldset className="store-cart-stepper">
+            <legend>Quantidade de {title}</legend>
             <button type="button" onClick={() => onQuantity(line.sku, line.quantity - 1)} aria-label="Diminuir quantidade">
               −
             </button>
@@ -127,7 +128,7 @@ function CartLine({
             >
               +
             </button>
-          </div>
+          </fieldset>
         ) : (
           <span className="store-cart-single">1×</span>
         )}
