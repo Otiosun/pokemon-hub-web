@@ -10,6 +10,10 @@ export function championStoreDisplayPrice(product: ChampionStoreProduct): string
   return `A partir de ${formatBrl(lowestPrice)}`;
 }
 
+function setTextIfDifferent(node: HTMLElement | undefined | null, value: string): void {
+  if (node && node.textContent !== value) node.textContent = value;
+}
+
 function syncStoreCard(card: HTMLElement): void {
   const code = card.querySelector<HTMLElement>('.champion-store-code')?.textContent?.trim();
   if (!code) return;
@@ -17,20 +21,23 @@ function syncStoreCard(card: HTMLElement): void {
   const product = CHAMPION_STORE_BY_CODE.get(code);
   if (!product) return;
 
-  const price = card.querySelector<HTMLElement>('.champion-store-price strong');
-  if (price) price.textContent = championStoreDisplayPrice(product);
+  setTextIfDifferent(
+    card.querySelector<HTMLElement>('.champion-store-price strong'),
+    championStoreDisplayPrice(product),
+  );
 
   if (product.variants) {
     const renderedVariants = card.querySelectorAll<HTMLElement>('.champion-store-variants > div');
     product.variants.forEach((variant, index) => {
-      const renderedPrice = renderedVariants[index]?.querySelector<HTMLElement>('strong');
-      if (renderedPrice) renderedPrice.textContent = formatBrl(variant.unitPriceCents);
+      setTextIfDifferent(
+        renderedVariants[index]?.querySelector<HTMLElement>('strong'),
+        formatBrl(variant.unitPriceCents),
+      );
     });
   }
 
   if (product.code === '2XP') {
-    const firstParagraph = card.querySelector<HTMLElement>('.champion-store-copy p');
-    if (firstParagraph) firstParagraph.textContent = DOUBLE_XP_COPY;
+    setTextIfDifferent(card.querySelector<HTMLElement>('.champion-store-copy p'), DOUBLE_XP_COPY);
   }
 
   card.dataset.canonicalCommerce = 'true';
