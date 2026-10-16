@@ -51,6 +51,14 @@ export class BeyondMusicEngine {
     this.ensureContext();
     if (!this.context) return 'closed';
 
+    try {
+      await this.context.resume();
+    } catch {
+      // Browsers may reject resume outside a user gesture; the first interaction retries it.
+    }
+
+    if (this.context.state !== 'running') return this.context.state;
+
     if (this.nextLoopStart === 0) {
       this.nextLoopStart = this.context.currentTime + 0.08;
       this.scheduleLoop(this.nextLoopStart);
@@ -58,11 +66,6 @@ export class BeyondMusicEngine {
       this.startScheduler();
     }
 
-    try {
-      await this.context.resume();
-    } catch {
-      // Browsers may reject resume outside a user gesture; the first interaction retries it.
-    }
     return this.context.state;
   }
 
@@ -119,7 +122,7 @@ export class BeyondMusicEngine {
     if (this.timer !== null) return;
     this.timer = window.setInterval(() => {
       const context = this.context;
-      if (!context || this.destroyed) return;
+      if (!context || context.state !== 'running' || this.destroyed) return;
       while (this.nextLoopStart - context.currentTime < 6) {
         this.scheduleLoop(this.nextLoopStart);
         this.nextLoopStart += LOOP_SECONDS;
@@ -166,7 +169,7 @@ export class BeyondMusicEngine {
     amplitude: number,
     type: OscillatorType,
   ): void {
-    if (!this.context || !this.master) return;
+    if (!this.context || !this.master || this.context.state !== 'running') return;
     const oscillator = this.context.createOscillator();
     const gain = this.context.createGain();
     oscillator.type = type;
