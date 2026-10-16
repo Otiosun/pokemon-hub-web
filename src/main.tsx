@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import { ChampionStoreCartBridge } from './features/store/ChampionStoreCartBridge';
 import './styles.css';
 import './form-control-reset.css';
 import './pokedex-qa-fixes.css';
@@ -22,5 +23,6 @@ if (!root) {
 createRoot(root).render(
   <StrictMode>
     <App />
+    <ChampionStoreCartBridge />
   </StrictMode>,
 );
