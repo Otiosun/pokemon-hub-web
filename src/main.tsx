@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import { ChampionStoreCanonicalDisplaySync } from './features/store/ChampionStoreCanonicalDisplaySync';
 import { ChampionStoreCartBridge } from './features/store/ChampionStoreCartBridge';
 import './styles.css';
 import './form-control-reset.css';
@@ -24,6 +25,7 @@ if (!root) {
 createRoot(root).render(
   <StrictMode>
     <App />
+    <ChampionStoreCanonicalDisplaySync />
     <ChampionStoreCartBridge />
   </StrictMode>,
 );
