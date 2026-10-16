@@ -4,6 +4,33 @@ import { CHAMPION_STORE_BY_CODE, formatBrl, type ChampionStoreProduct } from './
 const DOUBLE_XP_COPY =
   'Durante 7 dias, os Pokémon do seu personagem recebem 2× a experiência concedida pelas atividades elegíveis. O bônus acelera o desenvolvimento dos Pokémon sem multiplicar Progressão do Treinador, dinheiro, itens, Pokédex ou chances aleatórias.';
 
+const STORE_LOCAL_ART_BY_CODE: Readonly<Record<string, { src: string; alt: string }>> = {
+  'P-U': {
+    src: '/champion-store/sprites/ultra-ball.png',
+    alt: 'Sprite de Ultra Ball representando o Pack Ultra',
+  },
+  'P-E': {
+    src: '/champion-store/sprites/luxury-ball.png',
+    alt: 'Sprite de Luxury Ball representando o Pack Especial',
+  },
+  CAP: {
+    src: '/champion-store/sprites/great-ball.png',
+    alt: 'Sprite de Great Ball representando o Pack do Capturador',
+  },
+  NOITE: {
+    src: '/champion-store/sprites/dusk-ball.png',
+    alt: 'Sprite de Dusk Ball representando o Pack Noturno',
+  },
+  AQUA: {
+    src: '/champion-store/sprites/dive-ball.png',
+    alt: 'Sprite de Dive Ball representando o Pack Aquático',
+  },
+  COL: {
+    src: '/champion-store/sprites/premier-ball.png',
+    alt: 'Sprite de Premier Ball representando a Caixa do Colecionador',
+  },
+};
+
 export function championStoreDisplayPrice(product: ChampionStoreProduct): string {
   if (!product.variants?.length) return formatBrl(product.unitPriceCents);
   const lowestPrice = Math.min(...product.variants.map((variant) => variant.unitPriceCents));
@@ -12,6 +39,16 @@ export function championStoreDisplayPrice(product: ChampionStoreProduct): string
 
 function setTextIfDifferent(node: HTMLElement | undefined | null, value: string): void {
   if (node && node.textContent !== value) node.textContent = value;
+}
+
+function syncStoreCardArt(card: HTMLElement, code: string): void {
+  const replacement = STORE_LOCAL_ART_BY_CODE[code];
+  if (!replacement) return;
+  const image = card.querySelector<HTMLImageElement>('.champion-store-card-art');
+  if (!image) return;
+  if (image.getAttribute('src') !== replacement.src) image.src = replacement.src;
+  if (image.alt !== replacement.alt) image.alt = replacement.alt;
+  image.hidden = false;
 }
 
 function syncStoreCard(card: HTMLElement): void {
@@ -40,6 +77,7 @@ function syncStoreCard(card: HTMLElement): void {
     setTextIfDifferent(card.querySelector<HTMLElement>('.champion-store-copy p'), DOUBLE_XP_COPY);
   }
 
+  syncStoreCardArt(card, product.code);
   card.dataset.canonicalCommerce = 'true';
 }
 
