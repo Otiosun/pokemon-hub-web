@@ -114,7 +114,7 @@ function CartLine({
 
       <div className="store-cart-line-actions">
         {resolved.maxQuantity > 1 ? (
-          <div className="store-cart-stepper" aria-label={`Quantidade de ${title}`}>
+          <div className="store-cart-stepper" role="group" aria-label={`Quantidade de ${title}`}>
             <button type="button" onClick={() => onQuantity(line.sku, line.quantity - 1)} aria-label="Diminuir quantidade">
               −
             </button>
@@ -260,9 +260,13 @@ export function ChampionStoreCartBridge() {
   };
 
   const overlay = open ? (
-    <div className="store-cart-backdrop" role="presentation" onMouseDown={(event) => {
-      if (event.target === event.currentTarget) setOpen(false);
-    }}>
+    <div className="store-cart-backdrop">
+      <button
+        type="button"
+        className="store-cart-dismiss-layer"
+        onClick={() => setOpen(false)}
+        aria-label="Fechar carrinho"
+      />
       <section className="store-cart-panel" role="dialog" aria-modal="true" aria-label="Carrinho da Champion Store">
         <header className="store-cart-panel-header">
           <div>
