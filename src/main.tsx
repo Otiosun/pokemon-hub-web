@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import { BeyondMusicPlayer } from './features/music/BeyondMusicPlayer';
 import { ChampionStoreCanonicalDisplaySync } from './features/store/ChampionStoreCanonicalDisplaySync';
 import { ChampionStoreCartBridge } from './features/store/ChampionStoreCartBridge';
 import './styles.css';
@@ -25,6 +26,7 @@ if (!root) {
 createRoot(root).render(
   <StrictMode>
     <App />
+    <BeyondMusicPlayer />
     <ChampionStoreCanonicalDisplaySync />
     <ChampionStoreCartBridge />
   </StrictMode>,
