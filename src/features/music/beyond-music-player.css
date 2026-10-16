@@ -1,0 +1,180 @@
+.beyond-music-player {
+  position: fixed;
+  z-index: 106;
+  left: max(14px, env(safe-area-inset-left));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  min-width: 286px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 10px 9px 12px;
+  border: 1px solid rgba(221, 238, 240, 0.16);
+  border-left: 4px solid #72cad3;
+  border-bottom: 3px solid rgba(176, 38, 255, 0.52);
+  border-radius: 6px;
+  background: rgba(10, 15, 17, 0.96);
+  color: #eef5f5;
+  box-shadow: 0 15px 38px rgba(0, 0, 0, 0.36);
+  backdrop-filter: blur(8px);
+}
+
+.beyond-music-player[data-playback='waiting'] {
+  border-left-color: #d5ad5e;
+}
+
+.beyond-music-player[data-playback='paused'] {
+  border-left-color: #65777a;
+}
+
+.beyond-music-track {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+}
+
+.beyond-music-note {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(114, 202, 211, 0.26);
+  background: rgba(114, 202, 211, 0.055);
+  color: #8ad5dc;
+  font-size: 1rem;
+}
+
+.beyond-music-track > div {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.beyond-music-track strong {
+  font: 800 0.64rem 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: 0.1em;
+}
+
+.beyond-music-track small,
+.beyond-music-track em {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: 'IBM Plex Mono', monospace;
+  font-style: normal;
+}
+
+.beyond-music-track small {
+  color: #87999b;
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.045em;
+}
+
+.beyond-music-track em {
+  color: #6c8f92;
+  font-size: 0.48rem;
+  font-weight: 650;
+  letter-spacing: 0.035em;
+}
+
+.beyond-music-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.beyond-music-controls button {
+  height: 34px;
+  border: 1px solid rgba(220, 237, 239, 0.15);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.025);
+  color: #e8f1f1;
+  cursor: pointer;
+}
+
+.beyond-music-controls button:hover,
+.beyond-music-controls button:focus-visible,
+.beyond-music-volume input:focus-visible {
+  border-color: rgba(114, 202, 211, 0.55);
+  outline: 2px solid rgba(114, 202, 211, 0.55);
+  outline-offset: 2px;
+}
+
+.beyond-music-play {
+  width: 36px;
+  font: 800 0.68rem 'IBM Plex Mono', monospace;
+}
+
+.beyond-music-mute {
+  min-width: 42px;
+  padding: 0 7px;
+  color: #acbabc;
+  font: 750 0.49rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+.beyond-music-volume {
+  width: 65px;
+  display: grid;
+  gap: 2px;
+}
+
+.beyond-music-volume span {
+  color: #718487;
+  font: 700 0.44rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+}
+
+.beyond-music-volume input {
+  width: 65px;
+  height: 12px;
+  margin: 0;
+  accent-color: #72cad3;
+  cursor: pointer;
+}
+
+@media (max-width: 720px) {
+  .beyond-music-player {
+    left: max(10px, env(safe-area-inset-left));
+    bottom: max(10px, env(safe-area-inset-bottom));
+    min-width: 0;
+    width: min(254px, calc(100vw - 188px));
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 7px 8px;
+  }
+
+  .beyond-music-track {
+    grid-template-columns: 26px minmax(0, 1fr);
+    gap: 7px;
+  }
+
+  .beyond-music-note {
+    width: 26px;
+    height: 26px;
+  }
+
+  .beyond-music-track small,
+  .beyond-music-track em,
+  .beyond-music-volume,
+  .beyond-music-mute {
+    display: none;
+  }
+}
+
+@media (max-width: 430px) {
+  .beyond-music-player {
+    width: 136px;
+  }
+
+  .beyond-music-track > div {
+    display: none;
+  }
+
+  .beyond-music-track {
+    grid-template-columns: 26px;
+  }
+}
