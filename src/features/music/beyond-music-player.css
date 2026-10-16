@@ -141,7 +141,7 @@
     left: max(10px, env(safe-area-inset-left));
     bottom: max(10px, env(safe-area-inset-bottom));
     min-width: 0;
-    width: min(254px, calc(100vw - 188px));
+    width: min(276px, calc(100vw - 188px));
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px;
     padding: 7px 8px;
@@ -159,15 +159,15 @@
 
   .beyond-music-track small,
   .beyond-music-track em,
-  .beyond-music-volume,
-  .beyond-music-mute {
+  .beyond-music-volume {
     display: none;
   }
 }
 
 @media (max-width: 430px) {
   .beyond-music-player {
-    width: 136px;
+    width: 196px;
+    grid-template-columns: 26px minmax(0, 1fr);
   }
 
   .beyond-music-track > div {
@@ -176,5 +176,16 @@
 
   .beyond-music-track {
     grid-template-columns: 26px;
+  }
+
+  .beyond-music-controls {
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 370px) {
+  .beyond-music-player {
+    bottom: max(78px, calc(env(safe-area-inset-bottom) + 68px));
+    width: 190px;
   }
 }
