@@ -5,6 +5,7 @@ import {
   type AdminPlayer360,
   type AdminPlayerSearchItem,
 } from '../../player-api/playerPortalAdminPlayersClient';
+import { AdminPremiumIdentityPanel } from './AdminPremiumIdentityPanel';
 import {
   classifyAdminPremiumSearch,
   maskedWhatsAppDigits,
@@ -166,6 +167,21 @@ export function AdminPremiumSupportPanel() {
     }
   };
 
+  const refreshSelectedPlayer = async () => {
+    if (searchState.status !== 'selected') return;
+    const current = searchState;
+    const result = await getAdminPlayer(current.player.player.id);
+    if (result.status === 'ok') {
+      setSearchState({ status: 'selected', query: current.query, player: result.player });
+      return;
+    }
+    if (result.status === 'forbidden' || result.status === 'unauthenticated') {
+      setSearchState({ status: 'forbidden' });
+      return;
+    }
+    setSearchState({ status: 'empty', query: current.query });
+  };
+
   const runSearch = async () => {
     const query = classifyAdminPremiumSearch(queryText);
     if (query.kind === 'empty') {
@@ -210,8 +226,8 @@ export function AdminPremiumSupportPanel() {
           <span>OWNER · ACESSO RESTRITO</span>
           <h2 id="premium-support-title">Premium & Suporte</h2>
           <p>
-            Centro de diagnóstico e operação comercial do jogador. Esta primeira camada é de leitura:
-            nenhuma compra, entitlement ou identidade é alterada por esta tela.
+            Centro de diagnóstico e operação comercial do jogador. Leituras sensíveis e mudanças de
+            identidade permanecem protegidas por autorização e auditoria do backend.
           </p>
         </div>
         <strong>SUPER-ADMIN</strong>
@@ -314,7 +330,9 @@ export function AdminPremiumSupportPanel() {
             ) : null}
           </section>
 
-          {selectedPlayer ? <PlayerSummary player={selectedPlayer} /> : (
+          {selectedPlayer ? (
+            <PlayerSummary player={selectedPlayer} />
+          ) : (
             <section className="premium-player-empty">
               <span>PLAYER 360</span>
               <strong>NENHUM JOGADOR SELECIONADO</strong>
@@ -335,8 +353,8 @@ export function AdminPremiumSupportPanel() {
             </article>
             <article>
               <span>IDENTIDADE</span>
-              <strong>LEITURA ATIVA</strong>
-              <small>Gate 4 · busca Baileys/JID protegida confirmada</small>
+              <strong>OPERAÇÃO PROTEGIDA</strong>
+              <small>Gate 4 · owner + revision + transação + auditoria</small>
             </article>
           </div>
         </div>
@@ -359,11 +377,7 @@ export function AdminPremiumSupportPanel() {
       ) : null}
 
       {activeSection === 'identity' ? (
-        <PendingDomain
-          gate="GATE 4"
-          title="Troca segura de número"
-          detail="O vínculo player_identities já foi identificado. A troca será transacional, recusará conflito com outro jogador e preservará o mesmo Player ID."
-        />
+        <AdminPremiumIdentityPanel player={selectedPlayer} onChanged={refreshSelectedPlayer} />
       ) : null}
 
       {activeSection === 'repair' ? (
