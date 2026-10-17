@@ -429,3 +429,75 @@
     padding-left: 0;
   }
 }
+
+/* Compact store utility: the trigger should read as an icon, not as another content card. */
+.store-cart-trigger {
+  width: 46px;
+  min-width: 46px;
+  height: 46px;
+  min-height: 46px;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  place-items: center;
+  gap: 0;
+  padding: 0;
+  border: 1px solid rgba(223, 239, 241, 0.16);
+  border-radius: 14px;
+  background: rgba(11, 16, 18, 0.94);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(10px);
+}
+
+.store-cart-trigger::before {
+  content: '';
+  width: 21px;
+  height: 21px;
+  display: block;
+  background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23eff6f6' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6.1'/%3E%3Ccircle cx='10' cy='20' r='1'/%3E%3Ccircle cx='18' cy='20' r='1'/%3E%3C/svg%3E");
+}
+
+.store-cart-trigger > span,
+.store-cart-trigger > small {
+  display: none;
+}
+
+.store-cart-trigger > strong {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  grid-row: auto;
+  grid-column: auto;
+  min-width: 19px;
+  min-height: 19px;
+  padding: 0 4px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #0b1012;
+  border-radius: 999px;
+  background: #b026ff;
+  color: #fff;
+  font: 800 0.56rem 'IBM Plex Mono', monospace;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+}
+
+.store-cart-trigger:hover {
+  border-color: rgba(197, 100, 247, 0.48);
+  background: rgba(20, 14, 24, 0.96);
+}
+
+@media (max-width: 620px) {
+  .store-cart-trigger {
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    min-height: 42px;
+    right: max(10px, env(safe-area-inset-right));
+    bottom: max(10px, env(safe-area-inset-bottom));
+    border-radius: 12px;
+  }
+
+  .store-cart-trigger::before {
+    width: 19px;
+    height: 19px;
+  }
+}
