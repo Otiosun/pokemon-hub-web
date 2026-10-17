@@ -50,6 +50,15 @@ export function resolveAdminProxyRoute(url: URL, requestMethod = 'GET'): AdminPr
     };
   }
 
+  if (url.pathname === '/api/hub/admin/player-identity' && requestMethod === 'POST') {
+    const playerId = url.searchParams.get('playerId');
+    if (playerId === null || !UUID_PATTERN.test(playerId)) return null;
+    return {
+      upstreamPath: `/v1/hub/admin/players/${playerId}/whatsapp-identity`,
+      allowedMethod: 'POST',
+    };
+  }
+
   if (url.pathname === '/api/hub/admin/reward-catalog') {
     return {
       upstreamPath: '/v1/hub/admin/reward-catalog',
