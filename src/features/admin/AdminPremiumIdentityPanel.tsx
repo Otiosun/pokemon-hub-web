@@ -15,7 +15,7 @@ interface AdminPremiumIdentityPanelProps {
 type SubmitState =
   | { status: 'idle' }
   | { status: 'submitting' }
-  | { status: 'success'; replayed: boolean }
+  | { status: 'success'; replayed: boolean; refreshFailed: boolean }
   | { status: 'error'; message: string };
 
 function activeWhatsApp(player: AdminPlayer360): string {
@@ -34,7 +34,7 @@ function rejectionMessage(result: Extract<AdminPlayerIdentityChangeResult, { sta
     case 'ADMIN_DOMAIN_OPERATION_REJECTED':
       return 'A troca foi recusada por conflito de identidade ou estado inconsistente. Confira o jogador e o número antes de repetir.';
     case 'ADMIN_IDEMPOTENCY_CONFLICT':
-      return 'Esta tentativa não corresponde mais à operação preparada. Gere uma nova tentativa.';
+      return 'Esta tentativa não corresponde mais à operação preparada. Altere o formulário para iniciar uma nova tentativa.';
     default:
       return `A operação foi recusada pelo backend (${result.code}).`;
   }
@@ -44,6 +44,7 @@ export function AdminPremiumIdentityPanel({ player, onChanged }: AdminPremiumIde
   const [newWhatsApp, setNewWhatsApp] = useState('');
   const [reason, setReason] = useState('');
   const [confirmed, setConfirmed] = useState(false);
+  const [attemptRequestId, setAttemptRequestId] = useState<string | null>(null);
   const [submitState, setSubmitState] = useState<SubmitState>({ status: 'idle' });
 
   const canSubmit = useMemo(
@@ -55,6 +56,11 @@ export function AdminPremiumIdentityPanel({ player, onChanged }: AdminPremiumIde
       submitState.status !== 'submitting',
     [confirmed, newWhatsApp, player, reason, submitState.status],
   );
+
+  const resetAttempt = () => {
+    setAttemptRequestId(null);
+    if (submitState.status !== 'idle') setSubmitState({ status: 'idle' });
+  };
 
   if (player === null) {
     return (
@@ -71,11 +77,13 @@ export function AdminPremiumIdentityPanel({ player, onChanged }: AdminPremiumIde
 
   const submit = async () => {
     if (!canSubmit) return;
+    const requestId = attemptRequestId ?? crypto.randomUUID();
+    if (attemptRequestId === null) setAttemptRequestId(requestId);
     setSubmitState({ status: 'submitting' });
 
     try {
       const result = await changeAdminPlayerWhatsAppIdentity(player.player.id, {
-        requestId: crypto.randomUUID(),
+        requestId,
         newWhatsApp: newWhatsApp.trim(),
         reason: reason.trim(),
         expectedRevision: player.player.revision,
@@ -101,12 +109,20 @@ export function AdminPremiumIdentityPanel({ player, onChanged }: AdminPremiumIde
       setNewWhatsApp('');
       setReason('');
       setConfirmed(false);
-      setSubmitState({ status: 'success', replayed: result.replayed });
-      await onChanged();
-    } catch (error) {
+      setAttemptRequestId(null);
+
+      let refreshFailed = false;
+      try {
+        await onChanged();
+      } catch {
+        refreshFailed = true;
+      }
+      setSubmitState({ status: 'success', replayed: result.replayed, refreshFailed });
+    } catch {
       setSubmitState({
         status: 'error',
-        message: error instanceof Error ? error.message : 'Falha inesperada ao trocar a identidade.',
+        message:
+          'Não foi possível confirmar a resposta da operação. Repita sem alterar o formulário: a mesma chave idempotente será reutilizada.',
       });
     }
   };
@@ -158,7 +174,7 @@ export function AdminPremiumIdentityPanel({ player, onChanged }: AdminPremiumIde
             value={newWhatsApp}
             onChange={(event) => {
               setNewWhatsApp(event.currentTarget.value);
-              if (submitState.status !== 'idle') setSubmitState({ status: 'idle' });
+              resetAttempt();
             }}
             placeholder="+55 79 99999-9999"
             autoComplete="off"
@@ -174,7 +190,7 @@ export function AdminPremiumIdentityPanel({ player, onChanged }: AdminPremiumIde
             value={reason}
             onChange={(event) => {
               setReason(event.currentTarget.value);
-              if (submitState.status !== 'idle') setSubmitState({ status: 'idle' });
+              resetAttempt();
             }}
             maxLength={2000}
             rows={3}
@@ -189,7 +205,7 @@ export function AdminPremiumIdentityPanel({ player, onChanged }: AdminPremiumIde
             checked={confirmed}
             onChange={(event) => {
               setConfirmed(event.currentTarget.checked);
-              if (submitState.status !== 'idle') setSubmitState({ status: 'idle' });
+              resetAttempt();
             }}
             disabled={submitState.status === 'submitting'}
           />
@@ -203,16 +219,18 @@ export function AdminPremiumIdentityPanel({ player, onChanged }: AdminPremiumIde
           <div className="premium-identity-feedback is-success" role="status">
             <strong>TROCA APLICADA</strong>
             <span>
-              {submitState.replayed
-                ? 'A operação já havia sido aplicada; o Player 360 foi atualizado.'
-                : 'O vínculo foi atualizado e o Player 360 foi recarregado.'}
+              {submitState.refreshFailed
+                ? 'A troca foi aplicada, mas o Player 360 não pôde ser recarregado. Recarregue o jogador antes de outra ação.'
+                : submitState.replayed
+                  ? 'A operação já havia sido aplicada; o Player 360 foi atualizado.'
+                  : 'O vínculo foi atualizado e o Player 360 foi recarregado.'}
             </span>
           </div>
         ) : null}
 
         {submitState.status === 'error' ? (
           <div className="premium-identity-feedback is-error" role="alert">
-            <strong>OPERAÇÃO NÃO APLICADA</strong>
+            <strong>OPERAÇÃO NÃO CONFIRMADA</strong>
             <span>{submitState.message}</span>
           </div>
         ) : null}
