@@ -1,5 +1,6 @@
 import { HubMenuTrigger } from '../../components/HubNavigation';
 import { usePlayerPortalAdmin } from '../../player-api/usePlayerPortalAdmin';
+import { AdminPremiumSupportPanel } from './AdminPremiumSupportPanel';
 import './admin-page.css';
 
 const MODULES = [
@@ -50,6 +51,14 @@ const MODULES = [
     prefixes: ['content.'],
     href: '/admin/content',
     cta: 'ABRIR CONTEÚDO',
+  },
+  {
+    id: 'premium',
+    title: 'PREMIUM & SUPORTE',
+    detail: 'Pedidos, benefícios, identidade, reparos e diagnóstico comercial do jogador.',
+    prefixes: [],
+    href: '/admin#premium',
+    cta: 'ABRIR CENTRAL PREMIUM',
   },
   {
     id: 'audit',
@@ -140,10 +149,19 @@ export function AdminPage() {
           {MODULES.map((module) => {
             const grants = relevantCapabilities(capabilities, module.prefixes);
             const alwaysAvailable = module.id === 'guide';
-            const ownerTeamModule = module.id === 'security' && state.admin.owner;
-            const href = ownerTeamModule ? '/admin/team' : module.href;
-            const available = alwaysAvailable || ownerTeamModule || grants.length > 0;
+            const ownerOnlyModule =
+              (module.id === 'security' || module.id === 'premium') && state.admin.owner;
+            const href = module.id === 'security' && ownerOnlyModule ? '/admin/team' : module.href;
+            const available = alwaysAvailable || ownerOnlyModule || grants.length > 0;
             const className = `admin-module-card${available ? ' is-authorized' : ' is-unavailable'}`;
+            const accessLabel =
+              module.id === 'guide'
+                ? 'Guia da equipe'
+                : module.id === 'premium'
+                  ? state.admin.owner
+                    ? 'Owner protegido'
+                    : 'Somente owner'
+                  : `${grants.length} permissões`;
             const content = (
               <>
                 <header>
@@ -152,8 +170,14 @@ export function AdminPage() {
                 </header>
                 <p>{module.detail}</p>
                 <footer>
-                  <span>{module.id === 'guide' ? 'Guia da equipe' : `${grants.length} permissões`}</span>
-                  <small>{href && available ? module.cta : module.id === 'content' ? 'AINDA NÃO DISPONÍVEL NA CENTRAL' : 'SEM INTERFACE WEB'}</small>
+                  <span>{accessLabel}</span>
+                  <small>
+                    {href && available
+                      ? module.cta
+                      : module.id === 'content'
+                        ? 'AINDA NÃO DISPONÍVEL NA CENTRAL'
+                        : 'SEM INTERFACE WEB'}
+                  </small>
                 </footer>
               </>
             );
@@ -169,6 +193,8 @@ export function AdminPage() {
             );
           })}
         </section>
+
+        {state.admin.owner ? <AdminPremiumSupportPanel /> : null}
 
         <section className="admin-capabilities">
           <header>
