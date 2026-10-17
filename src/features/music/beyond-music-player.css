@@ -1,49 +1,118 @@
 .beyond-music-player {
   position: fixed;
   z-index: 106;
-  left: max(14px, env(safe-area-inset-left));
-  bottom: max(16px, env(safe-area-inset-bottom));
-  min-width: 286px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 12px;
-  padding: 9px 10px 9px 12px;
-  border: 1px solid rgba(221, 238, 240, 0.16);
-  border-left: 4px solid #72cad3;
-  border-bottom: 3px solid rgba(176, 38, 255, 0.52);
-  border-radius: 6px;
-  background: rgba(10, 15, 17, 0.96);
+  left: max(12px, env(safe-area-inset-left));
+  bottom: max(12px, env(safe-area-inset-bottom));
   color: #eef5f5;
-  box-shadow: 0 15px 38px rgba(0, 0, 0, 0.36);
-  backdrop-filter: blur(8px);
 }
 
-.beyond-music-player[data-playback='waiting'] {
-  border-left-color: #d5ad5e;
+.beyond-music-launcher,
+.beyond-music-panel {
+  border: 1px solid rgba(220, 237, 239, 0.14);
+  background: rgba(11, 16, 18, 0.94);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(10px);
 }
 
-.beyond-music-player[data-playback='paused'] {
-  border-left-color: #65777a;
+.beyond-music-launcher {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 14px;
+  color: #eef5f5;
+  cursor: pointer;
+  overflow: visible;
+}
+
+.beyond-music-launcher:hover,
+.beyond-music-launcher:focus-visible,
+.beyond-music-collapse:hover,
+.beyond-music-collapse:focus-visible,
+.beyond-music-controls button:hover,
+.beyond-music-controls button:focus-visible,
+.beyond-music-volume input:focus-visible {
+  border-color: rgba(114, 202, 211, 0.5);
+  outline: 2px solid rgba(114, 202, 211, 0.5);
+  outline-offset: 2px;
+}
+
+.beyond-music-launcher img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.28));
+}
+
+.beyond-music-launcher-note {
+  position: absolute;
+  right: -4px;
+  top: -5px;
+  min-width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(220, 237, 239, 0.18);
+  border-radius: 999px;
+  background: #101719;
+  color: #91d7de;
+  font-size: 0.66rem;
+  line-height: 1;
+}
+
+.beyond-music-status-dot {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #6f7c7e;
+  box-shadow: 0 0 0 2px rgba(10, 15, 17, 0.9);
+}
+
+.beyond-music-player[data-playback='playing'] .beyond-music-status-dot {
+  background: #72cad3;
+}
+
+.beyond-music-player[data-playback='waiting'] .beyond-music-status-dot {
+  background: #d5ad5e;
+}
+
+.beyond-music-panel {
+  width: min(248px, calc(100vw - 24px));
+  display: grid;
+  gap: 9px;
+  padding: 9px;
+  border-radius: 12px;
 }
 
 .beyond-music-track {
   min-width: 0;
   display: grid;
-  grid-template-columns: 30px minmax(0, 1fr);
+  grid-template-columns: 38px minmax(0, 1fr) 28px;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
 }
 
-.beyond-music-note {
-  width: 30px;
-  height: 30px;
+.beyond-music-sprite {
+  width: 38px;
+  height: 38px;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(114, 202, 211, 0.26);
-  background: rgba(114, 202, 211, 0.055);
-  color: #8ad5dc;
-  font-size: 1rem;
+  border: 1px solid rgba(114, 202, 211, 0.15);
+  border-radius: 10px;
+  background: rgba(114, 202, 211, 0.035);
+}
+
+.beyond-music-sprite img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  image-rendering: pixelated;
 }
 
 .beyond-music-track > div {
@@ -53,8 +122,8 @@
 }
 
 .beyond-music-track strong {
-  font: 800 0.64rem 'Space Grotesk', system-ui, sans-serif;
-  letter-spacing: 0.1em;
+  font: 800 0.62rem 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: 0.08em;
 }
 
 .beyond-music-track small,
@@ -68,124 +137,107 @@
 
 .beyond-music-track small {
   color: #87999b;
-  font-size: 0.5rem;
+  font-size: 0.48rem;
   font-weight: 600;
-  letter-spacing: 0.045em;
+  letter-spacing: 0.04em;
 }
 
 .beyond-music-track em {
   color: #6c8f92;
-  font-size: 0.48rem;
+  font-size: 0.46rem;
   font-weight: 650;
-  letter-spacing: 0.035em;
+}
+
+.beyond-music-collapse {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(220, 237, 239, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.018);
+  color: #aab8ba;
+  cursor: pointer;
+  font: 800 0.82rem 'IBM Plex Mono', monospace;
 }
 
 .beyond-music-controls {
-  display: flex;
+  display: grid;
+  grid-template-columns: 34px 42px minmax(0, 1fr);
   align-items: center;
   gap: 6px;
 }
 
 .beyond-music-controls button {
-  height: 34px;
-  border: 1px solid rgba(220, 237, 239, 0.15);
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.025);
+  height: 32px;
+  border: 1px solid rgba(220, 237, 239, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
   color: #e8f1f1;
   cursor: pointer;
 }
 
-.beyond-music-controls button:hover,
-.beyond-music-controls button:focus-visible,
-.beyond-music-volume input:focus-visible {
-  border-color: rgba(114, 202, 211, 0.55);
-  outline: 2px solid rgba(114, 202, 211, 0.55);
-  outline-offset: 2px;
-}
-
 .beyond-music-play {
-  width: 36px;
-  font: 800 0.68rem 'IBM Plex Mono', monospace;
+  width: 34px;
+  font: 800 0.66rem 'IBM Plex Mono', monospace;
 }
 
 .beyond-music-mute {
   min-width: 42px;
-  padding: 0 7px;
+  padding: 0 6px;
   color: #acbabc;
-  font: 750 0.49rem 'IBM Plex Mono', monospace;
-  letter-spacing: 0.05em;
+  font: 750 0.47rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.04em;
 }
 
 .beyond-music-volume {
-  width: 65px;
+  min-width: 0;
   display: grid;
-  gap: 2px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
 }
 
 .beyond-music-volume span {
   color: #718487;
-  font: 700 0.44rem 'IBM Plex Mono', monospace;
-  letter-spacing: 0.08em;
+  font: 700 0.43rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.06em;
 }
 
 .beyond-music-volume input {
-  width: 65px;
+  width: 100%;
+  min-width: 0;
   height: 12px;
   margin: 0;
   accent-color: #72cad3;
   cursor: pointer;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 430px) {
   .beyond-music-player {
     left: max(10px, env(safe-area-inset-left));
     bottom: max(10px, env(safe-area-inset-bottom));
-    min-width: 0;
-    width: min(276px, calc(100vw - 188px));
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 8px;
-    padding: 7px 8px;
   }
 
-  .beyond-music-track {
-    grid-template-columns: 26px minmax(0, 1fr);
-    gap: 7px;
+  .beyond-music-launcher {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
   }
 
-  .beyond-music-note {
-    width: 26px;
-    height: 26px;
+  .beyond-music-launcher img {
+    width: 36px;
+    height: 36px;
   }
 
-  .beyond-music-track small,
-  .beyond-music-track em,
-  .beyond-music-volume {
-    display: none;
-  }
-}
-
-@media (max-width: 430px) {
-  .beyond-music-player {
-    width: 196px;
-    grid-template-columns: 26px minmax(0, 1fr);
-  }
-
-  .beyond-music-track > div {
-    display: none;
-  }
-
-  .beyond-music-track {
-    grid-template-columns: 26px;
-  }
-
-  .beyond-music-controls {
-    justify-content: flex-end;
+  .beyond-music-panel {
+    width: min(232px, calc(100vw - 20px));
   }
 }
 
 @media (max-width: 370px) {
   .beyond-music-player {
-    bottom: max(78px, calc(env(safe-area-inset-bottom) + 68px));
-    width: 190px;
+    bottom: max(72px, calc(env(safe-area-inset-bottom) + 62px));
   }
 }
