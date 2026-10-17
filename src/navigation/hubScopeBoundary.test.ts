@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import appSource from '../App.tsx?raw';
 import playerPortalClientSource from '../player-api/playerPortalClient.ts?raw';
 import cloudflareUatWorkerSource from '../player-api/cloudflareUatWorker.ts?raw';
-import adminPlayerIdentityProxySource from '../../api/hub/admin/player-identity.ts?raw';
+import adminProxySource from '../../api/hub/admin/[...path].ts?raw';
 import playerBattleProxySource from '../../api/hub/player/battle.ts?raw';
 import productIntegritySource from './productIntegrity.ts?raw';
 
@@ -10,7 +10,6 @@ const hubApiModules = import.meta.glob('../../api/hub/**/*.ts');
 
 const ALLOWED_HUB_API_MODULES = [
   '../../api/hub/admin/[...path].ts',
-  '../../api/hub/admin/player-identity.ts',
   '../../api/hub/auth/exchange.ts',
   '../../api/hub/player/battle.ts',
   '../../api/hub/player/inventory.ts',
@@ -42,13 +41,13 @@ describe('Hub scope boundary', () => {
     expect(Object.keys(hubApiModules).sort()).toEqual([...ALLOWED_HUB_API_MODULES].sort());
   });
 
-  it('keeps the sensitive player identity mutation on its dedicated admin POST proxy', () => {
-    expect(adminPlayerIdentityProxySource).toContain(
+  it('keeps the sensitive player identity mutation on the existing constrained admin proxy', () => {
+    expect(adminProxySource).toContain("url.pathname === '/api/hub/admin/player-identity'");
+    expect(adminProxySource).toContain(
       'upstreamPath: `/v1/hub/admin/players/${playerId}/whatsapp-identity`',
     );
-    expect(adminPlayerIdentityProxySource).toContain("allowedMethod: 'POST'");
-    expect(adminPlayerIdentityProxySource).not.toContain('/v1/hub/player/');
-    expect(adminPlayerIdentityProxySource).not.toContain('/battle/action');
+    expect(adminProxySource).toContain("allowedMethod: 'POST'");
+    expect(adminProxySource).not.toContain('/battle/action');
   });
 
   it('does not retain world travel or gameplay contracts in the browser client', () => {
