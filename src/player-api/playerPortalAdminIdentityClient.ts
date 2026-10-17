@@ -13,7 +13,8 @@ export type AdminPlayerIdentityChangeResult =
       replayed: boolean;
       result: Record<string, unknown> | null;
     }
-  | { status: 'unauthenticated' | 'forbidden' }
+  | { status: 'unauthenticated' }
+  | { status: 'forbidden' }
   | { status: 'rejected'; code: string };
 
 type Fetcher = typeof fetch;
