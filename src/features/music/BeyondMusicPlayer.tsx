@@ -10,6 +10,9 @@ import './beyond-music-player.css';
 
 type PlaybackStatus = 'starting' | 'playing' | 'waiting' | 'paused';
 
+const ROTOM_SPRITE =
+  'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/479.png';
+
 function loadSettings(): BeyondMusicSettings {
   if (typeof window === 'undefined') return DEFAULT_BEYOND_MUSIC_SETTINGS;
   try {
@@ -23,6 +26,7 @@ function loadSettings(): BeyondMusicSettings {
 export function BeyondMusicPlayer() {
   const [settings, setSettings] = useState<BeyondMusicSettings>(loadSettings);
   const [status, setStatus] = useState<PlaybackStatus>(settings.enabled ? 'starting' : 'paused');
+  const [expanded, setExpanded] = useState(false);
   const engineRef = useRef<BeyondMusicEngine | null>(null);
   const settingsRef = useRef(settings);
 
@@ -104,57 +108,89 @@ export function BeyondMusicPlayer() {
     status === 'playing'
       ? 'TOCANDO'
       : status === 'waiting'
-        ? 'COMEÇA AO TOCAR NA TELA'
+        ? 'TOQUE NA TELA PARA INICIAR'
         : status === 'starting'
           ? 'INICIANDO'
           : 'PAUSADA';
 
   return (
-    <aside className="beyond-music-player" data-playback={status} aria-label="Música do Pokémon Beyond">
-      <div className="beyond-music-track">
-        <span className="beyond-music-note" aria-hidden="true">♫</span>
-        <div>
-          <strong>BEYOND FM</strong>
-          <small>ROTA DISTANTE · ORIGINAL</small>
-          <em>{statusLabel}</em>
-        </div>
-      </div>
+    <aside
+      className="beyond-music-player"
+      data-playback={status}
+      data-expanded={expanded ? 'true' : 'false'}
+      aria-label="Música do Pokémon Beyond"
+    >
+      {!expanded ? (
+        <button
+          type="button"
+          className="beyond-music-launcher"
+          onClick={() => setExpanded(true)}
+          aria-label={`Abrir player de música · ${statusLabel}`}
+          aria-expanded="false"
+          aria-controls="beyond-music-panel"
+        >
+          <img src={ROTOM_SPRITE} alt="" aria-hidden="true" />
+          <span className="beyond-music-launcher-note" aria-hidden="true">♫</span>
+          <span className="beyond-music-status-dot" aria-hidden="true" />
+        </button>
+      ) : (
+        <section id="beyond-music-panel" className="beyond-music-panel">
+          <header className="beyond-music-track">
+            <span className="beyond-music-sprite" aria-hidden="true">
+              <img src={ROTOM_SPRITE} alt="" />
+            </span>
+            <div>
+              <strong>BEYOND FM</strong>
+              <small>ROTA DISTANTE</small>
+              <em>{statusLabel}</em>
+            </div>
+            <button
+              type="button"
+              className="beyond-music-collapse"
+              onClick={() => setExpanded(false)}
+              aria-label="Minimizar player de música"
+            >
+              −
+            </button>
+          </header>
 
-      <div className="beyond-music-controls">
-        <button
-          type="button"
-          className="beyond-music-play"
-          onClick={() => void togglePlayback()}
-          aria-label={settings.enabled ? 'Pausar música' : 'Tocar música'}
-          aria-pressed={settings.enabled}
-        >
-          {settings.enabled ? 'Ⅱ' : '▶'}
-        </button>
-        <button
-          type="button"
-          className="beyond-music-mute"
-          onClick={() => setSettings((current) => ({ ...current, muted: !current.muted }))}
-          aria-label={settings.muted ? 'Ativar som' : 'Silenciar música'}
-          aria-pressed={settings.muted}
-        >
-          {settings.muted ? 'MUDO' : 'SOM'}
-        </button>
-        <label className="beyond-music-volume">
-          <span>VOL</span>
-          <input
-            type="range"
-            min="0"
-            max="65"
-            step="1"
-            value={Math.round(settings.volume * 100)}
-            onChange={(event) => {
-              const volume = Number(event.currentTarget.value) / 100;
-              setSettings((current) => ({ ...current, volume }));
-            }}
-            aria-label="Volume da música"
-          />
-        </label>
-      </div>
+          <div className="beyond-music-controls">
+            <button
+              type="button"
+              className="beyond-music-play"
+              onClick={() => void togglePlayback()}
+              aria-label={settings.enabled ? 'Pausar música' : 'Tocar música'}
+              aria-pressed={settings.enabled}
+            >
+              {settings.enabled ? 'Ⅱ' : '▶'}
+            </button>
+            <button
+              type="button"
+              className="beyond-music-mute"
+              onClick={() => setSettings((current) => ({ ...current, muted: !current.muted }))}
+              aria-label={settings.muted ? 'Ativar som' : 'Silenciar música'}
+              aria-pressed={settings.muted}
+            >
+              {settings.muted ? 'MUDO' : 'SOM'}
+            </button>
+            <label className="beyond-music-volume">
+              <span>VOL</span>
+              <input
+                type="range"
+                min="0"
+                max="65"
+                step="1"
+                value={Math.round(settings.volume * 100)}
+                onChange={(event) => {
+                  const volume = Number(event.currentTarget.value) / 100;
+                  setSettings((current) => ({ ...current, volume }));
+                }}
+                aria-label="Volume da música"
+              />
+            </label>
+          </div>
+        </section>
+      )}
     </aside>
   );
 }
