@@ -25,7 +25,6 @@ type SearchState =
   | { status: 'loading'; query: AdminPremiumSearchQuery }
   | { status: 'results'; query: AdminPremiumSearchQuery; players: AdminPlayerSearchItem[] }
   | { status: 'selected'; query: AdminPremiumSearchQuery; player: AdminPlayer360 }
-  | { status: 'phone-pending'; query: Extract<AdminPremiumSearchQuery, { kind: 'whatsapp' }> }
   | { status: 'empty'; query: AdminPremiumSearchQuery }
   | { status: 'forbidden' }
   | { status: 'error'; message: string };
@@ -174,19 +173,15 @@ export function AdminPremiumSupportPanel() {
       return;
     }
 
-    if (query.kind === 'whatsapp') {
-      setSearchState({ status: 'phone-pending', query });
-      return;
-    }
-
     if (query.kind === 'uuid') {
       await selectPlayer(query.playerId, query);
       return;
     }
 
+    const backendQuery = query.kind === 'whatsapp' ? query.externalId : query.trainerNamePrefix;
     setSearchState({ status: 'loading', query });
     try {
-      const result = await searchAdminPlayers({ query: query.trainerNamePrefix, limit: 20 });
+      const result = await searchAdminPlayers({ query: backendQuery, limit: 20 });
       if (result.status !== 'ok') {
         setSearchState({ status: 'forbidden' });
         return;
@@ -268,20 +263,9 @@ export function AdminPremiumSupportPanel() {
 
             {searchState.status === 'idle' ? (
               <p className="premium-search-hint">
-                Nome e UUID consultam o Player360 atual. WhatsApp é reconhecido e normalizado, mas a
-                leitura sensível permanece bloqueada até a rota administrativa ser conectada.
+                Nome, UUID e WhatsApp consultam o Player360 atual. Números são normalizados para a
+                identidade Baileys canônica e exigem a permissão sensível do backend.
               </p>
-            ) : null}
-
-            {searchState.status === 'phone-pending' ? (
-              <div className="premium-search-notice is-warning">
-                <strong>WHATSAPP IDENTIFICADO</strong>
-                <span>{maskedWhatsAppDigits(searchState.query.digits)}</span>
-                <p>
-                  Identidade canônica preparada como <code>baileys</code>. A rota HTTP sensível ainda
-                  não foi ligada; nenhuma busca falsa foi executada.
-                </p>
-              </div>
             ) : null}
 
             {searchState.status === 'empty' ? (
@@ -351,8 +335,8 @@ export function AdminPremiumSupportPanel() {
             </article>
             <article>
               <span>IDENTIDADE</span>
-              <strong>LEITURA MAPEADA</strong>
-              <small>Gate 4 · Baileys/JID canônico confirmado</small>
+              <strong>LEITURA ATIVA</strong>
+              <small>Gate 4 · busca Baileys/JID protegida confirmada</small>
             </article>
           </div>
         </div>
