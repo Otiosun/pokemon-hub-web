@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import appSource from '../App.tsx?raw';
 import playerPortalClientSource from '../player-api/playerPortalClient.ts?raw';
 import cloudflareUatWorkerSource from '../player-api/cloudflareUatWorker.ts?raw';
+import adminPlayerIdentityProxySource from '../../api/hub/admin/player-identity.ts?raw';
 import playerBattleProxySource from '../../api/hub/player/battle.ts?raw';
 import productIntegritySource from './productIntegrity.ts?raw';
 
@@ -9,6 +10,7 @@ const hubApiModules = import.meta.glob('../../api/hub/**/*.ts');
 
 const ALLOWED_HUB_API_MODULES = [
   '../../api/hub/admin/[...path].ts',
+  '../../api/hub/admin/player-identity.ts',
   '../../api/hub/auth/exchange.ts',
   '../../api/hub/player/battle.ts',
   '../../api/hub/player/inventory.ts',
@@ -36,8 +38,17 @@ const FORBIDDEN_GAMEPLAY_PATH_FRAGMENTS = [
 ] as const;
 
 describe('Hub scope boundary', () => {
-  it('exposes only companion/admin reads, auth, profile customization, roster organization and move learning through the same-origin Hub API', () => {
+  it('exposes only approved companion, auth and administrative Hub APIs', () => {
     expect(Object.keys(hubApiModules).sort()).toEqual([...ALLOWED_HUB_API_MODULES].sort());
+  });
+
+  it('keeps the sensitive player identity mutation on its dedicated admin POST proxy', () => {
+    expect(adminPlayerIdentityProxySource).toContain(
+      'upstreamPath: `/v1/hub/admin/players/${playerId}/whatsapp-identity`',
+    );
+    expect(adminPlayerIdentityProxySource).toContain("allowedMethod: 'POST'");
+    expect(adminPlayerIdentityProxySource).not.toContain('/v1/hub/player/');
+    expect(adminPlayerIdentityProxySource).not.toContain('/battle/action');
   });
 
   it('does not retain world travel or gameplay contracts in the browser client', () => {
