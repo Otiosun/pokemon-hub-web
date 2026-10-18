@@ -407,3 +407,103 @@
   visibility: hidden;
   pointer-events: none;
 }
+
+/* BEYOND FM / four-track local shuffle. The original Rotom silhouette,
+   electric outline, mini/expanded measurement and palette stay untouched. */
+.beyond-music-panel { width: min(272px, calc(100vw - 24px)); gap: 7px; }
+.beyond-music-controls {
+  grid-template-columns: 28px 34px 28px 42px minmax(44px, 1fr);
+  gap: 5px;
+}
+.beyond-music-controls .beyond-music-skip {
+  width: 28px;
+  font-size: 1.4rem;
+  font-weight: 500;
+  line-height: 1;
+}
+.beyond-music-controls button:disabled { opacity: 0.38; cursor: not-allowed; }
+.beyond-music-track small { font-size: 0.51rem; color: #b8d9df; }
+.beyond-music-track em { color: #80a0a5; }
+.beyond-fm-timeline {
+  display: grid;
+  grid-template-columns: 28px minmax(0,1fr) 28px;
+  align-items: center;
+  gap: 7px;
+  color: #7d989e;
+  font: 500 0.53rem 'IBM Plex Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+.beyond-fm-timeline > span:last-child { text-align: right; }
+.beyond-fm-timeline-track {
+  height: 3px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(110, 151, 160, 0.24);
+}
+.beyond-fm-timeline-track > div {
+  height: 100%;
+  border-radius: inherit;
+  background: #8edbe5;
+  box-shadow: 0 0 7px rgba(115,226,240,.52);
+}
+.beyond-fm-playlist-heading {
+  display: flex; align-items: baseline; justify-content: space-between;
+  flex-wrap: wrap; gap: 3px;
+  margin-top: 1px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.beyond-fm-playlist-heading strong { color: #9acbd3; font-size: 0.5rem; letter-spacing: 0.075em; }
+.beyond-fm-playlist-heading span { color: #6d888e; font-size: 0.42rem; letter-spacing: 0.025em; }
+.beyond-fm-playlist { display: grid; gap: 2px; }
+.beyond-fm-track-row {
+  display: grid; grid-template-columns: 18px minmax(0,1fr) auto;
+  gap: 6px; align-items: center;
+  padding: 5px 6px;
+  min-height: 32px; width: 100%;
+  border: 1px solid transparent; border-radius: 5px;
+  color: #bdcdd1; background: transparent;
+  text-align: left; cursor: pointer;
+}
+.beyond-fm-track-row:hover:not(:disabled),.beyond-fm-track-row:focus-visible {
+  background: rgba(118,216,233,.08);
+  border-color: rgba(118,216,233,.3);
+  outline-offset: 1px;
+}
+.beyond-fm-track-row.is-current {
+  background: rgba(73,189,210,.1);
+  border-color: rgba(98,216,234,.28);
+}
+.beyond-fm-track-row:disabled { opacity: .67; cursor: default; }
+.beyond-fm-track-number, .beyond-fm-track-duration {
+  color: #6e979d; font: 620 0.52rem 'IBM Plex Mono', monospace;
+}
+.beyond-fm-track-row.is-current .beyond-fm-track-number { color: #9ceffc; }
+.beyond-fm-track-details { min-width: 0; display: grid; gap: 1px; }
+.beyond-fm-track-details strong {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: #d6e5e8;
+  font: 650 0.6rem 'Space Grotesk', sans-serif;
+}
+.beyond-fm-track-details small {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: #75949a; font: 520 0.5rem 'IBM Plex Mono', monospace;
+}
+.beyond-fm-import {
+  width: 100%; min-height: 29px; padding: 6px 9px;
+  border: 1px solid rgba(100,212,235,.26);
+  border-radius: 5px;
+  color: #a8dbe5; background: rgba(63,190,215,.065);
+  cursor: pointer; font: 690 .51rem 'IBM Plex Mono', monospace;
+  letter-spacing: .04em;
+}
+.beyond-fm-import:hover:not(:disabled),.beyond-fm-import:focus-visible {
+  border-color: rgba(119,220,241,.65);
+  background: rgba(63,190,215,.12); outline-offset: 2px;
+}
+.beyond-fm-import:disabled { opacity: .5; cursor: wait; }
+.beyond-fm-hidden-input { display: none; }
+.beyond-fm-import-hint { color: #869b9f; margin: 0; font: 500 .55rem/1.5 'Space Grotesk', sans-serif; }
+.beyond-fm-import-hint.is-error { color: #e4adac; }
+@media (max-width: 430px) {
+  .beyond-music-panel { width: min(272px, calc(100vw - 20px)); }
+}
