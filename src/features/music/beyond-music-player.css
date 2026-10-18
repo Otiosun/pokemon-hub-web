@@ -601,32 +601,12 @@
 .beyond-fm-public-credit a:hover,
 .beyond-fm-public-credit a:focus-visible { color: #d5f4f4; text-decoration: underline; }
 
-/* Production player: normal listening has NO upload buttons.
-   Library management is an explicit, small action in the player header. */
+/* Ordinary listening has no uploader or library-management toggle.
+   Recovery tools mount only on the explicit ?fm-library=recovery URL. */
 .beyond-music-track {
-  grid-template-columns: 38px minmax(0, 1fr) 22px 28px;
+  grid-template-columns: 38px minmax(0, 1fr) 28px;
   gap: 6px;
 }
-.beyond-fm-settings-toggle {
-  width: 22px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  border: 1px solid rgba(220, 237, 239, 0.1);
-  border-radius: 7px;
-  background: rgba(255, 255, 255, 0.015);
-  color: #8ea8ae;
-  cursor: pointer;
-  font: 700 1rem/1 'IBM Plex Mono', monospace;
-}
-.beyond-fm-settings-toggle:hover,
-.beyond-fm-settings-toggle:focus-visible,
-.beyond-fm-settings-toggle[aria-expanded='true'] {
-  color: #c8e7ec;
-  border-color: rgba(114, 202, 211, .4);
-  outline-offset: 2px;
-}
-.beyond-fm-library-details[hidden] { display: none !important; }
 .beyond-fm-library-details > header {
   display: flex;
   justify-content: space-between;

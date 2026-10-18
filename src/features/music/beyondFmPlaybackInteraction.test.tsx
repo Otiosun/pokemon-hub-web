@@ -9,10 +9,10 @@ describe('Beyond FM Play interaction safety', () => {
     const play = html.match(/<button[^>]*class="beyond-music-play"[^>]*>/)?.[0] ?? '';
     expect(play).toContain('aria-label="Tocar música"');
     expect(play).not.toContain('disabled');
-    expect(html).toContain('IMPORTAR 4 MÚSICAS · ZIP/MP3');
+    expect(html).not.toContain('IMPORTAR 4 MÚSICAS · ZIP/MP3');
+    expect(html).not.toContain('MINHA BIBLIOTECA');
+    expect(html).not.toContain('beyond-fm-settings-toggle');
     expect(html).toContain('aria-expanded="false"');
-    expect(html).toMatch(/id="beyond-fm-library-management"[^>]*hidden=""/);
     expect(html).not.toContain('SUBSTITUIR SÓ ALOLA');
-    expect(html).toContain('MINHA BIBLIOTECA');
   });
 });

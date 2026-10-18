@@ -29,6 +29,11 @@ function clockText(seconds: number): string {
   return `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
 }
 
+/** An explicit recovery URL keeps technical controls out of the public player. */
+export function isFmLibraryRecoveryRoute(search: string): boolean {
+  return new URLSearchParams(search).get('fm-library') === 'recovery';
+}
+
 const ROTOM_SPRITE =
   'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/479.png';
 
@@ -109,6 +114,7 @@ function MusicElectricProgressFrame({
 }
 
 export function BeyondMusicPlayer() {
+  const recoveryMode = typeof window !== 'undefined' && isFmLibraryRecoveryRoute(window.location.search);
   const [settings, setSettings] = useState<BeyondMusicSettings>(loadSettings);
   const [status, setStatus] = useState<PlaybackStatus>(settings.enabled ? 'starting' : 'paused');
   const [expanded, setExpanded] = useState(false);
@@ -117,7 +123,6 @@ export function BeyondMusicPlayer() {
   const [demoProgress, setDemoProgress] = useState(0);
   const [library, setLibrary] = useState<'loading' | 'public' | 'importing' | 'ready'>('loading');
   const [storageWarning, setStorageWarning] = useState(false);
-  const [manageLibrary, setManageLibrary] = useState(false);
   const [importError, setImportError] = useState('');
   const [singleReplacement, setSingleReplacement] = useState<'idle' | 'saving' | 'saved' | 'failed'>('idle');
   const [replacementMessage, setReplacementMessage] = useState('');
@@ -442,12 +447,6 @@ export function BeyondMusicPlayer() {
               <small title={selectedTrack?.title}>{selectedTrack?.title ?? 'BEYOND FM'}</small>
               <em title={selectedTrack?.artist}>{selectedTrack ? `${selectedTrack.artist} · ${statusLabel}` : statusLabel}</em>
             </div>
-            <button type="button" className="beyond-fm-settings-toggle"
-              aria-label="Configurar biblioteca pessoal" aria-expanded={manageLibrary}
-              aria-controls="beyond-fm-library-management"
-              onClick={() => setManageLibrary((open) => !open)}>
-              <span aria-hidden="true">⋮</span>
-            </button>
             <button
               type="button"
               className="beyond-music-collapse"
@@ -526,8 +525,7 @@ export function BeyondMusicPlayer() {
             </a>
           </p>
 
-          <div id="beyond-fm-library-management" className="beyond-fm-library-details"
-            hidden={!manageLibrary}>
+          {recoveryMode ? <div id="beyond-fm-library-management" className="beyond-fm-library-details">
             <header>MINHA BIBLIOTECA <span>{privateLibrary ? '4 FAIXAS PESSOAIS' : 'OPCIONAL'}</span></header>
             <p>Use músicas do seu dispositivo. Os arquivos nunca são enviados ao servidor.</p>
             <input ref={inputRef} className="beyond-fm-hidden-input" type="file"
@@ -564,7 +562,7 @@ export function BeyondMusicPlayer() {
               O armazenamento está indisponível; a biblioteca poderá precisar de nova importação.
             </p> : null}
             {importError ? <p className="beyond-fm-import-hint is-error" role="alert">{importError}</p> : null}
-          </div>
+          </div> : null}
           {available && playbackIssue ? <p className="beyond-fm-import-hint is-error" role="alert">{playbackIssue}</p> : null}
           {available && status === 'waiting' ? (
             <p className="beyond-fm-import-hint" role="status">
