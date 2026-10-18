@@ -6,6 +6,7 @@ describe('Beyond FM shuffled audio engine', () => {
   it('plays five songs including the CC0 track without repeating, and keeps pause/resume state', async () => {
     let serial = 0;
     const audioInstances: AudioStub[] = [];
+    const createdAudioSources: string[] = [];
     class AudioStub {
       src: string;
       loop = false;
@@ -18,7 +19,7 @@ describe('Beyond FM shuffled audio engine', () => {
       currentTime = 0;
       onended: (() => void) | null = null;
       onerror: (() => void) | null = null;
-      constructor(src: string) { this.src = src; audioInstances.push(this); }
+      constructor(src: string) { this.src = src; audioInstances.push(this); createdAudioSources.push(src); }
       async play() { this.paused = false; }
       pause() { this.paused = true; }
       removeAttribute(name: string) { if (name === 'src') this.src = ''; }
@@ -64,7 +65,7 @@ describe('Beyond FM shuffled audio engine', () => {
     expect(selected).toHaveLength(5);
     expect(new Set(selected).size).toBe(5);
     expect(selected).toContain('town-theme');
-    expect(audioInstances.some((audio) => audio.src === PUBLIC_FM_SOURCE_URL)).toBe(true);
+    expect(createdAudioSources).toContain(PUBLIC_FM_SOURCE_URL);
     expect(engine.hasPersonalLibrary).toBe(true);
     const beforeReplacement = engine.trackId;
     const sameAudio = audioInstances.at(-1);
