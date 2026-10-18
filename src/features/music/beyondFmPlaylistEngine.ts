@@ -122,8 +122,9 @@ export class BeyondFmPlaylistEngine {
     if (!blob) return false;
     if (remember && this.active) this.history.push(this.active);
     this.disposeAudio();
-    this.objectUrl = blob instanceof Blob ? URL.createObjectURL(blob) : null;
-    const audio = new Audio(this.objectUrl ?? blob);
+    const source = typeof blob === 'string' ? blob : URL.createObjectURL(blob);
+    this.objectUrl = typeof blob === 'string' ? null : source;
+    const audio = new Audio(source);
     audio.preload = 'auto';
     audio.loop = this.isPublicStation;
     audio.volume = this.volume;
