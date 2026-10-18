@@ -241,3 +241,18 @@
     bottom: max(72px, calc(env(safe-area-inset-bottom) + 62px));
   }
 }
+
+.beyond-music-credit {
+  justify-self: start;
+  color: #849b9d;
+  font: 550 0.5rem 'IBM Plex Mono', monospace;
+  text-decoration: none;
+}
+.beyond-music-credit:hover,
+.beyond-music-credit:focus-visible {
+  color: #9fdae0;
+  text-decoration: underline;
+}
+.beyond-music-player[data-playback='unavailable'] .beyond-music-status-dot {
+  background: #d57b7b;
+}

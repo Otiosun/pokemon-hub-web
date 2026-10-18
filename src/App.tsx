@@ -129,7 +129,7 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
     artSrc: '/champion-store/blessing-luck.jpg',
     artAlt: 'Arte de Benção da Sorte do catálogo Pokémon Beyond',
     paragraphs: [
-      'A sorte está ao seu lado permanentemente. A Gamepass Sorte em Dobro aumenta permanentemente em 2× as chances de capturar os Pokémon durante encontros selvagens em Pokémon Beyond. A partir da aquisição, o bônus fica vinculado ao seu personagem e será aplicado automaticamente em todos os encontros elegíveis realizados durante sua jornada. Em cada encontro selvagem, o sistema realiza o sorteio normalmente. Com a sorte em Dobro, as chances correspondentes às categorias de raridade são modificadas de acordo com o multiplicador de sorte definido pelo RPG.',
+      'EM DESENVOLVIMENTO — Sorte em Dobro ainda não está disponível para novas compras. A regra definitiva, sua duração e os efeitos sobre encontros e capturas serão publicados após implementação e testes. Nenhum benefício é aplicado automaticamente pelo catálogo atual.',
     ],
   },
   {
@@ -231,7 +231,7 @@ const CHAMPION_STORE_OFFERS: readonly ChampionStoreOffer[] = [
     artAlt: 'Arte de XP em Dobro do catálogo Pokémon Beyond',
     duration: '7 DIAS',
     paragraphs: [
-      'Receba 2× a experiência obtida durante sua jornada em Pokémon Beyond, acelerando o desenvolvimento do seu personagem e permitindo alcançar novos níveis com mais rapidez. O item tem a duração de 7 dias.',
+      'Durante 7 dias, seus Pokémon recebem 2× a experiência nas batalhas automáticas elegíveis. O bônus não dobra a experiência do Treinador nem recursos do jogo.',
       'O bônus será aplicado à experiência recebida pelas atividades elegíveis durante o período de duração da Gamepass.',
     ],
   },

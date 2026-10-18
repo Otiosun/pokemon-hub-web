@@ -44,6 +44,11 @@ describe('champion store cart model', () => {
     expect(setChampionStoreQuantity(cart, 'P-U', 0)).toEqual([]);
   });
 
+  it('keeps not-yet-implemented products out of new and saved carts', () => {
+    expect(addChampionStoreSku([], 'LUCK')).toEqual([]);
+    expect(sanitizeChampionStoreCart([{ productCode: 'LUCK', quantity: 1 }])).toEqual([]);
+  });
+
   it('sanitizes stale or malformed persisted data without trusting the browser', () => {
     const cart = sanitizeChampionStoreCart([
       {

@@ -1,4 +1,4 @@
-import { resolveChampionStoreSku } from './championStoreCatalog';
+import { CHAMPION_STORE_BY_CODE, resolveChampionStoreSku } from './championStoreCatalog';
 
 export const CHAMPION_STORE_CART_STORAGE_KEY = 'pokemon-beyond:champion-store-cart:v1';
 
@@ -27,7 +27,7 @@ export function sanitizeChampionStoreCart(value: unknown): ChampionStoreCartLine
     const productCode = typeof record.productCode === 'string' ? record.productCode : '';
     const variantCode = typeof record.variantCode === 'string' ? record.variantCode : undefined;
     const resolved = resolveChampionStoreSku(productCode, variantCode);
-    if (!resolved) continue;
+    if (!resolved || CHAMPION_STORE_BY_CODE.get(resolved.productCode)?.available === false) continue;
 
     const quantity = safeQuantity(record.quantity, resolved.maxQuantity);
     const snapshot =
@@ -56,7 +56,7 @@ export function addChampionStoreSku(
   variantCode?: string,
 ): ChampionStoreCartLine[] {
   const resolved = resolveChampionStoreSku(productCode, variantCode);
-  if (!resolved) return [...cart];
+  if (!resolved || CHAMPION_STORE_BY_CODE.get(resolved.productCode)?.available === false) return [...cart];
 
   const existing = cart.find((line) => line.sku === resolved.sku);
   if (!existing) {
@@ -91,7 +91,9 @@ export function setChampionStoreQuantity(
   const line = cart.find((candidate) => candidate.sku === sku);
   if (!line) return [...cart];
   const resolved = resolveChampionStoreSku(line.productCode, line.variantCode);
-  if (!resolved) return cart.filter((candidate) => candidate.sku !== sku);
+  if (!resolved || CHAMPION_STORE_BY_CODE.get(resolved.productCode)?.available === false) {
+    return cart.filter((candidate) => candidate.sku !== sku);
+  }
   if (quantity <= 0) return cart.filter((candidate) => candidate.sku !== sku);
 
   return cart.map((candidate) =>

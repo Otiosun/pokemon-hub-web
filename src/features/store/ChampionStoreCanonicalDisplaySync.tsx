@@ -2,7 +2,7 @@ import { useLayoutEffect } from 'react';
 import { CHAMPION_STORE_BY_CODE, formatBrl, type ChampionStoreProduct } from './championStoreCatalog';
 
 const DOUBLE_XP_COPY =
-  'Durante 7 dias, os Pokémon do seu personagem recebem 2× a experiência concedida pelas atividades elegíveis. O bônus acelera o desenvolvimento dos Pokémon sem multiplicar Progressão do Treinador, dinheiro, itens, Pokédex ou chances aleatórias.';
+  'Durante 7 dias, os Pokémon recebem 2× a experiência das batalhas automáticas elegíveis. O bônus não dobra experiência do Treinador, dinheiro, itens, Pokédex, capturas ou sorte.';
 
 const STORE_LOCAL_ART_BY_CODE: Readonly<Record<string, { src: string; alt: string }>> = {
   'P-U': {

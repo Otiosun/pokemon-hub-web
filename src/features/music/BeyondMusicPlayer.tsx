@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { BeyondMusicEngine } from './beyondMusicEngine';
+import { BEYOND_MUSIC_SOURCE_PAGE, BeyondMusicEngine } from './beyondMusicEngine';
 import {
   BEYOND_MUSIC_STORAGE_KEY,
   DEFAULT_BEYOND_MUSIC_SETTINGS,
@@ -8,7 +8,7 @@ import {
 } from './beyondMusicSettings';
 import './beyond-music-player.css';
 
-type PlaybackStatus = 'starting' | 'playing' | 'waiting' | 'paused';
+type PlaybackStatus = 'starting' | 'playing' | 'waiting' | 'paused' | 'unavailable';
 
 const ROTOM_SPRITE =
   'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/479.png';
@@ -41,7 +41,7 @@ export function BeyondMusicPlayer() {
     const requestPlayback = async () => {
       if (!settingsRef.current.enabled) return;
       const state = await engine.start();
-      setStatus(state === 'running' ? 'playing' : 'waiting');
+      setStatus(state === 'running' ? 'playing' : state === 'closed' ? 'unavailable' : 'waiting');
     };
 
     void requestPlayback();
@@ -101,7 +101,7 @@ export function BeyondMusicPlayer() {
     setSettings(next);
     setStatus('starting');
     const state = await engine.start();
-    setStatus(state === 'running' ? 'playing' : 'waiting');
+    setStatus(state === 'running' ? 'playing' : state === 'closed' ? 'unavailable' : 'waiting');
   };
 
   const statusLabel =
@@ -111,7 +111,9 @@ export function BeyondMusicPlayer() {
         ? 'TOQUE NA TELA PARA INICIAR'
         : status === 'starting'
           ? 'INICIANDO'
-          : 'PAUSADA';
+          : status === 'unavailable'
+            ? 'ÁUDIO INDISPONÍVEL'
+            : 'PAUSADA';
 
   return (
     <aside
@@ -141,7 +143,7 @@ export function BeyondMusicPlayer() {
             </span>
             <div>
               <strong>BEYOND FM</strong>
-              <small>ROTA DISTANTE</small>
+              <small>TOWN THEME · CC0</small>
               <em>{statusLabel}</em>
             </div>
             <button
@@ -189,6 +191,9 @@ export function BeyondMusicPlayer() {
               />
             </label>
           </div>
+          <a className="beyond-music-credit" href={BEYOND_MUSIC_SOURCE_PAGE} target="_blank" rel="noopener noreferrer">
+            Trilha: cynicmusic · domínio público ↗
+          </a>
         </section>
       )}
     </aside>
