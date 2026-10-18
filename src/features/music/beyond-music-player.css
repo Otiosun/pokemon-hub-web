@@ -386,3 +386,19 @@
 .beyond-music-electric-frame--expanded .beyond-music-electric-charge {
   stroke-linecap: butt;
 }
+
+/* PERSISTENT MUSIC PLAYER SWITCH
+   Keep BOTH presentation layers mounted: hidden open panel still measures
+   its real width/height, retaining its one-piece SVG path length and dash.
+   Only visibility changes — never the 16s demo clock or music position. */
+.beyond-music-player[data-expanded='false'] .beyond-music-panel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.beyond-music-player[data-expanded='true'] .beyond-music-launcher {
+  display: none;
+}

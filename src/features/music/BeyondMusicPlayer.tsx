@@ -235,13 +235,12 @@ export function BeyondMusicPlayer() {
       data-demo={demoActive ? 'true' : 'false'}
       aria-label="Música do Pokémon Beyond"
     >
-      {!expanded ? (
-        <button
+      <button
           type="button"
           className="beyond-music-launcher"
           onClick={() => setExpanded(true)}
           aria-label={`Abrir player de música · ${statusLabel}`}
-          aria-expanded="false"
+          aria-expanded={expanded}
           aria-controls="beyond-music-panel"
         >
           <CompactElectricProgressFrame progress={visualProgress} playing={borderActive} />
@@ -249,8 +248,7 @@ export function BeyondMusicPlayer() {
           <span className="beyond-music-launcher-note" aria-hidden="true">{demoActive ? 'DEMO' : '♫'}</span>
           <span className="beyond-music-status-dot" aria-hidden="true" />
         </button>
-      ) : (
-        <section id="beyond-music-panel" className="beyond-music-panel">
+      <section id="beyond-music-panel" className="beyond-music-panel" aria-hidden={!expanded}>
           <ExpandedElectricProgressFrame progress={visualProgress} playing={borderActive} />
           <header className="beyond-music-track">
             <span className="beyond-music-sprite" aria-hidden="true">
@@ -324,8 +322,7 @@ export function BeyondMusicPlayer() {
           <a className="beyond-music-credit" href={BEYOND_MUSIC_SOURCE_PAGE} target="_blank" rel="noopener noreferrer">
             Trilha: cynicmusic · domínio público ↗
           </a>
-        </section>
-      )}
+      </section>
     </aside>
   );
 }
