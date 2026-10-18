@@ -273,7 +273,7 @@ export function BeyondMusicPlayer() {
             : status === 'starting'
               ? 'INICIANDO'
               : status === 'unavailable'
-                ? 'FALHA NA REPRODUÇÃO'
+                ? engineRef.current?.mp3Recommended ? 'M4A INCOMPATÍVEL · USE MP3' : 'FALHA NA REPRODUÇÃO'
                 : 'PAUSADO';
 
   const onImport = async (selected: File[]) => {
@@ -421,8 +421,8 @@ export function BeyondMusicPlayer() {
           </div>
 
           <input ref={inputRef} className="beyond-fm-hidden-input" type="file"
-            accept=".zip,.m4a,audio/mp4,audio/x-m4a" multiple
-            aria-label="Selecionar quatro faixas M4A ou pacote ZIP"
+            accept=".zip,.mp3,.m4a,audio/mpeg,audio/mp4,audio/x-m4a" multiple
+            aria-label="Selecionar quatro faixas MP3 ou o pacote ZIP compatível"
             onChange={(event) => {
               const files = [...(event.currentTarget.files ?? [])];
               event.currentTarget.value = '';
@@ -431,13 +431,13 @@ export function BeyondMusicPlayer() {
           <button type="button" className="beyond-fm-import"
             disabled={library === 'loading' || library === 'importing'}
             onClick={() => inputRef.current?.click()}>
-            {library === 'importing' ? 'IMPORTANDO…' : available ? 'SUBSTITUIR BIBLIOTECA' : 'ADICIONAR 4 FAIXAS · ZIP OU M4A'}
+            {library === 'importing' ? 'IMPORTANDO…' : available && status === 'unavailable' && engineRef.current?.mp3Recommended ? 'SUBSTITUIR POR MP3' : available ? 'SUBSTITUIR BIBLIOTECA' : 'IMPORTAR 4 FAIXAS · ZIP MP3'}
           </button>
           {!available ? (
             <p className="beyond-fm-import-hint" role="status">
               {library === 'loading' ? 'Verificando músicas salvas neste endereço…'
                 : library === 'importing' ? 'Lendo o pacote de músicas…'
-                : 'O Play abrirá a seleção de arquivos. Escolha o ZIP com as quatro músicas. A biblioteca é salva para este endereço do site.'}
+                : 'O Play abrirá a seleção de arquivos. Escolha o novo ZIP MP3 com as quatro músicas. O navegador guardará as faixas neste endereço do site.'}
             </p>
           ) : null}
           {storageWarning ? <p className="beyond-fm-import-hint is-error">
@@ -446,6 +446,11 @@ export function BeyondMusicPlayer() {
           {importError ? <p className="beyond-fm-import-hint is-error" role="alert">{importError}</p> : null}
           {available && playbackIssue ? (
             <p className="beyond-fm-import-hint is-error" role="alert">{playbackIssue}</p>
+          ) : null}
+          {available && engineRef.current?.mp3Recommended && status === 'unavailable' ? (
+            <p className="beyond-fm-import-hint">
+              Os M4A antigos não foram alterados. Importe o pacote MP3 nesta prévia uma vez.
+            </p>
           ) : null}
           {available && status === 'waiting' ? (
             <p className="beyond-fm-import-hint" role="status">

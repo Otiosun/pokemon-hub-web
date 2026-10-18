@@ -34,6 +34,7 @@ export class BeyondFmPlaylistEngine {
   get hasTracks() { return this.tracks.size === 4; }
   get trackId() { return this.active; }
   get playbackIssue() { return this.issue; }
+  get mp3Recommended() { return Boolean(this.active && this.tracks.get(this.active)?.type !== 'audio/mpeg'); }
   get duration() { return this.audio?.duration ?? 0; }
   get currentTime() { return this.audio?.currentTime ?? 0; }
   get progress() {
@@ -54,6 +55,7 @@ export class BeyondFmPlaylistEngine {
     this.nextBag = [];
     this.history = [];
     this.active = null;
+    this.issue = '';
   }
 
   setVolume(volume: number) {
@@ -96,11 +98,11 @@ export class BeyondFmPlaylistEngine {
     audio.onerror = () => {
       // A supported file may still fail decoding; never silently leave Play inert.
       const code = audio.error?.code;
-      this.issue = code === 3
-        ? 'O navegador não conseguiu decodificar este M4A. Selecione outra faixa ou substitua a biblioteca.'
-        : code === 4
-          ? 'Formato de áudio não suportado pelo navegador. Experimente Chrome ou Firefox atualizados.'
-          : 'Não foi possível carregar esta música. Tente outra faixa ou importe novamente.';
+      this.issue = this.mp3Recommended
+        ? 'O navegador recusou esta faixa M4A. Use SUBSTITUIR POR MP3 e importe o pacote MP3 compatível.'
+        : code === 3 || code === 4
+          ? 'O navegador não conseguiu decodificar a faixa MP3. Experimente atualizar o navegador ou reimportar o pacote.'
+          : 'Não foi possível carregar esta música. Experimente importar o pacote MP3 novamente.';
       this.onPlaybackChange('closed');
     };
     audio.onplaying = () => { this.issue = ''; this.onPlaybackChange('running'); };
@@ -137,12 +139,14 @@ export class BeyondFmPlaylistEngine {
       const name = error && typeof error === 'object' && 'name' in error ? String(error.name) : '';
       const status: FmPlaybackState = name === 'NotAllowedError' || name === 'AbortError' ? 'suspended' : 'closed';
       this.issue = name === 'NotAllowedError'
-        ? 'O navegador bloqueou o início automático do som. Clique em Play mais uma vez.'
-        : name === 'NotSupportedError'
-          ? 'Este navegador não conseguiu tocar o M4A. Verifique a biblioteca ou experimente outro navegador.'
-          : status === 'closed'
-            ? 'Ocorreu um erro ao reproduzir a música. Tente outra faixa ou substitua a biblioteca.'
-            : '';
+        ? 'O navegador bloqueou o som automático. Clique em Play para começar.'
+        : name === 'NotSupportedError' && this.mp3Recommended
+          ? 'Este navegador não aceita a faixa M4A. Clique em SUBSTITUIR POR MP3 e importe o pacote compatível.'
+          : name === 'NotSupportedError'
+            ? 'O navegador recusou a faixa MP3. Experimente reimportar o pacote ou atualizar o navegador.'
+            : status === 'closed'
+              ? 'Ocorreu um erro ao reproduzir a música. Experimente o pacote MP3.'
+              : '';
       this.onPlaybackChange(status);
       return status;
     }

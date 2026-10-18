@@ -20,7 +20,7 @@ const MAX_TRACK_BYTES = 13_000_000;
 
 export function recognizeFmFile(name: string): BeyondFmTrackId | null {
   const lower = name.toLowerCase();
-  if (!lower.endsWith('.m4a')) return null;
+  if (!lower.endsWith('.m4a') && !lower.endsWith('.mp3')) return null;
   if (lower.includes('cynthia')) return 'cynthia';
   if (lower.includes('national') && lower.includes('park')) return 'national-park';
   if (lower.includes('driftveil')) return 'driftveil';
@@ -29,7 +29,7 @@ export function recognizeFmFile(name: string): BeyondFmTrackId | null {
 }
 
 /** Read standard, uncompressed ZIP archives. No remote files, no extra packages,
- * and no decompression bombs: the provided download uses ZIP_STORED.
+ * and no decompression bombs: both provided archives use ZIP_STORED.
  */
 export async function extractFmZip(file: Blob): Promise<File[]> {
   if (file.size > MAX_ARCHIVE_BYTES || file.size < 100) throw new Error('O pacote de áudio tem tamanho inválido.');
@@ -49,11 +49,11 @@ export async function extractFmZip(file: Blob): Promise<File[]> {
     const start = offset + 30 + nameSize + extraSize;
     if ((flags & 0x08) !== 0 || method !== 0 || size !== uncompressed ||
         size > MAX_TRACK_BYTES || start > bytes.length || start + size > bytes.length) {
-      throw new Error('Pacote incompatível. Use o ZIP oficial do Beyond FM ou selecione os quatro M4A.');
+      throw new Error('Pacote incompatível. Use o ZIP do Beyond FM ou selecione as quatro faixas MP3.');
     }
     const filename = decoder.decode(bytes.slice(offset + 30, offset + 30 + nameSize));
     if (!recognizeFmFile(filename) || files.length >= 4) throw new Error('O ZIP contém uma faixa não reconhecida.');
-    files.push(new File([buffer.slice(start, start + size)], filename, { type: 'audio/mp4' }));
+    files.push(new File([buffer.slice(start, start + size)], filename, { type: filename.toLowerCase().endsWith('.mp3') ? 'audio/mpeg' : 'audio/mp4' }));
     offset = start + size;
   }
   if (files.length !== 4 || dv.getUint32(offset, true) !== 0x02014b50) {
@@ -65,7 +65,7 @@ export async function extractFmZip(file: Blob): Promise<File[]> {
 export async function importFmFiles(selected: readonly File[]): Promise<LocalFmTrack[]> {
   const files = selected.length === 1 && selected[0]?.name.toLowerCase().endsWith('.zip')
     ? await extractFmZip(selected[0]) : [...selected];
-  if (files.length !== 4) throw new Error('Selecione as quatro faixas M4A ou o pacote ZIP completo.');
+  if (files.length !== 4) throw new Error('Selecione as quatro faixas MP3 ou o pacote ZIP completo.');
   const mapped = new Map<BeyondFmTrackId, Blob>();
   for (const file of files) {
     const id = recognizeFmFile(file.name);
