@@ -173,4 +173,25 @@ describe('consolidated admin proxy boundary', () => {
       ),
     ).toBeNull();
   });
+  it('only proxies owner Premium reads for valid players, never writes', () => {
+    const playerId = '11111111-1111-4111-8111-111111111111';
+    for (const resource of ['orders', 'entitlements']) {
+      const target = new URL(`https://hub.test/api/hub/admin/premium?playerId=${playerId}&resource=${resource}`);
+      expect(resolveAdminProxyRoute(target)).toEqual({
+        upstreamPath: `/v1/hub/admin/premium/players/${playerId}/${resource}`,
+        allowedMethod: 'GET',
+      });
+      for (const method of ['POST', 'PUT', 'DELETE']) {
+        expect(resolveAdminProxyRoute(target, method)).toBeNull();
+      }
+    }
+    for (const query of [
+      'playerId=bad&resource=orders',
+      `playerId=${playerId}&resource=payment`,
+      `playerId=${playerId}&resource=orders&admin=true`,
+    ]) {
+      expect(resolveAdminProxyRoute(new URL(`https://hub.test/api/hub/admin/premium?${query}`))).toBeNull();
+    }
+  });
+
 });

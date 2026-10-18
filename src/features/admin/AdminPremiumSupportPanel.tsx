@@ -6,6 +6,7 @@ import {
   type AdminPlayerSearchItem,
 } from '../../player-api/playerPortalAdminPlayersClient';
 import { AdminPremiumIdentityPanel } from './AdminPremiumIdentityPanel';
+import { AdminPremiumReadPanel } from './AdminPremiumReadPanel';
 import {
   classifyAdminPremiumSearch,
   maskedWhatsAppDigits,
@@ -343,13 +344,13 @@ export function AdminPremiumSupportPanel() {
           <div className="premium-overview-gates">
             <article>
               <span>ENTITLEMENTS</span>
-              <strong>SCHEMA PENDENTE</strong>
-              <small>Gate 5 · bloqueado por backup de produção</small>
+              <strong>SCHEMA 0075 ATIVO</strong>
+              <small>Consulta owner-only em integração com o backend</small>
             </article>
             <article>
               <span>PEDIDOS</span>
-              <strong>PERSISTÊNCIA PENDENTE</strong>
-              <small>Gate 6 · carrinho do navegador não é autoridade</small>
+              <strong>PERSISTÊNCIA NO BACKEND</strong>
+              <small>Pedidos oficiais; checkout do site ainda não integrado</small>
             </article>
             <article>
               <span>IDENTIDADE</span>
@@ -361,18 +362,18 @@ export function AdminPremiumSupportPanel() {
       ) : null}
 
       {activeSection === 'entitlements' ? (
-        <PendingDomain
-          gate="GATE 5"
-          title="Entitlements canônicos"
-          detail="Benefícios permanentes, temporários e consumíveis serão lidos de uma fonte própria. Não vamos inferir premium pelo histórico de pedidos."
+        <AdminPremiumReadPanel
+          resource="entitlements"
+          playerId={selectedPlayer?.player.id ?? null}
+          playerName={selectedPlayer?.profile.trainerName ?? null}
         />
       ) : null}
 
       {activeSection === 'orders' ? (
-        <PendingDomain
-          gate="GATE 6"
-          title="Pedidos e fulfillment"
-          detail="O carrinho atual organiza intenção de compra. Pedidos confirmados só existirão quando o servidor persistir snapshots, estados e grants idempotentes."
+        <AdminPremiumReadPanel
+          resource="orders"
+          playerId={selectedPlayer?.player.id ?? null}
+          playerName={selectedPlayer?.profile.trainerName ?? null}
         />
       ) : null}
 
