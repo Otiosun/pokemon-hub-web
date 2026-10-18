@@ -1,0 +1,602 @@
+.beyond-music-player {
+  position: fixed;
+  z-index: 106;
+  left: max(12px, env(safe-area-inset-left));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  color: #eef5f5;
+}
+
+.beyond-music-launcher,
+.beyond-music-panel {
+  border: 1px solid rgba(220, 237, 239, 0.14);
+  background: rgba(11, 16, 18, 0.94);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(10px);
+}
+
+.beyond-music-launcher {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 14px;
+  color: #eef5f5;
+  cursor: pointer;
+  overflow: visible;
+}
+
+.beyond-music-launcher:hover,
+.beyond-music-launcher:focus-visible,
+.beyond-music-collapse:hover,
+.beyond-music-collapse:focus-visible,
+.beyond-music-controls button:hover,
+.beyond-music-controls button:focus-visible,
+.beyond-music-volume input:focus-visible {
+  border-color: rgba(114, 202, 211, 0.5);
+  outline: 2px solid rgba(114, 202, 211, 0.5);
+  outline-offset: 2px;
+}
+
+.beyond-music-launcher img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.28));
+}
+
+.beyond-music-launcher-note {
+  position: absolute;
+  right: -4px;
+  top: -5px;
+  min-width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(220, 237, 239, 0.18);
+  border-radius: 999px;
+  background: #101719;
+  color: #91d7de;
+  font-size: 0.66rem;
+  line-height: 1;
+}
+
+.beyond-music-status-dot {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #6f7c7e;
+  box-shadow: 0 0 0 2px rgba(10, 15, 17, 0.9);
+}
+
+.beyond-music-player[data-playback='playing'] .beyond-music-status-dot {
+  background: #72cad3;
+}
+
+.beyond-music-player[data-playback='waiting'] .beyond-music-status-dot {
+  background: #d5ad5e;
+}
+
+.beyond-music-panel {
+  width: min(248px, calc(100vw - 24px));
+  display: grid;
+  gap: 9px;
+  padding: 9px;
+  border-radius: 12px;
+}
+
+.beyond-music-track {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 8px;
+}
+
+.beyond-music-sprite {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(114, 202, 211, 0.15);
+  border-radius: 10px;
+  background: rgba(114, 202, 211, 0.035);
+}
+
+.beyond-music-sprite img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.beyond-music-track > div {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.beyond-music-track strong {
+  font: 800 0.62rem 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: 0.08em;
+}
+
+.beyond-music-track small,
+.beyond-music-track em {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: 'IBM Plex Mono', monospace;
+  font-style: normal;
+}
+
+.beyond-music-track small {
+  color: #87999b;
+  font-size: 0.48rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.beyond-music-track em {
+  color: #6c8f92;
+  font-size: 0.46rem;
+  font-weight: 650;
+}
+
+.beyond-music-collapse {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(220, 237, 239, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.018);
+  color: #aab8ba;
+  cursor: pointer;
+  font: 800 0.82rem 'IBM Plex Mono', monospace;
+}
+
+.beyond-music-controls {
+  display: grid;
+  grid-template-columns: 34px 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+}
+
+.beyond-music-controls button {
+  height: 32px;
+  border: 1px solid rgba(220, 237, 239, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  color: #e8f1f1;
+  cursor: pointer;
+}
+
+.beyond-music-play {
+  width: 34px;
+  font: 800 0.66rem 'IBM Plex Mono', monospace;
+}
+
+.beyond-music-mute {
+  min-width: 42px;
+  padding: 0 6px;
+  color: #acbabc;
+  font: 750 0.47rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.04em;
+}
+
+.beyond-music-volume {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+}
+
+.beyond-music-volume span {
+  color: #718487;
+  font: 700 0.43rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.06em;
+}
+
+.beyond-music-volume input {
+  width: 100%;
+  min-width: 0;
+  height: 12px;
+  margin: 0;
+  accent-color: #72cad3;
+  cursor: pointer;
+}
+
+@media (max-width: 430px) {
+  .beyond-music-player {
+    left: max(10px, env(safe-area-inset-left));
+    bottom: max(10px, env(safe-area-inset-bottom));
+  }
+
+  .beyond-music-launcher {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+  }
+
+  .beyond-music-launcher img {
+    width: 36px;
+    height: 36px;
+  }
+
+  .beyond-music-panel {
+    width: min(232px, calc(100vw - 20px));
+  }
+}
+
+@media (max-width: 370px) {
+  .beyond-music-player {
+    bottom: max(72px, calc(env(safe-area-inset-bottom) + 62px));
+  }
+}
+
+.beyond-music-credit {
+  justify-self: start;
+  color: #849b9d;
+  font: 550 0.5rem 'IBM Plex Mono', monospace;
+  text-decoration: none;
+}
+.beyond-music-credit:hover,
+.beyond-music-credit:focus-visible {
+  color: #9fdae0;
+  text-decoration: underline;
+}
+.beyond-music-player[data-playback='unavailable'] .beyond-music-status-dot {
+  background: #d57b7b;
+}
+
+/* Electric progress contour: measured playback, never a looping CSS countdown.
+   Track and charge share a 100-unit SVG perimeter in both presentations. */
+.beyond-music-panel {
+  position: relative;
+}
+
+.beyond-music-electric-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.beyond-music-electric-track,
+.beyond-music-electric-halo,
+.beyond-music-electric-charge {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.beyond-music-electric-track {
+  stroke: rgba(115, 157, 168, 0.31);
+  stroke-width: 1.65;
+}
+
+.beyond-music-electric-halo {
+  stroke: rgba(50, 214, 249, 0.42);
+  stroke-width: 5;
+  stroke-linecap: round;
+  filter: blur(3px);
+}
+
+.beyond-music-electric-charge {
+  stroke: #82eafa;
+  stroke-width: 2.1;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 3px rgba(45, 225, 255, 0.62));
+}
+
+/* A restrained voltage shimmer lives only on the light, not the timer. */
+.beyond-music-electric-frame.is-playing .beyond-music-electric-charge {
+  animation: beyond-electric-breathe 2s ease-in-out infinite;
+}
+
+@keyframes beyond-electric-breathe {
+  0%, 100% { stroke: #7ee5f6; stroke-width: 2; }
+  50% { stroke: #aff8ff; stroke-width: 2.5; }
+}
+
+/* Two precise bars replace the typographic Roman numeral II. */
+.beyond-music-pause-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 16px;
+  height: 16px;
+}
+
+.beyond-music-pause-icon::before,
+.beyond-music-pause-icon::after {
+  content: '';
+  display: block;
+  width: 3px;
+  height: 12px;
+  border-radius: 1px;
+  background: currentColor;
+}
+
+.beyond-music-play-icon {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-left: 2px;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-left: 10px solid currentColor;
+}
+
+.beyond-music-play {
+  display: inline-grid;
+  place-items: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beyond-music-electric-frame.is-playing .beyond-music-electric-charge {
+    animation: none;
+  }
+}
+
+/* Optional 16-second visual preview. It does not replace the real audio clock. */
+.beyond-music-demo {
+  min-height: 29px;
+  width: 100%;
+  border: 1px solid rgba(100, 212, 235, 0.25);
+  border-radius: 6px;
+  background: rgba(63, 190, 215, 0.06);
+  color: #a2d5dd;
+  font: 700 0.53rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.055em;
+  cursor: pointer;
+}
+.beyond-music-demo:hover,
+.beyond-music-demo:focus-visible {
+  border-color: rgba(122, 225, 244, 0.63);
+  background: rgba(63, 190, 215, 0.12);
+  outline-offset: 2px;
+}
+.beyond-music-player[data-demo='true'] .beyond-music-demo {
+  border-color: rgba(105, 235, 247, 0.6);
+  color: #c4f9ff;
+}
+.beyond-music-player[data-demo='true'] .beyond-music-launcher-note {
+  right: -8px;
+  min-width: 30px;
+  font-size: 0.42rem;
+  letter-spacing: 0.01em;
+  color: #bff9ff;
+  border-color: rgba(100, 225, 247, 0.5);
+}
+
+/* Expanded layout only: one continuous measured path, no second glow track.
+   The compact Rotom retains its original drawing and styling. */
+.beyond-music-electric-frame--expanded .beyond-music-electric-charge {
+  stroke-linecap: butt;
+}
+
+/* PERSISTENT MUSIC PLAYER SWITCH
+   Keep BOTH presentation layers mounted: hidden open panel still measures
+   its real width/height, retaining its one-piece SVG path length and dash.
+   Only visibility changes — never the 16s demo clock or music position. */
+.beyond-music-player[data-expanded='false'] .beyond-music-panel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.beyond-music-player[data-expanded='true'] .beyond-music-launcher {
+  /* Keep the mini sized and measurable; display:none resets its SVG geometry. */
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* BEYOND FM / four-track local shuffle. The original Rotom silhouette,
+   electric outline, mini/expanded measurement and palette stay untouched. */
+.beyond-music-panel { width: min(272px, calc(100vw - 24px)); gap: 7px; }
+.beyond-music-controls {
+  grid-template-columns: 28px 34px 28px 42px minmax(44px, 1fr);
+  gap: 5px;
+}
+.beyond-music-controls .beyond-music-skip {
+  width: 28px;
+  font-size: 1.4rem;
+  font-weight: 500;
+  line-height: 1;
+}
+.beyond-music-controls button:disabled { opacity: 0.38; cursor: not-allowed; }
+.beyond-music-track small { font-size: 0.51rem; color: #b8d9df; }
+.beyond-music-track em { color: #80a0a5; }
+.beyond-fm-timeline {
+  display: grid;
+  grid-template-columns: 28px minmax(0,1fr) 28px;
+  align-items: center;
+  gap: 7px;
+  color: #7d989e;
+  font: 500 0.53rem 'IBM Plex Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+.beyond-fm-timeline > span:last-child { text-align: right; }
+.beyond-fm-timeline-track {
+  height: 3px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(110, 151, 160, 0.24);
+}
+.beyond-fm-timeline-track > div {
+  height: 100%;
+  border-radius: inherit;
+  background: #8edbe5;
+  box-shadow: 0 0 7px rgba(115,226,240,.52);
+}
+.beyond-fm-playlist-heading {
+  display: flex; align-items: baseline; justify-content: space-between;
+  flex-wrap: wrap; gap: 3px;
+  margin-top: 1px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.beyond-fm-playlist-heading strong { color: #9acbd3; font-size: 0.5rem; letter-spacing: 0.075em; }
+.beyond-fm-playlist-heading span { color: #6d888e; font-size: 0.42rem; letter-spacing: 0.025em; }
+.beyond-fm-playlist { display: grid; gap: 2px; }
+.beyond-fm-track-row {
+  display: grid; grid-template-columns: 18px minmax(0,1fr) auto;
+  gap: 6px; align-items: center;
+  padding: 5px 6px;
+  min-height: 32px; width: 100%;
+  border: 1px solid transparent; border-radius: 5px;
+  color: #bdcdd1; background: transparent;
+  text-align: left; cursor: pointer;
+}
+.beyond-fm-track-row:hover:not(:disabled),.beyond-fm-track-row:focus-visible {
+  background: rgba(118,216,233,.08);
+  border-color: rgba(118,216,233,.3);
+  outline-offset: 1px;
+}
+.beyond-fm-track-row.is-current {
+  background: rgba(73,189,210,.1);
+  border-color: rgba(98,216,234,.28);
+}
+.beyond-fm-track-row:disabled { opacity: .67; cursor: default; }
+.beyond-fm-track-number, .beyond-fm-track-duration {
+  color: #6e979d; font: 620 0.52rem 'IBM Plex Mono', monospace;
+}
+.beyond-fm-track-row.is-current .beyond-fm-track-number { color: #9ceffc; }
+.beyond-fm-track-details { min-width: 0; display: grid; gap: 1px; }
+.beyond-fm-track-details strong {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: #d6e5e8;
+  font: 650 0.6rem 'Space Grotesk', sans-serif;
+}
+.beyond-fm-track-details small {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: #75949a; font: 520 0.5rem 'IBM Plex Mono', monospace;
+}
+.beyond-fm-import {
+  width: 100%; min-height: 29px; padding: 6px 9px;
+  border: 1px solid rgba(100,212,235,.26);
+  border-radius: 5px;
+  color: #a8dbe5; background: rgba(63,190,215,.065);
+  cursor: pointer; font: 690 .51rem 'IBM Plex Mono', monospace;
+  letter-spacing: .04em;
+}
+.beyond-fm-import:hover:not(:disabled),.beyond-fm-import:focus-visible {
+  border-color: rgba(119,220,241,.65);
+  background: rgba(63,190,215,.12); outline-offset: 2px;
+}
+.beyond-fm-import:disabled { opacity: .5; cursor: wait; }
+.beyond-fm-hidden-input { display: none; }
+.beyond-fm-import-hint { color: #869b9f; margin: 0; font: 500 .55rem/1.5 'Space Grotesk', sans-serif; }
+.beyond-fm-import-hint.is-error { color: #e4adac; }
+@media (max-width: 430px) {
+  .beyond-music-panel { width: min(272px, calc(100vw - 20px)); }
+}
+
+/* Diagnóstico compacto: explica a falha real sem pedir novo download. */
+.beyond-fm-diagnostics {
+  display: grid;
+  gap: 4px;
+  padding: 8px 9px;
+  border: 1px solid rgba(218, 158, 119, 0.35);
+  border-radius: 5px;
+  background: rgba(138, 75, 54, 0.08);
+}
+.beyond-fm-diagnostics strong {
+  color: #e3b4a3;
+  font: 680 0.53rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.04em;
+}
+.beyond-fm-diagnostics code {
+  color: #bdcfd0;
+  font: 500 0.52rem/1.6 'IBM Plex Mono', monospace;
+  overflow-wrap: anywhere;
+}
+.beyond-fm-diagnostics small {
+  color: #9eabad;
+  font: 500 0.54rem/1.55 'Space Grotesk', sans-serif;
+}
+
+/* Replace one personal MP3 without forcing a new four-track archive. */
+.beyond-fm-single-replacement {
+  display: grid;
+  gap: 6px;
+}
+.beyond-fm-replace-one {
+  width: 100%;
+  min-height: 29px;
+  padding: 6px 9px;
+  border: 1px solid rgba(100, 212, 235, 0.35);
+  border-radius: 5px;
+  color: #b7e4e9;
+  background: rgba(63, 190, 215, 0.075);
+  font: 690 .51rem 'IBM Plex Mono', monospace;
+  letter-spacing: .04em;
+  cursor: pointer;
+}
+.beyond-fm-replace-one:hover:not(:disabled),
+.beyond-fm-replace-one:focus-visible {
+  border-color: rgba(119, 220, 241, .75);
+  background: rgba(63, 190, 215, .16);
+  outline-offset: 2px;
+}
+.beyond-fm-replace-one:disabled {
+  cursor: wait;
+  opacity: .5;
+}
+
+/* Public player: maintenance tools remain tucked away, not part of the
+   listening flow. Native disclosure keeps the experience keyboard accessible. */
+.beyond-fm-library-details {
+  border-top: 1px solid rgba(113, 171, 180, .16);
+  padding-top: 8px;
+  display: grid;
+  gap: 7px;
+}
+.beyond-fm-library-details > summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  list-style: none;
+  font: 670 .52rem 'IBM Plex Mono', monospace;
+  letter-spacing: .04em;
+  color: #a8c7cb;
+}
+.beyond-fm-library-details > summary::-webkit-details-marker { display: none; }
+.beyond-fm-library-details > summary::before {
+  content: '▸';
+  margin-right: 7px;
+  color: #66bbcb;
+}
+.beyond-fm-library-details[open] > summary::before { content: '▾'; }
+.beyond-fm-library-details > summary span {
+  margin-left: auto;
+  color: #7b969a;
+  font-size: .46rem;
+}
+.beyond-fm-library-details > p,
+.beyond-fm-public-credit {
+  font: 520 .55rem/1.5 'Space Grotesk', sans-serif;
+  color: #93abae;
+  margin: 6px 0 0;
+}
+.beyond-fm-library-details > button { margin-top: 6px; }
+.beyond-fm-public-credit a { color: #8fbfc3; text-decoration: none; }
+.beyond-fm-public-credit a:hover,
+.beyond-fm-public-credit a:focus-visible { color: #d5f4f4; text-decoration: underline; }
