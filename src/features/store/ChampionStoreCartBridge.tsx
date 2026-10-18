@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { checkoutIntentId, completeCheckoutIntent, createPending2XpOrder } from '../../player-api/playerPortalPremiumCheckoutClient';
 import {
   CHAMPION_STORE_BY_CODE,
   formatBrl,
@@ -153,6 +154,12 @@ export function ChampionStoreCartBridge() {
   const [open, setOpen] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const [orderState, setOrderState] = useState<
+    | { status: 'idle' | 'submitting' }
+    | { status: 'created'; humanId: string; totalCents: number }
+    | { status: 'error'; message: string }
+  >({ status: 'idle' });
+  const creatingOrderRef = useRef(false);
 
   useEffect(() => {
     try {
@@ -234,6 +241,49 @@ export function ChampionStoreCartBridge() {
   const count = championStoreCartCount(cart);
   const total = championStoreCartTotal(cart);
   const hasPriceChanges = championStoreCartHasPriceChanges(cart);
+  const canCreate2XpOrder = cart.length === 1 && cart[0]?.sku === '2XP';
+
+  const mutateCart = (
+    update: (current: ChampionStoreCartLine[]) => ChampionStoreCartLine[],
+  ) => {
+    setOrderState({ status: 'idle' });
+    setCart(update);
+  };
+
+  const createOrder = async () => {
+    if (!canCreate2XpOrder || creatingOrderRef.current) return;
+    const quantity = cart[0]?.quantity;
+    if (!quantity) return;
+    creatingOrderRef.current = true;
+    setOrderState({ status: 'submitting' });
+    try {
+      const requestId = checkoutIntentId(quantity, window.localStorage, () => crypto.randomUUID());
+      const result = await createPending2XpOrder(quantity, requestId);
+      if (result.status === 'created') {
+        completeCheckoutIntent(requestId, window.localStorage);
+        setOrderState({
+          status: 'created',
+          humanId: result.order.humanId,
+          totalCents: result.order.totalCents,
+        });
+        return;
+      }
+      const messages = {
+        unauthenticated: 'Entre na sua conta pelo /hub para criar um pedido para o seu personagem.',
+        unavailable: 'O pedido real ainda não está disponível neste ambiente. Continue pelo atendimento.',
+      } as const;
+      setOrderState({
+        status: 'error',
+        message: result.status === 'rejected'
+          ? `Pedido não aceito pelo servidor (${result.code}). Nenhum pagamento foi registrado.`
+          : messages[result.status],
+      });
+    } catch {
+      setOrderState({ status: 'error', message: 'Não foi possível registrar o pedido. Tente novamente; a repetição é protegida contra duplicidade.' });
+    } finally {
+      creatingOrderRef.current = false;
+    }
+  };
 
   const summary = useMemo(() => {
     const lines = cart.flatMap((line) => {
@@ -295,8 +345,8 @@ export function ChampionStoreCartBridge() {
               <CartLine
                 key={line.sku}
                 line={line}
-                onQuantity={(sku, quantity) => setCart((current) => setChampionStoreQuantity(current, sku, quantity))}
-                onRemove={(sku) => setCart((current) => removeChampionStoreSku(current, sku))}
+                onQuantity={(sku, quantity) => mutateCart((current) => setChampionStoreQuantity(current, sku, quantity))}
+                onRemove={(sku) => mutateCart((current) => removeChampionStoreSku(current, sku))}
               />
             ))
           )}
@@ -325,7 +375,7 @@ export function ChampionStoreCartBridge() {
                   setConfirmClear(true);
                   return;
                 }
-                setCart([]);
+                mutateCart(() => []);
                 setConfirmClear(false);
               }}
             >
@@ -333,7 +383,39 @@ export function ChampionStoreCartBridge() {
             </button>
           </div>
 
-          <small className="store-cart-checkout-note">Pagamento automático ainda não está ativo. O carrinho organiza o pedido sem alterar o fluxo atual.</small>
+          {canCreate2XpOrder ? (
+            <div className="store-cart-order-create">
+              {orderState.status === 'created' ? (
+                <div className="store-cart-order-confirmation" role="status">
+                  <strong>PEDIDO {orderState.humanId} CRIADO</strong>
+                  <span>Valor oficial: {formatBrl(orderState.totalCents)} · PAGAMENTO PENDENTE</span>
+                  <small>Guarde o código e informe-o ao atendimento. Nenhuma cobrança ou ativação foi feita.</small>
+                </div>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="store-cart-create-order"
+                    disabled={orderState.status === 'submitting'}
+                    onClick={() => void createOrder()}
+                  >
+                    {orderState.status === 'submitting' ? 'REGISTRANDO PEDIDO…' : 'CRIAR PEDIDO 2XP · SEM COBRANÇA'}
+                  </button>
+                  {orderState.status === 'error' ? (
+                    <p className="store-cart-order-error" role="status">{orderState.message}</p>
+                  ) : null}
+                </>
+              )}
+            </div>
+          ) : cart.length > 0 ? (
+            <small className="store-cart-checkout-note">
+              Pedido digital disponível apenas para carrinhos contendo exclusivamente XP 2×.
+              Os demais itens continuam pelo atendimento.
+            </small>
+          ) : null}
+          <small className="store-cart-checkout-note">
+            Criar pedido não confirma pagamento nem entrega benefícios. O servidor calcula o preço oficial.
+          </small>
         </footer>
       </section>
     </div>
@@ -348,7 +430,7 @@ export function ChampionStoreCartBridge() {
               <StoreCardControl
                 product={product}
                 cart={cart}
-                onAdd={(productCode, variantCode) => setCart((current) => addChampionStoreSku(current, productCode, variantCode))}
+                onAdd={(productCode, variantCode) => mutateCart((current) => addChampionStoreSku(current, productCode, variantCode))}
               />,
               host,
               code,

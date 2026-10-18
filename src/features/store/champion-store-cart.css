@@ -507,3 +507,49 @@
   color: #b4a5a1;
   font: 600 0.62rem/1.55 'IBM Plex Mono', monospace;
 }
+
+/* Checkout is an unpaid order request — never a payment CTA. */
+.store-cart-order-create {
+  display: grid;
+  gap: 8px;
+}
+.store-cart-create-order {
+  min-height: 44px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(115, 207, 212, 0.48);
+  border-radius: 6px;
+  background: rgba(47, 149, 157, 0.12);
+  color: #d5f8f9;
+  font: 760 0.65rem 'Space Grotesk', sans-serif;
+  letter-spacing: 0.045em;
+  cursor: pointer;
+}
+.store-cart-create-order:hover,
+.store-cart-create-order:focus-visible {
+  border-color: #7cdae0;
+  background: rgba(47, 149, 157, 0.2);
+  outline-offset: 2px;
+}
+.store-cart-create-order:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+.store-cart-order-confirmation {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid rgba(115, 207, 212, 0.28);
+  border-left: 3px solid #7cdae0;
+  border-radius: 6px;
+  background: #101b1d;
+}
+.store-cart-order-confirmation strong { color: #c7f4f4; font-size: 0.75rem; overflow-wrap: anywhere; }
+.store-cart-order-confirmation span { color: #b4d2d4; font-size: 0.68rem; }
+.store-cart-order-confirmation small { color: #90a6a8; font-size: 0.61rem; line-height: 1.5; }
+.store-cart-order-error {
+  margin: 0;
+  color: #debdb2;
+  font-size: 0.67rem;
+  line-height: 1.5;
+}
