@@ -367,7 +367,7 @@ export function BeyondMusicPlayer() {
             </label>
           </div>
 
-          <div className="beyond-fm-timeline" role="group" aria-label="Progresso da faixa">
+          <div className="beyond-fm-timeline">
             <span>{clockText(seconds)}</span>
             <div className="beyond-fm-timeline-track">
               <div style={{ width: `${Math.round(progress * 1000) / 10}%` }} />
@@ -378,7 +378,7 @@ export function BeyondMusicPlayer() {
             <strong>ROTAÇÃO ALEATÓRIA</strong>
             <span>{available ? '4 FAIXAS · SEM REPETIR ATÉ COMPLETAR' : 'ARQUIVOS LOCAIS'}</span>
           </div>
-          <div className="beyond-fm-playlist" role="group" aria-label="Quatro músicas do Beyond FM">
+          <div className="beyond-fm-playlist">
             {BEYOND_FM_TRACKS.map((track, index) => (
               <button type="button" key={track.id}
                 className={`beyond-fm-track-row${activeId === track.id && available ? ' is-current' : ''}`}
