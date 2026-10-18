@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { checkoutIntentId, createPending2XpOrder } from './playerPortalPremiumCheckoutClient';
+import { checkoutIntentId, completeCheckoutIntent, createPending2XpOrder } from './playerPortalPremiumCheckoutClient';
 
 const requestId = '99999999-9999-4999-8999-999999999999';
 const orderId = '88888888-8888-4888-8888-888888888888';
@@ -11,11 +11,22 @@ describe('manual Premium order creation', () => {
     const storage = {
       getItem: (key: string) => values.get(key) ?? null,
       setItem: (key: string, value: string) => { values.set(key, value); },
+      removeItem: (key: string) => { values.delete(key); },
     };
     expect(checkoutIntentId(2, storage, () => requestId)).toBe(requestId);
     expect(checkoutIntentId(2, storage, () => { throw new Error('should not regenerate'); })).toBe(requestId);
     const alternate = '66666666-6666-4666-8666-666666666666';
     expect(checkoutIntentId(3, storage, () => alternate)).toBe(alternate);
+
+    // Never release a newer checkout when an older response arrives late.
+    completeCheckoutIntent(requestId, storage);
+    expect(checkoutIntentId(3, storage, () => { throw new Error('new intent was erased'); })).toBe(alternate);
+
+    // After an acknowledged order, allow a genuinely new 2XP purchase.
+    completeCheckoutIntent(alternate, storage);
+    const newOrderId = '55555555-5555-4555-8555-555555555555';
+    expect(checkoutIntentId(3, storage, () => newOrderId)).toBe(newOrderId);
+    expect(checkoutIntentId(3, storage, () => { throw new Error('retry should reuse request id'); })).toBe(newOrderId);
   });
 
   it('sends only SKU, quantity and idempotency key, never player ID or price', async () => {
