@@ -13,6 +13,6 @@ describe('deployment integrity', () => {
   it('allows the browser to load National Dex metadata from PokeAPI', () => {
     const serialized = JSON.stringify(vercelConfig);
 
-    expect(serialized).toContain("connect-src 'self' https://raw.githubusercontent.com https://pokeapi.co");
+    expect(serialized).toContain("connect-src 'self' blob: https://raw.githubusercontent.com https://pokeapi.co");
   });
 });
