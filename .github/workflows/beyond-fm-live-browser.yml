@@ -1,0 +1,25 @@
+name: Beyond FM live browser QA
+on:
+  push:
+    branches:
+      - feat/beyond-fm-four-shuffle-20261018
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  playback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install headless Playwright
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Inspect actual live player using four playable MP3 files
+        run: node scripts/qa-beyond-fm-live.mjs
