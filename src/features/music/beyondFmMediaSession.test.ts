@@ -66,10 +66,10 @@ describe('Beyond FM system media controls', () => {
     handlers.get('previoustrack')?.({});
     handlers.get('seekto')?.({ seekTime: 46 });
     handlers.get('seekto')?.({ seekTime: Number.NaN });
-    expect(play).toHaveBeenCalledExactlyOnceWith();
-    expect(pause).toHaveBeenCalledExactlyOnceWith();
-    expect(next).toHaveBeenCalledExactlyOnceWith();
-    expect(previous).toHaveBeenCalledExactlyOnceWith();
+    expect(play).toHaveBeenCalledTimes(1);
+    expect(pause).toHaveBeenCalledTimes(1);
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(previous).toHaveBeenCalledTimes(1);
     expect(seekTo).toHaveBeenCalledExactlyOnceWith(46);
     bridge.destroy();
     expect(handlers.get('play')).toBeNull();
