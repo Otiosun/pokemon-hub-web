@@ -16,6 +16,7 @@ const ALLOWED_HUB_API_MODULES = [
   '../../api/hub/player/location.ts',
   '../../api/hub/player/move-choices.ts',
   '../../api/hub/player/move-choices/resolve.ts',
+  '../../api/hub/player/premium/orders.ts',
   '../../api/hub/player/pokedex.ts',
   '../../api/hub/player/pokemon.ts',
   '../../api/hub/player/profile-customization.ts',
