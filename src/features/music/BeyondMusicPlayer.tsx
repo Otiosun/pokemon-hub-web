@@ -126,7 +126,12 @@ export function BeyondMusicPlayer() {
     let mounted = true;
     const engine = new BeyondFmPlaylistEngine(
       (id) => { if (mounted) { setActiveId(id); setProgress(0); setSeconds(0); } },
-      (state) => { if (mounted) setStatus(state === 'running' ? 'playing' : state === 'closed' ? 'unavailable' : 'waiting'); },
+      (state) => {
+        if (mounted) {
+          setStatus(state === 'running' ? 'playing' : state === 'closed' ? 'unavailable' : 'waiting');
+          setPlaybackIssue(engine.playbackIssue);
+        }
+      },
     );
     engineRef.current = engine;
     engine.setVolume(settingsRef.current.volume);
@@ -445,7 +450,16 @@ export function BeyondMusicPlayer() {
           </p> : null}
           {importError ? <p className="beyond-fm-import-hint is-error" role="alert">{importError}</p> : null}
           {available && playbackIssue ? (
-            <p className="beyond-fm-import-hint is-error" role="alert">{playbackIssue}</p>
+            <>
+              <p className="beyond-fm-import-hint is-error" role="alert">{playbackIssue}</p>
+              {status === 'unavailable' ? (
+                <div className="beyond-fm-diagnostics">
+                  <strong>DIAGNÓSTICO DE ÁUDIO</strong>
+                  <code>{engineRef.current?.playbackDiagnostic || 'Nenhum detalhe de mídia disponível.'}</code>
+                  <small>Se continuar sem som, envie uma captura desta linha. Não é necessário baixar as músicas novamente.</small>
+                </div>
+              ) : null}
+            </>
           ) : null}
           {available && engineRef.current?.mp3Recommended && status === 'unavailable' ? (
             <p className="beyond-fm-import-hint">

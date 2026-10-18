@@ -70,7 +70,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'wasm-unsafe-eval'; script-src-attr 'none'; style-src 'self'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data: blob: https://raw.githubusercontent.com https://play.pokemonshowdown.com https://archives.bulbagarden.net https://*.r2.dev https://*.cloudflarestorage.com; connect-src 'self' https://raw.githubusercontent.com https://pokeapi.co https://*.r2.dev https://*.cloudflarestorage.com; font-src 'self'; media-src 'self' blob:; frame-src 'none'; worker-src 'self' blob:; manifest-src 'self'; upgrade-insecure-requests"
+          "value": "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'wasm-unsafe-eval'; script-src-attr 'none'; style-src 'self'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data: blob: https://raw.githubusercontent.com https://play.pokemonshowdown.com https://archives.bulbagarden.net https://*.r2.dev https://*.cloudflarestorage.com; connect-src 'self' blob: https://raw.githubusercontent.com https://pokeapi.co https://*.r2.dev https://*.cloudflarestorage.com; font-src 'self'; media-src 'self' blob: data:; frame-src 'none'; worker-src 'self' blob:; manifest-src 'self'; upgrade-insecure-requests"
         }
       ]
     }

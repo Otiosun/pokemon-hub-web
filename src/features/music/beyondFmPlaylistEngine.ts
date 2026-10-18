@@ -16,6 +16,9 @@ export class BeyondFmPlaylistEngine {
   private muted = false;
   private destroyed = false;
   private issue = '';
+  private loadingFallback = false;
+  private lastDiagnostic = '';
+  private sourceMode: 'blob' | 'data' = 'blob';
   private readonly onTrackChange: (id: BeyondFmTrackId) => void;
   private readonly onPlaybackChange: (state: FmPlaybackState) => void;
 
@@ -34,6 +37,7 @@ export class BeyondFmPlaylistEngine {
   get hasTracks() { return this.tracks.size === 4; }
   get trackId() { return this.active; }
   get playbackIssue() { return this.issue; }
+  get playbackDiagnostic() { return this.lastDiagnostic; }
   get mp3Recommended() { return Boolean(this.active && this.tracks.get(this.active)?.type !== 'audio/mpeg'); }
   get duration() { return this.audio?.duration ?? 0; }
   get currentTime() { return this.audio?.currentTime ?? 0; }
@@ -56,6 +60,8 @@ export class BeyondFmPlaylistEngine {
     this.history = [];
     this.active = null;
     this.issue = '';
+    this.lastDiagnostic = '';
+    this.sourceMode = 'blob';
   }
 
   setVolume(volume: number) {
@@ -96,17 +102,25 @@ export class BeyondFmPlaylistEngine {
     audio.muted = this.muted;
     audio.onended = () => { void this.next(); };
     audio.onerror = () => {
-      // A supported file may still fail decoding; never silently leave Play inert.
+      if (this.loadingFallback || this.audio !== audio) return;
+      // Include the actual media error without exposing local file data.
       const code = audio.error?.code;
       this.issue = this.mp3Recommended
         ? 'O navegador recusou esta faixa M4A. Use SUBSTITUIR POR MP3 e importe o pacote MP3 compatível.'
         : code === 3 || code === 4
           ? 'O navegador não conseguiu decodificar a faixa MP3. Experimente atualizar o navegador ou reimportar o pacote.'
           : 'Não foi possível carregar esta música. Experimente importar o pacote MP3 novamente.';
+      this.lastDiagnostic = this.describeAudioFailure(audio);
       this.onPlaybackChange('closed');
     };
-    audio.onplaying = () => { this.issue = ''; this.onPlaybackChange('running'); };
+    audio.onplaying = () => {
+      this.issue = '';
+      this.lastDiagnostic = '';
+      this.onPlaybackChange('running');
+    };
     this.audio = audio;
+    this.sourceMode = 'blob';
+    this.lastDiagnostic = '';
     this.issue = '';
     this.active = id;
     this.lastTrack = id;
@@ -123,6 +137,53 @@ export class BeyondFmPlaylistEngine {
     return this.nextBag.shift() ?? null;
   }
 
+  private describeAudioFailure(audio: HTMLAudioElement): string {
+    const blob = this.active ? this.tracks.get(this.active) : null;
+    const mime = blob?.type || 'sem MIME';
+    const canPlay = audio.canPlayType(mime || 'audio/mpeg') || 'não';
+    const name = this.active ?? 'desconhecida';
+    return [
+      'faixa=' + name,
+      'fonte=' + this.sourceMode,
+      'tipo=' + mime,
+      'bytes=' + String(blob?.size ?? 0),
+      'codec=' + canPlay,
+      'erro=' + String(audio.error?.code ?? 0),
+      'rede=' + audio.networkState,
+      'pronto=' + audio.readyState,
+    ].join(' | ');
+  }
+
+  private async retryAsDataUrl(audio: HTMLAudioElement): Promise<boolean> {
+    const blob = this.active ? this.tracks.get(this.active) : null;
+    if (!blob || blob.size > 13_000_000 || typeof FileReader === 'undefined') return false;
+    this.loadingFallback = true;
+    try {
+      const url = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => typeof reader.result === 'string'
+          ? resolve(reader.result)
+          : reject(new Error('Arquivo não pôde ser lido.'));
+        reader.onerror = () => reject(reader.error ?? new Error('Arquivo não pôde ser lido.'));
+        reader.readAsDataURL(blob);
+      });
+      if (this.audio !== audio || this.destroyed) return false;
+      this.sourceMode = 'data';
+      audio.src = url;
+      audio.load();
+      await audio.play();
+      this.issue = '';
+      this.lastDiagnostic = '';
+      this.onPlaybackChange('running');
+      return true;
+    } catch {
+      if (this.audio === audio) this.lastDiagnostic = this.describeAudioFailure(audio);
+      return false;
+    } finally {
+      this.loadingFallback = false;
+    }
+  }
+
   async start(): Promise<FmPlaybackState> {
     if (this.destroyed) return 'closed';
     if (!this.hasTracks) return 'suspended';
@@ -137,16 +198,19 @@ export class BeyondFmPlaylistEngine {
       return 'running';
     } catch (error) {
       const name = error && typeof error === 'object' && 'name' in error ? String(error.name) : '';
+      if (name === 'NotSupportedError' && this.audio && this.sourceMode === 'blob') {
+        const playable = await this.retryAsDataUrl(this.audio);
+        if (playable) return 'running';
+      }
       const status: FmPlaybackState = name === 'NotAllowedError' || name === 'AbortError' ? 'suspended' : 'closed';
+      this.lastDiagnostic = this.audio ? this.describeAudioFailure(this.audio) : 'audio=null';
       this.issue = name === 'NotAllowedError'
-        ? 'O navegador bloqueou o som automático. Clique em Play para começar.'
-        : name === 'NotSupportedError' && this.mp3Recommended
-          ? 'Este navegador não aceita a faixa M4A. Clique em SUBSTITUIR POR MP3 e importe o pacote compatível.'
-          : name === 'NotSupportedError'
-            ? 'O navegador recusou a faixa MP3. Experimente reimportar o pacote ou atualizar o navegador.'
-            : status === 'closed'
-              ? 'Ocorreu um erro ao reproduzir a música. Experimente o pacote MP3.'
-              : '';
+        ? 'O navegador bloqueou o som automático. Clique em Play novamente.'
+        : name === 'NotSupportedError'
+          ? 'O navegador recusou o áudio nas duas formas de reprodução. Consulte o diagnóstico abaixo.'
+          : status === 'closed'
+            ? 'A reprodução falhou. Consulte o diagnóstico abaixo.'
+            : '';
       this.onPlaybackChange(status);
       return status;
     }

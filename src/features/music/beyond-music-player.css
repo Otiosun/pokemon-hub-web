@@ -507,3 +507,27 @@
 @media (max-width: 430px) {
   .beyond-music-panel { width: min(272px, calc(100vw - 20px)); }
 }
+
+/* Diagnóstico compacto: explica a falha real sem pedir novo download. */
+.beyond-fm-diagnostics {
+  display: grid;
+  gap: 4px;
+  padding: 8px 9px;
+  border: 1px solid rgba(218, 158, 119, 0.35);
+  border-radius: 5px;
+  background: rgba(138, 75, 54, 0.08);
+}
+.beyond-fm-diagnostics strong {
+  color: #e3b4a3;
+  font: 680 0.53rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.04em;
+}
+.beyond-fm-diagnostics code {
+  color: #bdcfd0;
+  font: 500 0.52rem/1.6 'IBM Plex Mono', monospace;
+  overflow-wrap: anywhere;
+}
+.beyond-fm-diagnostics small {
+  color: #9eabad;
+  font: 500 0.54rem/1.55 'Space Grotesk', sans-serif;
+}
