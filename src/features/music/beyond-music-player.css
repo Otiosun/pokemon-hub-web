@@ -241,3 +241,169 @@
     bottom: max(72px, calc(env(safe-area-inset-bottom) + 62px));
   }
 }
+
+.beyond-music-credit {
+  justify-self: start;
+  color: #849b9d;
+  font: 550 0.5rem 'IBM Plex Mono', monospace;
+  text-decoration: none;
+}
+.beyond-music-credit:hover,
+.beyond-music-credit:focus-visible {
+  color: #9fdae0;
+  text-decoration: underline;
+}
+.beyond-music-player[data-playback='unavailable'] .beyond-music-status-dot {
+  background: #d57b7b;
+}
+
+/* Electric progress contour: measured playback, never a looping CSS countdown.
+   Track and charge share a 100-unit SVG perimeter in both presentations. */
+.beyond-music-panel {
+  position: relative;
+}
+
+.beyond-music-electric-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.beyond-music-electric-track,
+.beyond-music-electric-halo,
+.beyond-music-electric-charge {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.beyond-music-electric-track {
+  stroke: rgba(115, 157, 168, 0.31);
+  stroke-width: 1.65;
+}
+
+.beyond-music-electric-halo {
+  stroke: rgba(50, 214, 249, 0.42);
+  stroke-width: 5;
+  stroke-linecap: round;
+  filter: blur(3px);
+}
+
+.beyond-music-electric-charge {
+  stroke: #82eafa;
+  stroke-width: 2.1;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 3px rgba(45, 225, 255, 0.62));
+}
+
+/* A restrained voltage shimmer lives only on the light, not the timer. */
+.beyond-music-electric-frame.is-playing .beyond-music-electric-charge {
+  animation: beyond-electric-breathe 2s ease-in-out infinite;
+}
+
+@keyframes beyond-electric-breathe {
+  0%, 100% { stroke: #7ee5f6; stroke-width: 2; }
+  50% { stroke: #aff8ff; stroke-width: 2.5; }
+}
+
+/* Two precise bars replace the typographic Roman numeral II. */
+.beyond-music-pause-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 16px;
+  height: 16px;
+}
+
+.beyond-music-pause-icon::before,
+.beyond-music-pause-icon::after {
+  content: '';
+  display: block;
+  width: 3px;
+  height: 12px;
+  border-radius: 1px;
+  background: currentColor;
+}
+
+.beyond-music-play-icon {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-left: 2px;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-left: 10px solid currentColor;
+}
+
+.beyond-music-play {
+  display: inline-grid;
+  place-items: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beyond-music-electric-frame.is-playing .beyond-music-electric-charge {
+    animation: none;
+  }
+}
+
+/* Optional 16-second visual preview. It does not replace the real audio clock. */
+.beyond-music-demo {
+  min-height: 29px;
+  width: 100%;
+  border: 1px solid rgba(100, 212, 235, 0.25);
+  border-radius: 6px;
+  background: rgba(63, 190, 215, 0.06);
+  color: #a2d5dd;
+  font: 700 0.53rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.055em;
+  cursor: pointer;
+}
+.beyond-music-demo:hover,
+.beyond-music-demo:focus-visible {
+  border-color: rgba(122, 225, 244, 0.63);
+  background: rgba(63, 190, 215, 0.12);
+  outline-offset: 2px;
+}
+.beyond-music-player[data-demo='true'] .beyond-music-demo {
+  border-color: rgba(105, 235, 247, 0.6);
+  color: #c4f9ff;
+}
+.beyond-music-player[data-demo='true'] .beyond-music-launcher-note {
+  right: -8px;
+  min-width: 30px;
+  font-size: 0.42rem;
+  letter-spacing: 0.01em;
+  color: #bff9ff;
+  border-color: rgba(100, 225, 247, 0.5);
+}
+
+/* Expanded layout only: one continuous measured path, no second glow track.
+   The compact Rotom retains its original drawing and styling. */
+.beyond-music-electric-frame--expanded .beyond-music-electric-charge {
+  stroke-linecap: butt;
+}
+
+/* PERSISTENT MUSIC PLAYER SWITCH
+   Keep BOTH presentation layers mounted: hidden open panel still measures
+   its real width/height, retaining its one-piece SVG path length and dash.
+   Only visibility changes — never the 16s demo clock or music position. */
+.beyond-music-player[data-expanded='false'] .beyond-music-panel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.beyond-music-player[data-expanded='true'] .beyond-music-launcher {
+  /* Keep the mini sized and measurable; display:none resets its SVG geometry. */
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  visibility: hidden;
+  pointer-events: none;
+}

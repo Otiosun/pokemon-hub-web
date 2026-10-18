@@ -9,6 +9,7 @@ export type ChampionStoreProduct = {
   title: string;
   unitPriceCents: number;
   maxQuantity: number;
+  available?: boolean;
   variants?: readonly ChampionStoreVariant[];
 };
 
@@ -26,7 +27,7 @@ export const CHAMPION_STORE_PRODUCTS: readonly ChampionStoreProduct[] = [
   { code: 'TERA', title: 'Terastalização', unitPriceCents: 5000, maxQuantity: 1 },
   { code: 'Z', title: 'Movimento Z', unitPriceCents: 3000, maxQuantity: 1 },
   { code: 'GMAX', title: 'Gigantamax', unitPriceCents: 5000, maxQuantity: 1 },
-  { code: 'LUCK', title: 'Benção da Sorte', unitPriceCents: 4500, maxQuantity: 1 },
+  { code: 'LUCK', title: 'Benção da Sorte', unitPriceCents: 4500, maxQuantity: 1, available: false },
   { code: 'SAVE+', title: 'Save Premium', unitPriceCents: 3500, maxQuantity: 1 },
   { code: 'GEN', title: 'Pokémon Gênesis', unitPriceCents: 6000, maxQuantity: 20 },
   { code: 'GYM', title: 'Insígnia de Ginásio', unitPriceCents: 10000, maxQuantity: 1 },

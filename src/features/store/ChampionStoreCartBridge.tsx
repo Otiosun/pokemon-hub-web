@@ -50,6 +50,7 @@ function StoreCardControl({
   const line = cart.find((candidate) => candidate.sku === resolved.sku);
   const quantity = line?.quantity ?? 0;
   const isFull = quantity >= resolved.maxQuantity;
+  const available = product.available !== false;
 
   return (
     <div className="store-cart-card-control" data-store-commerce={product.code}>
@@ -70,11 +71,14 @@ function StoreCardControl({
         type="button"
         className="store-cart-add-button"
         onClick={() => onAdd(product.code, variantCode || undefined)}
-        disabled={isFull}
+        disabled={isFull || !available}
       >
-        <span>{isFull && resolved.maxQuantity === 1 ? 'NO CARRINHO' : 'ADICIONAR AO CARRINHO'}</span>
+        <span>{!available ? 'INDISPONÍVEL POR ENQUANTO' : isFull && resolved.maxQuantity === 1 ? 'NO CARRINHO' : 'ADICIONAR AO CARRINHO'}</span>
         {quantity > 0 && resolved.maxQuantity > 1 ? <strong>{quantity}</strong> : null}
       </button>
+      {!available ? (
+        <p className="store-cart-availability-note">Mecânica ainda não implementada; novas compras não estão disponíveis.</p>
+      ) : null}
     </div>
   );
 }
@@ -246,7 +250,7 @@ export function ChampionStoreCartBridge() {
       ...lines,
       '',
       `TOTAL: ${formatBrl(total)}`,
-      'Pagamento e confirmação seguem pelo atendimento atual.',
+      'Este resumo não cria nem confirma um pedido. Pagamento e entrega seguem pelo atendimento.',
     ].join('\n');
   }, [cart, total]);
 
