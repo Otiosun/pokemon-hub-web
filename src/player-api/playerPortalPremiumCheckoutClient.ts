@@ -80,6 +80,7 @@ export async function createPending2XpOrder(
     !UUID.test(body.order.playerId) ||
     body.order.status !== 'PENDING' ||
     typeof body.order.currency !== 'string' ||
+    typeof body.order.totalCents !== 'number' ||
     !Number.isSafeInteger(body.order.totalCents) ||
     body.order.totalCents < 1 ||
     typeof body.replayed !== 'boolean' ||
