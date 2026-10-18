@@ -64,6 +64,22 @@ export class BeyondFmPlaylistEngine {
     this.sourceMode = 'blob';
   }
 
+  /** Hot-swap only the chosen track. Other song blobs and the shuffle bag
+   * survive unchanged. If the replaced track is active, reload it safely.
+   */
+  async replaceTrack(track: LocalFmTrack): Promise<FmPlaybackState> {
+    if (this.destroyed || !this.hasTracks || !this.tracks.has(track.id)) return 'closed';
+    this.tracks.set(track.id, track.blob);
+    if (this.active !== track.id) return this.state;
+    const wasPlaying = this.state === 'running';
+    if (!this.loadTrack(track.id, false)) return 'closed';
+    if (!wasPlaying) {
+      this.onPlaybackChange('suspended');
+      return 'suspended';
+    }
+    return this.start();
+  }
+
   setVolume(volume: number) {
     this.volume = Math.max(0, Math.min(0.65, volume));
     if (this.audio) this.audio.volume = this.volume;

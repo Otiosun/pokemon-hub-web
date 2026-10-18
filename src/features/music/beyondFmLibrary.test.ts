@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BEYOND_FM_TRACKS, extractFmZip, importFmFiles, recognizeFmFile } from './beyondFmLibrary';
+import { BEYOND_FM_TRACKS, extractFmZip, importFmFiles, recognizeFmFile, validateFmReplacementFile } from './beyondFmLibrary';
 
 function ownedBuffer(bytes: Uint8Array): ArrayBuffer {
   const copy = new Uint8Array(bytes.byteLength);
@@ -112,6 +112,18 @@ describe('Beyond FM music import', () => {
     expect(recognizeFmFile('Satoshi - アローラ!! -Instrumental-.mp3')).toBe('alola');
     expect(recognizeFmFile('wrong.mp3')).toBeNull();
   });
+  it('allows replacing just Alola with a user-chosen MP3 while rejecting other formats', () => {
+    const file = new File([new Uint8Array(15000)], 'nova-musica-alola.MP3', { type: '' });
+    const one = validateFmReplacementFile('alola', file);
+    expect(one.id).toBe('alola');
+    expect(one.blob.type).toBe('audio/mpeg');
+    expect(one.blob.size).toBe(15000);
+    expect(() => validateFmReplacementFile('alola',
+      new File([new Uint8Array(15000)], 'alola.m4a'))).toThrow('MP3');
+    expect(() => validateFmReplacementFile('alola',
+      new File([new Uint8Array(12)], 'alola.mp3'))).toThrow('MP3');
+  });
+
   it('accepts four separate MP3 or M4A files', async () => {
     const files = names.map((name) => new File([new Uint8Array(15000)], name, { type: 'audio/mpeg' }));
     expect((await importFmFiles(files)).map((t) => t.id))

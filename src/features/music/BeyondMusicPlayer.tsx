@@ -6,6 +6,8 @@ import {
   importFmFiles,
   restoreFmLibrary,
   saveFmLibrary,
+  saveFmTrackReplacement,
+  validateFmReplacementFile,
   type BeyondFmTrackId,
 } from './beyondFmLibrary';
 import { MUSIC_DEMO_DURATION_MS, MUSIC_DEMO_HOLD_MS, demoProgressAt } from './musicProgressDemo';
@@ -115,6 +117,9 @@ export function BeyondMusicPlayer() {
   const [library, setLibrary] = useState<'loading' | 'missing' | 'importing' | 'ready'>('loading');
   const [storageWarning, setStorageWarning] = useState(false);
   const [importError, setImportError] = useState('');
+  const [singleReplacement, setSingleReplacement] = useState<'idle' | 'saving' | 'saved' | 'failed'>('idle');
+  const [replacementMessage, setReplacementMessage] = useState('');
+  const replacementRef = useRef<HTMLInputElement>(null);
   const [playbackIssue, setPlaybackIssue] = useState('');
   const [activeId, setActiveId] = useState<BeyondFmTrackId | null>(null);
   const [seconds, setSeconds] = useState(0);
@@ -359,6 +364,29 @@ export function BeyondMusicPlayer() {
     }
   };
 
+  const replaceAlola = async (selected: File | undefined) => {
+    if (!selected) return;
+    const engine = engineRef.current;
+    if (!engine?.hasTracks || library !== 'ready' || singleReplacement === 'saving') return;
+    setReplacementMessage('');
+    setSingleReplacement('saving');
+    try {
+      const replacement = validateFmReplacementFile('alola', selected);
+      // Commit a SINGLE IndexedDB record; do not clear the four-song library.
+      await saveFmTrackReplacement(replacement);
+      const result = await engine.replaceTrack(replacement);
+      setSingleReplacement('saved');
+      setReplacementMessage(result === 'closed'
+        ? 'Alola foi salva. Toque na faixa para testar a reprodução.'
+        : 'Alola substituída! As outras três músicas foram preservadas. Toque nela para testar.');
+      setPlaybackIssue(engine.playbackIssue);
+      setStatus(result === 'running' ? 'playing' : result === 'closed' ? 'unavailable' : 'paused');
+    } catch (error) {
+      setSingleReplacement('failed');
+      setReplacementMessage(error instanceof Error ? error.message : 'Não foi possível substituir a faixa.');
+    }
+  };
+
   const switchTrack = async (direction: 'next' | 'previous') => {
     const engine = engineRef.current;
     if (!engine || !engine.hasTracks) return;
@@ -487,6 +515,27 @@ export function BeyondMusicPlayer() {
             onClick={() => inputRef.current?.click()}>
             {library === 'importing' ? 'IMPORTANDO…' : available && status === 'unavailable' && engineRef.current?.mp3Recommended ? 'SUBSTITUIR POR MP3' : available ? 'SUBSTITUIR BIBLIOTECA' : 'IMPORTAR 4 FAIXAS · ZIP MP3'}
           </button>
+          {available ? (
+            <div className="beyond-fm-single-replacement">
+              <input ref={replacementRef} type="file" accept=".mp3,audio/mpeg"
+                className="beyond-fm-hidden-input" aria-label="Escolher novo MP3 de Alola"
+                onChange={(event) => {
+                  const file = event.currentTarget.files?.[0];
+                  event.currentTarget.value = '';
+                  void replaceAlola(file);
+                }} />
+              <button type="button" className="beyond-fm-replace-one"
+                disabled={singleReplacement === 'saving'}
+                onClick={() => replacementRef.current?.click()}>
+                {singleReplacement === 'saving' ? 'SALVANDO ALOLA…' : 'SUBSTITUIR SÓ ALOLA · MP3'}
+              </button>
+              {replacementMessage ? (
+                <p className={singleReplacement === 'failed'
+                  ? 'beyond-fm-import-hint is-error' : 'beyond-fm-import-hint'}
+                  role="status">{replacementMessage}</p>
+              ) : null}
+            </div>
+          ) : null}
           {!available ? (
             <p className="beyond-fm-import-hint" role="status">
               {library === 'loading' ? 'Verificando músicas salvas neste endereço…'

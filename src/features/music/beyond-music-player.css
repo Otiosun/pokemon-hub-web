@@ -531,3 +531,31 @@
   color: #9eabad;
   font: 500 0.54rem/1.55 'Space Grotesk', sans-serif;
 }
+
+/* Replace one personal MP3 without forcing a new four-track archive. */
+.beyond-fm-single-replacement {
+  display: grid;
+  gap: 6px;
+}
+.beyond-fm-replace-one {
+  width: 100%;
+  min-height: 29px;
+  padding: 6px 9px;
+  border: 1px solid rgba(100, 212, 235, 0.35);
+  border-radius: 5px;
+  color: #b7e4e9;
+  background: rgba(63, 190, 215, 0.075);
+  font: 690 .51rem 'IBM Plex Mono', monospace;
+  letter-spacing: .04em;
+  cursor: pointer;
+}
+.beyond-fm-replace-one:hover:not(:disabled),
+.beyond-fm-replace-one:focus-visible {
+  border-color: rgba(119, 220, 241, .75);
+  background: rgba(63, 190, 215, .16);
+  outline-offset: 2px;
+}
+.beyond-fm-replace-one:disabled {
+  cursor: wait;
+  opacity: .5;
+}

@@ -189,6 +189,35 @@ export async function importFmFiles(selected: readonly File[]): Promise<LocalFmT
   return trackIds.map((id) => ({ id, blob: mapped.get(id)! }));
 }
 
+/** A single user-selected replacement must not force another four-track ZIP
+ * import. Only one existing IndexedDB record is modified atomically.
+ */
+export function validateFmReplacementFile(id: BeyondFmTrackId, file: File): LocalFmTrack {
+  if (!trackIds.includes(id) || !file.name.toLowerCase().endsWith('.mp3') ||
+      file.size < 10_000 || file.size > MAX_TRACK_BYTES) {
+    throw new Error('Selecione um arquivo MP3 válido, com até 13 MB, para substituir a faixa.');
+  }
+  return {
+    id,
+    blob: new Blob([file], { type: 'audio/mpeg' }),
+  };
+}
+
+export async function saveFmTrackReplacement(track: LocalFmTrack): Promise<void> {
+  const db = await openDatabase();
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction('audio', 'readwrite');
+      const store = transaction.objectStore('audio');
+      // Only touch the named record; the remaining three songs stay intact.
+      store.put({ id: track.id, blob: track.blob });
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error ?? new Error('Falha ao salvar a faixa.'));
+      transaction.onabort = () => reject(transaction.error ?? new Error('Substituição interrompida.'));
+    });
+  } finally { db.close(); }
+}
+
 function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     if (typeof indexedDB === 'undefined') { reject(new Error('Armazenamento local indisponível.')); return; }

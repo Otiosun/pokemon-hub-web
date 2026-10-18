@@ -62,6 +62,16 @@ describe('Beyond FM shuffled audio engine', () => {
     await engine.next();
     expect(selected).toHaveLength(4);
     expect(new Set(selected).size).toBe(4);
+    const beforeReplacement = engine.trackId;
+    const sameAudio = audioInstances.at(-1);
+    const intact = await engine.replaceTrack({
+      id: 'alola' === beforeReplacement ? 'cynthia' : 'alola',
+      blob: new Blob([new Uint8Array(12800)], { type: 'audio/mpeg' }),
+    });
+    expect(intact).toBe('running');
+    expect(engine.trackId).toBe(beforeReplacement);
+    expect(audioInstances.at(-1)).toBe(sameAudio);
+    expect(engine.hasTracks).toBe(true);
     await engine.next();
     expect(engine.trackId).not.toBe(selected[3]);
     expect(revoked.length).toBe(4);
