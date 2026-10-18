@@ -57,8 +57,8 @@ export class BeyondFmMediaSession {
         artist: track.artist,
         album: 'Pokémon Beyond · Beyond FM',
         artwork: [{
-          src: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/479.png',
-          sizes: '96x96',
+          src: new URL('/beyond-fm-cover.png', document.baseURI).href,
+          sizes: '192x192',
           type: 'image/png',
         }],
       });

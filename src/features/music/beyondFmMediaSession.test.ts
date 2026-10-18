@@ -45,7 +45,7 @@ describe('Beyond FM system media controls', () => {
       title: 'Cynthia · Champion Battle',
       artist: 'Qumu',
       album: 'Pokémon Beyond · Beyond FM',
-      artwork: [expect.objectContaining({ type: 'image/png', sizes: '96x96' })],
+      artwork: [expect.objectContaining({ type: 'image/png', sizes: '192x192', src: expect.stringContaining('/beyond-fm-cover.png') })],
     });
     bridge.updateTrack('driftveil');
     expect(mediaSession.metadata).toMatchObject({
