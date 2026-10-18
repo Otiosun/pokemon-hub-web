@@ -245,6 +245,17 @@ export class BeyondFmPlaylistEngine {
     return this.start();
   }
 
+  seekTo(seconds: number): void {
+    if (!this.audio || !Number.isFinite(seconds)) return;
+    const duration = this.audio.duration;
+    if (!Number.isFinite(duration) || duration <= 0) return;
+    try {
+      this.audio.currentTime = Math.max(0, Math.min(duration, seconds));
+    } catch {
+      // Streaming/decoding states can temporarily reject seeking.
+    }
+  }
+
   pause() {
     this.audio?.pause();
     this.onPlaybackChange('suspended');

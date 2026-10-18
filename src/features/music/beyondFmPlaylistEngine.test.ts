@@ -41,6 +41,13 @@ describe('Beyond FM shuffled audio engine', () => {
     playingAudio.currentTime = 37;
     const playingTrack = engine.trackId;
     engine.setVolume(0.57);
+    engine.seekTo(52);
+    expect(playingAudio.currentTime).toBe(52);
+    engine.seekTo(500);
+    expect(playingAudio.currentTime).toBe(90);
+    engine.seekTo(-4);
+    expect(playingAudio.currentTime).toBe(0);
+    engine.seekTo(37);
     expect(playingAudio.volume).toBe(0.57);
     expect(playingAudio.currentTime).toBe(37);
     expect(playingAudio.paused).toBe(false);

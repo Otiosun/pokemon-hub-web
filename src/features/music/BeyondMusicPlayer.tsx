@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BeyondFmPlaylistEngine } from './beyondFmPlaylistEngine';
+import { BeyondFmMediaSession } from './beyondFmMediaSession';
 import {
   BEYOND_FM_TRACKS,
   importFmFiles,
@@ -119,19 +120,28 @@ export function BeyondMusicPlayer() {
   const [seconds, setSeconds] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const engineRef = useRef<BeyondFmPlaylistEngine | null>(null);
+  const mediaSessionRef = useRef<BeyondFmMediaSession | null>(null);
   const settingsRef = useRef(settings);
 
   settingsRef.current = settings;
 
   useEffect(() => {
     let mounted = true;
+    let mediaSession: BeyondFmMediaSession | null = null;
     const engine = new BeyondFmPlaylistEngine(
-      (id) => { if (mounted) { setActiveId(id); setProgress(0); setSeconds(0); } },
+      (id) => {
+        if (mounted) { setActiveId(id); setProgress(0); setSeconds(0); }
+        mediaSession?.updateTrack(id);
+      },
       (state) => {
         if (mounted) {
-          setStatus(state === 'running' ? 'playing' : state === 'closed' ? 'unavailable' : 'waiting');
+          setStatus(state === 'running'
+            ? 'playing'
+            : state === 'closed' ? 'unavailable'
+              : settingsRef.current.enabled ? 'waiting' : 'paused');
           setPlaybackIssue(engine.playbackIssue);
         }
+        mediaSession?.updatePlayback(state === 'running');
       },
     );
     engineRef.current = engine;
@@ -146,6 +156,46 @@ export function BeyondMusicPlayer() {
         setPlaybackIssue(engine.playbackIssue);
       }
     };
+
+    const enablePlayback = () => {
+      const next = { ...settingsRef.current, enabled: true };
+      settingsRef.current = next;
+      setSettings(next);
+    };
+    const requestSystemTrack = async (direction: 'previous' | 'next') => {
+      if (!mounted || !engine.hasTracks) return;
+      enablePlayback();
+      const state = direction === 'next' ? await engine.next() : await engine.previous();
+      if (mounted) {
+        setStatus(state === 'running' ? 'playing' : state === 'closed' ? 'unavailable' : 'waiting');
+        setPlaybackIssue(engine.playbackIssue);
+      }
+    };
+    mediaSession = new BeyondFmMediaSession({
+      play: () => {
+        if (!mounted || !engine.hasTracks) return;
+        enablePlayback();
+        void requestPlayback();
+      },
+      pause: () => {
+        if (!mounted) return;
+        const next = { ...settingsRef.current, enabled: false };
+        settingsRef.current = next;
+        setSettings(next);
+        engine.pause();
+      },
+      previous: () => { void requestSystemTrack('previous'); },
+      next: () => { void requestSystemTrack('next'); },
+      seekTo: (seconds) => {
+        engine.seekTo(seconds);
+        mediaSession?.updatePosition(engine.currentTime, engine.duration, true);
+        if (mounted) {
+          setSeconds(engine.currentTime);
+          setProgress(engine.progress);
+        }
+      },
+    });
+    mediaSessionRef.current = mediaSession;
 
     void restoreFmLibrary().then((saved) => {
       if (!mounted) return;
@@ -173,17 +223,12 @@ export function BeyondMusicPlayer() {
     window.addEventListener('pointerdown', unlock, { passive: true });
     window.addEventListener('keydown', unlock);
 
-    const onVisibilityChange = () => {
-      if (document.hidden) { engine.pause(); return; }
-      if (settingsRef.current.enabled) void requestPlayback();
-    };
-    document.addEventListener('visibilitychange', onVisibilityChange);
-
     return () => {
       mounted = false;
       window.removeEventListener('pointerdown', unlock);
       window.removeEventListener('keydown', unlock);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
+      mediaSession?.destroy();
+      mediaSessionRef.current = null;
       engineRef.current = null;
       engine.destroy();
     };
@@ -206,8 +251,10 @@ export function BeyondMusicPlayer() {
   // audio position and minimising never resets it.
   useEffect(() => {
     const refreshProgress = () => {
-      setProgress(engineRef.current?.progress ?? 0);
-      setSeconds(engineRef.current?.currentTime ?? 0);
+      const engine = engineRef.current;
+      setProgress(engine?.progress ?? 0);
+      setSeconds(engine?.currentTime ?? 0);
+      if (engine) mediaSessionRef.current?.updatePosition(engine.currentTime, engine.duration);
     };
     refreshProgress();
     if (status !== 'playing') return;
