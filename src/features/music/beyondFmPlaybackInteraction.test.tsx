@@ -10,6 +10,9 @@ describe('Beyond FM Play interaction safety', () => {
     expect(play).toContain('aria-label="Tocar música"');
     expect(play).not.toContain('disabled');
     expect(html).toContain('IMPORTAR 4 MÚSICAS · ZIP/MP3');
+    expect(html).toContain('aria-expanded="false"');
+    expect(html).toMatch(/id="beyond-fm-library-management"[^>]*hidden=""/);
+    expect(html).not.toContain('SUBSTITUIR SÓ ALOLA');
     expect(html).toContain('MINHA BIBLIOTECA');
   });
 });

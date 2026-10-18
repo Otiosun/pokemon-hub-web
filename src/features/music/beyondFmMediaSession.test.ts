@@ -52,6 +52,11 @@ describe('Beyond FM system media controls', () => {
       title: 'Driftveil City',
       artist: 'The Zame',
     });
+    bridge.updateTrack('town-theme');
+    expect(mediaSession.metadata).toMatchObject({
+      title: 'Town Theme',
+      artist: 'cynicmusic',
+    });
     bridge.updatePlayback(true);
     expect(mediaSession.playbackState).toBe('playing');
     bridge.updatePlayback(false);

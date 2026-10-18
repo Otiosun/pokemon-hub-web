@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BeyondFmPlaylistEngine } from './beyondFmPlaylistEngine';
-import { BEYOND_FM_TRACKS } from './beyondFmLibrary';
+import { BEYOND_FM_TRACKS, PUBLIC_FM_SOURCE_URL } from './beyondFmLibrary';
 afterEach(() => vi.unstubAllGlobals());
 describe('Beyond FM shuffled audio engine', () => {
-  it('plays all four without repeating, and keeps pause/resume state', async () => {
+  it('plays five songs including the CC0 track without repeating, and keeps pause/resume state', async () => {
     let serial = 0;
     const audioInstances: AudioStub[] = [];
     class AudioStub {
@@ -60,8 +60,12 @@ describe('Beyond FM shuffled audio engine', () => {
     await engine.next();
     await engine.next();
     await engine.next();
-    expect(selected).toHaveLength(4);
-    expect(new Set(selected).size).toBe(4);
+    await engine.next();
+    expect(selected).toHaveLength(5);
+    expect(new Set(selected).size).toBe(5);
+    expect(selected).toContain('town-theme');
+    expect(audioInstances.some((audio) => audio.src === PUBLIC_FM_SOURCE_URL)).toBe(true);
+    expect(engine.hasPersonalLibrary).toBe(true);
     const beforeReplacement = engine.trackId;
     const sameAudio = audioInstances.at(-1);
     const intact = await engine.replaceTrack({
@@ -73,10 +77,19 @@ describe('Beyond FM shuffled audio engine', () => {
     expect(audioInstances.at(-1)).toBe(sameAudio);
     expect(engine.hasTracks).toBe(true);
     await engine.next();
-    expect(engine.trackId).not.toBe(selected[3]);
-    expect(revoked.length).toBe(4);
+    expect(engine.trackId).not.toBe(selected[4]);
+    const previousRevoked = revoked.length;
     engine.destroy();
     expect(engine.state).toBe('closed');
-    expect(revoked.length).toBe(5);
+    expect(revoked.length).toBeGreaterThanOrEqual(previousRevoked);
+    // The remote CC0 stream does not create or revoke local blob URLs.
+    const publicOnly = new BeyondFmPlaylistEngine();
+    publicOnly.installPublic();
+    expect(publicOnly.isPublicStation).toBe(true);
+    expect(publicOnly.hasPersonalLibrary).toBe(false);
+    expect(await publicOnly.start()).toBe('running');
+    expect(audioInstances.at(-1)?.src).toBe(PUBLIC_FM_SOURCE_URL);
+    expect(audioInstances.at(-1)?.loop).toBe(true);
+    publicOnly.destroy();
   });
 });

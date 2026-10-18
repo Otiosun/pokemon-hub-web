@@ -19,3 +19,15 @@ describe('four song shuffle bag', () => {
     expect(shuffleFmBag([], null)).toEqual([]);
   });
 });
+
+describe('five-track public + private rotation', () => {
+  const songs = ['cynthia', 'national-park', 'driftveil', 'alola', 'town-theme'];
+  it('includes Town Theme exactly once among the five shuffled tracks', () => {
+    const bag = shuffleFmBag(songs, null, () => 0.37);
+    expect(bag).toHaveLength(5);
+    expect(new Set(bag)).toEqual(new Set(songs));
+    for (const last of songs) {
+      expect(shuffleFmBag(songs, last, () => 0.37)[0]).not.toBe(last);
+    }
+  });
+});

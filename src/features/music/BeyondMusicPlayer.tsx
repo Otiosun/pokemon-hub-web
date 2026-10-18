@@ -442,6 +442,12 @@ export function BeyondMusicPlayer() {
               <small title={selectedTrack?.title}>{selectedTrack?.title ?? 'BEYOND FM'}</small>
               <em title={selectedTrack?.artist}>{selectedTrack ? `${selectedTrack.artist} · ${statusLabel}` : statusLabel}</em>
             </div>
+            <button type="button" className="beyond-fm-settings-toggle"
+              aria-label="Configurar biblioteca pessoal" aria-expanded={manageLibrary}
+              aria-controls="beyond-fm-library-management"
+              onClick={() => setManageLibrary((open) => !open)}>
+              <span aria-hidden="true">⋮</span>
+            </button>
             <button
               type="button"
               className="beyond-music-collapse"
@@ -490,10 +496,10 @@ export function BeyondMusicPlayer() {
           </div>
           <div className="beyond-fm-playlist-heading">
             <strong>{publicRadio ? 'BEYOND FM · RÁDIO LIVRE' : 'ROTAÇÃO ALEATÓRIA'}</strong>
-            <span>{publicRadio ? 'FAIXA CC0 · REPETIÇÃO' : '4 FAIXAS · SEM REPETIR'}</span>
+            <span>{publicRadio ? '1 FAIXA CC0 · REPETIÇÃO' : '5 FAIXAS · SEM REPETIR'}</span>
           </div>
           <div className="beyond-fm-playlist">
-            {(publicRadio ? [PUBLIC_FM_TRACK] : BEYOND_FM_TRACKS).map((track, index) => (
+            {(publicRadio ? [PUBLIC_FM_TRACK] : [...BEYOND_FM_TRACKS, PUBLIC_FM_TRACK]).map((track, index) => (
               <button type="button" key={track.id}
                 className={`beyond-fm-track-row${activeId === track.id && available ? ' is-current' : ''}`}
                 disabled={!available} aria-current={activeId === track.id ? 'true' : undefined}
@@ -514,17 +520,15 @@ export function BeyondMusicPlayer() {
           </div>
 
 
-          {publicRadio ? (
-            <p className="beyond-fm-public-credit">
-              <a href={PUBLIC_FM_TRACK.sourcePage} target="_blank" rel="noopener noreferrer">
-                Town Theme · cynicmusic · CC0
-              </a>
-            </p>
-          ) : null}
+          <p className="beyond-fm-public-credit">
+            <a href={PUBLIC_FM_TRACK.sourcePage} target="_blank" rel="noopener noreferrer">
+              Town Theme · cynicmusic · CC0
+            </a>
+          </p>
 
-          <details className="beyond-fm-library-details" open={manageLibrary}
-            onToggle={(event) => setManageLibrary(event.currentTarget.open)}>
-            <summary>MINHA BIBLIOTECA <span>{privateLibrary ? '4 FAIXAS SALVAS' : 'OPCIONAL'}</span></summary>
+          <div id="beyond-fm-library-management" className="beyond-fm-library-details"
+            hidden={!manageLibrary}>
+            <header>MINHA BIBLIOTECA <span>{privateLibrary ? '4 FAIXAS PESSOAIS' : 'OPCIONAL'}</span></header>
             <p>Use músicas do seu dispositivo. Os arquivos nunca são enviados ao servidor.</p>
             <input ref={inputRef} className="beyond-fm-hidden-input" type="file"
               accept=".zip,.mp3,.m4a,audio/mpeg,audio/mp4,audio/x-m4a" multiple
@@ -560,7 +564,7 @@ export function BeyondMusicPlayer() {
               O armazenamento está indisponível; a biblioteca poderá precisar de nova importação.
             </p> : null}
             {importError ? <p className="beyond-fm-import-hint is-error" role="alert">{importError}</p> : null}
-          </details>
+          </div>
           {available && playbackIssue ? <p className="beyond-fm-import-hint is-error" role="alert">{playbackIssue}</p> : null}
           {available && status === 'waiting' ? (
             <p className="beyond-fm-import-hint" role="status">
@@ -568,7 +572,7 @@ export function BeyondMusicPlayer() {
             </p>
           ) : null}
           <span className="beyond-music-credit">
-            {publicRadio ? 'RÁDIO PÚBLICA · MÚSICA CC0' : 'BIBLIOTECA PESSOAL · ARQUIVOS LOCAIS'}
+            {publicRadio ? 'RÁDIO PÚBLICA · CC0' : 'MIX DE 5 FAIXAS · BIBLIOTECA LOCAL + CC0'}
           </span>
       </section>
     </aside>

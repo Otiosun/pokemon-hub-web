@@ -11,6 +11,9 @@ describe('music player layout switching', () => {
     expect(html).toContain('id="beyond-music-panel"');
     expect(html).toContain('aria-hidden="true"');
     expect(html).toContain('MINHA BIBLIOTECA');
+    expect(html).toContain('aria-label="Configurar biblioteca pessoal"');
+    expect(html).toContain('id="beyond-fm-library-management"');
+    expect(html).toMatch(/id="beyond-fm-library-management"[^>]*hidden=""/);
     expect(html).not.toContain('SIMULAR FAIXA');
     expect(html.match(/beyond-music-electric-frame/g)?.length).toBeGreaterThanOrEqual(2);
   });
