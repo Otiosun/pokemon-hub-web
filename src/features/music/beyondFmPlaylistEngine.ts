@@ -34,8 +34,9 @@ export class BeyondFmPlaylistEngine {
     } catch { /* Persistence is optional. */ }
   }
 
-  get hasTracks() { return this.isPublicStation || this.tracks.size === 4; }
+  get hasTracks() { return this.tracks.has('town-theme') && (this.tracks.size === 1 || this.tracks.size === 5); }
   get isPublicStation() { return this.tracks.size === 1 && this.tracks.has('town-theme'); }
+  get hasPersonalLibrary() { return this.tracks.size === 5; }
   get trackId() { return this.active; }
   get playbackIssue() { return this.issue; }
   get playbackDiagnostic() { return this.lastDiagnostic; }
@@ -56,7 +57,12 @@ export class BeyondFmPlaylistEngine {
   install(tracks: readonly LocalFmTrack[]) {
     if (this.destroyed) return;
     this.disposeAudio();
-    this.tracks = new Map(tracks.map((track) => [track.id, track.blob]));
+    // The public CC0 track is ALWAYS part of the shuffle bag, alongside the
+    // four locally stored tracks. Nothing from the personal library is uploaded.
+    this.tracks = new Map<BeyondFmTrackId, Blob | string>([
+      ...tracks.map((track) => [track.id, track.blob] as [BeyondFmTrackId, Blob]),
+      ['town-theme', PUBLIC_FM_SOURCE_URL],
+    ]);
     this.nextBag = [];
     this.history = [];
     this.active = null;
