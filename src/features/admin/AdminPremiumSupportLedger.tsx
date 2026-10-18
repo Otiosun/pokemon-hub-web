@@ -94,8 +94,17 @@ export function AdminPremiumSupportLedger({
       setKind('NOTE');
       setOrderId('');
       setSaved(true);
-      const refreshed = await getPremiumSupportEvents(playerId);
-      setState(refreshed);
+      // The POST is authoritative: present the saved event even if the follow-up
+      // GET fails. Never suggest that a successfully persisted note was lost.
+      setState((current) => current.status === 'ok'
+        ? { status: 'ok', events: [result.event, ...current.events.filter((item) => item.id !== result.event.id)] }
+        : current);
+      try {
+        const refreshed = await getPremiumSupportEvents(playerId);
+        if (refreshed.status === 'ok') setState(refreshed);
+      } catch {
+        // The successful write remains visible until the next history refresh.
+      }
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'Não foi possível salvar. Tente novamente.');
     } finally {
