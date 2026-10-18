@@ -7,7 +7,7 @@ describe('Beyond FM production Content Security Policy', () => {
 
   it('allows same-origin and local Blob audio for imported MP3 and M4A files', () => {
     expect(policy).toContain("media-src 'self' blob: data: https://opengameart.org;");
-    expect(policy).toContain("connect-src 'self' blob:");
+    expect(policy).toContain("connect-src 'self' https://raw.githubusercontent.com");
     expect(policy).not.toContain("media-src 'none'");
   });
 
