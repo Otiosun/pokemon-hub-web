@@ -40,6 +40,22 @@ export function checkoutIntentId(quantity: number, storage: Pick<Storage, 'getIt
   return requestId;
 }
 
+/** Release the persisted retry key ONLY after the server confirms an order.
+ * Failed/uncertain responses retain the key so retries cannot duplicate a charge intent.
+ */
+export function completeCheckoutIntent(requestId: string, storage: Pick<Storage, 'getItem' | 'removeItem'>): void {
+  if (!UUID.test(requestId)) return;
+  try {
+    const previous = storage.getItem(STORAGE_KEY);
+    if (!previous) return;
+    const parsed: unknown = JSON.parse(previous);
+    // Do not erase a newer intent created in another tab while this request was in flight.
+    if (object(parsed) && parsed.requestId === requestId) storage.removeItem(STORAGE_KEY);
+  } catch {
+    // Persisted retries are best effort in browsers with restricted storage.
+  }
+}
+
 export async function createPending2XpOrder(
   quantity: number,
   requestId: string,
