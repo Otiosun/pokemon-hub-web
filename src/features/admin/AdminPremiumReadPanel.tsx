@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { AdminPremiumOrderActions } from './AdminPremiumOrderActions';
 import {
   getAdminPremiumRead,
   type AdminPremiumReadResult,
@@ -44,6 +45,7 @@ export function AdminPremiumReadPanel({
   resource: PremiumReadResource;
 }) {
   const [state, setState] = useState<ReadState>({ status: 'choose' });
+  const [refreshToken, refresh] = useState(0);
 
   useEffect(() => {
     if (!playerId) {
@@ -65,7 +67,7 @@ export function AdminPremiumReadPanel({
         }
       });
     return () => { cancelled = true; };
-  }, [playerId, resource]);
+  }, [playerId, resource, refreshToken]);
 
   const title = resource === 'orders' ? 'Pedidos do jogador' : 'Benefícios do jogador';
 
@@ -77,7 +79,7 @@ export function AdminPremiumReadPanel({
           <h3>{title}</h3>
           <small>{playerName ?? 'Nenhum jogador selecionado'}</small>
         </div>
-        <span className="premium-read-tag">SOMENTE LEITURA</span>
+        <span className="premium-read-tag">{resource === 'orders' ? 'REVISÃO DO OWNER' : 'SOMENTE LEITURA'}</span>
       </header>
 
       {state.status === 'choose' ? (
@@ -127,6 +129,7 @@ export function AdminPremiumReadPanel({
                   ))}
                 </ul>
                 <small>PAGO {dateText(order.paidAt)} · APLICADO {dateText(order.appliedAt)}</small>
+                <AdminPremiumOrderActions order={order} onUpdated={() => refresh((value) => value + 1)} />
               </article>
             ))}
           </div>

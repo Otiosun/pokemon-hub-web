@@ -835,3 +835,85 @@
   .premium-support-ledger-activity { order: 2; }
   .premium-support-ledger-compose { order: 1; }
 }
+
+/* Explicit, owner-only two-stage workflow. Never mimics automatic checkout. */
+.premium-order-admin-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 5px;
+  padding: 12px;
+  border-radius: 7px;
+  border: 1px solid rgba(114, 207, 213, 0.18);
+  background: #111f21;
+}
+.premium-order-admin-actions header {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+.premium-order-admin-actions header strong {
+  font: 750 .63rem 'IBM Plex Mono', monospace;
+  color: #abdee1;
+  letter-spacing: .025em;
+}
+.premium-order-admin-actions header span {
+  font: 570 .52rem 'IBM Plex Mono', monospace;
+  color: #8fa6a9;
+}
+.premium-order-admin-actions p {
+  margin: 0;
+  color: #a8bdc0;
+  font: 530 .69rem/1.55 'Space Grotesk', sans-serif;
+}
+.premium-order-admin-actions label:not(.premium-order-admin-confirm) {
+  display: grid;
+  gap: 6px;
+  color: #d1e0e0;
+  font: 650 .64rem 'Space Grotesk', sans-serif;
+}
+.premium-order-admin-actions textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid rgba(172, 209, 212, .23);
+  border-radius: 5px;
+  background: #091314;
+  color: #ecf6f6;
+  resize: vertical;
+  font: 550 .72rem/1.5 'Space Grotesk', sans-serif;
+}
+.premium-order-admin-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font: 580 .67rem/1.45 'Space Grotesk', sans-serif;
+  color: #c4d4d5;
+  cursor: pointer;
+}
+.premium-order-admin-confirm input {
+  margin-top: 2px;
+  accent-color: #72ccd3;
+  flex-shrink: 0;
+}
+.premium-order-admin-actions > button {
+  min-height: 40px;
+  border: 1px solid rgba(125, 216, 219, .48);
+  border-radius: 6px;
+  color: #d3f9f9;
+  background: rgba(70, 177, 187, .15);
+  cursor: pointer;
+  font: 760 .63rem 'IBM Plex Mono', monospace;
+  letter-spacing: .025em;
+}
+.premium-order-admin-actions > button:hover:not(:disabled),
+.premium-order-admin-actions > button:focus-visible {
+  background: rgba(70, 177, 187, .26);
+  outline-offset: 2px;
+}
+.premium-order-admin-actions > button:disabled {
+  cursor: not-allowed;
+  opacity: .48;
+}
+.premium-order-admin-actions p.is-warning { color: #e0ac9d; }
+.premium-order-admin-actions p.is-success { color: #a7e4ce; }

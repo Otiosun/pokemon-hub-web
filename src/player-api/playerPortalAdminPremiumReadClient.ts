@@ -15,6 +15,7 @@ export interface PremiumOrder {
   humanId: string;
   playerId: string;
   status: PremiumOrderStatus;
+  revision: string;
   currency: string;
   totalCents: number;
   createdAt: string;
@@ -57,6 +58,7 @@ function isOrder(value: unknown): value is PremiumOrder {
     typeof value.playerId === 'string' &&
     UUID_PATTERN.test(value.playerId) &&
     ['PENDING', 'PAID', 'APPLIED', 'CANCELLED'].includes(String(value.status)) &&
+    typeof value.revision === 'string' && /^\\d{1,20}$/.test(value.revision) &&
     typeof value.currency === 'string' &&
     Number.isSafeInteger(value.totalCents) &&
     typeof value.createdAt === 'string' &&
