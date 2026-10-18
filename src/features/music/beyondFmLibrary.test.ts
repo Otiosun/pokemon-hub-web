@@ -18,6 +18,28 @@ describe('Beyond FM local music import', () => {
     expect(tracks.map((track) => track.id)).toEqual(BEYOND_FM_TRACKS.map((track) => track.id));
     expect(tracks.every((track) => track.blob.size === 15_000)).toBe(true);
   });
+  it('imports the four songs from the supplied kind of uncompressed ZIP', async () => {
+    const encoder = new TextEncoder();
+    const parts: BlobPart[] = [];
+    for (const name of names) {
+      const filename = encoder.encode(name);
+      const payload = new Uint8Array(15_000);
+      const header = new Uint8Array(30);
+      const dv = new DataView(header.buffer);
+      dv.setUint32(0, 0x04034b50, true);
+      dv.setUint16(8, 0, true); // ZIP_STORED
+      dv.setUint32(18, payload.length, true);
+      dv.setUint32(22, payload.length, true);
+      dv.setUint16(26, filename.length, true);
+      parts.push(header, filename, payload);
+    }
+    // Central directory signature marks the end of local entries.
+    parts.push(new Uint8Array([0x50, 0x4b, 0x01, 0x02]));
+    const archive = new File(parts, 'Beyond_FM_4_Faixas.zip', { type: 'application/zip' });
+    const tracks = await importFmFiles([archive]);
+    expect(tracks.map((track) => track.id)).toEqual(BEYOND_FM_TRACKS.map((track) => track.id));
+    expect(tracks.every((track) => track.blob.size === 15_000)).toBe(true);
+  });
   it('rejects missing or duplicate songs', async () => {
     const make = (name: string) => new File([new Uint8Array(15_000)], name);
     await expect(importFmFiles(names.slice(0, 3).map(make))).rejects.toThrow();
