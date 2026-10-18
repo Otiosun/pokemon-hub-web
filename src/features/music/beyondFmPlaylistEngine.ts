@@ -15,6 +15,7 @@ export class BeyondFmPlaylistEngine {
   private volume = 0.22;
   private muted = false;
   private destroyed = false;
+  private issue = '';
   private readonly onTrackChange: (id: BeyondFmTrackId) => void;
   private readonly onPlaybackChange: (state: FmPlaybackState) => void;
 
@@ -32,6 +33,7 @@ export class BeyondFmPlaylistEngine {
 
   get hasTracks() { return this.tracks.size === 4; }
   get trackId() { return this.active; }
+  get playbackIssue() { return this.issue; }
   get duration() { return this.audio?.duration ?? 0; }
   get currentTime() { return this.audio?.currentTime ?? 0; }
   get progress() {
@@ -91,8 +93,19 @@ export class BeyondFmPlaylistEngine {
     audio.volume = this.volume;
     audio.muted = this.muted;
     audio.onended = () => { void this.next(); };
-    audio.onerror = () => this.onPlaybackChange('closed');
+    audio.onerror = () => {
+      // A supported file may still fail decoding; never silently leave Play inert.
+      const code = audio.error?.code;
+      this.issue = code === 3
+        ? 'O navegador não conseguiu decodificar este M4A. Selecione outra faixa ou substitua a biblioteca.'
+        : code === 4
+          ? 'Formato de áudio não suportado pelo navegador. Experimente Chrome ou Firefox atualizados.'
+          : 'Não foi possível carregar esta música. Tente outra faixa ou importe novamente.';
+      this.onPlaybackChange('closed');
+    };
+    audio.onplaying = () => { this.issue = ''; this.onPlaybackChange('running'); };
     this.audio = audio;
+    this.issue = '';
     this.active = id;
     this.lastTrack = id;
     try { localStorage.setItem(LAST_TRACK_KEY, id); } catch { /* Optional. */ }
@@ -117,11 +130,19 @@ export class BeyondFmPlaylistEngine {
     }
     try {
       await this.audio!.play();
+      this.issue = '';
       this.onPlaybackChange('running');
       return 'running';
     } catch (error) {
       const name = error && typeof error === 'object' && 'name' in error ? String(error.name) : '';
       const status: FmPlaybackState = name === 'NotAllowedError' || name === 'AbortError' ? 'suspended' : 'closed';
+      this.issue = name === 'NotAllowedError'
+        ? 'O navegador bloqueou o início automático do som. Clique em Play mais uma vez.'
+        : name === 'NotSupportedError'
+          ? 'Este navegador não conseguiu tocar o M4A. Verifique a biblioteca ou experimente outro navegador.'
+          : status === 'closed'
+            ? 'Ocorreu um erro ao reproduzir a música. Tente outra faixa ou substitua a biblioteca.'
+            : '';
       this.onPlaybackChange(status);
       return status;
     }

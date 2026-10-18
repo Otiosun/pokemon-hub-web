@@ -113,6 +113,7 @@ export function BeyondMusicPlayer() {
   const [library, setLibrary] = useState<'loading' | 'missing' | 'importing' | 'ready'>('loading');
   const [storageWarning, setStorageWarning] = useState(false);
   const [importError, setImportError] = useState('');
+  const [playbackIssue, setPlaybackIssue] = useState('');
   const [activeId, setActiveId] = useState<BeyondFmTrackId | null>(null);
   const [seconds, setSeconds] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -134,7 +135,10 @@ export function BeyondMusicPlayer() {
     const requestPlayback = async () => {
       if (!settingsRef.current.enabled || !engine.hasTracks) return;
       const state = await engine.start();
-      if (mounted) setStatus(state === 'running' ? 'playing' : state === 'closed' ? 'unavailable' : 'waiting');
+      if (mounted) {
+        setStatus(state === 'running' ? 'playing' : state === 'closed' ? 'unavailable' : 'waiting');
+        setPlaybackIssue(engine.playbackIssue);
+      }
     };
 
     void restoreFmLibrary().then((saved) => {
@@ -148,7 +152,14 @@ export function BeyondMusicPlayer() {
       if (mounted) setLibrary('missing');
     });
 
-    const unlock = () => {
+    const unlock = (event: Event) => {
+      // Play / Next / playlist buttons manage their own single playback
+      // request. Do not race their click handlers with a second global play().
+      const target = event.target;
+      if (target instanceof Element &&
+        (target.closest('.beyond-music-controls') ||
+          target.closest('.beyond-fm-playlist') ||
+          target.closest('.beyond-fm-import'))) return;
       if (settingsRef.current.enabled && engine.hasTracks && engine.state !== 'running') {
         void requestPlayback();
       }
@@ -221,6 +232,11 @@ export function BeyondMusicPlayer() {
   const togglePlayback = async () => {
     const engine = engineRef.current;
     if (!engine) return;
+    if (!engine.hasTracks) {
+      setExpanded(true);
+      if (library === 'missing') inputRef.current?.click();
+      return;
+    }
 
     if (status === 'playing') {
       const next = { ...settings, enabled: false };
@@ -235,8 +251,10 @@ export function BeyondMusicPlayer() {
     const next = { ...settings, enabled: true };
     settingsRef.current = next;
     setSettings(next);
+    setPlaybackIssue('');
     setStatus('starting');
     const state = await engine.start();
+    setPlaybackIssue(engine.playbackIssue);
     setStatus(state === 'running' ? 'playing' : state === 'closed' ? 'unavailable' : 'waiting');
   };
 
@@ -262,6 +280,7 @@ export function BeyondMusicPlayer() {
     if (!selected.length) return;
     setLibrary('importing');
     setImportError('');
+    setPlaybackIssue('');
     try {
       const tracks = await importFmFiles(selected);
       let persisted = true;
@@ -280,6 +299,7 @@ export function BeyondMusicPlayer() {
       setSettings(next);
       const playback = await engine.start();
       setStatus(playback === 'running' ? 'playing' : playback === 'closed' ? 'unavailable' : 'waiting');
+      setPlaybackIssue(engine.playbackIssue);
     } catch (error) {
       setImportError(error instanceof Error ? error.message : 'Não foi possível importar as faixas.');
       setLibrary(engineRef.current?.hasTracks ? 'ready' : 'missing');
@@ -294,6 +314,7 @@ export function BeyondMusicPlayer() {
     setSettings(next);
     const state = direction === 'next' ? await engine.next() : await engine.previous();
     setStatus(state === 'running' ? 'playing' : state === 'closed' ? 'unavailable' : 'waiting');
+    setPlaybackIssue(engine.playbackIssue);
     setProgress(engine.progress);
   };
 
@@ -342,9 +363,9 @@ export function BeyondMusicPlayer() {
           <div className="beyond-music-controls">
             <button type="button" className="beyond-music-skip" disabled={!available}
               onClick={() => void switchTrack('previous')} aria-label="Música anterior">‹</button>
-            <button type="button" className="beyond-music-play" disabled={!available}
+            <button type="button" className="beyond-music-play"
               onClick={() => void togglePlayback()}
-              aria-label={status === 'playing' ? 'Pausar música' : 'Tocar música'}
+              aria-label={!available ? 'Adicionar quatro faixas para tocar' : status === 'playing' ? 'Pausar música' : 'Tocar música'}
               aria-pressed={status === 'playing'}>
               {status === 'playing'
                 ? <span className="beyond-music-pause-icon" aria-hidden="true" />
@@ -413,15 +434,24 @@ export function BeyondMusicPlayer() {
             {library === 'importing' ? 'IMPORTANDO…' : available ? 'SUBSTITUIR BIBLIOTECA' : 'ADICIONAR 4 FAIXAS · ZIP OU M4A'}
           </button>
           {!available ? (
-            <p className="beyond-fm-import-hint">
-              Importe o pacote Beyond FM uma vez. As músicas ficam no seu dispositivo,
-              sem serem publicadas no servidor.
+            <p className="beyond-fm-import-hint" role="status">
+              {library === 'loading' ? 'Verificando músicas salvas neste endereço…'
+                : library === 'importing' ? 'Lendo o pacote de músicas…'
+                : 'O Play abrirá a seleção de arquivos. Escolha o ZIP com as quatro músicas. A biblioteca é salva para este endereço do site.'}
             </p>
           ) : null}
           {storageWarning ? <p className="beyond-fm-import-hint is-error">
             O navegador bloqueou o armazenamento permanente. As músicas funcionam nesta visita, mas precisarão ser importadas novamente.
           </p> : null}
           {importError ? <p className="beyond-fm-import-hint is-error" role="alert">{importError}</p> : null}
+          {available && playbackIssue ? (
+            <p className="beyond-fm-import-hint is-error" role="alert">{playbackIssue}</p>
+          ) : null}
+          {available && status === 'waiting' ? (
+            <p className="beyond-fm-import-hint" role="status">
+              O navegador aguardou um clique para liberar o áudio. Use Play para continuar.
+            </p>
+          ) : null}
           {!available ? (
             <button type="button" className="beyond-music-demo" aria-pressed={demoActive}
               onClick={() => { setDemoProgress(0); setDemoActive((active) => !active); }}>
