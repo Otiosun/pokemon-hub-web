@@ -1,0 +1,9 @@
+# pnpm 11: only the audited dependencies that require install-time binary setup.
+# Versions are pinned to the isolated QA dependency resolution. Any version change
+# requires a new explicit review instead of silently executing a new postinstall.
+packages:
+  - '.'
+allowBuilds:
+  'esbuild@0.28.1': true
+  'workerd@1.20260825.1': true
+strictDepBuilds: true
