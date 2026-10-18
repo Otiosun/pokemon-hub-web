@@ -7,6 +7,7 @@ import {
 } from '../../player-api/playerPortalAdminPlayersClient';
 import { AdminPremiumIdentityPanel } from './AdminPremiumIdentityPanel';
 import { AdminPremiumReadPanel } from './AdminPremiumReadPanel';
+import { AdminPremiumSupportLedger } from './AdminPremiumSupportLedger';
 import {
   classifyAdminPremiumSearch,
   maskedWhatsAppDigits,
@@ -18,6 +19,7 @@ type PremiumSection =
   | 'overview'
   | 'entitlements'
   | 'orders'
+  | 'support'
   | 'identity'
   | 'repair'
   | 'audit';
@@ -39,6 +41,7 @@ const SECTIONS: readonly {
   { id: 'overview', label: 'RESUMO', eyebrow: 'BUSCA & ESTADO' },
   { id: 'entitlements', label: 'ENTITLEMENTS', eyebrow: 'BENEFÍCIOS' },
   { id: 'orders', label: 'PEDIDOS', eyebrow: 'COMÉRCIO' },
+  { id: 'support', label: 'ATENDIMENTOS', eyebrow: 'HISTÓRICO' },
   { id: 'identity', label: 'TROCA DE NÚMERO', eyebrow: 'IDENTIDADE' },
   { id: 'repair', label: 'REPROCESSAR', eyebrow: 'SUPORTE' },
   { id: 'audit', label: 'LOGS', eyebrow: 'AUDITORIA' },
@@ -372,6 +375,13 @@ export function AdminPremiumSupportPanel() {
       {activeSection === 'orders' ? (
         <AdminPremiumReadPanel
           resource="orders"
+          playerId={selectedPlayer?.player.id ?? null}
+          playerName={selectedPlayer?.profile.trainerName ?? null}
+        />
+      ) : null}
+
+      {activeSection === 'support' ? (
+        <AdminPremiumSupportLedger
           playerId={selectedPlayer?.player.id ?? null}
           playerName={selectedPlayer?.profile.trainerName ?? null}
         />

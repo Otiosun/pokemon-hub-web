@@ -59,20 +59,20 @@ export function resolveAdminProxyRoute(url: URL, requestMethod = 'GET'): AdminPr
     };
   }
 
-  if (url.pathname === '/api/hub/admin/premium' && requestMethod === 'GET') {
+  if (url.pathname === '/api/hub/admin/premium' && (requestMethod === 'GET' || requestMethod === 'POST')) {
     const playerId = url.searchParams.get('playerId');
     const resource = url.searchParams.get('resource');
     if (
       playerId === null ||
       !UUID_PATTERN.test(playerId) ||
-      (resource !== 'orders' && resource !== 'entitlements') ||
+      (resource !== 'support' && (requestMethod !== 'GET' || (resource !== 'orders' && resource !== 'entitlements'))) ||
       [...url.searchParams.keys()].some((key) => key !== 'playerId' && key !== 'resource')
     ) {
       return null;
     }
     return {
       upstreamPath: `/v1/hub/admin/premium/players/${playerId}/${resource}`,
-      allowedMethod: 'GET',
+      allowedMethod: requestMethod,
     };
   }
 

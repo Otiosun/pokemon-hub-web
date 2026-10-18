@@ -173,6 +173,28 @@ describe('consolidated admin proxy boundary', () => {
       ),
     ).toBeNull();
   });
+  it('allows strictly owner-scoped support history reads and notes without payment mutation routes', () => {
+    const playerId = '11111111-1111-4111-8111-111111111111';
+    const url = new URL(`https://hub.test/api/hub/admin/premium?playerId=${playerId}&resource=support`);
+    for (const method of ['GET', 'POST']) {
+      expect(resolveAdminProxyRoute(url, method)).toEqual({
+        upstreamPath: `/v1/hub/admin/premium/players/${playerId}/support`,
+        allowedMethod: method,
+      });
+    }
+    for (const method of ['PUT', 'DELETE']) {
+      expect(resolveAdminProxyRoute(url, method)).toBeNull();
+    }
+    expect(resolveAdminProxyRoute(
+      new URL(`https://hub.test/api/hub/admin/premium?playerId=${playerId}&resource=support&paid=true`),
+      'POST',
+    )).toBeNull();
+    expect(resolveAdminProxyRoute(
+      new URL(`https://hub.test/api/hub/admin/premium?playerId=${playerId}&resource=orders`),
+      'POST',
+    )).toBeNull();
+  });
+
   it('only proxies owner Premium reads for valid players, never writes', () => {
     const playerId = '11111111-1111-4111-8111-111111111111';
     for (const resource of ['orders', 'entitlements']) {
