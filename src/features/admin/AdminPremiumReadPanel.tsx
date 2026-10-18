@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AdminPremiumOrderActions } from './AdminPremiumOrderActions';
 import {
   getAdminPremiumRead,
@@ -45,29 +45,31 @@ export function AdminPremiumReadPanel({
   resource: PremiumReadResource;
 }) {
   const [state, setState] = useState<ReadState>({ status: 'choose' });
-  const [refreshToken, refresh] = useState(0);
-
-  useEffect(() => {
+  const requestSeq = useRef(0);
+  const reload = useCallback(() => {
+    const seq = ++requestSeq.current;
     if (!playerId) {
       setState({ status: 'choose' });
       return;
     }
-    let cancelled = false;
     setState({ status: 'loading' });
     void getAdminPremiumRead(playerId, resource)
       .then((result) => {
-        if (!cancelled) setState(result);
+        if (seq === requestSeq.current) setState(result);
       })
       .catch((error: unknown) => {
-        if (!cancelled) {
+        if (seq === requestSeq.current) {
           setState({
             status: 'error',
             message: error instanceof Error ? error.message : 'Não foi possível consultar a Central Premium.',
           });
         }
       });
-    return () => { cancelled = true; };
-  }, [playerId, resource, refreshToken]);
+  }, [playerId, resource]);
+  useEffect(() => {
+    reload();
+    return () => { requestSeq.current += 1; };
+  }, [reload]);
 
   const title = resource === 'orders' ? 'Pedidos do jogador' : 'Benefícios do jogador';
 
@@ -129,7 +131,7 @@ export function AdminPremiumReadPanel({
                   ))}
                 </ul>
                 <small>PAGO {dateText(order.paidAt)} · APLICADO {dateText(order.appliedAt)}</small>
-                <AdminPremiumOrderActions order={order} onUpdated={() => refresh((value) => value + 1)} />
+                <AdminPremiumOrderActions order={order} onUpdated={reload} />
               </article>
             ))}
           </div>
