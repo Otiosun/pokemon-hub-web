@@ -380,3 +380,9 @@
   color: #bff9ff;
   border-color: rgba(100, 225, 247, 0.5);
 }
+
+/* Expanded layout only: one continuous measured path, no second glow track.
+   The compact Rotom retains its original drawing and styling. */
+.beyond-music-electric-frame--expanded .beyond-music-electric-charge {
+  stroke-linecap: butt;
+}
