@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { BEYOND_MUSIC_SOURCE_PAGE, BeyondMusicEngine } from './beyondMusicEngine';
+import { MUSIC_DEMO_DURATION_MS, MUSIC_DEMO_HOLD_MS, demoProgressAt } from './musicProgressDemo';
 import {
   BEYOND_MUSIC_STORAGE_KEY,
   DEFAULT_BEYOND_MUSIC_SETTINGS,
@@ -70,6 +71,8 @@ export function BeyondMusicPlayer() {
   const [status, setStatus] = useState<PlaybackStatus>(settings.enabled ? 'starting' : 'paused');
   const [expanded, setExpanded] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [demoActive, setDemoActive] = useState(false);
+  const [demoProgress, setDemoProgress] = useState(0);
   const engineRef = useRef<BeyondMusicEngine | null>(null);
   const settingsRef = useRef(settings);
 
@@ -136,6 +139,26 @@ export function BeyondMusicPlayer() {
     return () => window.clearInterval(intervalId);
   }, [status]);
 
+  // Independent visual-only test; doesn't fake a payment, audio playback, or user settings.
+  // Because it's local to the mounted player, it survives collapse and expansion.
+  useEffect(() => {
+    if (!demoActive) return;
+    const startedAt = performance.now();
+    const refresh = () => {
+      const elapsedMs = performance.now() - startedAt;
+      setDemoProgress(demoProgressAt(elapsedMs));
+      if (elapsedMs >= MUSIC_DEMO_DURATION_MS + MUSIC_DEMO_HOLD_MS) {
+        setDemoActive(false);
+      }
+    };
+    refresh();
+    const intervalId = window.setInterval(refresh, 60);
+    return () => window.clearInterval(intervalId);
+  }, [demoActive]);
+
+  const visualProgress = demoActive ? demoProgress : progress;
+  const borderActive = demoActive || status === 'playing';
+
   const togglePlayback = async () => {
     const engine = engineRef.current;
     if (!engine) return;
@@ -158,8 +181,9 @@ export function BeyondMusicPlayer() {
     setStatus(state === 'running' ? 'playing' : state === 'closed' ? 'unavailable' : 'waiting');
   };
 
-  const statusLabel =
-    status === 'playing'
+  const statusLabel = demoActive
+    ? 'PRÉVIA VISUAL · SEM ÁUDIO'
+    : status === 'playing'
       ? 'TOCANDO'
       : status === 'waiting'
         ? 'TOQUE NA TELA PARA INICIAR'
@@ -174,6 +198,7 @@ export function BeyondMusicPlayer() {
       className="beyond-music-player"
       data-playback={status}
       data-expanded={expanded ? 'true' : 'false'}
+      data-demo={demoActive ? 'true' : 'false'}
       aria-label="Música do Pokémon Beyond"
     >
       {!expanded ? (
@@ -185,14 +210,14 @@ export function BeyondMusicPlayer() {
           aria-expanded="false"
           aria-controls="beyond-music-panel"
         >
-          <ElectricProgressFrame progress={progress} compact playing={status === 'playing'} />
+          <ElectricProgressFrame progress={visualProgress} compact playing={borderActive} />
           <img src={ROTOM_SPRITE} alt="" aria-hidden="true" />
-          <span className="beyond-music-launcher-note" aria-hidden="true">♫</span>
+          <span className="beyond-music-launcher-note" aria-hidden="true">{demoActive ? 'DEMO' : '♫'}</span>
           <span className="beyond-music-status-dot" aria-hidden="true" />
         </button>
       ) : (
         <section id="beyond-music-panel" className="beyond-music-panel">
-          <ElectricProgressFrame progress={progress} compact={false} playing={status === 'playing'} />
+          <ElectricProgressFrame progress={visualProgress} compact={false} playing={borderActive} />
           <header className="beyond-music-track">
             <span className="beyond-music-sprite" aria-hidden="true">
               <img src={ROTOM_SPRITE} alt="" />
@@ -251,6 +276,17 @@ export function BeyondMusicPlayer() {
               />
             </label>
           </div>
+          <button
+            type="button"
+            className="beyond-music-demo"
+            aria-pressed={demoActive}
+            onClick={() => {
+              setDemoProgress(0);
+              setDemoActive((active) => !active);
+            }}
+          >
+            {demoActive ? 'ENCERRAR PRÉVIA' : 'SIMULAR FAIXA · 16 S'}
+          </button>
           <a className="beyond-music-credit" href={BEYOND_MUSIC_SOURCE_PAGE} target="_blank" rel="noopener noreferrer">
             Trilha: cynicmusic · domínio público ↗
           </a>

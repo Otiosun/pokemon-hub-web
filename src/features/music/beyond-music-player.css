@@ -349,3 +349,34 @@
     animation: none;
   }
 }
+
+/* Optional 16-second visual preview. It does not replace the real audio clock. */
+.beyond-music-demo {
+  min-height: 29px;
+  width: 100%;
+  border: 1px solid rgba(100, 212, 235, 0.25);
+  border-radius: 6px;
+  background: rgba(63, 190, 215, 0.06);
+  color: #a2d5dd;
+  font: 700 0.53rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.055em;
+  cursor: pointer;
+}
+.beyond-music-demo:hover,
+.beyond-music-demo:focus-visible {
+  border-color: rgba(122, 225, 244, 0.63);
+  background: rgba(63, 190, 215, 0.12);
+  outline-offset: 2px;
+}
+.beyond-music-player[data-demo='true'] .beyond-music-demo {
+  border-color: rgba(105, 235, 247, 0.6);
+  color: #c4f9ff;
+}
+.beyond-music-player[data-demo='true'] .beyond-music-launcher-note {
+  right: -8px;
+  min-width: 30px;
+  font-size: 0.42rem;
+  letter-spacing: 0.01em;
+  color: #bff9ff;
+  border-color: rgba(100, 225, 247, 0.5);
+}
