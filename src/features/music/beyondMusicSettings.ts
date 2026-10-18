@@ -28,3 +28,14 @@ export function sanitizeBeyondMusicSettings(value: unknown): BeyondMusicSettings
     volume: clampMusicVolume(candidate.volume),
   };
 }
+
+/** Snapshot the slider value before React can defer an updater callback. */
+export function applyMusicSliderValue(
+  rawValue: string,
+  enqueue: (update: (current: BeyondMusicSettings) => BeyondMusicSettings) => void,
+): void {
+  const nextVolume = clampMusicVolume(Number(rawValue) / 100);
+  enqueue((current) => current.volume === nextVolume
+    ? current
+    : { ...current, volume: nextVolume });
+}

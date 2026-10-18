@@ -12,6 +12,7 @@ import { expandedMusicOutline, musicProgressStroke } from './musicExpandedOutlin
 import {
   BEYOND_MUSIC_STORAGE_KEY,
   DEFAULT_BEYOND_MUSIC_SETTINGS,
+  applyMusicSliderValue,
   type BeyondMusicSettings,
   sanitizeBeyondMusicSettings,
 } from './beyondMusicSettings';
@@ -387,9 +388,10 @@ export function BeyondMusicPlayer() {
               <span>VOL</span>
               <input type="range" min="0" max="65" step="1"
                 value={Math.round(settings.volume * 100)}
-                onChange={(event) => setSettings((current) => ({
-                  ...current, volume: Number(event.currentTarget.value) / 100,
-                }))} aria-label="Volume da música" />
+                onChange={(event) => {
+                  // Read the live input synchronously: React may defer the state updater.
+                  applyMusicSliderValue(event.currentTarget.value, setSettings);
+                }} aria-label="Volume da música" />
             </label>
           </div>
 

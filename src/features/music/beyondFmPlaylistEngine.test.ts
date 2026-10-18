@@ -5,6 +5,7 @@ afterEach(() => vi.unstubAllGlobals());
 describe('Beyond FM shuffled audio engine', () => {
   it('plays all four without repeating, and keeps pause/resume state', async () => {
     let serial = 0;
+    const audioInstances: AudioStub[] = [];
     class AudioStub {
       src: string;
       loop = false;
@@ -17,7 +18,7 @@ describe('Beyond FM shuffled audio engine', () => {
       currentTime = 0;
       onended: (() => void) | null = null;
       onerror: (() => void) | null = null;
-      constructor(src: string) { this.src = src; }
+      constructor(src: string) { this.src = src; audioInstances.push(this); }
       async play() { this.paused = false; }
       pause() { this.paused = true; }
       removeAttribute(name: string) { if (name === 'src') this.src = ''; }
@@ -36,6 +37,16 @@ describe('Beyond FM shuffled audio engine', () => {
     engine.setMuted(true);
     expect(engine.hasTracks).toBe(true);
     expect(await engine.start()).toBe('running');
+    const playingAudio = audioInstances[0]!;
+    playingAudio.currentTime = 37;
+    const playingTrack = engine.trackId;
+    engine.setVolume(0.57);
+    expect(playingAudio.volume).toBe(0.57);
+    expect(playingAudio.currentTime).toBe(37);
+    expect(playingAudio.paused).toBe(false);
+    expect(engine.trackId).toBe(playingTrack);
+    expect(engine.state).toBe('running');
+    expect(revoked).toHaveLength(0);
     engine.pause();
     expect(engine.state).toBe('suspended');
     expect(await engine.start()).toBe('running');
