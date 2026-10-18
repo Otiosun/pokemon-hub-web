@@ -1,6 +1,9 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import { BeyondMusicPlayer } from './features/music/BeyondMusicPlayer';
+import { ChampionStoreCanonicalDisplaySync } from './features/store/ChampionStoreCanonicalDisplaySync';
+import { ChampionStoreCartBridge } from './features/store/ChampionStoreCartBridge';
 import './styles.css';
 import './form-control-reset.css';
 import './pokedex-qa-fixes.css';
@@ -12,6 +15,7 @@ import './features/pokedex/pokedex-species-review-polish.css';
 import './features/collection/owned-pokemon-context-filter.css';
 import './features/collection/owned-pokemon-collection-dex-scale.css';
 import './features/collection/owned-pokemon-detail-review-polish.css';
+import './features/store/champion-store-cart-layer.css';
 
 const root = document.getElementById('root');
 
@@ -22,5 +26,8 @@ if (!root) {
 createRoot(root).render(
   <StrictMode>
     <App />
+    <BeyondMusicPlayer />
+    <ChampionStoreCanonicalDisplaySync />
+    <ChampionStoreCartBridge />
   </StrictMode>,
 );
