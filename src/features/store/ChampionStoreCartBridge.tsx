@@ -243,9 +243,12 @@ export function ChampionStoreCartBridge() {
   const hasPriceChanges = championStoreCartHasPriceChanges(cart);
   const canCreate2XpOrder = cart.length === 1 && cart[0]?.sku === '2XP';
 
-  useEffect(() => {
+  const mutateCart = (
+    update: (current: ChampionStoreCartLine[]) => ChampionStoreCartLine[],
+  ) => {
     setOrderState({ status: 'idle' });
-  }, [cart]);
+    setCart(update);
+  };
 
   const createOrder = async () => {
     if (!canCreate2XpOrder || creatingOrderRef.current) return;
@@ -341,8 +344,8 @@ export function ChampionStoreCartBridge() {
               <CartLine
                 key={line.sku}
                 line={line}
-                onQuantity={(sku, quantity) => setCart((current) => setChampionStoreQuantity(current, sku, quantity))}
-                onRemove={(sku) => setCart((current) => removeChampionStoreSku(current, sku))}
+                onQuantity={(sku, quantity) => mutateCart((current) => setChampionStoreQuantity(current, sku, quantity))}
+                onRemove={(sku) => mutateCart((current) => removeChampionStoreSku(current, sku))}
               />
             ))
           )}
@@ -371,7 +374,7 @@ export function ChampionStoreCartBridge() {
                   setConfirmClear(true);
                   return;
                 }
-                setCart([]);
+                mutateCart(() => []);
                 setConfirmClear(false);
               }}
             >
@@ -426,7 +429,7 @@ export function ChampionStoreCartBridge() {
               <StoreCardControl
                 product={product}
                 cart={cart}
-                onAdd={(productCode, variantCode) => setCart((current) => addChampionStoreSku(current, productCode, variantCode))}
+                onAdd={(productCode, variantCode) => mutateCart((current) => addChampionStoreSku(current, productCode, variantCode))}
               />,
               host,
               code,
