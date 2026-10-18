@@ -113,11 +113,16 @@ function MusicElectricProgressFrame({
   );
 }
 
+function recoveryModeFromLocation(): boolean {
+  return typeof window !== 'undefined' && isFmLibraryRecoveryRoute(window.location.search);
+}
+
 export function BeyondMusicPlayer() {
-  const recoveryMode = typeof window !== 'undefined' && isFmLibraryRecoveryRoute(window.location.search);
+  const [recoveryMode, setRecoveryMode] = useState(recoveryModeFromLocation);
   const [settings, setSettings] = useState<BeyondMusicSettings>(loadSettings);
   const [status, setStatus] = useState<PlaybackStatus>(settings.enabled ? 'starting' : 'paused');
-  const [expanded, setExpanded] = useState(false);
+  // Recovery links must reveal the import controls immediately, with no Rotom click.
+  const [expanded, setExpanded] = useState(recoveryModeFromLocation);
   const [progress, setProgress] = useState(0);
   const [demoActive, setDemoActive] = useState(false);
   const [demoProgress, setDemoProgress] = useState(0);
@@ -136,6 +141,23 @@ export function BeyondMusicPlayer() {
   const settingsRef = useRef(settings);
 
   settingsRef.current = settings;
+
+  useEffect(() => {
+    const syncRecoveryRoute = () => {
+      const recovery = recoveryModeFromLocation();
+      setRecoveryMode(recovery);
+      if (recovery) setExpanded(true);
+    };
+    // The SPA changes history without reloading. popstate alone does not
+    // report pushState/replaceState navigations, so App emits its route event.
+    window.addEventListener('popstate', syncRecoveryRoute);
+    window.addEventListener('pokemon-beyond:navigation', syncRecoveryRoute);
+    syncRecoveryRoute();
+    return () => {
+      window.removeEventListener('popstate', syncRecoveryRoute);
+      window.removeEventListener('pokemon-beyond:navigation', syncRecoveryRoute);
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -222,6 +244,9 @@ export function BeyondMusicPlayer() {
       }
     }).catch(() => {
       if (!mounted) return;
+      // The public station is still usable, but do not silently pretend
+      // IndexedDB is healthy when we could not restore personal tracks.
+      setStorageWarning(true);
       engine.installPublic();
       setLibrary('public');
       void requestPlayback();
@@ -421,6 +446,7 @@ export function BeyondMusicPlayer() {
       data-playback={status}
       data-expanded={expanded ? 'true' : 'false'}
       data-demo={demoActive ? 'true' : 'false'}
+      data-recovery={recoveryMode ? 'true' : 'false'}
       aria-label="Música do Pokémon Beyond"
     >
       <button
@@ -526,8 +552,19 @@ export function BeyondMusicPlayer() {
           </p>
 
           {recoveryMode ? <div id="beyond-fm-library-management" className="beyond-fm-library-details">
-            <header>MINHA BIBLIOTECA <span>{privateLibrary ? '4 FAIXAS PESSOAIS' : 'OPCIONAL'}</span></header>
-            <p>Use músicas do seu dispositivo. Os arquivos nunca são enviados ao servidor.</p>
+            <header>RECUPERAR MÚSICAS <span>{privateLibrary ? '4 FAIXAS SALVAS' : 'MODO PRIVADO'}</span></header>
+            <p className="beyond-fm-recovery-status" role="status">
+              {library === 'loading'
+                ? 'Verificando as músicas deste navegador…'
+                : library === 'importing'
+                  ? 'Lendo e verificando as quatro músicas…'
+                  : privateLibrary
+                    ? storageWarning
+                      ? 'As cinco faixas estão disponíveis nesta sessão, mas o navegador não salvou sua biblioteca. Não feche esta aba antes de resolver o armazenamento.'
+                      : 'Biblioteca encontrada: as quatro músicas pessoais mais Town Theme estão disponíveis neste navegador.'
+                    : 'Este navegador ainda só tem Town Theme. Escolha o ZIP de quatro músicas para restaurar a playlist de cinco faixas.'}
+            </p>
+            <p>O ZIP é lido aqui, sem enviar seus MP3 ao servidor. Outros navegadores e abas privadas não compartilham esta biblioteca.</p>
             <input ref={inputRef} className="beyond-fm-hidden-input" type="file"
               accept=".zip,.mp3,.m4a,audio/mpeg,audio/mp4,audio/x-m4a" multiple
               aria-label="Importar biblioteca pessoal"
@@ -539,7 +576,7 @@ export function BeyondMusicPlayer() {
             <button type="button" className="beyond-fm-import"
               disabled={library === 'loading' || library === 'importing'}
               onClick={() => inputRef.current?.click()}>
-              {library === 'importing' ? 'IMPORTANDO…' : privateLibrary ? 'ATUALIZAR BIBLIOTECA' : 'IMPORTAR 4 MÚSICAS · ZIP/MP3'}
+              {library === 'importing' ? 'VERIFICANDO…' : privateLibrary ? 'TROCAR BIBLIOTECA LOCAL' : 'ESCOLHER ZIP · 4 MÚSICAS'}
             </button>
             {privateLibrary ? (
               <>

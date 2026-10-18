@@ -1,7 +1,9 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BeyondMusicPlayer, isFmLibraryRecoveryRoute } from './BeyondMusicPlayer';
+
+afterEach(() => vi.unstubAllGlobals());
 
 describe('music player layout switching', () => {
   it('renders both compact and expanded frames in the same mounted player', () => {
@@ -26,5 +28,21 @@ describe('Beyond FM recovery URL', () => {
     expect(isFmLibraryRecoveryRoute('?fm-library=manage')).toBe(false);
     expect(isFmLibraryRecoveryRoute('?fm-library=recovery')).toBe(true);
     expect(isFmLibraryRecoveryRoute('?other=1&fm-library=recovery')).toBe(true);
+  });
+});
+
+describe('Recovery route initial render', () => {
+  it('expands the player and immediately displays the library controls on the recovery URL', () => {
+    vi.stubGlobal('window', {
+      location: { search: '?fm-library=recovery' },
+      localStorage: { getItem: () => null },
+    });
+    const html = renderToStaticMarkup(createElement(BeyondMusicPlayer));
+    expect(html).toContain('data-expanded="true"');
+    expect(html).toContain('data-recovery="true"');
+    expect(html).toContain('id="beyond-fm-library-management"');
+    expect(html).toContain('ESCOLHER ZIP · 4 MÚSICAS');
+    expect(html).toContain('RECUPERAR MÚSICAS');
+    expect(html).not.toContain('Configurar biblioteca pessoal');
   });
 });
