@@ -57,7 +57,7 @@ async function inflateZipEntry(
   }
   let stream: ReadableStream<Uint8Array>;
   try {
-    stream = new Blob([packed]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    stream = new Blob([new Uint8Array(packed).buffer]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
   } catch {
     throw new Error('Este navegador não suporta a compressão do ZIP. Extraia os quatro MP3 e importe-os juntos.');
   }

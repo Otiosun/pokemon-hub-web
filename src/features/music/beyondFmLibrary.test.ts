@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { BEYOND_FM_TRACKS, extractFmZip, importFmFiles, recognizeFmFile } from './beyondFmLibrary';
 
+function ownedBuffer(bytes: Uint8Array): ArrayBuffer {
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy.buffer;
+}
+
 const names = [
   '01_Qumu_Cynthia.mp3',
   '02_Michael_Tai_National_Park.mp3',
@@ -35,7 +41,7 @@ async function makeZip(
     const filename = encoder.encode(song.filename);
     const compressed = options.compressed && song.data.length
       ? new Uint8Array(await new Response(
-        new Blob([song.data]).stream().pipeThrough(new CompressionStream('deflate-raw')),
+        new Blob([ownedBuffer(song.data)]).stream().pipeThrough(new CompressionStream('deflate-raw')),
       ).arrayBuffer())
       : song.data;
     const method = options.compressed && song.data.length ? 8 : 0;
@@ -89,7 +95,7 @@ async function makeZip(
   encode32(v, 16, offset);
   encode16(v, 20, comment.byteLength);
   end.set(comment, 22);
-  return new File([...locals, ...central, end], 'Beyond_FM.zip', { type: 'application/zip' });
+  return new File([...locals, ...central, end].map(ownedBuffer), 'Beyond_FM.zip', { type: 'application/zip' });
 }
 
 function fourSongs(): ZipSong[] {
@@ -140,6 +146,6 @@ describe('Beyond FM music import', () => {
     await expect(importFmFiles([await makeZip(fourSongs().slice(0, 3))]))
       .rejects.toThrow('quatro músicas');
     await expect(importFmFiles(fourSongs().slice(0, 3).map((s) =>
-      new File([s.data], s.filename)))).rejects.toThrow('quatro faixas');
+      new File([ownedBuffer(s.data)], s.filename)))).rejects.toThrow('quatro faixas');
   });
 });
