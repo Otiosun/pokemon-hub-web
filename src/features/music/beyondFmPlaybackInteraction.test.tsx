@@ -9,7 +9,7 @@ describe('Beyond FM Play interaction safety', () => {
     const play = html.match(/<button[^>]*class="beyond-music-play"[^>]*>/)?.[0] ?? '';
     expect(play).toContain('aria-label="Adicionar quatro faixas para tocar"');
     expect(play).not.toContain('disabled');
-    expect(html).toContain('ADICIONAR 4 FAIXAS');
+    expect(html).toContain('IMPORTAR 4 FAIXAS · ZIP MP3');
     expect(html).toContain('Verificando músicas salvas');
   });
 });
