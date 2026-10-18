@@ -34,4 +34,41 @@ describe('Beyond music playback', () => {
     await music.destroy();
     expect(music.state).toBe('closed');
   });
+
+  it('maps the electric border to real playback time and preserves position on pause', async () => {
+    const instances: FakeAudio[] = [];
+    class FakeAudio {
+      public currentTime = 0;
+      public duration = Number.NaN;
+      public loop = false;
+      public preload = '';
+      public volume = 1;
+      public muted = false;
+      public paused = true;
+      public ended = false;
+      public constructor(_src: string) { instances.push(this); }
+      public async play() { this.paused = false; }
+      public pause() { this.paused = true; }
+      public removeAttribute(_name: string) {}
+    }
+    vi.stubGlobal('Audio', FakeAudio);
+    const music = new BeyondMusicEngine();
+    expect(music.progress).toBe(0);
+    await music.start();
+    const audio = instances[0]!;
+    expect(music.progress).toBe(0);
+    audio.duration = 120;
+    audio.currentTime = 30;
+    expect(music.progress).toBe(0.25);
+    await music.pause();
+    expect(music.progress).toBe(0.25);
+    audio.currentTime = 120;
+    expect(music.progress).toBe(1);
+    audio.currentTime = 0;
+    expect(music.progress).toBe(0);
+    audio.duration = Number.POSITIVE_INFINITY;
+    expect(music.progress).toBe(0);
+    await music.destroy();
+    expect(music.progress).toBe(0);
+  });
 });

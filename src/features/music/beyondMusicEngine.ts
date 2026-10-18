@@ -12,6 +12,14 @@ export class BeyondMusicEngine {
   private muted = false;
   private destroyed = false;
 
+  /** Real recording progress: 0 at the start, 1 at the end. Never a decorative timer. */
+  get progress(): number {
+    const audio = this.audio;
+    if (!audio || !Number.isFinite(audio.duration) || audio.duration <= 0) return 0;
+    const fraction = audio.currentTime / audio.duration;
+    return Number.isFinite(fraction) ? Math.min(1, Math.max(0, fraction)) : 0;
+  }
+
   get state(): BeyondMusicPlaybackState {
     if (this.destroyed) return 'closed';
     if (!this.audio) return 'uninitialized';
