@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { checkoutIntentId, createPending2XpOrder } from '../../player-api/playerPortalPremiumCheckoutClient';
+import { checkoutIntentId, completeCheckoutIntent, createPending2XpOrder } from '../../player-api/playerPortalPremiumCheckoutClient';
 import {
   CHAMPION_STORE_BY_CODE,
   formatBrl,
@@ -260,6 +260,7 @@ export function ChampionStoreCartBridge() {
       const requestId = checkoutIntentId(quantity, window.localStorage, () => crypto.randomUUID());
       const result = await createPending2XpOrder(quantity, requestId);
       if (result.status === 'created') {
+        completeCheckoutIntent(requestId, window.localStorage);
         setOrderState({
           status: 'created',
           humanId: result.order.humanId,
