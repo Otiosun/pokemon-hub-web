@@ -39,7 +39,16 @@ function ElectricProgressFrame({
 }) {
   const radiusX = compact ? 29 : 5.5;
   const radiusY = compact ? 29 : 10;
-  const strokeDasharray = `${(Math.max(0, Math.min(1, progress)) * 100).toFixed(2)} 100`;
+  const normalizedProgress = Math.max(0, Math.min(1, progress));
+  // The expanded SVG is stretched into a wide panel. On some browsers rect
+  // pathLength normalisation is inconsistent there, repeating the bright
+  // stroke on opposite edges. Use its unnormalised path perimeter instead:
+  // 2*(97 + 97 - 2*(5.5 + 10)) + ellipse(5.5,10) ~= 376 viewBox units.
+  // Keep the compact Rotom exactly as before.
+  const expandedPerimeter = 376;
+  const strokeDasharray = compact
+    ? `${(normalizedProgress * 100).toFixed(2)} 100`
+    : `${(normalizedProgress * expandedPerimeter).toFixed(2)} ${expandedPerimeter}`;
 
   const geometry = {
     x: 1.5,
@@ -48,7 +57,7 @@ function ElectricProgressFrame({
     height: 97,
     rx: radiusX,
     ry: radiusY,
-    pathLength: 100,
+    ...(compact ? { pathLength: 100 } : {}),
   };
 
   return (
@@ -60,7 +69,9 @@ function ElectricProgressFrame({
       focusable="false"
     >
       <rect className="beyond-music-electric-track" {...geometry} />
-      <rect className="beyond-music-electric-halo" {...geometry} strokeDasharray={strokeDasharray} />
+      {compact ? (
+        <rect className="beyond-music-electric-halo" {...geometry} strokeDasharray={strokeDasharray} />
+      ) : null}
       <rect className="beyond-music-electric-charge" {...geometry} strokeDasharray={strokeDasharray} />
     </svg>
   );
