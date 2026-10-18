@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BEYOND_MUSIC_SOURCE_PAGE, BeyondMusicEngine } from './beyondMusicEngine';
 import { MUSIC_DEMO_DURATION_MS, MUSIC_DEMO_HOLD_MS, demoProgressAt } from './musicProgressDemo';
-import { expandedMusicOutline } from './musicExpandedOutline';
+import { expandedMusicOutline, musicProgressStroke } from './musicExpandedOutline';
 import {
   BEYOND_MUSIC_STORAGE_KEY,
   DEFAULT_BEYOND_MUSIC_SETTINGS,
@@ -26,74 +26,65 @@ function loadSettings(): BeyondMusicSettings {
 }
 
 
-/** Preserve the approved compact Rotom outline exactly. */
-function CompactElectricProgressFrame({ progress, playing }: { progress: number; playing: boolean }) {
-  const normalizedProgress = Math.max(0, Math.min(1, progress));
-  const geometry = {
-    x: 1.5, y: 1.5, width: 97, height: 97, rx: 29, ry: 29, pathLength: 100,
-  };
-  const strokeDasharray = `${(normalizedProgress * 100).toFixed(2)} 100`;
-  return (
-    <svg
-      className={`beyond-music-electric-frame${playing ? ' is-playing' : ''}`}
-      viewBox="0 0 100 100" preserveAspectRatio="none"
-      aria-hidden="true" focusable="false"
-    >
-      <rect className="beyond-music-electric-track" {...geometry} />
-      <rect className="beyond-music-electric-halo" {...geometry} strokeDasharray={strokeDasharray} />
-      <rect className="beyond-music-electric-charge" {...geometry} strokeDasharray={strokeDasharray} />
-    </svg>
-  );
-}
-
 /**
- * The open panel has a real pixel perimeter, not a stretched 100x100 square.
- * One measured path creates one advancing luminous arc at any card size.
+ * Both player sizes use exactly the SAME path-length-based progress algorithm.
+ * No SVG rect pathLength calibration and no guessed perimeter. A given fraction
+ * occupies the same percentage on both outlines regardless of shape or size.
  */
-function ExpandedElectricProgressFrame({ progress, playing }: { progress: number; playing: boolean }) {
+function MusicElectricProgressFrame({
+  progress,
+  playing,
+  compact,
+}: {
+  progress: number;
+  playing: boolean;
+  compact: boolean;
+}) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const chargeRef = useRef<SVGPathElement | null>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [perimeter, setPerimeter] = useState(0);
 
   useLayoutEffect(() => {
-    const panel = svgRef.current?.parentElement;
-    if (!panel) return;
+    const wrapper = svgRef.current?.parentElement;
+    if (!wrapper) return;
     const measure = () => {
-      const width = panel.clientWidth;
-      const height = panel.clientHeight;
+      const width = wrapper.clientWidth;
+      const height = wrapper.clientHeight;
       setDimensions((old) => (old.width === width && old.height === height ? old : { width, height }));
     };
     measure();
     const observer = new ResizeObserver(measure);
-    observer.observe(panel);
+    observer.observe(wrapper);
     return () => observer.disconnect();
   }, []);
 
-  const outline = expandedMusicOutline(dimensions.width, dimensions.height);
+  const cornerRadius = compact ? (dimensions.width <= 43 ? 10.5 : 12.5) : 10.5;
+  const outline = expandedMusicOutline(dimensions.width, dimensions.height, cornerRadius);
+
   useLayoutEffect(() => {
     setPerimeter(outline ? (chargeRef.current?.getTotalLength() ?? 0) : 0);
   }, [outline]);
 
-  const fraction = Number.isFinite(progress) ? Math.min(1, Math.max(0, progress)) : 0;
+  const { dasharray, dashoffset, visible } = musicProgressStroke(perimeter, progress);
   return (
     <svg
       ref={svgRef}
-      className={`beyond-music-electric-frame beyond-music-electric-frame--expanded${playing ? ' is-playing' : ''}`}
+      className={`beyond-music-electric-frame${compact ? '' : ' beyond-music-electric-frame--expanded'}${playing ? ' is-playing' : ''}`}
       viewBox={`0 0 ${Math.max(1, dimensions.width)} ${Math.max(1, dimensions.height)}`}
       preserveAspectRatio="none" aria-hidden="true" focusable="false"
     >
       {outline ? (
         <>
           <path className="beyond-music-electric-track" d={outline} />
-          <path
-            ref={chargeRef}
-            className="beyond-music-electric-charge"
-            d={outline}
-            strokeDasharray={`${perimeter} ${perimeter}`}
-            strokeDashoffset={perimeter * (1 - fraction)}
-            opacity={perimeter > 0 && fraction > 0 ? 1 : 0}
-          />
+          {compact ? (
+            <path className="beyond-music-electric-halo" d={outline}
+              strokeDasharray={dasharray} strokeDashoffset={dashoffset}
+              opacity={visible ? 1 : 0} />
+          ) : null}
+          <path ref={chargeRef} className="beyond-music-electric-charge"
+            d={outline} strokeDasharray={dasharray} strokeDashoffset={dashoffset}
+            opacity={visible ? 1 : 0} />
         </>
       ) : null}
     </svg>
@@ -243,13 +234,13 @@ export function BeyondMusicPlayer() {
           aria-expanded={expanded}
           aria-controls="beyond-music-panel"
         >
-          <CompactElectricProgressFrame progress={visualProgress} playing={borderActive} />
+          <MusicElectricProgressFrame progress={visualProgress} playing={borderActive} compact />
           <img src={ROTOM_SPRITE} alt="" aria-hidden="true" />
           <span className="beyond-music-launcher-note" aria-hidden="true">{demoActive ? 'DEMO' : '♫'}</span>
           <span className="beyond-music-status-dot" aria-hidden="true" />
         </button>
       <section id="beyond-music-panel" className="beyond-music-panel" aria-hidden={!expanded}>
-          <ExpandedElectricProgressFrame progress={visualProgress} playing={borderActive} />
+          <MusicElectricProgressFrame progress={visualProgress} playing={borderActive} compact={false} />
           <header className="beyond-music-track">
             <span className="beyond-music-sprite" aria-hidden="true">
               <img src={ROTOM_SPRITE} alt="" />

@@ -400,5 +400,10 @@
 }
 
 .beyond-music-player[data-expanded='true'] .beyond-music-launcher {
-  display: none;
+  /* Keep the mini sized and measurable; display:none resets its SVG geometry. */
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
