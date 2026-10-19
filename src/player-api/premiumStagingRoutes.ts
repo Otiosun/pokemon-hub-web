@@ -16,6 +16,12 @@ export function resolvePremiumStagePlayerRoute(url: URL, method: string): Premiu
 }
 
 export function resolvePremiumStageAdminRoute(url: URL, method: string): PremiumStageRoute | null {
+  if (!url.search && url.pathname === '/api/hub/admin/premium/delivery/catalog' && method === 'GET') {
+    return { upstreamPath: '/v1/hub/admin/premium/delivery/catalog', allowedMethod: 'GET' };
+  }
+  if (!url.search && url.pathname === '/api/hub/admin/premium/delivery' && method === 'POST') {
+    return { upstreamPath: '/v1/hub/admin/premium/delivery', allowedMethod: 'POST' };
+  }
   if (url.pathname === '/api/hub/admin/premium') {
     if (url.searchParams.size !== 2) return null;
     const playerId = url.searchParams.get('playerId');
@@ -25,6 +31,12 @@ export function resolvePremiumStageAdminRoute(url: URL, method: string): Premium
       return {
         upstreamPath: `/v1/hub/admin/premium/players/${playerId}/support`,
         allowedMethod: method,
+      };
+    }
+    if (resource === 'deliveries' && method === 'GET') {
+      return {
+        upstreamPath: `/v1/hub/admin/premium/players/${playerId}/deliveries`,
+        allowedMethod: 'GET',
       };
     }
     if ((resource === 'orders' || resource === 'entitlements') && method === 'GET') {
