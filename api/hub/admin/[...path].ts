@@ -1,6 +1,8 @@
+import { isSafePremiumStagingMutation, premiumStagingForbidden } from '../../../src/player-api/premiumStagingRequestGuard.js';
 import { proxyPlayerPortalRequest } from '../../../src/player-api/playerPortalProxy.js';
 import { readPlayerPortalApiBaseUrl, readPremiumStagingApiBaseUrl } from '../../../src/player-api/playerPortalServerRuntime.js';
 import { resolvePremiumStageAdminRoute } from '../../../src/player-api/premiumStagingRoutes.js';
+import { clearPremiumStageCookie } from '../../../src/player-api/premiumStagingSessionCookies.js';
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -196,12 +198,68 @@ function jsonNotFound(): Response {
 export default {
   fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
+    if (url.pathname.startsWith('/api/hub/admin/premium-auth/')) {
+      if (request.method === 'POST' && !isSafePremiumStagingMutation(request)) {
+        return Promise.resolve(premiumStagingForbidden());
+      }
+      if (url.search) return Promise.resolve(jsonNotFound());
+      if (url.pathname === '/api/hub/admin/premium-auth/logout' && request.method === 'POST') {
+        return Promise.resolve(new Response(JSON.stringify({ signedOut: true }), {
+          status: 200,
+          headers: {
+            'cache-control': 'no-store',
+            'content-type': 'application/json',
+            'set-cookie': clearPremiumStageCookie(),
+          },
+        }));
+      }
+      if (url.pathname === '/api/hub/admin/premium-auth/exchange' && request.method === 'POST') {
+        return (async () => {
+          const input: unknown = await request.clone().json().catch(() => null);
+          if (typeof input !== 'object' || input === null || Array.isArray(input) ||
+            Object.keys(input).length !== 1 || !('ticket' in input) ||
+            typeof input.ticket !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(input.ticket)) {
+            return new Response(JSON.stringify({ error: 'VALIDATION_FAILED' }), {
+              status: 400, headers: { 'cache-control': 'no-store', 'content-type': 'application/json' },
+            });
+          }
+          return proxyPlayerPortalRequest(request, {
+            baseUrl: readPremiumStagingApiBaseUrl(),
+            upstreamPath: '/v1/hub/auth/exchange',
+            allowedMethod: 'POST',
+            sessionScope: 'none',
+            responseCookieMode: 'premium-stage-exchange',
+          });
+        })();
+      }
+      if (url.pathname === '/api/hub/admin/premium-auth/self' && request.method === 'GET') {
+        return proxyPlayerPortalRequest(request, {
+          baseUrl: readPremiumStagingApiBaseUrl(),
+          upstreamPath: '/v1/hub/admin/self',
+          allowedMethod: 'GET',
+          sessionScope: 'premium-stage',
+        });
+      }
+      if (url.pathname === '/api/hub/admin/premium-auth/player' && request.method === 'GET') {
+        return proxyPlayerPortalRequest(request, {
+          baseUrl: readPremiumStagingApiBaseUrl(),
+          upstreamPath: '/v1/hub/player/self',
+          allowedMethod: 'GET',
+          sessionScope: 'premium-stage',
+        });
+      }
+      return Promise.resolve(jsonNotFound());
+    }
     if (url.pathname.startsWith('/api/hub/admin/premium')) {
+      if (request.method === 'POST' && !isSafePremiumStagingMutation(request)) {
+        return Promise.resolve(premiumStagingForbidden());
+      }
       const premiumRoute = resolvePremiumStageAdminRoute(url, request.method);
       if (premiumRoute === null) return Promise.resolve(jsonNotFound());
-      // Staging-only, and never the normal Hub production upstream.
+      // Premium never receives the standard Hub/prod browser session.
       return proxyPlayerPortalRequest(request, {
         baseUrl: readPremiumStagingApiBaseUrl(),
+        sessionScope: 'premium-stage',
         ...premiumRoute,
       });
     }

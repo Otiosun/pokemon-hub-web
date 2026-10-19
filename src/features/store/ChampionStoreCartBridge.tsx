@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   CHAMPION_STORE_BY_CODE,
@@ -17,6 +17,7 @@ import {
   sanitizeChampionStoreCart,
   setChampionStoreQuantity,
 } from './championStoreCartModel';
+import { Premium2XpCartCheckout } from './Premium2XpCartCheckout';
 import './champion-store-cart.css';
 
 type StorePortalTarget = {
@@ -153,6 +154,8 @@ export function ChampionStoreCartBridge() {
   const [open, setOpen] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const dialogRef = useRef<HTMLElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     try {
@@ -161,6 +164,21 @@ export function ChampionStoreCartBridge() {
       // Storage may be unavailable in hardened/private browser contexts. The cart still works in memory.
     }
   }, [cart]);
+
+  // Keep two store tabs consistent without turning the cart into a server-side order.
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== CHAMPION_STORE_CART_STORAGE_KEY || event.storageArea !== window.localStorage) return;
+      try {
+        const next = event.newValue ? sanitizeChampionStoreCart(JSON.parse(event.newValue)) : [];
+        setCart((current) => JSON.stringify(current) === JSON.stringify(next) ? current : next);
+      } catch {
+        // A malformed external write must never wipe the current in-memory cart.
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
 
   useEffect(() => {
     let disposed = false;
@@ -215,13 +233,36 @@ export function ChampionStoreCartBridge() {
     if (!open) return;
     const before = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    const dialog = dialogRef.current;
+    dialog?.querySelector<HTMLButtonElement>('.store-cart-close')?.focus();
+
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setOpen(false);
+        return;
+      }
+      if (event.key !== 'Tab' || !dialog) return;
+      const controls = Array.from(dialog.querySelectorAll<HTMLElement>('button:not(:disabled), select:not(:disabled)'))
+        .filter((node) => node.getClientRects().length > 0);
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (!first || !last) {
+        event.preventDefault();
+        dialog.focus();
+      } else if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => {
       document.body.style.overflow = before;
       window.removeEventListener('keydown', onKeyDown);
+      triggerRef.current?.focus();
     };
   }, [open]);
 
@@ -279,7 +320,7 @@ export function ChampionStoreCartBridge() {
         onClick={() => setOpen(false)}
         aria-label="Fechar carrinho"
       />
-      <section className="store-cart-panel" role="dialog" aria-modal="true" aria-label="Carrinho da Champion Store">
+      <section ref={dialogRef} tabIndex={-1} className="store-cart-panel" role="dialog" aria-modal="true" aria-label="Carrinho da Champion Store">
         <header className="store-cart-panel-header">
           <div>
             <small>CHAMPION STORE</small>
@@ -340,6 +381,7 @@ export function ChampionStoreCartBridge() {
             </button>
           </div>
 
+          <Premium2XpCartCheckout cart={cart} />
           <small className="store-cart-checkout-note">
             O carrinho prepara seu pedido para o atendimento. Não cobra, não confirma pagamento nem entrega benefícios automaticamente.
           </small>
@@ -366,7 +408,7 @@ export function ChampionStoreCartBridge() {
       })}
 
       {storeVisible ? (
-        <button type="button" className="store-cart-trigger" onClick={() => setOpen(true)} aria-label={`Abrir carrinho com ${count} itens`}>
+        <button ref={triggerRef} type="button" className="store-cart-trigger" onClick={() => { setConfirmClear(false); setOpen(true); }} aria-label={`Abrir carrinho com ${count} itens`}>
           <span>CARRINHO</span>
           <strong>{count}</strong>
           <small>{formatBrl(total)}</small>

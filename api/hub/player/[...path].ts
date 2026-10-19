@@ -1,3 +1,4 @@
+import { isSafePremiumStagingMutation, premiumStagingForbidden } from '../../../src/player-api/premiumStagingRequestGuard.js';
 import { proxyPlayerPortalRequest } from '../../../src/player-api/playerPortalProxy.js';
 import { readPlayerPortalApiBaseUrl, readPremiumStagingApiBaseUrl } from '../../../src/player-api/playerPortalServerRuntime.js';
 import { resolvePremiumStagePlayerRoute } from '../../../src/player-api/premiumStagingRoutes.js';
@@ -31,9 +32,13 @@ export default {
   fetch(request: Request): Promise<Response> {
     const route = resolvePlayerProxyRoute(new URL(request.url), request.method);
     if (route === null) return Promise.resolve(jsonNotFound());
+    if (route.premiumStaging && request.method === 'POST' && !isSafePremiumStagingMutation(request)) {
+      return Promise.resolve(premiumStagingForbidden());
+    }
 
     return proxyPlayerPortalRequest(request, {
       baseUrl: route.premiumStaging ? readPremiumStagingApiBaseUrl() : readPlayerPortalApiBaseUrl(),
+      sessionScope: route.premiumStaging ? 'premium-stage' : 'normal',
       upstreamPath: route.upstreamPath,
       allowedMethod: route.allowedMethod,
     });
