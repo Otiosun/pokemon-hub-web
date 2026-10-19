@@ -8,7 +8,7 @@ import './admin-page.css';
 import './admin-premium-support.css';
 import './admin-premium-staging.css';
 
-type Section = 'delivery' | 'orders' | 'entitlements' | 'support';
+type Section = 'delivery' | 'entitlements' | 'support';
 const PLAYER_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function AdminPremiumStagingPage() {
@@ -30,8 +30,8 @@ export function AdminPremiumStagingPage() {
           <header className="admin-premium-heading">
             <div>
               <span>CENTRAL ADM · GATE E</span>
-              <h1>Pedidos &amp; atendimento</h1>
-              <p>Revise pedidos, benefícios e suporte sem misturar os dados do jogo real.</p>
+              <h1>Entregas &amp; suporte</h1>
+              <p>Escolha quem recebe cada gamepass. Pagamento é verificado fora do bot e do site.</p>
             </div>
             <strong>STAGING · NÃO LIVE</strong>
           </header>
@@ -62,7 +62,6 @@ export function AdminPremiumStagingPage() {
           <nav className="admin-premium-tabs premium-staging-tabs" aria-label="Seções da Central Premium">
             {([
               ['delivery', 'ENTREGAS', 'MANUAL · PRIORIDADE'],
-              ['orders', 'PEDIDOS', 'HISTÓRICO DE SOLICITAÇÕES'],
               ['entitlements', 'BENEFÍCIOS', 'EXPIRAÇÃO & ESTADO'],
               ['support', 'ATENDIMENTOS', 'REGISTROS AUDITÁVEIS'],
             ] as const).map(([id, label, eyebrow]) => (
@@ -77,9 +76,6 @@ export function AdminPremiumStagingPage() {
           {section === 'delivery' ? (
             <AdminPremiumDeliveryPanel playerId={playerId} />
           ) : null}
-          {section === 'orders' ? (
-            <AdminPremiumReadPanel playerId={playerId} playerName={playerId} resource="orders" />
-          ) : null}
           {section === 'entitlements' ? (
             <AdminPremiumReadPanel playerId={playerId} playerName={playerId} resource="entitlements" />
           ) : null}
@@ -88,7 +84,7 @@ export function AdminPremiumStagingPage() {
           ) : null}
           <footer className="premium-staging-foot">
             <a href="/admin">← VOLTAR À CENTRAL ADM</a>
-            <span>Consulta e ações validadas pelo backend. Aprovação e entrega são etapas independentes.</span>
+            <span>Somente o ADM concede e registra benefícios. Nenhum pagamento é confirmado aqui.</span>
           </footer>
         </section>
       </div>
