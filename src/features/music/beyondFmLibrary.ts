@@ -1,5 +1,5 @@
 export type BeyondFmTrackId = 'cynthia' | 'national-park' | 'driftveil' | 'alola' | 'town-theme';
-/** Public, redistributable CC0 opening track; personal remixes remain local. */
+/** Redistributable CC0 fallback; hosted tracks use this site's static assets. */
 export const PUBLIC_FM_SOURCE_URL = 'https://opengameart.org/sites/default/files/TownTheme.mp3';
 export interface BeyondFmTrack {
   id: BeyondFmTrackId;
@@ -15,6 +15,40 @@ export const BEYOND_FM_TRACKS: readonly BeyondFmTrack[] = [
   { id: 'driftveil', title: 'Driftveil City', artist: 'The Zame', duration: 163.43, sourcePage: 'https://www.youtube.com/@Zame' },
   { id: 'alola', title: 'Alola!! · Instrumental', artist: 'Satoshi & Pikachu', duration: 260.57, sourcePage: 'https://www.sonymusic.co.jp/artist/sakotomohisa/info/477648' },
 ];
+export const HOSTED_FM_TRACK_URLS: Readonly<Record<Exclude<BeyondFmTrackId, 'town-theme'>, string>> = {
+  cynthia: '/beyond-fm/cynthia.mp3',
+  'national-park': '/beyond-fm/national-park.mp3',
+  driftveil: '/beyond-fm/driftveil.mp3',
+  alola: '/beyond-fm/alola.mp3',
+};
+
+/** A valid manifest is produced only when every uploaded track passes build verification.
+ * Missing Vite routes can return HTTP 200 HTML; this never counts as a music library.
+ */
+export async function hasHostedFmLibrary(fetcher: typeof fetch = fetch): Promise<boolean> {
+  try {
+    const response = await fetcher('/beyond-fm/manifest.json', { cache: 'no-store' });
+    if (!response.ok || !response.headers.get('content-type')?.toLowerCase().includes('application/json')) return false;
+    const body: unknown = await response.json();
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return false;
+    const { version, tracks } = body as { version?: unknown; tracks?: unknown };
+    if (version !== 1 || !Array.isArray(tracks) || tracks.length !== 4) return false;
+    return BEYOND_FM_TRACKS.every((track) =>
+      tracks.some((raw: unknown) => {
+        if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return false;
+        const candidate = raw as Record<string, unknown>;
+        return candidate.id === track.id &&
+          candidate.src === HOSTED_FM_TRACK_URLS[track.id as Exclude<BeyondFmTrackId, 'town-theme'>] &&
+          typeof candidate.size === 'number' &&
+          Number.isSafeInteger(candidate.size) && candidate.size >= 10_000 && candidate.size <= 13_000_000 &&
+          typeof candidate.sha256 === 'string' && /^[a-f0-9]{64}$/.test(candidate.sha256);
+      }),
+    );
+  } catch {
+    return false;
+  }
+}
+
 export const PUBLIC_FM_TRACK: BeyondFmTrack = {
   id: 'town-theme',
   title: 'Town Theme',

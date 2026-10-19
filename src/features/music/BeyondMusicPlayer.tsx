@@ -4,6 +4,7 @@ import { BeyondFmMediaSession } from './beyondFmMediaSession';
 import {
   BEYOND_FM_TRACKS,
   PUBLIC_FM_TRACK,
+  hasHostedFmLibrary,
   importFmFiles,
   restoreFmLibrary,
   saveFmLibrary,
@@ -126,7 +127,7 @@ export function BeyondMusicPlayer() {
   const [progress, setProgress] = useState(0);
   const [demoActive, setDemoActive] = useState(false);
   const [demoProgress, setDemoProgress] = useState(0);
-  const [library, setLibrary] = useState<'loading' | 'public' | 'importing' | 'ready'>('loading');
+  const [library, setLibrary] = useState<'loading' | 'public' | 'importing' | 'ready' | 'hosted'>('loading');
   const [storageWarning, setStorageWarning] = useState(false);
   const [importError, setImportError] = useState('');
   const [singleReplacement, setSingleReplacement] = useState<'idle' | 'saving' | 'saved' | 'failed'>('idle');
@@ -231,7 +232,15 @@ export function BeyondMusicPlayer() {
     });
     mediaSessionRef.current = mediaSession;
 
-    void restoreFmLibrary().then((saved) => {
+    void hasHostedFmLibrary().then(async (hosted) => {
+      if (!mounted) return;
+      if (hosted) {
+        engine.installHosted();
+        setLibrary('hosted');
+        void requestPlayback();
+        return;
+      }
+      const saved = await restoreFmLibrary();
       if (!mounted) return;
       if (saved.length === 4) {
         engine.install(saved);
@@ -356,7 +365,7 @@ export function BeyondMusicPlayer() {
   };
 
   const selectedTrack = activeId === 'town-theme' ? PUBLIC_FM_TRACK : BEYOND_FM_TRACKS.find((track) => track.id === activeId);
-  const privateLibrary = library === 'ready';
+  const privateLibrary = library === 'ready' || library === 'hosted';
   const publicRadio = library === 'public';
   const available = privateLibrary || publicRadio;
   const statusLabel = demoActive
@@ -366,7 +375,7 @@ export function BeyondMusicPlayer() {
       : !available
         ? 'INICIANDO RÁDIO'
         : status === 'playing'
-          ? publicRadio ? 'RÁDIO LIVRE · CC0' : 'TOCANDO · ALEATÓRIO'
+          ? publicRadio ? 'RÁDIO LIVRE · CC0' : library === 'hosted' ? 'TOCANDO · SERVIDOR' : 'TOCANDO · ALEATÓRIO'
           : status === 'waiting'
             ? 'TOQUE PARA LIBERAR O SOM'
             : status === 'starting'
@@ -551,7 +560,7 @@ export function BeyondMusicPlayer() {
             </a>
           </p>
 
-          {recoveryMode ? <div id="beyond-fm-library-management" className="beyond-fm-library-details">
+          {recoveryMode && library !== 'hosted' ? <div id="beyond-fm-library-management" className="beyond-fm-library-details">
             <header>RECUPERAR MÚSICAS <span>{privateLibrary ? '4 FAIXAS SALVAS' : 'MODO PRIVADO'}</span></header>
             <p className="beyond-fm-recovery-status" role="status">
               {library === 'loading'
@@ -600,6 +609,11 @@ export function BeyondMusicPlayer() {
             </p> : null}
             {importError ? <p className="beyond-fm-import-hint is-error" role="alert">{importError}</p> : null}
           </div> : null}
+          {recoveryMode && library === 'hosted' ? (
+            <p className="beyond-fm-recovery-status" role="status">
+              Cinco músicas disponíveis no servidor. Não é necessário importar arquivos.
+            </p>
+          ) : null}
           {available && playbackIssue ? <p className="beyond-fm-import-hint is-error" role="alert">{playbackIssue}</p> : null}
           {available && status === 'waiting' ? (
             <p className="beyond-fm-import-hint" role="status">
@@ -607,7 +621,7 @@ export function BeyondMusicPlayer() {
             </p>
           ) : null}
           <span className="beyond-music-credit">
-            {publicRadio ? 'RÁDIO PÚBLICA · CC0' : 'MIX DE 5 FAIXAS · BIBLIOTECA LOCAL + CC0'}
+            {publicRadio ? 'RÁDIO PÚBLICA · CC0' : library === 'hosted' ? 'MIX DE 5 FAIXAS · SERVIDOR + CC0' : 'MIX DE 5 FAIXAS · BIBLIOTECA LOCAL + CC0'}
           </span>
       </section>
     </aside>
