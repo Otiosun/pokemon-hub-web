@@ -23,3 +23,12 @@
 .premium-delivery-history li{display:grid;gap:6px;background:#0a1112;border:1px solid #283638;padding:13px;font-size:.76rem}
 .premium-delivery-history li small{color:#92a4a4;overflow-wrap:anywhere}
 @media(max-width:550px){.premium-delivery-form{grid-template-columns:minmax(0,1fr)}}
+
+.premium-fulfillment-status-list{display:grid;gap:8px;max-height:490px;overflow:auto}
+.premium-fulfillment-status-list>div{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;min-width:0;padding:12px 14px;background:#0a1112;border:1px solid #2d393b;border-radius:5px}
+.premium-fulfillment-status-list>div>div{display:grid;gap:4px}
+.premium-fulfillment-status-list strong{font-size:.79rem;color:#e1ecec}
+.premium-fulfillment-status-list small{color:#9cacae;font:650 .61rem 'IBM Plex Mono',monospace}
+.premium-fulfillment-status-list span{font:700 .59rem 'IBM Plex Mono',monospace;color:#b9c5c4;letter-spacing:.035em}
+.premium-fulfillment-status-list span[data-status=AUTOMATED]{color:#a4ddbf}
+.premium-fulfillment-status-list span[data-status=UNAVAILABLE]{color:#e9b5aa}
