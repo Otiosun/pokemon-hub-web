@@ -10,7 +10,7 @@ type PlayerProxyRoute = {
 
 /** Reuse the existing battle proxy function slot; no extra Vercel Function. */
 export function resolvePlayerProxyRoute(url: URL, method: string): PlayerProxyRoute | null {
-  if (url.pathname === '/api/hub/player/battle' && method === 'GET' && !url.search) {
+  if (url.pathname === '/api/hub/player/battle' && method === 'GET') {
     return { upstreamPath: '/v1/hub/player/battle', allowedMethod: 'GET', premiumStaging: false };
   }
   const stage = resolvePremiumStagePlayerRoute(url, method);
