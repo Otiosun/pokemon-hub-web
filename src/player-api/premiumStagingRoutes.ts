@@ -19,7 +19,7 @@ export function resolvePremiumStageAdminRoute(url: URL, method: string): Premium
   if (url.pathname === '/api/hub/admin/premium/players' && method === 'GET') {
     if (url.searchParams.size !== 1) return null;
     const query = url.searchParams.get('q')?.trim();
-    if (!query || query.length < 2 || query.length > 80 || /[\\x00-\\x1F]/.test(query)) return null;
+    if (!query || query.length < 2 || query.length > 80 || query.split('').some((char) => char.charCodeAt(0) < 32)) return null;
     return {
       upstreamPath: `/v1/hub/admin/players?q=${encodeURIComponent(query)}&limit=8`,
       allowedMethod: 'GET',
