@@ -5,7 +5,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-
 
 export async function searchPremiumStagePlayers(query: string, fetcher: typeof fetch = fetch): Promise<SearchPlayer[]> {
   const value = query.trim();
-  if (value.length < 2 || value.length > 80 || /[\x00-\x1F]/.test(value)) return [];
+  if (value.length < 2 || value.length > 80 || value.split('').some((char) => char.charCodeAt(0) < 32)) return [];
   const response = await fetcher(`/api/hub/admin/premium/players?q=${encodeURIComponent(value)}`, {
     method: 'GET', credentials: 'include', cache: 'no-store',
     headers: { accept: 'application/json' },
