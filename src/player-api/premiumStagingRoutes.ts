@@ -16,6 +16,15 @@ export function resolvePremiumStagePlayerRoute(url: URL, method: string): Premiu
 }
 
 export function resolvePremiumStageAdminRoute(url: URL, method: string): PremiumStageRoute | null {
+  if (url.pathname === '/api/hub/admin/premium/players' && method === 'GET') {
+    if (url.searchParams.size !== 1) return null;
+    const query = url.searchParams.get('q')?.trim();
+    if (!query || query.length < 2 || query.length > 80 || /[\\x00-\\x1F]/.test(query)) return null;
+    return {
+      upstreamPath: `/v1/hub/admin/players?q=${encodeURIComponent(query)}&limit=8`,
+      allowedMethod: 'GET',
+    };
+  }
   if (!url.search && url.pathname === '/api/hub/admin/premium/delivery/catalog' && method === 'GET') {
     return { upstreamPath: '/v1/hub/admin/premium/delivery/catalog', allowedMethod: 'GET' };
   }
