@@ -41,8 +41,8 @@ describe('2XP cart staging boundary', () => {
       target: import.meta.env.VITE_PREMIUM_STAGING_TARGET,
     });
     if (allowed) {
-      expect(html).toContain('CRIAR PEDIDO 2XP');
-      expect(html).toContain('SEM COBRANÇA');
+      expect(html).toContain('Verificando uma sessão exclusiva');
+      expect(html).not.toContain('CRIAR PEDIDO 2XP');
     } else {
       expect(html).toBe('');
     }
