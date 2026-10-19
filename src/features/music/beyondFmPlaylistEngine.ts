@@ -1,5 +1,5 @@
 import { shuffleFmBag } from './beyondFmShuffle';
-import { PUBLIC_FM_SOURCE_URL, type BeyondFmTrackId, type LocalFmTrack } from './beyondFmLibrary';
+import { BEYOND_FM_TRACKS, HOSTED_FM_TRACK_URLS, PUBLIC_FM_SOURCE_URL, type BeyondFmTrackId, type LocalFmTrack } from './beyondFmLibrary';
 
 export type FmPlaybackState = 'uninitialized' | 'running' | 'suspended' | 'closed';
 const LAST_TRACK_KEY = 'pokemon-beyond:fm-last-track:v1';
@@ -15,6 +15,7 @@ export class BeyondFmPlaylistEngine {
   private volume = 0.22;
   private muted = false;
   private destroyed = false;
+  private hosted = false;
   private issue = '';
   private loadingFallback = false;
   private lastDiagnostic = '';
@@ -37,6 +38,7 @@ export class BeyondFmPlaylistEngine {
   get hasTracks() { return this.tracks.has('town-theme') && (this.tracks.size === 1 || this.tracks.size === 5); }
   get isPublicStation() { return this.tracks.size === 1 && this.tracks.has('town-theme'); }
   get hasPersonalLibrary() { return this.tracks.size === 5; }
+  get isHostedLibrary() { return this.hosted && this.hasTracks; }
   get trackId() { return this.active; }
   get playbackIssue() { return this.issue; }
   get playbackDiagnostic() { return this.lastDiagnostic; }
@@ -57,6 +59,7 @@ export class BeyondFmPlaylistEngine {
   install(tracks: readonly LocalFmTrack[]) {
     if (this.destroyed) return;
     this.disposeAudio();
+    this.hosted = false;
     // The public CC0 track is ALWAYS part of the shuffle bag, alongside the
     // four locally stored tracks. Nothing from the personal library is uploaded.
     this.tracks = new Map<BeyondFmTrackId, Blob | string>([
@@ -68,6 +71,23 @@ export class BeyondFmPlaylistEngine {
     this.active = null;
     this.issue = '';
     this.lastDiagnostic = '';
+    this.sourceMode = 'blob';
+  }
+
+  /** Hosted MP3 files stream from Vercel; no per-device import is required. */
+  installHosted() {
+    if (this.destroyed) return;
+    this.disposeAudio();
+    this.tracks = new Map<BeyondFmTrackId, Blob | string>([
+      ...BEYOND_FM_TRACKS.map((track) => [track.id, HOSTED_FM_TRACK_URLS[track.id as Exclude<BeyondFmTrackId, 'town-theme'>]] as [BeyondFmTrackId, string]),
+      ['town-theme', PUBLIC_FM_SOURCE_URL],
+    ]);
+    this.nextBag = [];
+    this.history = [];
+    this.active = null;
+    this.issue = '';
+    this.lastDiagnostic = '';
+    this.hosted = true;
     this.sourceMode = 'blob';
   }
 
@@ -90,6 +110,7 @@ export class BeyondFmPlaylistEngine {
   installPublic() {
     if (this.destroyed) return;
     this.disposeAudio();
+    this.hosted = false;
     this.tracks = new Map([['town-theme', PUBLIC_FM_SOURCE_URL]]);
     this.nextBag = [];
     this.history = [];
@@ -142,6 +163,8 @@ export class BeyondFmPlaylistEngine {
       const code = audio.error?.code;
       this.issue = this.isPublicStation
         ? 'Rádio pública indisponível no momento. Verifique a conexão e tente novamente.'
+        : this.isHostedLibrary
+        ? 'Não foi possível carregar a música do servidor. Verifique sua conexão e tente novamente.'
         : this.mp3Recommended
         ? 'O navegador recusou esta faixa M4A. Use SUBSTITUIR POR MP3 e importe o pacote MP3 compatível.'
         : code === 3 || code === 4
