@@ -3,6 +3,7 @@ import { HubMenuTrigger } from '../../components/HubNavigation';
 import { PremiumStagingSessionGate } from './PremiumStagingSessionGate';
 import { AdminPremiumReadPanel } from './AdminPremiumReadPanel';
 import { AdminPremiumDeliveryPanel } from './AdminPremiumDeliveryPanel';
+import { PremiumStagePlayerSearch } from './PremiumStagePlayerSearch';
 import { AdminPremiumSupportLedger } from './AdminPremiumSupportLedger';
 import './admin-page.css';
 import './admin-premium-support.css';
@@ -47,6 +48,7 @@ export function AdminPremiumStagingPage() {
               <h2>Treinador de teste</h2>
               <p>Insira apenas o Player ID de uma conta <strong>sintética de staging</strong>. Nunca utilize um ID de produção.</p>
             </div>
+            <PremiumStagePlayerSearch onSelect={(id) => { setDraft(id); setPlayerId(id); }} />
             <form onSubmit={(event) => { event.preventDefault(); if (valid) setPlayerId(draft.trim()); }}>
               <label htmlFor="premium-staging-player-id">PLAYER ID (UUID)</label>
               <div>
