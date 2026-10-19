@@ -1,5 +1,6 @@
 import { proxyPlayerPortalRequest } from '../../../src/player-api/playerPortalProxy.js';
-import { readPlayerPortalApiBaseUrl } from '../../../src/player-api/playerPortalServerRuntime.js';
+import { readPlayerPortalApiBaseUrl, readPremiumStagingApiBaseUrl } from '../../../src/player-api/playerPortalServerRuntime.js';
+import { resolvePremiumStageAdminRoute } from '../../../src/player-api/premiumStagingRoutes.js';
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -194,7 +195,18 @@ function jsonNotFound(): Response {
 
 export default {
   fetch(request: Request): Promise<Response> {
-    const route = resolveAdminProxyRoute(new URL(request.url), request.method);
+    const url = new URL(request.url);
+    if (url.pathname.startsWith('/api/hub/admin/premium')) {
+      const premiumRoute = resolvePremiumStageAdminRoute(url, request.method);
+      if (premiumRoute === null) return Promise.resolve(jsonNotFound());
+      // Staging-only, and never the normal Hub production upstream.
+      return proxyPlayerPortalRequest(request, {
+        baseUrl: readPremiumStagingApiBaseUrl(),
+        ...premiumRoute,
+      });
+    }
+
+    const route = resolveAdminProxyRoute(url, request.method);
     if (route === null) return Promise.resolve(jsonNotFound());
 
     return proxyPlayerPortalRequest(request, {
