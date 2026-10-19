@@ -2,18 +2,19 @@ import { useState } from 'react';
 import { HubMenuTrigger } from '../../components/HubNavigation';
 import { PremiumStagingSessionGate } from './PremiumStagingSessionGate';
 import { AdminPremiumReadPanel } from './AdminPremiumReadPanel';
+import { AdminPremiumDeliveryPanel } from './AdminPremiumDeliveryPanel';
 import { AdminPremiumSupportLedger } from './AdminPremiumSupportLedger';
 import './admin-page.css';
 import './admin-premium-support.css';
 import './admin-premium-staging.css';
 
-type Section = 'orders' | 'entitlements' | 'support';
+type Section = 'delivery' | 'orders' | 'entitlements' | 'support';
 const PLAYER_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function AdminPremiumStagingPage() {
   const [draft, setDraft] = useState('');
   const [playerId, setPlayerId] = useState<string | null>(null);
-  const [section, setSection] = useState<Section>('orders');
+  const [section, setSection] = useState<Section>('delivery');
   const valid = PLAYER_ID.test(draft.trim());
 
   return (
@@ -60,7 +61,8 @@ export function AdminPremiumStagingPage() {
 
           <nav className="admin-premium-tabs premium-staging-tabs" aria-label="Seções da Central Premium">
             {([
-              ['orders', 'PEDIDOS', 'PAGAMENTO & ENTREGA'],
+              ['delivery', 'ENTREGAS', 'MANUAL · PRIORIDADE'],
+              ['orders', 'PEDIDOS', 'HISTÓRICO DE SOLICITAÇÕES'],
               ['entitlements', 'BENEFÍCIOS', 'EXPIRAÇÃO & ESTADO'],
               ['support', 'ATENDIMENTOS', 'REGISTROS AUDITÁVEIS'],
             ] as const).map(([id, label, eyebrow]) => (
@@ -72,6 +74,9 @@ export function AdminPremiumStagingPage() {
             ))}
           </nav>
 
+          {section === 'delivery' ? (
+            <AdminPremiumDeliveryPanel playerId={playerId} />
+          ) : null}
           {section === 'orders' ? (
             <AdminPremiumReadPanel playerId={playerId} playerName={playerId} resource="orders" />
           ) : null}
