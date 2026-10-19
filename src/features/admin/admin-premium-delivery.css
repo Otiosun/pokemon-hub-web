@@ -32,3 +32,11 @@
 .premium-fulfillment-status-list span{font:700 .59rem 'IBM Plex Mono',monospace;color:#b9c5c4;letter-spacing:.035em}
 .premium-fulfillment-status-list span[data-status=AUTOMATED]{color:#a4ddbf}
 .premium-fulfillment-status-list span[data-status=UNAVAILABLE]{color:#e9b5aa}
+
+.premium-case-selector{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:8px}
+.premium-case-selector button{min-width:0;display:grid;gap:6px;text-align:left;padding:12px;background:#0b1415;color:#e5efec;border:1px solid #324448;border-radius:5px;cursor:pointer}
+.premium-case-selector button[aria-pressed=true]{border-color:#bca5d9;background:rgba(188,165,217,.09)}
+.premium-case-selector small{font:600 .64rem 'IBM Plex Mono',monospace;color:#a6bbb8}
+.premium-case-timeline{grid-column:1/-1}
+.premium-case-timeline>p{display:grid;gap:5px;padding:11px 0;border-bottom:1px solid #293b3b;color:#dae6e5;font-size:.78rem}
+.premium-case-timeline>p small{color:#96abaa;overflow-wrap:anywhere}
