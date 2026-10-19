@@ -94,6 +94,8 @@ export function setChampionStoreQuantity(
   if (!resolved || CHAMPION_STORE_BY_CODE.get(resolved.productCode)?.available === false) {
     return cart.filter((candidate) => candidate.sku !== sku);
   }
+  // The UI uses +/- integers; reject non-finite external inputs rather than storing NaN.
+  if (!Number.isFinite(quantity)) return [...cart];
   if (quantity <= 0) return cart.filter((candidate) => candidate.sku !== sku);
 
   return cart.map((candidate) =>
