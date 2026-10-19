@@ -51,8 +51,10 @@ export function Premium2XpCartCheckout({ cart }: { cart: readonly ChampionStoreC
         setStatus({ kind: 'error', quantity, message: 'Entre com uma sessão válida do ambiente de testes.' });
       } else if (result.status === 'unavailable') {
         setStatus({ kind: 'error', quantity, message: 'API de staging indisponível. Nenhum pedido foi confirmado.' });
-      } else {
+      } else if (result.status === 'rejected') {
         setStatus({ kind: 'error', quantity, message: `Pedido recusado pelo backend (${result.code}).` });
+      } else {
+        setStatus({ kind: 'error', quantity, message: 'Pedido não confirmado.' });
       }
     } catch {
       setStatus({
