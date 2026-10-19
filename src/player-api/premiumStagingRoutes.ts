@@ -25,6 +25,10 @@ export function resolvePremiumStageAdminRoute(url: URL, method: string): Premium
       allowedMethod: 'GET',
     };
   }
+  if (!url.search && url.pathname === '/api/hub/admin/premium/delivery/items' &&
+      (method === 'GET' || method === 'POST')) {
+    return { upstreamPath: '/v1/hub/admin/premium/delivery/items', allowedMethod: method };
+  }
   if (!url.search && url.pathname === '/api/hub/admin/premium/delivery/catalog' && method === 'GET') {
     return { upstreamPath: '/v1/hub/admin/premium/delivery/catalog', allowedMethod: 'GET' };
   }
