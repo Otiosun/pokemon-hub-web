@@ -4,6 +4,7 @@ import { PremiumStagingSessionGate } from './PremiumStagingSessionGate';
 import { AdminPremiumReadPanel } from './AdminPremiumReadPanel';
 import { AdminPremiumDeliveryPanel } from './AdminPremiumDeliveryPanel';
 import { AdminPremiumInventoryPanel } from './AdminPremiumInventoryPanel';
+import { AdminPremiumPokemonPanel } from './AdminPremiumPokemonPanel';
 import { AdminPremiumFulfillmentCatalog } from './AdminPremiumFulfillmentCatalog';
 import { PremiumStagePlayerSearch } from './PremiumStagePlayerSearch';
 import { AdminPremiumSupportLedger } from './AdminPremiumSupportLedger';
@@ -11,7 +12,7 @@ import './admin-page.css';
 import './admin-premium-support.css';
 import './admin-premium-staging.css';
 
-type Section = 'delivery' | 'inventory' | 'catalog' | 'entitlements' | 'support';
+type Section = 'delivery' | 'inventory' | 'pokemon' | 'catalog' | 'entitlements' | 'support';
 const PLAYER_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function AdminPremiumStagingPage() {
@@ -67,6 +68,7 @@ export function AdminPremiumStagingPage() {
             {([
               ['delivery', 'ENTREGAS', 'MANUAL · PRIORIDADE'],
               ['inventory', 'ITENS', 'ENTREGA AVULSA'],
+              ['pokemon', 'POKÉMON', 'CRIAÇÃO INDIVIDUAL'],
               ['catalog', 'GAMEPASSES', 'COBERTURA DO CATÁLOGO'],
               ['entitlements', 'BENEFÍCIOS', 'EXPIRAÇÃO & ESTADO'],
               ['support', 'ATENDIMENTOS', 'REGISTROS AUDITÁVEIS'],
@@ -84,6 +86,9 @@ export function AdminPremiumStagingPage() {
           ) : null}
           {section === 'inventory' ? (
             <AdminPremiumInventoryPanel key={playerId ?? 'unselected'} playerId={playerId} />
+          ) : null}
+          {section === 'pokemon' ? (
+            <AdminPremiumPokemonPanel key={playerId ?? 'unselected'} playerId={playerId} />
           ) : null}
           {section === 'catalog' ? <AdminPremiumFulfillmentCatalog /> : null}
           {section === 'entitlements' ? (
