@@ -173,7 +173,7 @@ export function AdminPage() {
             import.meta.env.VITE_PREMIUM_STAGING_TARGET === 'preview' ? (
               <a className="admin-module-card is-authorized is-link" href="/admin/premium">
                 <header><span>CENTRAL PREMIUM</span><strong>STAGING</strong></header>
-                <p>Pedidos, XP 2× e atendimento. Console isolado para validação antes da publicação.</p>
+                <p>Entregas manuais de gamepasses e suporte. Sem confirmação de pagamento.</p>
                 <footer><span>OWNER · TESTES</span><small>ABRIR CENTRAL PREMIUM</small></footer>
               </a>
             ) : null}
