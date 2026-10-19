@@ -1,0 +1,107 @@
+import { useState } from 'react';
+import { HubMenuTrigger } from '../../components/HubNavigation';
+import { usePlayerPortalAdmin } from '../../player-api/usePlayerPortalAdmin';
+import { AdminPremiumReadPanel } from './AdminPremiumReadPanel';
+import { AdminPremiumSupportLedger } from './AdminPremiumSupportLedger';
+import './admin-page.css';
+import './admin-premium-support.css';
+import './admin-premium-staging.css';
+
+type Section = 'orders' | 'entitlements' | 'support';
+const PLAYER_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function AdminPremiumStagingPage() {
+  const admin = usePlayerPortalAdmin();
+  const [draft, setDraft] = useState('');
+  const [playerId, setPlayerId] = useState<string | null>(null);
+  const [section, setSection] = useState<Section>('orders');
+  const valid = PLAYER_ID.test(draft.trim());
+
+  if (admin.status === 'loading') {
+    return <main className="admin-page"><p className="premium-staging-access">VALIDANDO SESSÃO ADMINISTRATIVA…</p></main>;
+  }
+  if (admin.status !== 'admin' || !admin.admin.owner) {
+    return (
+      <main className="admin-page">
+        <section className="premium-staging-access">
+          <strong>CENTRAL PREMIUM · ACESSO RESTRITO</strong>
+          <p>Somente o proprietário autorizado pode consultar os pedidos e benefícios.</p>
+          <a href="/admin">VOLTAR À CENTRAL</a>
+        </section>
+      </main>
+    );
+  }
+
+  return (
+    <main className="admin-page">
+      <header className="admin-topbar">
+        <div><small>POKÉMON BEYOND</small><strong>CENTRAL PREMIUM</strong></div>
+        <HubMenuTrigger />
+      </header>
+
+      <div className="admin-shell">
+        <section className="admin-premium">
+          <header className="admin-premium-heading">
+            <div>
+              <span>CENTRAL ADM · GATE E</span>
+              <h1>Pedidos &amp; atendimento</h1>
+              <p>Revise pedidos, benefícios e suporte sem misturar os dados do jogo real.</p>
+            </div>
+            <strong>STAGING · NÃO LIVE</strong>
+          </header>
+
+          <p className="premium-staging-disclaimer" role="status">
+            Ambiente de integração em preparação. Os registros só aparecem quando uma API de staging
+            independente e autenticada estiver habilitada. Não há pedidos ou pagamentos de demonstração.
+          </p>
+
+          <section className="premium-staging-player" aria-label="Identificar treinador de staging">
+            <div>
+              <span>IDENTIFICAÇÃO NO AMBIENTE DE TESTES</span>
+              <h2>Treinador de teste</h2>
+              <p>Insira apenas o Player ID de uma conta <strong>sintética de staging</strong>. Nunca utilize um ID de produção.</p>
+            </div>
+            <form onSubmit={(event) => { event.preventDefault(); if (valid) setPlayerId(draft.trim()); }}>
+              <label htmlFor="premium-staging-player-id">PLAYER ID (UUID)</label>
+              <div>
+                <input id="premium-staging-player-id" value={draft}
+                  autoComplete="off" spellCheck={false}
+                  onChange={(event) => { setDraft(event.target.value); setPlayerId(null); }}
+                  placeholder="00000000-0000-4000-8000-000000000000" />
+                <button type="submit" disabled={!valid}>CONSULTAR</button>
+              </div>
+            </form>
+          </section>
+
+          <nav className="admin-premium-tabs premium-staging-tabs" aria-label="Seções da Central Premium">
+            {([
+              ['orders', 'PEDIDOS', 'PAGAMENTO & ENTREGA'],
+              ['entitlements', 'BENEFÍCIOS', 'EXPIRAÇÃO & ESTADO'],
+              ['support', 'ATENDIMENTOS', 'REGISTROS AUDITÁVEIS'],
+            ] as const).map(([id, label, eyebrow]) => (
+              <button key={id} type="button" aria-pressed={section === id}
+                className={section === id ? 'is-active' : undefined}
+                onClick={() => setSection(id)}>
+                <small>{eyebrow}</small><span>{label}</span>
+              </button>
+            ))}
+          </nav>
+
+          {section === 'orders' ? (
+            <AdminPremiumReadPanel playerId={playerId} playerName={playerId} resource="orders" />
+          ) : null}
+          {section === 'entitlements' ? (
+            <AdminPremiumReadPanel playerId={playerId} playerName={playerId} resource="entitlements" />
+          ) : null}
+          {section === 'support' ? (
+            <AdminPremiumSupportLedger playerId={playerId} playerName={playerId} />
+          ) : null}
+          <footer className="premium-staging-foot">
+            <a href="/admin">← VOLTAR À CENTRAL ADM</a>
+            <span>Consulta e ações validadas pelo backend. Aprovação e entrega são etapas independentes.</span>
+          </footer>
+        </section>
+      </div>
+    </main>
+  );
+}
