@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { HubMenuTrigger } from '../../components/HubNavigation';
-import { usePlayerPortalAdmin } from '../../player-api/usePlayerPortalAdmin';
+import { PremiumStagingSessionGate } from './PremiumStagingSessionGate';
 import { AdminPremiumReadPanel } from './AdminPremiumReadPanel';
 import { AdminPremiumSupportLedger } from './AdminPremiumSupportLedger';
 import './admin-page.css';
@@ -11,26 +11,10 @@ type Section = 'orders' | 'entitlements' | 'support';
 const PLAYER_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function AdminPremiumStagingPage() {
-  const admin = usePlayerPortalAdmin();
   const [draft, setDraft] = useState('');
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [section, setSection] = useState<Section>('orders');
   const valid = PLAYER_ID.test(draft.trim());
-
-  if (admin.status === 'loading') {
-    return <main className="admin-page"><p className="premium-staging-access">VALIDANDO SESSÃO ADMINISTRATIVA…</p></main>;
-  }
-  if (admin.status !== 'admin' || !admin.admin.owner) {
-    return (
-      <main className="admin-page">
-        <section className="premium-staging-access">
-          <strong>CENTRAL PREMIUM · ACESSO RESTRITO</strong>
-          <p>Somente o proprietário autorizado pode consultar os pedidos e benefícios.</p>
-          <a href="/admin">VOLTAR À CENTRAL</a>
-        </section>
-      </main>
-    );
-  }
 
   return (
     <main className="admin-page">
@@ -39,6 +23,7 @@ export function AdminPremiumStagingPage() {
         <HubMenuTrigger />
       </header>
 
+      <PremiumStagingSessionGate role="owner">
       <div className="admin-shell">
         <section className="admin-premium">
           <header className="admin-premium-heading">
@@ -102,6 +87,7 @@ export function AdminPremiumStagingPage() {
           </footer>
         </section>
       </div>
+      </PremiumStagingSessionGate>
     </main>
   );
 }
