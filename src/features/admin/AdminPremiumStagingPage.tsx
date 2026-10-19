@@ -23,7 +23,7 @@ export function AdminPremiumStagingPage() {
         <HubMenuTrigger />
       </header>
 
-      <PremiumStagingSessionGate role="owner">
+      <PremiumStagingSessionGate access="owner">
       <div className="admin-shell">
         <section className="admin-premium">
           <header className="admin-premium-heading">
