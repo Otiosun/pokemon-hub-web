@@ -1,14 +1,27 @@
+import { resolvePremiumStagingApiBaseUrl } from './premiumStagingBoundary';
+
 const PLAYER_PORTAL_API_BASE_URL = 'PLAYER_PORTAL_API_BASE_URL';
 
-export function readPlayerPortalApiBaseUrl(): string | null {
+function readRuntimeEnv(name: string): string | null {
   const runtimeProcess = Reflect.get(globalThis, 'process');
   if (typeof runtimeProcess !== 'object' || runtimeProcess === null) return null;
+  const environment = Reflect.get(runtimeProcess, 'env');
+  if (typeof environment !== 'object' || environment === null) return null;
+  const value = Reflect.get(environment, name);
+  return typeof value === 'string' && value.trim() !== '' ? value.trim() : null;
+}
 
-  const runtimeEnvironment = Reflect.get(runtimeProcess, 'env');
-  if (typeof runtimeEnvironment !== 'object' || runtimeEnvironment === null) return null;
+export function readPlayerPortalApiBaseUrl(): string | null {
+  return readRuntimeEnv(PLAYER_PORTAL_API_BASE_URL);
+}
 
-  const explicitValue = Reflect.get(runtimeEnvironment, PLAYER_PORTAL_API_BASE_URL);
-  return typeof explicitValue === 'string' && explicitValue.trim() !== ''
-    ? explicitValue.trim()
-    : null;
+/** Never fallback to PLAYER_PORTAL_API_BASE_URL for Premium preview calls. */
+export function readPremiumStagingApiBaseUrl(): string | null {
+  return resolvePremiumStagingApiBaseUrl({
+    vercelEnv: readRuntimeEnv('VERCEL_ENV'),
+    enabled: readRuntimeEnv('PREMIUM_STAGING_ENABLED'),
+    apiBaseUrl: readRuntimeEnv('PREMIUM_STAGING_API_BASE_URL'),
+    approvedOrigin: readRuntimeEnv('PREMIUM_STAGING_APPROVED_ORIGIN'),
+    productionApiBaseUrl: readPlayerPortalApiBaseUrl(),
+  });
 }
