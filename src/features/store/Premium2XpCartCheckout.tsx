@@ -14,6 +14,16 @@ type Status =
   | { kind: 'created'; quantity: number; humanId: string; cents: number }
   | { kind: 'error'; quantity: number; message: string };
 
+export function canShowStaged2XpCheckout(
+  cart: readonly ChampionStoreCartLine[],
+  flags: { ui: string | undefined; target: string | undefined },
+): boolean {
+  return flags.ui === '1' && flags.target === 'preview' &&
+    cart.length === 1 && cart[0]?.sku === '2XP' &&
+    Number.isSafeInteger(cart[0]?.quantity) &&
+    (cart[0]?.quantity ?? 0) >= 1 && (cart[0]?.quantity ?? 0) <= 52;
+}
+
 /**
  * Preview-only staged order request. No payment, XP grants or non-2XP items.
  * The checkout idempotency ID survives uncertain responses and multi-tab retries.
@@ -23,13 +33,11 @@ export function Premium2XpCartCheckout({ cart }: { cart: readonly ChampionStoreC
   const sending = useRef(false);
   const item = cart.length === 1 && cart[0]?.sku === '2XP' ? cart[0] : null;
   const quantity = item?.quantity ?? 0;
-  const enabled = Number.isSafeInteger(quantity) && quantity >= 1 && quantity <= 52;
-
-  if (
-    import.meta.env.VITE_PREMIUM_STAGING_UI !== '1' ||
-    import.meta.env.VITE_PREMIUM_STAGING_TARGET !== 'preview' ||
-    !enabled
-  ) return null;
+  const enabled = canShowStaged2XpCheckout(cart, {
+    ui: import.meta.env.VITE_PREMIUM_STAGING_UI,
+    target: import.meta.env.VITE_PREMIUM_STAGING_TARGET,
+  });
+  if (!enabled) return null;
 
   const create = async () => {
     if (sending.current) return;
