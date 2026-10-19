@@ -7,6 +7,7 @@ import {
 } from '../../player-api/playerPortalPremiumCheckoutClient';
 import type { ChampionStoreCartLine } from './championStoreCartModel';
 import { formatBrl } from './championStoreCatalog';
+import { PremiumStagingSessionGate } from '../admin/PremiumStagingSessionGate';
 
 type Status =
   | { kind: 'idle' }
@@ -77,6 +78,7 @@ export function Premium2XpCartCheckout({ cart }: { cart: readonly ChampionStoreC
 
   const visible = status.kind !== 'idle' && status.quantity === quantity ? status : null;
   return (
+    <PremiumStagingSessionGate role="player">
     <section className="store-cart-stage-checkout" aria-label="Pedido 2XP no ambiente de testes">
       <header><strong>PEDIDO XP 2×</strong><span>STAGING · SEM COBRANÇA</span></header>
       {visible?.kind === 'created' ? (
@@ -96,5 +98,6 @@ export function Premium2XpCartCheckout({ cart }: { cart: readonly ChampionStoreC
       )}
       <small>Apenas pedidos com XP 2×. Aprovar pagamento e entregar benefício são ações administrativas separadas.</small>
     </section>
+    </PremiumStagingSessionGate>
   );
 }
