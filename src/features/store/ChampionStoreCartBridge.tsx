@@ -17,7 +17,6 @@ import {
   sanitizeChampionStoreCart,
   setChampionStoreQuantity,
 } from './championStoreCartModel';
-import { Premium2XpCartCheckout } from './Premium2XpCartCheckout';
 import './champion-store-cart.css';
 
 type StorePortalTarget = {
@@ -381,7 +380,6 @@ export function ChampionStoreCartBridge() {
             </button>
           </div>
 
-          <Premium2XpCartCheckout cart={cart} />
           <small className="store-cart-checkout-note">
             O carrinho prepara seu pedido para o atendimento. Não cobra, não confirma pagamento nem entrega benefícios automaticamente.
           </small>
