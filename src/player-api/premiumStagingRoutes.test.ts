@@ -37,6 +37,21 @@ describe('Premium staging proxy allowlist', () => {
     });
   });
 
+  it('routes owner-delivery catalog, grants and history without payment endpoints', () => {
+    expect(resolvePremiumStageAdminRoute(url('/api/hub/admin/premium/delivery/catalog'), 'GET')).toMatchObject({
+      upstreamPath: '/v1/hub/admin/premium/delivery/catalog', allowedMethod: 'GET',
+    });
+    expect(resolvePremiumStageAdminRoute(url('/api/hub/admin/premium/delivery'), 'POST')).toMatchObject({
+      upstreamPath: '/v1/hub/admin/premium/delivery', allowedMethod: 'POST',
+    });
+    expect(resolvePremiumStageAdminRoute(url(`/api/hub/admin/premium?playerId=${playerId}&resource=deliveries`), 'GET')).toMatchObject({
+      upstreamPath: `/v1/hub/admin/premium/players/${playerId}/deliveries`, allowedMethod: 'GET',
+    });
+    expect(resolvePremiumStageAdminRoute(url('/api/hub/admin/premium/delivery?paid=1'), 'POST')).toBeNull();
+    expect(resolvePremiumStageAdminRoute(url('/api/hub/admin/premium/delivery'), 'GET')).toBeNull();
+    expect(resolvePremiumStageAdminRoute(url('/api/hub/admin/premium/delivery/catalog'), 'POST')).toBeNull();
+  });
+
   it('refuses unsupported actions, query injection and mutations', () => {
     for (const [path, method] of [
       [`/api/hub/admin/premium?playerId=${playerId}&resource=orders&debug=1`, 'GET'],
