@@ -20,6 +20,13 @@ export function AdminPremiumInventoryPanel({ playerId }: { playerId: string | nu
     reason.trim().length <= 400);
 
   useEffect(() => {
+    // Switching recipients is a distinct grant intention, never reuse the
+    // previous player's idempotency key or confirmation checkbox.
+    requestId.current = null;
+    setConfirmed(false);
+  }, [playerId]);
+
+  useEffect(() => {
     let active = true;
     void readDeliveryInventoryCatalog()
       .then((catalog) => {
