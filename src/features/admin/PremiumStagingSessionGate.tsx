@@ -10,9 +10,9 @@ import './premium-staging-session-gate.css';
 
 type GateState = PremiumStageSession | { status: 'loading' };
 export function PremiumStagingSessionGate({
-  role,
+  access,
   children,
-}: { role: PremiumStageRole; children: ReactNode }) {
+}: { access: PremiumStageRole; children: ReactNode }) {
   const [state, setState] = useState<GateState>({ status: 'loading' });
   const [ticket, setTicket] = useState('');
   const [busy, setBusy] = useState(false);
@@ -20,11 +20,11 @@ export function PremiumStagingSessionGate({
 
   useEffect(() => {
     let mounted = true;
-    void readPremiumStageSession(role)
+    void readPremiumStageSession(access)
       .then((result) => { if (mounted) setState(result); })
       .catch(() => { if (mounted) setState({ status: 'unavailable' }); });
     return () => { mounted = false; };
-  }, [role]);
+  }, [access]);
 
   const exchange = async () => {
     if (busy) return;
@@ -38,7 +38,7 @@ export function PremiumStagingSessionGate({
       } else if (result === 'invalid') {
         setError('Ticket inválido, usado ou expirado. Use somente um ticket do staging isolado.');
       } else {
-        setState(await readPremiumStageSession(role));
+        setState(await readPremiumStageSession(access));
       }
     } catch {
       setError('Falha de conexão. Nenhuma sessão foi confirmada.');
@@ -82,11 +82,11 @@ export function PremiumStagingSessionGate({
             ? 'A sessão de staging não possui a permissão exigida. Use uma identidade de testes autorizada.'
             : 'A sessão do jogo real não funciona aqui. Entre apenas com um ticket temporário emitido pela API isolada de testes.'}</p>
           <form onSubmit={(event) => { event.preventDefault(); void exchange(); }}>
-            <label htmlFor={role === 'owner' ? 'premium-stage-ticket-owner' : 'premium-stage-ticket-player'}>
+            <label htmlFor={access === 'owner' ? 'premium-stage-ticket-owner' : 'premium-stage-ticket-player'}>
               TICKET TEMPORÁRIO DO STAGING
             </label>
             <input
-              id={role === 'owner' ? 'premium-stage-ticket-owner' : 'premium-stage-ticket-player'}
+              id={access === 'owner' ? 'premium-stage-ticket-owner' : 'premium-stage-ticket-player'}
               type="password"
               autoComplete="off"
               spellCheck={false}
