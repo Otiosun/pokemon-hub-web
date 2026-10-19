@@ -1,3 +1,4 @@
+import { isSafePremiumStagingMutation, premiumStagingForbidden } from '../../../src/player-api/premiumStagingRequestGuard.js';
 import { proxyPlayerPortalRequest } from '../../../src/player-api/playerPortalProxy.js';
 import { readPlayerPortalApiBaseUrl, readPremiumStagingApiBaseUrl } from '../../../src/player-api/playerPortalServerRuntime.js';
 import { resolvePremiumStageAdminRoute } from '../../../src/player-api/premiumStagingRoutes.js';
@@ -198,6 +199,9 @@ export default {
   fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname.startsWith('/api/hub/admin/premium-auth/')) {
+      if (request.method === 'POST' && !isSafePremiumStagingMutation(request)) {
+        return Promise.resolve(premiumStagingForbidden());
+      }
       if (url.search) return Promise.resolve(jsonNotFound());
       if (url.pathname === '/api/hub/admin/premium-auth/logout' && request.method === 'POST') {
         return Promise.resolve(new Response(JSON.stringify({ signedOut: true }), {
@@ -247,6 +251,9 @@ export default {
       return Promise.resolve(jsonNotFound());
     }
     if (url.pathname.startsWith('/api/hub/admin/premium')) {
+      if (request.method === 'POST' && !isSafePremiumStagingMutation(request)) {
+        return Promise.resolve(premiumStagingForbidden());
+      }
       const premiumRoute = resolvePremiumStageAdminRoute(url, request.method);
       if (premiumRoute === null) return Promise.resolve(jsonNotFound());
       // Premium never receives the standard Hub/prod browser session.
