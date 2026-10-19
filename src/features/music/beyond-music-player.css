@@ -619,3 +619,20 @@
   color: #7b969a;
   font-size: .46rem;
 }
+
+/* Dedicated recovery is visible on arrival and scrollable on small screens.
+   The ordinary Rotom/player geometry remains unchanged. */
+.beyond-music-player[data-recovery='true'] .beyond-music-panel {
+  width: min(310px, calc(100vw - 24px));
+  max-height: calc(100dvh - 28px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.beyond-fm-recovery-status {
+  padding: 8px 9px;
+  border: 1px solid rgba(119, 220, 241, .22);
+  border-radius: 8px;
+  background: rgba(119, 220, 241, .065);
+  color: #d0e9ec !important;
+  font-weight: 650 !important;
+}

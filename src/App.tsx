@@ -766,6 +766,7 @@ export function App() {
 
   useEffect(() => {
     const onPopState = () => {
+      window.dispatchEvent(new Event('pokemon-beyond:navigation'));
       const nextPath = getPath();
       const remembered = rememberHubDestination(getHubLocation());
       startTransition(() => {
@@ -862,6 +863,7 @@ export function App() {
         window.history.pushState(nextState, '', nextLocation);
       }
 
+      window.dispatchEvent(new Event('pokemon-beyond:navigation'));
       const remembered = rememberHubDestination(`${destination.pathname}${destination.search}`);
       startTransition(() => {
         setPath(destination.pathname);
