@@ -15,7 +15,9 @@ function asHttpsOrigin(value: string): URL | null {
     const url = new URL(value);
     if (url.protocol !== 'https:' || url.username || url.password ||
         url.pathname !== '/' || url.search || url.hash) return null;
-    if (!url.hostname.includes('.') || url.hostname === 'pokemon-api.otiosunbots.xyz') return null;
+    if (!url.hostname.includes('.') || url.hostname === 'pokemon-api.otiosunbots.xyz' ||
+        /^[0-9.]+$/.test(url.hostname) || url.hostname.endsWith('.local') ||
+        url.hostname.endsWith('.internal') || url.port) return null;
     return url;
   } catch {
     return null;
