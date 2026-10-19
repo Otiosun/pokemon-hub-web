@@ -1,0 +1,41 @@
+import { proxyPlayerPortalRequest } from '../../../src/player-api/playerPortalProxy.js';
+import { readPlayerPortalApiBaseUrl, readPremiumStagingApiBaseUrl } from '../../../src/player-api/playerPortalServerRuntime.js';
+import { resolvePremiumStagePlayerRoute } from '../../../src/player-api/premiumStagingRoutes.js';
+
+type PlayerProxyRoute = {
+  upstreamPath: `/v1/hub/${string}`;
+  allowedMethod: 'GET' | 'POST';
+  premiumStaging: boolean;
+};
+
+/** Reuse the existing battle proxy function slot; no extra Vercel Function. */
+export function resolvePlayerProxyRoute(url: URL, method: string): PlayerProxyRoute | null {
+  if (url.pathname === '/api/hub/player/battle' && method === 'GET' && !url.search) {
+    return { upstreamPath: '/v1/hub/player/battle', allowedMethod: 'GET', premiumStaging: false };
+  }
+  const stage = resolvePremiumStagePlayerRoute(url, method);
+  return stage ? { ...stage, premiumStaging: true } : null;
+}
+
+function jsonNotFound(): Response {
+  return new Response(JSON.stringify({ error: 'NOT_FOUND' }), {
+    status: 404,
+    headers: {
+      'cache-control': 'no-store',
+      'content-type': 'application/json; charset=utf-8',
+    },
+  });
+}
+
+export default {
+  fetch(request: Request): Promise<Response> {
+    const route = resolvePlayerProxyRoute(new URL(request.url), request.method);
+    if (route === null) return Promise.resolve(jsonNotFound());
+
+    return proxyPlayerPortalRequest(request, {
+      baseUrl: route.premiumStaging ? readPremiumStagingApiBaseUrl() : readPlayerPortalApiBaseUrl(),
+      upstreamPath: route.upstreamPath,
+      allowedMethod: route.allowedMethod,
+    });
+  },
+};
