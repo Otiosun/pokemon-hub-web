@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Premium2XpCartCheckout } from './Premium2XpCartCheckout';
+import { canShowStaged2XpCheckout, Premium2XpCartCheckout } from './Premium2XpCartCheckout';
 import type { ChampionStoreCartLine } from './championStoreCartModel';
 
 const xp: ChampionStoreCartLine = {
@@ -16,25 +16,35 @@ const other: ChampionStoreCartLine = {
   unitPriceSnapshotCents: 5000,
 };
 
-afterEach(() => vi.unstubAllEnvs());
-
 describe('2XP cart staging boundary', () => {
-  it('does not render checkout unless both frontend preview flags are explicit', () => {
-    expect(renderToStaticMarkup(<Premium2XpCartCheckout cart={[xp]} />)).toBe('');
-    vi.stubEnv('VITE_PREMIUM_STAGING_UI', '1');
-    expect(renderToStaticMarkup(<Premium2XpCartCheckout cart={[xp]} />)).toBe('');
-    vi.stubEnv('VITE_PREMIUM_STAGING_TARGET', 'preview');
-    const html = renderToStaticMarkup(<Premium2XpCartCheckout cart={[xp]} />);
-    expect(html).toContain('CRIAR PEDIDO 2XP');
-    expect(html).toContain('SEM COBRANÇA');
+  it('requires BOTH explicit compile-time preview flags', () => {
+    expect(canShowStaged2XpCheckout([xp], { ui: undefined, target: undefined })).toBe(false);
+    expect(canShowStaged2XpCheckout([xp], { ui: '1', target: undefined })).toBe(false);
+    expect(canShowStaged2XpCheckout([xp], { ui: undefined, target: 'preview' })).toBe(false);
+    expect(canShowStaged2XpCheckout([xp], { ui: '1', target: 'production' })).toBe(false);
+    expect(canShowStaged2XpCheckout([xp], { ui: '1', target: 'preview' })).toBe(true);
   });
 
-  it('refuses orders involving other products or invalid quantities', () => {
-    vi.stubEnv('VITE_PREMIUM_STAGING_UI', '1');
-    vi.stubEnv('VITE_PREMIUM_STAGING_TARGET', 'preview');
-    expect(renderToStaticMarkup(<Premium2XpCartCheckout cart={[other]} />)).toBe('');
-    expect(renderToStaticMarkup(<Premium2XpCartCheckout cart={[xp, other]} />)).toBe('');
-    expect(renderToStaticMarkup(<Premium2XpCartCheckout cart={[{ ...xp, quantity: 53 }]} />)).toBe('');
-    expect(renderToStaticMarkup(<Premium2XpCartCheckout cart={[]} />)).toBe('');
+  it('refuses non-2XP products, mixed baskets and invalid quantities', () => {
+    const flags = { ui: '1', target: 'preview' };
+    expect(canShowStaged2XpCheckout([other], flags)).toBe(false);
+    expect(canShowStaged2XpCheckout([xp, other], flags)).toBe(false);
+    expect(canShowStaged2XpCheckout([{ ...xp, quantity: 53 }], flags)).toBe(false);
+    expect(canShowStaged2XpCheckout([{ ...xp, quantity: Number.NaN }], flags)).toBe(false);
+    expect(canShowStaged2XpCheckout([], flags)).toBe(false);
+  });
+
+  it('renders the staged order action only when the effective bundle flags allow it', () => {
+    const html = renderToStaticMarkup(<Premium2XpCartCheckout cart={[xp]} />);
+    const allowed = canShowStaged2XpCheckout([xp], {
+      ui: import.meta.env.VITE_PREMIUM_STAGING_UI,
+      target: import.meta.env.VITE_PREMIUM_STAGING_TARGET,
+    });
+    if (allowed) {
+      expect(html).toContain('CRIAR PEDIDO 2XP');
+      expect(html).toContain('SEM COBRANÇA');
+    } else {
+      expect(html).toBe('');
+    }
   });
 });
