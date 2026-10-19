@@ -63,6 +63,17 @@ describe('Premium staging proxy allowlist', () => {
     expect(resolvePremiumStageAdminRoute(url('/api/hub/admin/premium/players?q=Aurora'), 'POST')).toBeNull();
   });
 
+  it('allowlists standalone item catalog and audited item delivery only on staging', () => {
+    expect(resolvePremiumStageAdminRoute(url('/api/hub/admin/premium/delivery/items'), 'GET')).toEqual({
+      upstreamPath: '/v1/hub/admin/premium/delivery/items', allowedMethod: 'GET',
+    });
+    expect(resolvePremiumStageAdminRoute(url('/api/hub/admin/premium/delivery/items'), 'POST')).toEqual({
+      upstreamPath: '/v1/hub/admin/premium/delivery/items', allowedMethod: 'POST',
+    });
+    expect(resolvePremiumStageAdminRoute(url('/api/hub/admin/premium/delivery/items?paid=1'), 'POST')).toBeNull();
+    expect(resolvePremiumStageAdminRoute(url('/api/hub/admin/premium/delivery/items'), 'DELETE')).toBeNull();
+  });
+
   it('refuses unsupported actions, query injection and mutations', () => {
     for (const [path, method] of [
       [`/api/hub/admin/premium?playerId=${playerId}&resource=orders&debug=1`, 'GET'],
