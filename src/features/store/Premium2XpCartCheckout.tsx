@@ -1,3 +1,4 @@
+import './premium-2xp-checkout.css';
 import { useRef, useState } from 'react';
 import {
   checkoutIntentId,
