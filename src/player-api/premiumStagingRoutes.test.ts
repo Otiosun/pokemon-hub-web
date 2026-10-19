@@ -89,6 +89,31 @@ describe('Premium staging proxy allowlist', () => {
       .toBeNull();
   });
 
+  it('allowlists human case opening, status transition and immutable timeline only on staged owner', () => {
+    const root='/api/hub/admin/premium/delivery/cases';
+    const id='11111111-1111-4111-8111-111111111111';
+    expect(resolvePremiumStageAdminRoute(url(root+'/catalog'),'GET')).toEqual({
+      upstreamPath:'/v1/hub/admin/premium/delivery/cases/catalog',allowedMethod:'GET',
+    });
+    expect(resolvePremiumStageAdminRoute(url(root),'POST')).toEqual({
+      upstreamPath:'/v1/hub/admin/premium/delivery/cases',allowedMethod:'POST',
+    });
+    expect(resolvePremiumStageAdminRoute(url(root+'?playerId='+id),'GET')).toEqual({
+      upstreamPath:'/v1/hub/admin/premium/delivery/cases?playerId='+id,allowedMethod:'GET',
+    });
+    expect(resolvePremiumStageAdminRoute(url(root+'/'+id+'/transition'),'POST')).toEqual({
+      upstreamPath:'/v1/hub/admin/premium/delivery/cases/'+id+'/transition',allowedMethod:'POST',
+    });
+    expect(resolvePremiumStageAdminRoute(url(root+'/'+id+'/events'),'GET')).toEqual({
+      upstreamPath:'/v1/hub/admin/premium/delivery/cases/'+id+'/events',allowedMethod:'GET',
+    });
+    expect(resolvePremiumStageAdminRoute(url(root+'?paid=1'),'POST')).toBeNull();
+    expect(resolvePremiumStageAdminRoute(url(root+'?playerId=bad'),'GET')).toBeNull();
+    expect(resolvePremiumStageAdminRoute(url(root+'/'+id+'/transition'),'GET')).toBeNull();
+    expect(resolvePremiumStageAdminRoute(url(root+'/'+id+'/events'),'POST')).toBeNull();
+    expect(resolvePremiumStageAdminRoute(url(root+'/'+id+'/payment'),'POST')).toBeNull();
+  });
+
   it('refuses unsupported actions, query injection and mutations', () => {
     for (const [path, method] of [
       [`/api/hub/admin/premium?playerId=${playerId}&resource=orders&debug=1`, 'GET'],
