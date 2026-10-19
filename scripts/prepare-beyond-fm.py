@@ -2,11 +2,15 @@
 """Extract exactly four verified MP3 files for the Beyond FM server build."""
 import hashlib
 import json
+from io import BytesIO
 from pathlib import Path
 from zipfile import BadZipFile, ZipFile
 
 ARCHIVE = Path('assets/beyond-fm/Beyond_FM_4_Faixas_Alola_Nova.zip')
 DESTINATION = Path('public/beyond-fm')
+PARTS = tuple(Path(f'assets/beyond-fm/Beyond_FM_Parte_{n}_de_4.part') for n in range(1, 5))
+PART_BYTES = (5195162, 5195162, 5195162, 5195161)
+ARCHIVE_SHA256 = '74dd36e6e79bd78db24f8fb0f38a3771265d413421c0cafa884c6bc2c13fb609'
 TRACKS = (
     ('cynthia', '01_Qumu_Cynthia.mp3'),
     ('national-park', '02_Michael_Tai_National_Park.mp3'),
@@ -16,15 +20,26 @@ TRACKS = (
 
 
 def main():
-    if not ARCHIVE.exists():
+    if ARCHIVE.is_file():
+        archive_bytes = ARCHIVE.read_bytes()
+    elif any(part.is_file() for part in PARTS):
+        present = [part.is_file() for part in PARTS]
+        if not all(present):
+            print(f'[Beyond FM] Received {sum(present)}/4 archive parts; awaiting remaining parts.')
+            return
+        chunks = [part.read_bytes() for part in PARTS]
+        if any(len(chunk) != size for chunk, size in zip(chunks, PART_BYTES)):
+            raise ValueError('Beyond FM archive parts have incorrect sizes')
+        archive_bytes = b''.join(chunks)
+    else:
         print('[Beyond FM] Server archive absent; retaining the public CC0 station.')
         return
-    if not (100_000 <= ARCHIVE.stat().st_size <= 26_000_000):
-        raise ValueError('Beyond FM archive has an invalid size')
+    if hashlib.sha256(archive_bytes).hexdigest() != ARCHIVE_SHA256:
+        raise ValueError('Beyond FM archive checksum mismatch; check all four parts and names')
     tracks = []
     files = {}
     try:
-        with ZipFile(ARCHIVE) as archive:
+        with ZipFile(BytesIO(archive_bytes)) as archive:
             entries = archive.infolist()
             if len(entries) != 4 or {entry.filename for entry in entries} != {name for _, name in TRACKS}:
                 raise ValueError('Beyond FM archive must contain exactly the four expected MP3 files')
