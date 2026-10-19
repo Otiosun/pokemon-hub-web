@@ -168,6 +168,15 @@ export function AdminPage() {
               </article>
             );
           })}
+          {state.admin.owner &&
+            import.meta.env.VITE_PREMIUM_STAGING_UI === '1' &&
+            import.meta.env.VITE_PREMIUM_STAGING_TARGET === 'preview' ? (
+              <a className="admin-module-card is-authorized is-link" href="/admin/premium">
+                <header><span>CENTRAL PREMIUM</span><strong>STAGING</strong></header>
+                <p>Pedidos, XP 2× e atendimento. Console isolado para validação antes da publicação.</p>
+                <footer><span>OWNER · TESTES</span><small>ABRIR CENTRAL PREMIUM</small></footer>
+              </a>
+            ) : null}
         </section>
 
         <section className="admin-capabilities">
