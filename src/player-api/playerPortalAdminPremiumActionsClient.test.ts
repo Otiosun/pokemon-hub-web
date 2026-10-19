@@ -19,7 +19,7 @@ describe('owner Premium actions client', () => {
       status: 'ok', operation: 'PAYMENT_APPROVED', replayed: false,
     });
     const [url, request] = fetcher.mock.calls[0]!;
-    expect(url).toBe(`/api/hub/admin/premium-action?orderId=${orderId}&action=approve`);
+    expect(url).toBe(`/api/hub/admin/premium/orders/${orderId}/approve`);
     expect(request?.method).toBe('POST');
     expect(request?.credentials).toBe('include');
     expect(JSON.parse(String(request?.body))).toEqual(input);
