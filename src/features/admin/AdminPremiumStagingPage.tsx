@@ -80,10 +80,10 @@ export function AdminPremiumStagingPage() {
           </nav>
 
           {section === 'delivery' ? (
-            <AdminPremiumDeliveryPanel playerId={playerId} />
+            <AdminPremiumDeliveryPanel key={playerId ?? 'unselected'} playerId={playerId} />
           ) : null}
           {section === 'inventory' ? (
-            <AdminPremiumInventoryPanel playerId={playerId} />
+            <AdminPremiumInventoryPanel key={playerId ?? 'unselected'} playerId={playerId} />
           ) : null}
           {section === 'catalog' ? <AdminPremiumFulfillmentCatalog /> : null}
           {section === 'entitlements' ? (
