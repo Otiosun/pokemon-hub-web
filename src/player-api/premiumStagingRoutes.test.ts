@@ -52,6 +52,17 @@ describe('Premium staging proxy allowlist', () => {
     expect(resolvePremiumStageAdminRoute(url('/api/hub/admin/premium/delivery/catalog'), 'POST')).toBeNull();
   });
 
+  it('only searches stage trainers by bounded name prefix', () => {
+    expect(resolvePremiumStageAdminRoute(url('/api/hub/admin/premium/players?q=Aurora'), 'GET'))
+      .toMatchObject({
+        upstreamPath: '/v1/hub/admin/players?q=Aurora&limit=8',
+        allowedMethod: 'GET',
+      });
+    expect(resolvePremiumStageAdminRoute(url('/api/hub/admin/premium/players?q=A'), 'GET')).toBeNull();
+    expect(resolvePremiumStageAdminRoute(url('/api/hub/admin/premium/players?q=Aurora&limit=10000'), 'GET')).toBeNull();
+    expect(resolvePremiumStageAdminRoute(url('/api/hub/admin/premium/players?q=Aurora'), 'POST')).toBeNull();
+  });
+
   it('refuses unsupported actions, query injection and mutations', () => {
     for (const [path, method] of [
       [`/api/hub/admin/premium?playerId=${playerId}&resource=orders&debug=1`, 'GET'],
