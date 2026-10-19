@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BeyondFmPlaylistEngine } from './beyondFmPlaylistEngine';
-import { BEYOND_FM_TRACKS, PUBLIC_FM_SOURCE_URL } from './beyondFmLibrary';
+import { BEYOND_FM_TRACKS, HOSTED_FM_TRACK_URLS, PUBLIC_FM_SOURCE_URL } from './beyondFmLibrary';
 afterEach(() => vi.unstubAllGlobals());
 describe('Beyond FM shuffled audio engine', () => {
   it('plays five songs including the CC0 track without repeating, and keeps pause/resume state', async () => {
@@ -92,5 +92,40 @@ describe('Beyond FM shuffled audio engine', () => {
     expect(audioInstances.at(-1)?.src).toBe(PUBLIC_FM_SOURCE_URL);
     expect(audioInstances.at(-1)?.loop).toBe(true);
     publicOnly.destroy();
+  });
+});
+
+describe('hosted audio mode', () => {
+  it('plays all five remote URLs, never creating local blobs', async () => {
+    const heard: string[] = [];
+    class RemoteAudio {
+      src: string;
+      paused = true;
+      ended = false;
+      duration = 90;
+      currentTime = 0;
+      volume = 0.22;
+      muted = false;
+      loop = false;
+      preload = '';
+      onended: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      onplaying: (() => void) | null = null;
+      constructor(src: string) { this.src = src; heard.push(src); }
+      async play() { this.paused = false; this.onplaying?.(); }
+      pause() { this.paused = true; }
+      load() {}
+      removeAttribute() {}
+      canPlayType() { return 'probably'; }
+    }
+    vi.stubGlobal('Audio', RemoteAudio);
+    const engine = new BeyondFmPlaylistEngine();
+    engine.installHosted();
+    expect(engine.isHostedLibrary).toBe(true);
+    expect(engine.hasPersonalLibrary).toBe(true);
+    await engine.start();
+    for (let i = 1; i < 5; i++) await engine.next();
+    expect(new Set(heard)).toEqual(new Set([...Object.values(HOSTED_FM_TRACK_URLS), PUBLIC_FM_SOURCE_URL]));
+    engine.destroy();
   });
 });
