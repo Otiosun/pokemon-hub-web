@@ -45,6 +45,6 @@ describe('Premium staging proxy allowlist', () => {
       [`/api/hub/admin/premium/orders/${orderId}/pay`, 'POST'],
       [`/api/hub/admin/premium/orders/${orderId}/deliver?confirm=1`, 'POST'],
       [`/api/hub/admin/premium/orders/${orderId}/deliver`, 'GET'],
-    ]) expect(resolvePremiumStageAdminRoute(url(path), method)).toBeNull();
+    ] as const) expect(resolvePremiumStageAdminRoute(url(path), method)).toBeNull();
   });
 });
