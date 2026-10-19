@@ -4,13 +4,14 @@ import { PremiumStagingSessionGate } from './PremiumStagingSessionGate';
 import { AdminPremiumReadPanel } from './AdminPremiumReadPanel';
 import { AdminPremiumDeliveryPanel } from './AdminPremiumDeliveryPanel';
 import { AdminPremiumInventoryPanel } from './AdminPremiumInventoryPanel';
+import { AdminPremiumFulfillmentCatalog } from './AdminPremiumFulfillmentCatalog';
 import { PremiumStagePlayerSearch } from './PremiumStagePlayerSearch';
 import { AdminPremiumSupportLedger } from './AdminPremiumSupportLedger';
 import './admin-page.css';
 import './admin-premium-support.css';
 import './admin-premium-staging.css';
 
-type Section = 'delivery' | 'inventory' | 'entitlements' | 'support';
+type Section = 'delivery' | 'inventory' | 'catalog' | 'entitlements' | 'support';
 const PLAYER_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function AdminPremiumStagingPage() {
@@ -66,6 +67,7 @@ export function AdminPremiumStagingPage() {
             {([
               ['delivery', 'ENTREGAS', 'MANUAL · PRIORIDADE'],
               ['inventory', 'ITENS', 'ENTREGA AVULSA'],
+              ['catalog', 'GAMEPASSES', 'COBERTURA DO CATÁLOGO'],
               ['entitlements', 'BENEFÍCIOS', 'EXPIRAÇÃO & ESTADO'],
               ['support', 'ATENDIMENTOS', 'REGISTROS AUDITÁVEIS'],
             ] as const).map(([id, label, eyebrow]) => (
@@ -83,6 +85,7 @@ export function AdminPremiumStagingPage() {
           {section === 'inventory' ? (
             <AdminPremiumInventoryPanel playerId={playerId} />
           ) : null}
+          {section === 'catalog' ? <AdminPremiumFulfillmentCatalog /> : null}
           {section === 'entitlements' ? (
             <AdminPremiumReadPanel playerId={playerId} playerName={playerId} resource="entitlements" />
           ) : null}
