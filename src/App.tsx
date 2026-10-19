@@ -51,6 +51,9 @@ const TrainingPage = lazy(() =>
 const AdminPage = lazy(() =>
   import('./features/admin/AdminPage').then((module) => ({ default: module.AdminPage })),
 );
+const AdminPremiumStagingPage = lazy(() =>
+  import('./features/admin/AdminPremiumStagingPage').then((module) => ({ default: module.AdminPremiumStagingPage })),
+);
 const AdminPlayersPage = lazy(() =>
   import('./features/admin/AdminPlayersPage').then((module) => ({ default: module.AdminPlayersPage })),
 );
@@ -884,6 +887,20 @@ export function App() {
       document.removeEventListener('click', onDocumentClick);
     };
   }, []);
+
+  if (
+    (path === '/admin/premium' || path === '/admin/premium/') &&
+    import.meta.env.VITE_PREMIUM_STAGING_UI === '1' &&
+    import.meta.env.VITE_PREMIUM_STAGING_TARGET === 'preview'
+  ) {
+    return (
+      <HubFrame active={null} destinations={hubDestinations}>
+        <Suspense fallback={<RouteFallback module="journey" label="ABRINDO CENTRAL PREMIUM DE TESTES" />}>
+          <AdminPremiumStagingPage />
+        </Suspense>
+      </HubFrame>
+    );
+  }
 
   if (path === '/admin/guia' || path === '/admin/guia/') {
     return (
