@@ -110,6 +110,31 @@ describe('independent Premium staging credentials', () => {
     expect(upstream).toHaveBeenCalledTimes(1);
   });
 
+  it('blocks foreign-origin Premium writes before reaching any staging service', async () => {
+    activateStage();
+    const upstream = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => new Response('{}', { status: 200 }));
+    vi.stubGlobal('fetch', upstream);
+    for (const url of [
+      `${server}/api/hub/player/premium/orders`,
+      `${server}/api/hub/admin/premium/orders/22222222-2222-4222-8222-222222222222/approve`,
+      `${server}/api/hub/admin/premium-auth/exchange`,
+    ]) {
+      const target = url.includes('/api/hub/player/') ? playerHandler : adminHandler;
+      const denied = await target.fetch(new Request(url, {
+        method: 'POST',
+        headers: {
+          cookie: both,
+          origin: 'https://malicious.example.net',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({ ticket: 'A'.repeat(43) }),
+      }));
+      expect(denied.status).toBe(403);
+      await expect(denied.json()).resolves.toEqual({ error: 'CROSS_ORIGIN_STAGING_MUTATION' });
+    }
+    expect(upstream).not.toHaveBeenCalled();
+  });
+
   it('fails closed without approved upstream and never exposes staging cookie to production', async () => {
     vi.stubEnv('VERCEL_ENV', 'production');
     vi.stubEnv('PREMIUM_STAGING_ENABLED', '1');
