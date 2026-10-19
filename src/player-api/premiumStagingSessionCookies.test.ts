@@ -50,7 +50,7 @@ describe('independent Premium staging credentials', () => {
 
   it('requires a staging session for checkout even when a production browser session exists', async () => {
     activateStage();
-    const upstream = vi.fn(async () => new Response(JSON.stringify({}), { status: 200 }));
+    const upstream = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => new Response(JSON.stringify({}), { status: 200 }));
     vi.stubGlobal('fetch', upstream);
     const endpoint = `${server}/api/hub/player/premium/orders`;
     const denied = await playerHandler.fetch(new Request(endpoint, {
@@ -71,7 +71,7 @@ describe('independent Premium staging credentials', () => {
   it('issues the staging cookie from the approved staging auth exchange, never the prod one', async () => {
     activateStage();
     const upstreamCookie = `${HUB_COOKIE}=${staged}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=43200`;
-    const upstream = vi.fn(async () => new Response('{}', {
+    const upstream = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => new Response('{}', {
       status: 200, headers: { 'set-cookie': upstreamCookie, 'content-type': 'application/json' },
     }));
     vi.stubGlobal('fetch', upstream);
@@ -95,7 +95,7 @@ describe('independent Premium staging credentials', () => {
 
   it('does not pass staging cookies to normal live admin routes, and clears only staging on logout', async () => {
     activateStage();
-    const upstream = vi.fn(async () => new Response('{}', { status: 200 }));
+    const upstream = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => new Response('{}', { status: 200 }));
     vi.stubGlobal('fetch', upstream);
     const normal = await adminHandler.fetch(new Request(`${server}/api/hub/admin/self`, {
       headers: { cookie: both },
@@ -115,7 +115,7 @@ describe('independent Premium staging credentials', () => {
     vi.stubEnv('PREMIUM_STAGING_ENABLED', '1');
     vi.stubEnv('PREMIUM_STAGING_API_BASE_URL', stage);
     vi.stubEnv('PREMIUM_STAGING_APPROVED_ORIGIN', stage);
-    const upstream = vi.fn(async () => new Response('unexpected'));
+    const upstream = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => new Response('unexpected'));
     vi.stubGlobal('fetch', upstream);
     const response = await adminHandler.fetch(new Request(`${server}/api/hub/admin/premium-auth/self`, {
       headers: { cookie: both },
