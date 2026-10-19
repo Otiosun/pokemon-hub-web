@@ -27,8 +27,7 @@ export async function submitManualPremiumAction(
     (action !== 'approve' && action !== 'deliver')
   ) throw new Error('Confira os dados e a justificativa antes de confirmar.');
 
-  const params = new URLSearchParams({ orderId, action });
-  const response = await fetcher(`/api/hub/admin/premium-action?${params}`, {
+  const response = await fetcher(`/api/hub/admin/premium/orders/${orderId}/${action}`, {
     method: 'POST',
     credentials: 'include',
     cache: 'no-store',
