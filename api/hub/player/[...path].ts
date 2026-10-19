@@ -34,6 +34,7 @@ export default {
 
     return proxyPlayerPortalRequest(request, {
       baseUrl: route.premiumStaging ? readPremiumStagingApiBaseUrl() : readPlayerPortalApiBaseUrl(),
+      sessionScope: route.premiumStaging ? 'premium-stage' : 'normal',
       upstreamPath: route.upstreamPath,
       allowedMethod: route.allowedMethod,
     });
