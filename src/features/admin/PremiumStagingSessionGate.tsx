@@ -66,7 +66,7 @@ export function PremiumStagingSessionGate({
   if (state.status === 'ready') return (
     <div className="premium-stage-gate-ready">
       <div className="premium-stage-gate-identity">
-        <span>{state.label}</span>
+        <span>{local ? (access === 'owner' ? 'PROPRIETÁRIO LOCAL' : 'TREINADOR LOCAL') : state.label}</span>
         <button type="button" onClick={() => void leave()} disabled={busy}>{'SAIR DA ' + environment}</button>
       </div>
       {children}
