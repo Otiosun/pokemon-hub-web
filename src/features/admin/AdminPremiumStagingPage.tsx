@@ -52,7 +52,7 @@ export function AdminPremiumStagingPage() {
 
           <section className="premium-staging-player" aria-label="Identificar treinador para entrega Premium">
             <div>
-              <span>IDENTIFICAÇÃO NO AMBIENTE DE TESTES</span>
+              <span>{local ? 'IDENTIFICAÇÃO DO DESTINATÁRIO' : 'IDENTIFICAÇÃO NO AMBIENTE DE TESTES'}</span>
               <h2>{local ? "Destinatário da entrega" : "Treinador de teste"}</h2>
               <p>{local ? "Selecione o Player ID real do destinatário somente após conferir a entrega autorizada externamente." : <>Insira apenas o Player ID de uma conta <strong>sintética de staging</strong>. Nunca utilize um ID de produção.</>}</p>
             </div>
