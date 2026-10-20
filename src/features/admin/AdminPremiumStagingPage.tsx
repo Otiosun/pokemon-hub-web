@@ -39,7 +39,7 @@ export function AdminPremiumStagingPage() {
             <div>
               <span>CENTRAL ADM · ENTREGAS MANUAIS</span>
               <h1>Entregas &amp; suporte</h1>
-              <p>Escolha quem recebe cada gamepass. Pagamento é verificado fora do bot e do site.</p>
+              <p>Gerencie benefícios disponíveis para entrega e atendimentos pendentes. Pagamentos são verificados exclusivamente pela administração.</p>
             </div>
             <strong>{local ? 'API LOCAL · ATIVAÇÃO MANUAL' : 'STAGING · NÃO LIVE'}</strong>
           </header>
