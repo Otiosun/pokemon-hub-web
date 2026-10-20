@@ -149,4 +149,44 @@ describe('PC-hosted Premium manual BFF owner boundary', () => {
     expect(response.status).toBe(404);
     expect(upstream).not.toHaveBeenCalled();
   });
+  it('proxies only audited Premium rewrite keys into the isolated owner backend', async () => {
+    configure();
+    const forwarded: string[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (target: string) => {
+      forwarded.push(target);
+      return new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), { status: 401 });
+    }));
+    const cases: Array<[string, string]> = [
+      ['auth-self', '/v1/hub/admin/self'],
+      ['catalog', '/v1/hub/admin/premium/delivery/catalog'],
+      ['cases-catalog', '/v1/hub/admin/premium/delivery/cases/catalog'],
+      ['items', '/v1/hub/admin/premium/delivery/items'],
+      ['master', '/v1/hub/admin/premium/delivery/packs/master'],
+    ];
+    for (const [key, upstream] of cases) {
+      const req = new Request('https://hub.example.org/api/hub/admin/premium?__premium_route=' + key, {
+        headers: { cookie: `${PREMIUM_STAGE_COOKIE}=signed.session` },
+      });
+      const response = await adminHandler.fetch(req);
+      expect(response.status).toBe(401);
+      expect(forwarded.at(-1)).toBe(origin + upstream);
+    }
+    const caseId = '11111111-1111-4111-8111-111111111111';
+    const event = await adminHandler.fetch(new Request(
+      'https://hub.example.org/api/hub/admin/premium?__premium_route=case-events&__premium_case=' + caseId,
+      { headers: { cookie: `${PREMIUM_STAGE_COOKIE}=signed.session` } },
+    ));
+    expect(event.status).toBe(401);
+    expect(forwarded.at(-1)).toBe(origin + '/v1/hub/admin/premium/delivery/cases/' + caseId + '/events');
+    const before = forwarded.length;
+    for (const query of [
+      '__premium_route=unknown', '__premium_route=auth-self&__premium_route=auth-self',
+      '__premium_route=case-events&__premium_case=not-a-uuid',
+    ]) {
+      const response = await adminHandler.fetch(new Request('https://hub.example.org/api/hub/admin/premium?' + query));
+      expect(response.status).toBe(404);
+    }
+    expect(forwarded).toHaveLength(before);
+  });
+
 });

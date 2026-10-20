@@ -7,6 +7,46 @@ import { clearPremiumStageCookie } from '../../../src/player-api/premiumStagingS
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+// Vercel Hobby limits this project to 12 functions. Nested Premium URLs are
+// explicitly rewritten to the existing /api/hub/admin/premium function.
+// Resolve only fixed, audited route keys; never accept a free-form URL target.
+const PREMIUM_REWRITE_PATHS: Readonly<Record<string, string>> = {
+  'auth-self': '/api/hub/admin/premium-auth/self',
+  'auth-player': '/api/hub/admin/premium-auth/player',
+  'auth-exchange': '/api/hub/admin/premium-auth/exchange',
+  'auth-logout': '/api/hub/admin/premium-auth/logout',
+  'delivery': '/api/hub/admin/premium/delivery',
+  'players': '/api/hub/admin/premium/players',
+  'catalog': '/api/hub/admin/premium/delivery/catalog',
+  'items': '/api/hub/admin/premium/delivery/items',
+  'pokemon': '/api/hub/admin/premium/delivery/pokemon',
+  'cases': '/api/hub/admin/premium/delivery/cases',
+  'cases-catalog': '/api/hub/admin/premium/delivery/cases/catalog',
+  'master': '/api/hub/admin/premium/delivery/packs/master',
+};
+
+function resolvePremiumRewrite(input: URL): URL | null {
+  if (input.pathname !== '/api/hub/admin/premium') return input;
+  const keys = input.searchParams.getAll('__premium_route');
+  if (keys.length === 0) return input;
+  if (keys.length !== 1) return null;
+  const key = keys[0];
+  const params = new URLSearchParams(input.searchParams);
+  params.delete('__premium_route');
+  let pathname: string | undefined = key ? PREMIUM_REWRITE_PATHS[key] : undefined;
+  if (key === 'case-events' || key === 'case-transition') {
+    const ids = params.getAll('__premium_case');
+    if (ids.length !== 1 || !ids[0] || !UUID_PATTERN.test(ids[0])) return null;
+    pathname = '/api/hub/admin/premium/delivery/cases/' + ids[0] +
+      (key === 'case-events' ? '/events' : '/transition');
+    params.delete('__premium_case');
+  } else if (params.has('__premium_case')) return null;
+  if (!pathname) return null;
+  const output = new URL(pathname, input.origin);
+  output.search = params.toString();
+  return output;
+}
+
 type AdminProxyRoute = {
   upstreamPath: `/v1/hub/${string}`;
   allowedMethod: 'GET' | 'POST' | 'PUT';
@@ -197,7 +237,8 @@ function jsonNotFound(): Response {
 
 export default {
   fetch(request: Request): Promise<Response> {
-    const url = new URL(request.url);
+    const url = resolvePremiumRewrite(new URL(request.url));
+    if (url === null) return Promise.resolve(jsonNotFound());
     if (url.pathname.startsWith('/api/hub/admin/premium-auth/')) {
       if (request.method === 'POST' && !isSafePremiumStagingMutation(request)) {
         return Promise.resolve(premiumStagingForbidden());
