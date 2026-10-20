@@ -57,6 +57,70 @@ describe('PC-hosted Premium manual BFF owner boundary', () => {
     expect(new Headers(options.headers).get('cookie')).not.toContain('wrong.token');
   });
 
+  it('exchanges a one-time ticket and uses only the separate Premium cookie in production', async () => {
+    configure();
+    const site = 'https://hub.example.org';
+    const ticket = 'T'.repeat(43);
+    const token = 'signed.session';
+    const owner = '11111111-1111-4111-8111-111111111111';
+    const forwarded: Array<{ url: string; method: string; cookie: string | null }> = [];
+    const upstream = vi.fn(async (target: string, init: RequestInit) => {
+      const headers = new Headers(init.headers);
+      forwarded.push({ url: target, method: init.method ?? 'GET', cookie: headers.get('cookie') });
+      if (target === origin + '/v1/hub/auth/exchange') {
+        expect(init.method).toBe('POST');
+        expect(init.body).toBe(JSON.stringify({ ticket }));
+        return new Response(JSON.stringify({ profile: { playerId: owner } }), {
+          status: 200,
+          headers: {
+            'set-cookie': `${HUB_COOKIE}=${token}; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=43200`,
+            'content-type': 'application/json',
+          },
+        });
+      }
+      if (target === origin + '/v1/hub/admin/self') return new Response(JSON.stringify({
+        admin: { principalId: owner, owner: true, capabilities: ['central.view'] },
+      }), { status: 200, headers: { 'content-type': 'application/json' } });
+      if (target === origin + '/v1/hub/admin/premium/delivery/catalog')
+        return new Response(JSON.stringify({ products: [] }), { status: 200 });
+      throw new Error('Unexpected upstream path');
+    });
+    vi.stubGlobal('fetch', upstream);
+
+    const exchange = await adminHandler.fetch(new Request(site + '/api/hub/admin/premium-auth/exchange', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', cookie: `${HUB_COOKIE}=normal.session` },
+      body: JSON.stringify({ ticket }),
+    }));
+    expect(exchange.status).toBe(200);
+    const premiumCookie = exchange.headers.get('set-cookie');
+    expect(premiumCookie).toContain(`${PREMIUM_STAGE_COOKIE}=${token};`);
+    expect(premiumCookie).not.toContain(`${HUB_COOKIE}=`);
+
+    const cookies = `${HUB_COOKIE}=normal.session; ${PREMIUM_STAGE_COOKIE}=${token}`;
+    const self = await adminHandler.fetch(new Request(site + '/api/hub/admin/premium-auth/self', {
+      headers: { cookie: cookies },
+    }));
+    expect(self.status).toBe(200);
+    expect((await self.json()).admin.owner).toBe(true);
+
+    const catalog = await adminHandler.fetch(new Request(site + '/api/hub/admin/premium/delivery/catalog', {
+      headers: { cookie: cookies },
+    }));
+    expect(catalog.status).toBe(200);
+
+    const denied = await adminHandler.fetch(new Request(site + '/api/hub/admin/premium/delivery/catalog', {
+      headers: { cookie: `${HUB_COOKIE}=normal.session` },
+    }));
+    expect(denied.status).toBe(401);
+    expect(forwarded).toEqual([
+      { url: origin + '/v1/hub/auth/exchange', method: 'POST', cookie: null },
+      { url: origin + '/v1/hub/admin/self', method: 'GET', cookie: `${HUB_COOKIE}=${token}` },
+      { url: origin + '/v1/hub/admin/premium/delivery/catalog', method: 'GET', cookie: `${HUB_COOKIE}=${token}` },
+    ]);
+    expect(upstream).toHaveBeenCalledTimes(3);
+  });
+
   it('refuses external Origin for mutation before touching the local API', async () => {
     configure();
     const upstream = vi.fn();
