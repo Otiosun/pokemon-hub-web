@@ -40,7 +40,7 @@ describe('PC-hosted Premium manual BFF owner boundary', () => {
 
   it('forwards only the separately authenticated cookie to approved existing HTTPS API', async () => {
     configure();
-    const upstream = vi.fn(async () => new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), {
+    const upstream = vi.fn(async (_target: string, _options: RequestInit) => new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), {
       status: 401, headers: { 'content-type': 'application/json' },
     }));
     vi.stubGlobal('fetch', upstream);
