@@ -1,5 +1,6 @@
 import { HubMenuTrigger } from '../../components/HubNavigation';
 import { usePlayerPortalAdmin } from '../../player-api/usePlayerPortalAdmin';
+import { currentPremiumManualUiMode } from '../../player-api/premiumManualUiMode';
 import './admin-page.css';
 
 const MODULES = [
@@ -108,6 +109,7 @@ export function AdminPage() {
   if (state.status !== 'admin') return <HiddenAdminRoute />;
 
   const capabilities = state.admin.capabilities;
+  const premiumMode = currentPremiumManualUiMode();
 
   return (
     <main className="admin-page">
@@ -168,13 +170,11 @@ export function AdminPage() {
               </article>
             );
           })}
-          {state.admin.owner &&
-            import.meta.env.VITE_PREMIUM_STAGING_UI === '1' &&
-            import.meta.env.VITE_PREMIUM_STAGING_TARGET === 'preview' ? (
+          {state.admin.owner && premiumMode !== null ? (
               <a className="admin-module-card is-authorized is-link" href="/admin/premium">
-                <header><span>CENTRAL PREMIUM</span><strong>STAGING</strong></header>
+                <header><span>CENTRAL PREMIUM</span><strong>{premiumMode === 'local' ? 'API LOCAL' : 'STAGING'}</strong></header>
                 <p>Entregas manuais de gamepasses e suporte. Sem confirmação de pagamento.</p>
-                <footer><span>OWNER · TESTES</span><small>ABRIR CENTRAL PREMIUM</small></footer>
+                <footer><span>{premiumMode === 'local' ? 'OWNER · PRODUÇÃO' : 'OWNER · TESTES'}</span><small>ABRIR CENTRAL PREMIUM</small></footer>
               </a>
             ) : null}
         </section>
