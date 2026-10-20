@@ -38,6 +38,29 @@ export async function readPremiumStageSession(
   return { status: 'ready', label: 'TREINADOR DE STAGING' };
 }
 
+/**
+ * Accept a freshly issued /hub link from the same official site, without
+ * navigating to it (navigation would redeem the one-time ticket).
+ * Never log or persist the raw URL; only its ticket reaches the exchange API.
+ */
+export function premiumTicketFromInput(input: string, siteOrigin: string): string | null {
+  const value = input.trim();
+  const valid = /^[A-Za-z0-9_-]{43}$/;
+  if (valid.test(value)) return value;
+  if (value.length > 2048 || /[\r\n]/.test(value)) return null;
+  try {
+    const link = new URL(value);
+    const site = new URL(siteOrigin);
+    if (link.protocol !== 'https:' || site.protocol !== 'https:' ||
+      link.origin !== site.origin || link.username || link.password) return null;
+    const ticketValues = new URLSearchParams(link.hash.slice(1)).getAll('hub_ticket');
+    return ticketValues.length === 1 && valid.test(ticketValues[0]!)
+      ? ticketValues[0]! : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function exchangePremiumStageTicket(
   ticket: string,
   fetcher: typeof fetch = fetch,

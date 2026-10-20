@@ -1,4 +1,5 @@
 import { resolvePremiumStagingApiBaseUrl } from './premiumStagingBoundary';
+import { resolvePremiumLocalApiBaseUrl } from './premiumLocalBoundary';
 
 const PLAYER_PORTAL_API_BASE_URL = 'PLAYER_PORTAL_API_BASE_URL';
 
@@ -23,5 +24,18 @@ export function readPremiumStagingApiBaseUrl(): string | null {
     apiBaseUrl: readRuntimeEnv('PREMIUM_STAGING_API_BASE_URL'),
     approvedOrigin: readRuntimeEnv('PREMIUM_STAGING_APPROVED_ORIGIN'),
     productionApiBaseUrl: readPlayerPortalApiBaseUrl(),
+  });
+}
+
+/** Manual Premium transport: stage preview or explicitly approved local-PC API; never both. */
+export function readPremiumManualApiBaseUrl(): string | null {
+  const mode = readRuntimeEnv('VERCEL_ENV');
+  if (mode === 'preview') return readPremiumStagingApiBaseUrl();
+  if (mode !== 'production') return null;
+  return resolvePremiumLocalApiBaseUrl({
+    vercelEnv: mode,
+    enabled: readRuntimeEnv('PREMIUM_LOCAL_ENABLED'),
+    approvedOrigin: readRuntimeEnv('PREMIUM_LOCAL_APPROVED_ORIGIN'),
+    apiBaseUrl: readPlayerPortalApiBaseUrl(),
   });
 }

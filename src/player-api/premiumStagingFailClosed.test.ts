@@ -8,7 +8,7 @@ afterEach(() => {
 });
 
 describe('Premium staging transport never falls back to production', () => {
-  it('does not forward a Premium order or admin payment decision in production', async () => {
+  it('blocks obsolete payment mutations in production without invoking an upstream', async () => {
     vi.stubEnv('VERCEL_ENV', 'production');
     vi.stubEnv('PREMIUM_STAGING_ENABLED', '1');
     vi.stubEnv('PREMIUM_STAGING_API_BASE_URL', 'https://stage.example.org');
@@ -25,8 +25,8 @@ describe('Premium staging transport never falls back to production', () => {
       { method: 'POST', body: '{}' },
     ));
 
-    expect(checkout.status).toBe(503);
-    expect(approval.status).toBe(503);
+    expect(checkout.status).toBe(404);
+    expect(approval.status).toBe(404);
     expect(upstream).not.toHaveBeenCalled();
   });
 
@@ -42,7 +42,14 @@ describe('Premium staging transport never falls back to production', () => {
     const result = await playerHandler.fetch(new Request('https://hub.example.org/api/hub/player/premium/orders', {
       method: 'POST', body: '{}',
     }));
-    expect(result.status).toBe(503);
+    expect(result.status).toBe(404);
+    // A genuinely supported manual grant still fails closed without the
+    // approved staging origin (never falls back to the normal Player API).
+    const master = await adminHandler.fetch(new Request(
+      'https://hub.example.org/api/hub/admin/premium/delivery/packs/master',
+      { method: 'GET' },
+    ));
+    expect(master.status).toBe(503);
     expect(upstream).not.toHaveBeenCalled();
   });
 });

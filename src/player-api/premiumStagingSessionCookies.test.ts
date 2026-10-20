@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import adminHandler from '../../api/hub/admin/[...path]';
-import playerHandler from '../../api/hub/player/[...path]';
 import {
   HUB_COOKIE,
   PREMIUM_STAGE_COOKIE,
@@ -48,22 +47,22 @@ describe('independent Premium staging credentials', () => {
     ]) expect(stageExchangeCookie(bad)).toBeNull();
   });
 
-  it('requires a staging session for checkout even when a production browser session exists', async () => {
+  it('requires staging credentials for MASTER even if a production browser session exists', async () => {
     activateStage();
     const upstream = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => new Response(JSON.stringify({}), { status: 200 }));
     vi.stubGlobal('fetch', upstream);
-    const endpoint = `${server}/api/hub/player/premium/orders`;
-    const denied = await playerHandler.fetch(new Request(endpoint, {
+    const endpoint = `${server}/api/hub/admin/premium/delivery/packs/master`;
+    const denied = await adminHandler.fetch(new Request(endpoint, {
       method: 'POST', headers: { cookie: `${HUB_COOKIE}=${real}` }, body: '{}',
     }));
     expect(denied.status).toBe(401);
     expect(upstream).not.toHaveBeenCalled();
-    const allowed = await playerHandler.fetch(new Request(endpoint, {
+    const allowed = await adminHandler.fetch(new Request(endpoint, {
       method: 'POST', headers: { cookie: both }, body: '{}',
     }));
     expect(allowed.status).toBe(200);
     const [url, init] = upstream.mock.calls[0]!;
-    expect(url).toBe(`${stage}/v1/hub/player/premium/orders`);
+    expect(url).toBe(`${stage}/v1/hub/admin/premium/delivery/packs/master`);
     expect(new Headers(init?.headers).get('cookie')).toBe(`${HUB_COOKIE}=${staged}`);
     expect(new Headers(init?.headers).get('cookie')).not.toContain(real);
   });
@@ -115,12 +114,11 @@ describe('independent Premium staging credentials', () => {
     const upstream = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => new Response('{}', { status: 200 }));
     vi.stubGlobal('fetch', upstream);
     for (const url of [
-      `${server}/api/hub/player/premium/orders`,
-      `${server}/api/hub/admin/premium/orders/22222222-2222-4222-8222-222222222222/approve`,
+      `${server}/api/hub/admin/premium/delivery`,
+      `${server}/api/hub/admin/premium/delivery/packs/master`,
       `${server}/api/hub/admin/premium-auth/exchange`,
     ]) {
-      const target = url.includes('/api/hub/player/') ? playerHandler : adminHandler;
-      const denied = await target.fetch(new Request(url, {
+      const denied = await adminHandler.fetch(new Request(url, {
         method: 'POST',
         headers: {
           cookie: both,

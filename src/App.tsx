@@ -13,6 +13,7 @@ import {
 import { resolveProductRoute } from './navigation/productIntegrity';
 import { preloadProductRoute } from './navigation/productRoutePreload';
 import { usePlayerPortalBrowserSession } from './player-api/playerPortalBrowserSession';
+import { currentPremiumManualUiMode } from './player-api/premiumManualUiMode';
 import './hub-route-fallback-v3.css';
 
 const JourneyPage = lazy(() =>
@@ -890,12 +891,11 @@ export function App() {
 
   if (
     (path === '/admin/premium' || path === '/admin/premium/') &&
-    import.meta.env.VITE_PREMIUM_STAGING_UI === '1' &&
-    import.meta.env.VITE_PREMIUM_STAGING_TARGET === 'preview'
+    currentPremiumManualUiMode() !== null
   ) {
     return (
       <HubFrame active={null} destinations={hubDestinations}>
-        <Suspense fallback={<RouteFallback module="journey" label="ABRINDO CENTRAL PREMIUM DE TESTES" />}>
+        <Suspense fallback={<RouteFallback module="journey" label="ABRINDO CENTRAL PREMIUM" />}>
           <AdminPremiumStagingPage />
         </Suspense>
       </HubFrame>

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   readPremiumStageSession,
   exchangePremiumStageTicket,
+  premiumTicketFromInput,
   signOutPremiumStage,
 } from './premiumStagingAuthClient';
 
@@ -53,4 +54,18 @@ describe('Premium staging-only session client', () => {
     await signOutPremiumStage(fetcher);
     expect(fetcher.mock.calls[1]![0]).toBe('/api/hub/admin/premium-auth/logout');
   });
+  it('accepts only same-origin /hub links, without navigating or exposing link contents', () => {
+    const origin = 'https://pokemon-hub-web-self.vercel.app';
+    const ticket = 'A'.repeat(43);
+    const official = `${origin}/jornada?hub_open=1792500000000#hub_ticket=${ticket}`;
+    expect(premiumTicketFromInput(ticket, origin)).toBe(ticket);
+    expect(premiumTicketFromInput(official, origin)).toBe(ticket);
+    expect(premiumTicketFromInput(official.replace(origin, 'https://fake.example'), origin)).toBeNull();
+    expect(premiumTicketFromInput(official.replace('https:', 'http:'), origin)).toBeNull();
+    expect(premiumTicketFromInput(`${origin}/#hub_ticket=${ticket}&hub_ticket=${ticket}`, origin)).toBeNull();
+    expect(premiumTicketFromInput(`${origin}/#hub_ticket=invalid`, origin)).toBeNull();
+    expect(premiumTicketFromInput('not-a-link', origin)).toBeNull();
+    expect(premiumTicketFromInput(official + 'B'.repeat(2048), origin)).toBeNull();
+  });
+
 });
