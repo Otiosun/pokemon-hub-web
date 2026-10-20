@@ -7,34 +7,28 @@ const orderId = '22222222-2222-4222-8222-222222222222';
 const url = (path: string) => new URL(`https://preview.example.com${path}`);
 
 describe('Premium staging proxy allowlist', () => {
-  it('keeps existing battle route and only accepts the specific checkout route', () => {
+  it('keeps the normal battle route and refuses superseded premium checkout mutations', () => {
     expect(resolvePlayerProxyRoute(url('/api/hub/player/battle'), 'GET')).toMatchObject({
       upstreamPath: '/v1/hub/player/battle', premiumStaging: false,
     });
     expect(resolvePlayerProxyRoute(url('/api/hub/player/battle?noCache=true'), 'GET')).toMatchObject({
       premiumStaging: false,
     });
-    expect(resolvePlayerProxyRoute(url('/api/hub/player/premium/orders'), 'POST')).toMatchObject({
-      upstreamPath: '/v1/hub/player/premium/orders', premiumStaging: true,
-    });
+    expect(resolvePlayerProxyRoute(url('/api/hub/player/premium/orders'), 'POST')).toBeNull();
     expect(resolvePremiumStagePlayerRoute(url('/api/hub/player/premium/orders?admin=true'), 'POST')).toBeNull();
     expect(resolvePlayerProxyRoute(url('/api/hub/player/premium/orders'), 'GET')).toBeNull();
     expect(resolvePlayerProxyRoute(url('/api/hub/player/roster'), 'POST')).toBeNull();
   });
 
-  it('allows only read/support actions and owner approval/delivery routes', () => {
+  it('allows historical read and support, but never financial approval or old paid-order delivery', () => {
     expect(resolvePremiumStageAdminRoute(url(`/api/hub/admin/premium?playerId=${playerId}&resource=orders`), 'GET')).toMatchObject({
       upstreamPath: `/v1/hub/admin/premium/players/${playerId}/orders`, allowedMethod: 'GET',
     });
     expect(resolvePremiumStageAdminRoute(url(`/api/hub/admin/premium?playerId=${playerId}&resource=support`), 'POST')).toMatchObject({
       upstreamPath: `/v1/hub/admin/premium/players/${playerId}/support`, allowedMethod: 'POST',
     });
-    expect(resolvePremiumStageAdminRoute(url(`/api/hub/admin/premium/orders/${orderId}/approve`), 'POST')).toMatchObject({
-      upstreamPath: `/v1/hub/admin/premium/orders/${orderId}/approve`,
-    });
-    expect(resolvePremiumStageAdminRoute(url(`/api/hub/admin/premium/orders/${orderId}/deliver`), 'POST')).toMatchObject({
-      upstreamPath: `/v1/hub/admin/premium/orders/${orderId}/deliver`,
-    });
+    expect(resolvePremiumStageAdminRoute(url(`/api/hub/admin/premium/orders/${orderId}/approve`), 'POST')).toBeNull();
+    expect(resolvePremiumStageAdminRoute(url(`/api/hub/admin/premium/orders/${orderId}/deliver`), 'POST')).toBeNull();
   });
 
   it('routes owner-delivery catalog, grants and history without payment endpoints', () => {
