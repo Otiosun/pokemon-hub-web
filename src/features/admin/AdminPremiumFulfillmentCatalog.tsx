@@ -1,12 +1,13 @@
 import { CHAMPION_STORE_PRODUCTS } from '../store/championStoreCatalog';
 
-export type FulfillmentReadiness = 'AUTOMATED' | 'NOT_CONFIGURED' | 'UNAVAILABLE';
+export type FulfillmentReadiness = 'AUTOMATED' | 'NOT_CONFIGURED' | 'UNAVAILABLE' | 'CONDITIONAL';
 
 /** Readiness is NOT payment status or a promise that a product was delivered. */
 export function getStoreFulfillmentReadiness(code: string): FulfillmentReadiness {
   const product = CHAMPION_STORE_PRODUCTS.find((entry) => entry.code === code);
   if (!product || product.available === false) return 'UNAVAILABLE';
-  return product.code === '2XP' ? 'AUTOMATED' : 'NOT_CONFIGURED';
+  if (product.code === '2XP') return 'AUTOMATED';
+  return product.code === 'MASTER' ? 'CONDITIONAL' : 'NOT_CONFIGURED';
 }
 
 export function AdminPremiumFulfillmentCatalog() {
@@ -14,6 +15,8 @@ export function AdminPremiumFulfillmentCatalog() {
     getStoreFulfillmentReadiness(product.code) === 'AUTOMATED').length;
   const pending = CHAMPION_STORE_PRODUCTS.filter((product) =>
     getStoreFulfillmentReadiness(product.code) === 'NOT_CONFIGURED').length;
+  const conditional = CHAMPION_STORE_PRODUCTS.filter((product) =>
+    getStoreFulfillmentReadiness(product.code) === 'CONDITIONAL').length;
   return (
     <section className="premium-delivery-console" aria-label="Produtos da loja e compatibilidade de entrega">
       <header>
@@ -22,7 +25,8 @@ export function AdminPremiumFulfillmentCatalog() {
         </div>
         <span>{ready} PRONTO</span>
       </header>
-      <p>{ready} benefício(s) com executor próprio no bot; {pending} aguardando definição técnica da entrega.
+      <p>{ready} benefício(s) com executor próprio; {conditional} executor condicionado ao item publicado
+        no staging; {pending} aguardando definição técnica da entrega.
         <strong> A lista abaixo não autoriza concessões nem confirma pagamentos.</strong></p>
       <div className="premium-fulfillment-status-list">
         {CHAMPION_STORE_PRODUCTS.map((product) => {
@@ -33,7 +37,8 @@ export function AdminPremiumFulfillmentCatalog() {
               <span data-status={state}>
                 {state === 'AUTOMATED' ? 'EXECUTOR IMPLEMENTADO'
                   : state === 'UNAVAILABLE' ? 'INDISPONÍVEL NA LOJA'
-                    : 'ENTREGA POR DEFINIR'}
+                    : state === 'CONDITIONAL' ? 'EXECUTOR CONDICIONAL · VERIFICAR CATÁLOGO'
+                      : 'ENTREGA POR DEFINIR'}
               </span>
             </div>
           );
