@@ -54,9 +54,11 @@ describe('champion store cart model', () => {
     expect(championStoreCartTotal(setChampionStoreQuantity(cart, '2XP', 5))).toBe(20000);
   });
 
-  it('keeps not-yet-implemented products out of new and saved carts', () => {
-    expect(addChampionStoreSku([], 'LUCK')).toEqual([]);
-    expect(sanitizeChampionStoreCart([{ productCode: 'LUCK', quantity: 1 }])).toEqual([]);
+  it('accepts the supported permanent Luck 2x entitlement only once', () => {
+    const first = addChampionStoreSku([], 'LUCK');
+    expect(first[0]?.quantity).toBe(1);
+    expect(addChampionStoreSku(first, 'LUCK')).toEqual(first);
+    expect(sanitizeChampionStoreCart([{ productCode: 'LUCK', quantity: 1 }])[0]?.sku).toBe('LUCK');
   });
 
   it('sanitizes stale or malformed persisted data without trusting the browser', () => {

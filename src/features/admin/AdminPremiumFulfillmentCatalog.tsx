@@ -6,7 +6,7 @@ export type FulfillmentReadiness = 'AUTOMATED' | 'NOT_CONFIGURED' | 'UNAVAILABLE
 export function getStoreFulfillmentReadiness(code: string): FulfillmentReadiness {
   const product = CHAMPION_STORE_PRODUCTS.find((entry) => entry.code === code);
   if (!product || product.available === false) return 'UNAVAILABLE';
-  if (product.code === '2XP') return 'AUTOMATED';
+  if (product.code === '2XP' || product.code === 'LUCK') return 'AUTOMATED';
   return product.code === 'MASTER' ? 'CONDITIONAL' : 'NOT_CONFIGURED';
 }
 
@@ -26,7 +26,7 @@ export function AdminPremiumFulfillmentCatalog() {
         <span>{ready} PRONTO</span>
       </header>
       <p>{ready} benefício(s) com executor próprio; {conditional} executor condicionado ao item publicado
-        no staging; {pending} aguardando definição técnica da entrega.
+        no catálogo ativo do backend; {pending} aguardando definição técnica da entrega.
         <strong> A lista abaixo não autoriza concessões nem confirma pagamentos.</strong></p>
       <div className="premium-fulfillment-status-list">
         {CHAMPION_STORE_PRODUCTS.map((product) => {
