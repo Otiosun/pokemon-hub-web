@@ -18,6 +18,9 @@ describe('PC-hosted Premium manual BFF owner boundary', () => {
   it('does not proxy when local activation is absent', async () => {
     vi.stubEnv('VERCEL_ENV', 'production');
     vi.stubEnv('PLAYER_PORTAL_API_BASE_URL', origin);
+    // Production deployment may have the flag enabled globally; always force
+    // the negative case explicitly instead of assuming its initial value.
+    vi.stubEnv('PREMIUM_LOCAL_ENABLED', '0');
     const upstream = vi.fn();
     vi.stubGlobal('fetch', upstream);
     const result = await adminHandler.fetch(new Request(endpoint, {
