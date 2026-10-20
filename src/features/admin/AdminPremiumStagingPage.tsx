@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { currentPremiumManualUiMode } from '../../player-api/premiumManualUiMode';
 import { HubMenuTrigger } from '../../components/HubNavigation';
 import { PremiumStagingSessionGate } from './PremiumStagingSessionGate';
 import { AdminPremiumReadPanel } from './AdminPremiumReadPanel';
@@ -18,6 +19,7 @@ type Section = 'delivery' | 'cases' | 'inventory' | 'pokemon' | 'catalog' | 'ent
 const PLAYER_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function AdminPremiumStagingPage() {
+  const local = currentPremiumManualUiMode() === 'local';
   const [draft, setDraft] = useState('');
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [section, setSection] = useState<Section>('delivery');
@@ -35,23 +37,24 @@ export function AdminPremiumStagingPage() {
         <section className="admin-premium">
           <header className="admin-premium-heading">
             <div>
-              <span>CENTRAL ADM · GATE E</span>
+              <span>CENTRAL ADM · ENTREGAS MANUAIS</span>
               <h1>Entregas &amp; suporte</h1>
               <p>Escolha quem recebe cada gamepass. Pagamento é verificado fora do bot e do site.</p>
             </div>
-            <strong>STAGING · NÃO LIVE</strong>
+            <strong>{local ? 'API LOCAL · ATIVAÇÃO MANUAL' : 'STAGING · NÃO LIVE'}</strong>
           </header>
 
           <p className="premium-staging-disclaimer" role="status">
-            Ambiente de integração em preparação. Os registros só aparecem quando uma API de staging
-            independente e autenticada estiver habilitada. Não há pedidos ou pagamentos de demonstração.
+            {local
+              ? 'Este painel consulta a API do próprio operador, se habilitada e autenticada pelo servidor. Entregas alteram dados reais: confira destinatário e quantidade. Não aprova pagamentos.'
+              : 'Ambiente de integração em preparação. Os registros só aparecem quando uma API de staging independente e autenticada estiver habilitada. Não há pedidos ou pagamentos de demonstração.'}
           </p>
 
-          <section className="premium-staging-player" aria-label="Identificar treinador de staging">
+          <section className="premium-staging-player" aria-label="Identificar treinador para entrega Premium">
             <div>
               <span>IDENTIFICAÇÃO NO AMBIENTE DE TESTES</span>
-              <h2>Treinador de teste</h2>
-              <p>Insira apenas o Player ID de uma conta <strong>sintética de staging</strong>. Nunca utilize um ID de produção.</p>
+              <h2>{local ? "Destinatário da entrega" : "Treinador de teste"}</h2>
+              <p>{local ? "Selecione o Player ID real do destinatário somente após conferir a entrega autorizada externamente." : <>Insira apenas o Player ID de uma conta <strong>sintética de staging</strong>. Nunca utilize um ID de produção.</>}</p>
             </div>
             <PremiumStagePlayerSearch onSelect={(id) => { setDraft(id); setPlayerId(id); }} />
             <form onSubmit={(event) => { event.preventDefault(); if (valid) setPlayerId(draft.trim()); }}>
