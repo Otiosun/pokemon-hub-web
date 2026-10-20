@@ -4,6 +4,62 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/api/hub/admin/premium-auth/self",
+      "destination": "/api/hub/admin/premium?__premium_route=auth-self"
+    },
+    {
+      "source": "/api/hub/admin/premium-auth/player",
+      "destination": "/api/hub/admin/premium?__premium_route=auth-player"
+    },
+    {
+      "source": "/api/hub/admin/premium-auth/exchange",
+      "destination": "/api/hub/admin/premium?__premium_route=auth-exchange"
+    },
+    {
+      "source": "/api/hub/admin/premium-auth/logout",
+      "destination": "/api/hub/admin/premium?__premium_route=auth-logout"
+    },
+    {
+      "source": "/api/hub/admin/premium/delivery",
+      "destination": "/api/hub/admin/premium?__premium_route=delivery"
+    },
+    {
+      "source": "/api/hub/admin/premium/players",
+      "destination": "/api/hub/admin/premium?__premium_route=players"
+    },
+    {
+      "source": "/api/hub/admin/premium/delivery/catalog",
+      "destination": "/api/hub/admin/premium?__premium_route=catalog"
+    },
+    {
+      "source": "/api/hub/admin/premium/delivery/items",
+      "destination": "/api/hub/admin/premium?__premium_route=items"
+    },
+    {
+      "source": "/api/hub/admin/premium/delivery/pokemon",
+      "destination": "/api/hub/admin/premium?__premium_route=pokemon"
+    },
+    {
+      "source": "/api/hub/admin/premium/delivery/cases",
+      "destination": "/api/hub/admin/premium?__premium_route=cases"
+    },
+    {
+      "source": "/api/hub/admin/premium/delivery/cases/catalog",
+      "destination": "/api/hub/admin/premium?__premium_route=cases-catalog"
+    },
+    {
+      "source": "/api/hub/admin/premium/delivery/packs/master",
+      "destination": "/api/hub/admin/premium?__premium_route=master"
+    },
+    {
+      "source": "/api/hub/admin/premium/delivery/cases/:caseId/events",
+      "destination": "/api/hub/admin/premium?__premium_route=case-events&__premium_case=:caseId"
+    },
+    {
+      "source": "/api/hub/admin/premium/delivery/cases/:caseId/transition",
+      "destination": "/api/hub/admin/premium?__premium_route=case-transition&__premium_case=:caseId"
+    },
+    {
       "source": "/api/hub/admin/team/:principalId/reception-staff",
       "destination": "/api/hub/admin/team?principalId=:principalId&action=reception-staff"
     },
