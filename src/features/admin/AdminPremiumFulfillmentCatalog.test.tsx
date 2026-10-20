@@ -10,9 +10,10 @@ describe('Champions Store: no product is falsely shown as delivered', () => {
       .map((p) => p.code)).toEqual(['2XP']);
   });
   it('marks products without a real backend executor as awaiting configuration', () => {
-    for (const code of ['GEN', 'EGG', 'P-U', 'P-E', 'CAP', 'MASTER', 'KIT', 'SAVE+']) {
+    for (const code of ['GEN', 'EGG', 'P-U', 'P-E', 'CAP', 'KIT', 'SAVE+']) {
       expect(getStoreFulfillmentReadiness(code)).toBe('NOT_CONFIGURED');
     }
+    expect(getStoreFulfillmentReadiness('MASTER')).toBe('CONDITIONAL');
     expect(getStoreFulfillmentReadiness('LUCK')).toBe('UNAVAILABLE');
     expect(getStoreFulfillmentReadiness('FAKE')).toBe('UNAVAILABLE');
   });
