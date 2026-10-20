@@ -57,7 +57,7 @@ export function PremiumStagingSessionGate({
       setState({ status: 'unauthenticated' });
       setTicket('');
     } catch {
-      setError('Não foi possível encerrar a sessão de testes.');
+      setError(local ? 'Não foi possível encerrar a sessão da API local.' : 'Não foi possível encerrar a sessão de testes.');
     } finally {
       setBusy(false);
     }
@@ -67,7 +67,7 @@ export function PremiumStagingSessionGate({
     <div className="premium-stage-gate-ready">
       <div className="premium-stage-gate-identity">
         <span>{local ? (access === 'owner' ? 'PROPRIETÁRIO LOCAL' : 'TREINADOR LOCAL') : state.label}</span>
-        <button type="button" onClick={() => void leave()} disabled={busy}>{'SAIR DA ' + environment}</button>
+        <button type="button" onClick={() => void leave()} disabled={busy}>{`SAIR DA ${environment}`}</button>
       </div>
       {children}
     </div>
@@ -76,7 +76,7 @@ export function PremiumStagingSessionGate({
     <section className="premium-stage-gate" aria-live="polite">
       <strong>ACESSO ISOLADO · {environment}</strong>
       {state.status === 'loading' ? (
-        <p>Verificando uma sessão exclusiva do ambiente de testes…</p>
+        <p>{local ? 'Verificando a sessão isolada da API local…' : 'Verificando uma sessão exclusiva do ambiente de testes…'}</p>
       ) : state.status === 'unavailable' ? (
         <p>API Premium não habilitada ou inacessível. Nenhuma entrega ou aprovação financeira foi realizada.</p>
       ) : (
@@ -100,7 +100,7 @@ export function PremiumStagingSessionGate({
               disabled={busy}
             />
             <button type="submit" disabled={busy || !/^[A-Za-z0-9_-]{43}$/.test(ticket.trim())}>
-              {busy ? 'VERIFICANDO…' : 'ENTRAR NO STAGING'}
+              {busy ? 'VERIFICANDO…' : local ? 'ENTRAR NA API LOCAL' : 'ENTRAR NO STAGING'}
             </button>
           </form>
         </>
