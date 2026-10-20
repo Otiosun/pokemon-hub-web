@@ -1,18 +1,14 @@
 /** Strict, staging-only Premium endpoint allowlist. No arbitrary proxy paths. */
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const UUID_FRAGMENT = '([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})';
-const ACTION = new RegExp(`^/api/hub/admin/premium/orders/${UUID_FRAGMENT}/(approve|deliver)$`, 'i');
-
 export type PremiumStageRoute = {
   upstreamPath: `/v1/hub/${string}`;
   allowedMethod: 'GET' | 'POST';
 };
 
-export function resolvePremiumStagePlayerRoute(url: URL, method: string): PremiumStageRoute | null {
-  return url.pathname === '/api/hub/player/premium/orders' && !url.search &&
-    method === 'POST'
-    ? { upstreamPath: '/v1/hub/player/premium/orders', allowedMethod: 'POST' }
-    : null;
+/** Gate F5: cart is manual; no new premium orders are accepted by the Hub proxy. */
+export function resolvePremiumStagePlayerRoute(_url: URL, _method: string): PremiumStageRoute | null {
+  return null;
 }
 
 export function resolvePremiumStageAdminRoute(url: URL, method: string): PremiumStageRoute | null {
@@ -93,13 +89,7 @@ export function resolvePremiumStageAdminRoute(url: URL, method: string): Premium
     return null;
   }
 
-  if (url.search || method !== 'POST') return null;
-  const match = ACTION.exec(url.pathname);
-  const orderId = match?.[1];
-  const action = match?.[2]?.toLowerCase();
-  if (!orderId || !UUID.test(orderId) || (action !== 'approve' && action !== 'deliver')) return null;
-  return {
-    upstreamPath: `/v1/hub/admin/premium/orders/${orderId}/${action}`,
-    allowedMethod: 'POST',
-  };
+  // Old approval and paid-order delivery endpoints belong to a superseded
+  // workflow. Keep read-only ledgers, never expose financial mutations.
+  return null;
 }
