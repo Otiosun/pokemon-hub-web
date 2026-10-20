@@ -164,7 +164,7 @@ describe('PC-hosted Premium manual BFF owner boundary', () => {
       ['master', '/v1/hub/admin/premium/delivery/packs/master'],
     ];
     for (const [key, upstream] of cases) {
-      const req = new Request('https://hub.example.org/api/hub/admin/premium?__premium_route=' + key, {
+      const req = new Request('https://hub.example.org/api/hub/admin/self?premiumRoute=' + key, {
         headers: { cookie: `${PREMIUM_STAGE_COOKIE}=signed.session` },
       });
       const response = await adminHandler.fetch(req);
@@ -173,17 +173,17 @@ describe('PC-hosted Premium manual BFF owner boundary', () => {
     }
     const caseId = '11111111-1111-4111-8111-111111111111';
     const event = await adminHandler.fetch(new Request(
-      'https://hub.example.org/api/hub/admin/premium?__premium_route=case-events&__premium_case=' + caseId,
+      'https://hub.example.org/api/hub/admin/self?premiumRoute=case-events&premiumCase=' + caseId,
       { headers: { cookie: `${PREMIUM_STAGE_COOKIE}=signed.session` } },
     ));
     expect(event.status).toBe(401);
     expect(forwarded.at(-1)).toBe(origin + '/v1/hub/admin/premium/delivery/cases/' + caseId + '/events');
     const before = forwarded.length;
     for (const query of [
-      '__premium_route=unknown', '__premium_route=auth-self&__premium_route=auth-self',
-      '__premium_route=case-events&__premium_case=not-a-uuid',
+      'premiumRoute=unknown', 'premiumRoute=auth-self&premiumRoute=auth-self',
+      'premiumRoute=case-events&premiumCase=not-a-uuid',
     ]) {
-      const response = await adminHandler.fetch(new Request('https://hub.example.org/api/hub/admin/premium?' + query));
+      const response = await adminHandler.fetch(new Request('https://hub.example.org/api/hub/admin/self?' + query));
       expect(response.status).toBe(404);
     }
     expect(forwarded).toHaveLength(before);
