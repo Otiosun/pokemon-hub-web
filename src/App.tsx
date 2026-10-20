@@ -895,7 +895,7 @@ export function App() {
   ) {
     return (
       <HubFrame active={null} destinations={hubDestinations}>
-        <Suspense fallback={<RouteFallback module="journey" label="ABRINDO CENTRAL PREMIUM DE TESTES" />}>
+        <Suspense fallback={<RouteFallback module="journey" label="ABRINDO CENTRAL PREMIUM" />}>
           <AdminPremiumStagingPage />
         </Suspense>
       </HubFrame>
