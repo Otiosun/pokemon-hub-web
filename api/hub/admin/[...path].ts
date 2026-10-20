@@ -1,6 +1,6 @@
 import { isSafePremiumStagingMutation, premiumStagingForbidden } from '../../../src/player-api/premiumStagingRequestGuard.js';
 import { proxyPlayerPortalRequest } from '../../../src/player-api/playerPortalProxy.js';
-import { readPlayerPortalApiBaseUrl, readPremiumStagingApiBaseUrl } from '../../../src/player-api/playerPortalServerRuntime.js';
+import { readPlayerPortalApiBaseUrl, readPremiumManualApiBaseUrl } from '../../../src/player-api/playerPortalServerRuntime.js';
 import { resolvePremiumStageAdminRoute } from '../../../src/player-api/premiumStagingRoutes.js';
 import { clearPremiumStageCookie } from '../../../src/player-api/premiumStagingSessionCookies.js';
 
@@ -224,7 +224,7 @@ export default {
             });
           }
           return proxyPlayerPortalRequest(request, {
-            baseUrl: readPremiumStagingApiBaseUrl(),
+            baseUrl: readPremiumManualApiBaseUrl(),
             upstreamPath: '/v1/hub/auth/exchange',
             allowedMethod: 'POST',
             sessionScope: 'none',
@@ -234,7 +234,7 @@ export default {
       }
       if (url.pathname === '/api/hub/admin/premium-auth/self' && request.method === 'GET') {
         return proxyPlayerPortalRequest(request, {
-          baseUrl: readPremiumStagingApiBaseUrl(),
+          baseUrl: readPremiumManualApiBaseUrl(),
           upstreamPath: '/v1/hub/admin/self',
           allowedMethod: 'GET',
           sessionScope: 'premium-stage',
@@ -242,7 +242,7 @@ export default {
       }
       if (url.pathname === '/api/hub/admin/premium-auth/player' && request.method === 'GET') {
         return proxyPlayerPortalRequest(request, {
-          baseUrl: readPremiumStagingApiBaseUrl(),
+          baseUrl: readPremiumManualApiBaseUrl(),
           upstreamPath: '/v1/hub/player/self',
           allowedMethod: 'GET',
           sessionScope: 'premium-stage',
@@ -258,7 +258,7 @@ export default {
       if (premiumRoute === null) return Promise.resolve(jsonNotFound());
       // Premium never receives the standard Hub/prod browser session.
       return proxyPlayerPortalRequest(request, {
-        baseUrl: readPremiumStagingApiBaseUrl(),
+        baseUrl: readPremiumManualApiBaseUrl(),
         sessionScope: 'premium-stage',
         ...premiumRoute,
       });
