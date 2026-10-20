@@ -26,7 +26,7 @@ describe('MASTER SKU manual delivery (no payment integration)', () => {
     await expect(readMasterBallCatalog(malformed)).rejects.toThrow();
   });
   it('sends only the canonical MASTER grant, not payments or client item IDs', async () => {
-    const fetcher = vi.fn(async () => new Response(JSON.stringify({
+    const fetcher = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => new Response(JSON.stringify({
       ...input, sku: 'MASTER', itemId, operationId, applied: true, replayed: false,
     }), { status: 201 }));
     expect(await deliverMasterBallPack(input, fetcher)).toEqual({
