@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AdminPremiumOrderActions } from './AdminPremiumOrderActions';
 import {
   getAdminPremiumRead,
   type AdminPremiumReadResult,
@@ -81,7 +80,7 @@ export function AdminPremiumReadPanel({
           <h3>{title}</h3>
           <small>{playerName ?? 'Nenhum jogador selecionado'}</small>
         </div>
-        <span className="premium-read-tag">{resource === 'orders' ? 'REVISÃO DO OWNER' : 'SOMENTE LEITURA'}</span>
+        <span className="premium-read-tag">{'SOMENTE LEITURA'}</span>
       </header>
 
       {state.status === 'choose' ? (
@@ -131,7 +130,6 @@ export function AdminPremiumReadPanel({
                   ))}
                 </ul>
                 <small>PAGO {dateText(order.paidAt)} · APLICADO {dateText(order.appliedAt)}</small>
-                <AdminPremiumOrderActions order={order} onUpdated={reload} />
               </article>
             ))}
           </div>
