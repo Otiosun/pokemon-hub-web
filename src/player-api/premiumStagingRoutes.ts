@@ -48,6 +48,11 @@ export function resolvePremiumStageAdminRoute(url: URL, method: string): Premium
       allowedMethod: 'GET',
     };
   }
+  // Commercial MASTER grant is limited to the exact published Master Ball, never a generic pack proxy.
+  if (!url.search && url.pathname === '/api/hub/admin/premium/delivery/packs/master' &&
+      (method === 'GET' || method === 'POST')) {
+    return { upstreamPath: '/v1/hub/admin/premium/delivery/packs/master', allowedMethod: method };
+  }
   if (!url.search && url.pathname === '/api/hub/admin/premium/delivery/pokemon' &&
       (method === 'GET' || method === 'POST')) {
     return { upstreamPath: '/v1/hub/admin/premium/delivery/pokemon', allowedMethod: method };
