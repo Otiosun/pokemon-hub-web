@@ -74,6 +74,24 @@ describe('Premium staging proxy allowlist', () => {
     expect(resolvePremiumStageAdminRoute(url('/api/hub/admin/premium/delivery/items'), 'DELETE')).toBeNull();
   });
 
+  it('allowlists the exact MASTER pack endpoint without payments or arbitrary pack SKUs', () => {
+    const endpoint = '/api/hub/admin/premium/delivery/packs/master';
+    expect(resolvePremiumStageAdminRoute(url(endpoint), 'GET')).toEqual({
+      upstreamPath: '/v1/hub/admin/premium/delivery/packs/master', allowedMethod: 'GET',
+    });
+    expect(resolvePremiumStageAdminRoute(url(endpoint), 'POST')).toEqual({
+      upstreamPath: '/v1/hub/admin/premium/delivery/packs/master', allowedMethod: 'POST',
+    });
+    for (const [path, method] of [
+      [endpoint + '?paid=true', 'POST'],
+      [endpoint + '?sku=MASTER', 'GET'],
+      [endpoint, 'PUT'],
+      [endpoint, 'DELETE'],
+      ['/api/hub/admin/premium/delivery/packs/GEN', 'POST'],
+      ['/api/hub/admin/premium/delivery/packs/master/payment', 'POST'],
+    ] as const) expect(resolvePremiumStageAdminRoute(url(path), method)).toBeNull();
+  });
+
   it('allowlists only individual staged Pokémon delivery and published-form reads', () => {
     expect(resolvePremiumStageAdminRoute(url('/api/hub/admin/premium/delivery/pokemon'), 'GET'))
       .toEqual({
