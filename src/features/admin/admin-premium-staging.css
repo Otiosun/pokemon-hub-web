@@ -1,0 +1,102 @@
+.admin-premium { margin-top: 0; border-top: 0; padding-top: 0; }
+
+.admin-premium-heading h1 {
+  margin: 8px 0 10px;
+  font: 760 clamp(2rem, 4.5vw, 3.4rem)/1 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: -.05em;
+}
+.admin-premium-heading p { margin: 0; max-width: 620px; color: #98a7a8; line-height: 1.6; }
+.admin-premium-heading > strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  color: #d9bbff;
+  background: rgba(174,122,222,.08);
+  border: 1px solid rgba(174,122,222,.28);
+  font: 750 .69rem 'IBM Plex Mono',monospace;
+  letter-spacing: .09em;
+  border-radius: 8px;
+}
+.premium-staging-disclaimer {
+  padding: 17px 20px;
+  color: #d4c3e8;
+  border: 1px solid rgba(183,154,214,.22);
+  border-left: 3px solid #b79ad6;
+  background: rgba(183,154,214,.055);
+  line-height: 1.65;
+  font-size: .83rem;
+}
+.premium-staging-player {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) minmax(280px,1.05fr);
+  align-items: end;
+  gap: 28px;
+  padding: 28px;
+  margin: 24px 0;
+  border: 1px solid rgba(214,232,233,.12);
+  border-radius: 12px;
+  background: linear-gradient(120deg,rgba(183,154,214,.055),transparent 65%),#101617;
+}
+.premium-staging-player > div > span,
+.premium-staging-player label {
+  color: #b79ad6;
+  font: 750 .62rem 'IBM Plex Mono',monospace;
+  letter-spacing: .08em;
+}
+.premium-staging-player h2 {
+  margin: 8px 0;
+  font: 700 1.35rem 'Space Grotesk',system-ui,sans-serif;
+}
+.premium-staging-player p { max-width: 430px; margin: 0; font-size: .81rem; color: #91a1a3; line-height: 1.65; }
+.premium-staging-player p strong { color: #dfeced; }
+.premium-staging-player form { min-width: 0; display: grid; gap: 9px; }
+.premium-staging-player form > div { display: flex; gap: 8px; }
+.premium-staging-player input {
+  flex: 1; min-width: 0; min-height: 46px; padding: 0 13px;
+  border: 1px solid rgba(208,228,231,.2); border-radius: 5px;
+  color: #eff6f7; background: #0a1011;
+  font: 600 .77rem 'IBM Plex Mono',monospace;
+}
+.premium-staging-player input:focus-visible { outline: 2px solid #b79ad6; outline-offset: 2px; }
+.premium-staging-player button {
+  min-height: 46px; padding: 0 18px; border: 1px solid #b79ad6; border-radius: 5px;
+  background: #b79ad6; color: #161017;
+  font: 800 .66rem 'IBM Plex Mono',monospace; letter-spacing: .06em;
+  cursor: pointer;
+}
+.premium-staging-player button:disabled { opacity: .35; cursor: not-allowed; }
+.premium-staging-tabs { margin-bottom: 24px; }
+.premium-staging-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 18px;
+  padding: 24px 0; margin-top: 24px;
+  border-top: 1px solid rgba(214,232,233,.13);
+  font: 600 .62rem 'IBM Plex Mono',monospace;
+  color: #788b8e;
+}
+.premium-staging-foot a { color: #cfb5e5; text-decoration: none; }
+.premium-staging-access {
+  max-width: 560px; margin: 17svh auto; padding: 25px;
+  background: #141a1b; border: 1px solid rgba(214,232,233,.17);
+  color: #dce8e8; line-height: 1.6;
+}
+.premium-staging-access a { color: #b79ad6; }
+@media (max-width: 760px) {
+  .premium-staging-player { grid-template-columns: minmax(0,1fr); gap: 18px; padding: 20px; }
+  .premium-staging-player form > div { flex-direction: column; }
+  .premium-staging-player button { width: 100%; }
+  .admin-premium-heading { grid-template-columns: minmax(0,1fr); }
+  .admin-premium-heading > strong { justify-self: start; }
+  .premium-staging-foot { flex-direction: column; align-items: flex-start; }
+}
+
+.premium-stage-search{min-width:0;display:grid;gap:9px}
+.premium-stage-search form{display:grid;gap:9px}
+.premium-stage-search form>div{display:flex;gap:8px}
+.premium-stage-search form button{min-height:42px}
+.premium-stage-search ul{list-style:none;margin:0;padding:0;display:grid;gap:4px;max-height:230px;overflow:auto}
+.premium-stage-search li button{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:5px;min-height:48px;width:100%;padding:10px 13px;background:#111a1b;color:#e8f2f1;border:1px solid #405153;border-radius:5px;cursor:pointer}
+.premium-stage-search li button:hover,.premium-stage-search li button:focus-visible{border-color:#c3a5df;outline-offset:2px}
+.premium-stage-search li small{color:#9bafaf;overflow-wrap:anywhere}
+.premium-stage-search p{margin:0;color:#bfaee0;font-size:.72rem}
+@media(max-width:640px){.premium-stage-search form>div{flex-direction:column}}

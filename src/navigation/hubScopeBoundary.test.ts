@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import appSource from '../App.tsx?raw';
 import playerPortalClientSource from '../player-api/playerPortalClient.ts?raw';
 import cloudflareUatWorkerSource from '../player-api/cloudflareUatWorker.ts?raw';
-import playerBattleProxySource from '../../api/hub/player/battle.ts?raw';
+import playerBattleProxySource from '../../api/hub/player/[...path].ts?raw';
 import productIntegritySource from './productIntegrity.ts?raw';
 
 const hubApiModules = import.meta.glob('../../api/hub/**/*.ts');
@@ -10,7 +10,7 @@ const hubApiModules = import.meta.glob('../../api/hub/**/*.ts');
 const ALLOWED_HUB_API_MODULES = [
   '../../api/hub/admin/[...path].ts',
   '../../api/hub/auth/exchange.ts',
-  '../../api/hub/player/battle.ts',
+  '../../api/hub/player/[...path].ts',
   '../../api/hub/player/inventory.ts',
   '../../api/hub/player/location.ts',
   '../../api/hub/player/move-choices.ts',

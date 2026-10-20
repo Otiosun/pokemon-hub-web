@@ -13,6 +13,7 @@ import {
 import { resolveProductRoute } from './navigation/productIntegrity';
 import { preloadProductRoute } from './navigation/productRoutePreload';
 import { usePlayerPortalBrowserSession } from './player-api/playerPortalBrowserSession';
+import { currentPremiumManualUiMode } from './player-api/premiumManualUiMode';
 import './hub-route-fallback-v3.css';
 
 const JourneyPage = lazy(() =>
@@ -50,6 +51,9 @@ const TrainingPage = lazy(() =>
 );
 const AdminPage = lazy(() =>
   import('./features/admin/AdminPage').then((module) => ({ default: module.AdminPage })),
+);
+const AdminPremiumStagingPage = lazy(() =>
+  import('./features/admin/AdminPremiumStagingPage').then((module) => ({ default: module.AdminPremiumStagingPage })),
 );
 const AdminPlayersPage = lazy(() =>
   import('./features/admin/AdminPlayersPage').then((module) => ({ default: module.AdminPlayersPage })),
@@ -884,6 +888,19 @@ export function App() {
       document.removeEventListener('click', onDocumentClick);
     };
   }, []);
+
+  if (
+    (path === '/admin/premium' || path === '/admin/premium/') &&
+    currentPremiumManualUiMode() !== null
+  ) {
+    return (
+      <HubFrame active={null} destinations={hubDestinations}>
+        <Suspense fallback={<RouteFallback module="journey" label="ABRINDO CENTRAL PREMIUM" />}>
+          <AdminPremiumStagingPage />
+        </Suspense>
+      </HubFrame>
+    );
+  }
 
   if (path === '/admin/guia' || path === '/admin/guia/') {
     return (
