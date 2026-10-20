@@ -20,7 +20,7 @@ describe('Premium local operator origin, disabled by default', () => {
       'http://pokemon-api.otiosunbots.xyz',
       'https://127.0.0.1',
       'https://localhost',
-      'https://pokemon-api.otiosunbots.xyz:443',
+      'https://pokemon-api.otiosunbots.xyz:444',
       'https://pokemon-api.otiosunbots.xyz/premium',
       'https://pokemon-api.otiosunbots.xyz/?x=1',
       'https://owner:password@pokemon-api.otiosunbots.xyz',
