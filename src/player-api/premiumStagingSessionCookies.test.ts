@@ -135,6 +135,9 @@ describe('independent Premium staging credentials', () => {
 
   it('fails closed without approved upstream and never exposes staging cookie to production', async () => {
     vi.stubEnv('VERCEL_ENV', 'production');
+    // Production may intentionally configure its independent Premium Local gateway.
+    // Disable it explicitly in this fail-closed staging-only scenario.
+    vi.stubEnv('PREMIUM_LOCAL_ENABLED', '0');
     vi.stubEnv('PREMIUM_STAGING_ENABLED', '1');
     vi.stubEnv('PREMIUM_STAGING_API_BASE_URL', stage);
     vi.stubEnv('PREMIUM_STAGING_APPROVED_ORIGIN', stage);
