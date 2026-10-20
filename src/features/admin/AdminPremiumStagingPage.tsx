@@ -7,6 +7,7 @@ import { AdminPremiumInventoryPanel } from './AdminPremiumInventoryPanel';
 import { AdminPremiumPokemonPanel } from './AdminPremiumPokemonPanel';
 import { AdminPremiumCasesPanel } from './AdminPremiumCasesPanel';
 import { AdminPremiumFulfillmentCatalog } from './AdminPremiumFulfillmentCatalog';
+import { AdminPremiumMasterBallPanel } from './AdminPremiumMasterBallPanel';
 import { PremiumStagePlayerSearch } from './PremiumStagePlayerSearch';
 import { AdminPremiumSupportLedger } from './AdminPremiumSupportLedger';
 import './admin-page.css';
@@ -95,7 +96,12 @@ export function AdminPremiumStagingPage() {
           {section === 'pokemon' ? (
             <AdminPremiumPokemonPanel key={playerId ?? 'unselected'} playerId={playerId} />
           ) : null}
-          {section === 'catalog' ? <AdminPremiumFulfillmentCatalog /> : null}
+          {section === 'catalog' ? (
+            <>
+              <AdminPremiumFulfillmentCatalog />
+              <AdminPremiumMasterBallPanel key={playerId ?? 'unselected'} playerId={playerId} />
+            </>
+          ) : null}
           {section === 'entitlements' ? (
             <AdminPremiumReadPanel playerId={playerId} playerName={playerId} resource="entitlements" />
           ) : null}
