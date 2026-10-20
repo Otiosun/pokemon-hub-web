@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import {
   exchangePremiumStageTicket,
   readPremiumStageSession,
+  premiumTicketFromInput,
   signOutPremiumStage,
   type PremiumStageRole,
   type PremiumStageSession,
@@ -20,6 +21,7 @@ export function PremiumStagingSessionGate({
   const [ticket, setTicket] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const loginTicket = premiumTicketFromInput(ticket, typeof window === 'undefined' ? '' : window.location.origin);
 
   useEffect(() => {
     let mounted = true;
@@ -34,7 +36,7 @@ export function PremiumStagingSessionGate({
     setBusy(true);
     setError('');
     try {
-      const result = await exchangePremiumStageTicket(ticket.trim());
+      const result = await exchangePremiumStageTicket(loginTicket ?? '');
       setTicket('');
       if (result === 'unavailable') {
         setState({ status: 'unavailable' });
@@ -83,23 +85,23 @@ export function PremiumStagingSessionGate({
         <>
           <p>{state.status === 'forbidden'
             ? 'Esta sessão não tem a permissão de proprietário exigida.'
-            : local ? 'Acesso ao próprio jogo: use um ticket temporário de proprietário emitido pelo seu bot. Nenhum pagamento é confirmado aqui.' : 'A sessão do jogo real não funciona aqui. Entre apenas com um ticket temporário emitido pela API isolada de testes.'}</p>
+            : local ? 'Acesso ao próprio jogo: envie /hub ao bot, copie o link novo sem abri-lo e cole abaixo. O link expira em 5 minutos e só funciona uma vez. Nenhum pagamento é confirmado aqui.' : 'A sessão do jogo real não funciona aqui. Entre apenas com um ticket temporário emitido pela API isolada de testes.'}</p>
           <form onSubmit={(event) => { event.preventDefault(); void exchange(); }}>
             <label htmlFor={access === 'owner' ? 'premium-stage-ticket-owner' : 'premium-stage-ticket-player'}>
-              TICKET TEMPORÁRIO DA {environment}
+              {local ? 'LINK OU TICKET DO /hub' : `TICKET TEMPORÁRIO DA ${environment}`}
             </label>
             <input
               id={access === 'owner' ? 'premium-stage-ticket-owner' : 'premium-stage-ticket-player'}
               type="password"
               autoComplete="off"
               spellCheck={false}
-              maxLength={43}
+              maxLength={local ? 2048 : 43}
               value={ticket}
               onChange={(event) => setTicket(event.target.value)}
-              placeholder="Ticket de login do ambiente autorizado"
+              placeholder={local ? 'Cole aqui o link completo recebido no /hub' : 'Ticket de login do ambiente autorizado'}
               disabled={busy}
             />
-            <button type="submit" disabled={busy || !/^[A-Za-z0-9_-]{43}$/.test(ticket.trim())}>
+            <button type="submit" disabled={busy || loginTicket === null}>
               {busy ? 'VERIFICANDO…' : local ? 'ENTRAR NA API LOCAL' : 'ENTRAR NO STAGING'}
             </button>
           </form>
