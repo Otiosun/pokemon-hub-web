@@ -7,12 +7,15 @@ import {
   type PremiumStageSession,
 } from '../../player-api/premiumStagingAuthClient';
 import './premium-staging-session-gate.css';
+import { currentPremiumManualUiMode } from '../../player-api/premiumManualUiMode';
 
 type GateState = PremiumStageSession | { status: 'loading' };
 export function PremiumStagingSessionGate({
   access,
   children,
 }: { access: PremiumStageRole; children: ReactNode }) {
+  const local = currentPremiumManualUiMode() === 'local';
+  const environment = local ? 'API LOCAL' : 'STAGING';
   const [state, setState] = useState<GateState>({ status: 'loading' });
   const [ticket, setTicket] = useState('');
   const [busy, setBusy] = useState(false);
@@ -36,7 +39,7 @@ export function PremiumStagingSessionGate({
       if (result === 'unavailable') {
         setState({ status: 'unavailable' });
       } else if (result === 'invalid') {
-        setError('Ticket inválido, usado ou expirado. Use somente um ticket do staging isolado.');
+        setError('Ticket inválido, usado ou expirado. Use somente um ticket da API autorizada.');
       } else {
         setState(await readPremiumStageSession(access));
       }
@@ -64,26 +67,26 @@ export function PremiumStagingSessionGate({
     <div className="premium-stage-gate-ready">
       <div className="premium-stage-gate-identity">
         <span>{state.label}</span>
-        <button type="button" onClick={() => void leave()} disabled={busy}>SAIR DO STAGING</button>
+        <button type="button" onClick={() => void leave()} disabled={busy}>{'SAIR DA ' + environment}</button>
       </div>
       {children}
     </div>
   );
   return (
     <section className="premium-stage-gate" aria-live="polite">
-      <strong>ACESSO ISOLADO · STAGING</strong>
+      <strong>ACESSO ISOLADO · {environment}</strong>
       {state.status === 'loading' ? (
         <p>Verificando uma sessão exclusiva do ambiente de testes…</p>
       ) : state.status === 'unavailable' ? (
-        <p>API isolada de testes ainda não habilitada. Nenhum pedido, pagamento ou benefício pode ser registrado.</p>
+        <p>API Premium não habilitada ou inacessível. Nenhuma entrega ou aprovação financeira foi realizada.</p>
       ) : (
         <>
           <p>{state.status === 'forbidden'
-            ? 'A sessão de staging não possui a permissão exigida. Use uma identidade de testes autorizada.'
-            : 'A sessão do jogo real não funciona aqui. Entre apenas com um ticket temporário emitido pela API isolada de testes.'}</p>
+            ? 'Esta sessão não tem a permissão de proprietário exigida.'
+            : local ? 'Acesso ao próprio jogo: use um ticket temporário de proprietário emitido pelo seu bot. Nenhum pagamento é confirmado aqui.' : 'A sessão do jogo real não funciona aqui. Entre apenas com um ticket temporário emitido pela API isolada de testes.'}</p>
           <form onSubmit={(event) => { event.preventDefault(); void exchange(); }}>
             <label htmlFor={access === 'owner' ? 'premium-stage-ticket-owner' : 'premium-stage-ticket-player'}>
-              TICKET TEMPORÁRIO DO STAGING
+              TICKET TEMPORÁRIO DA {environment}
             </label>
             <input
               id={access === 'owner' ? 'premium-stage-ticket-owner' : 'premium-stage-ticket-player'}
@@ -93,7 +96,7 @@ export function PremiumStagingSessionGate({
               maxLength={43}
               value={ticket}
               onChange={(event) => setTicket(event.target.value)}
-              placeholder="Ticket de login do ambiente isolado"
+              placeholder="Ticket de login do ambiente autorizado"
               disabled={busy}
             />
             <button type="submit" disabled={busy || !/^[A-Za-z0-9_-]{43}$/.test(ticket.trim())}>
