@@ -53,8 +53,8 @@ describe('PC-hosted Premium manual BFF owner boundary', () => {
     expect(upstream).toHaveBeenCalledTimes(1);
     const [target, options] = upstream.mock.calls[0]!;
     expect(target).toBe(origin + '/v1/hub/admin/premium/delivery/packs/master');
-    expect(options.headers.get('cookie')).toBe(`${HUB_COOKIE}=correct.token`);
-    expect(options.headers.get('cookie')).not.toContain('wrong.token');
+    expect(new Headers(options.headers).get('cookie')).toBe(`${HUB_COOKIE}=correct.token`);
+    expect(new Headers(options.headers).get('cookie')).not.toContain('wrong.token');
   });
 
   it('refuses external Origin for mutation before touching the local API', async () => {
