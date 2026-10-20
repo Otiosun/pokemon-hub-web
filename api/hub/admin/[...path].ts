@@ -26,21 +26,21 @@ const PREMIUM_REWRITE_PATHS: Readonly<Record<string, string>> = {
 };
 
 function resolvePremiumRewrite(input: URL): URL | null {
-  if (input.pathname !== '/api/hub/admin/premium') return input;
-  const keys = input.searchParams.getAll('__premium_route');
+  if (input.pathname !== '/api/hub/admin/self') return input;
+  const keys = input.searchParams.getAll('premiumRoute');
   if (keys.length === 0) return input;
   if (keys.length !== 1) return null;
   const key = keys[0];
   const params = new URLSearchParams(input.searchParams);
-  params.delete('__premium_route');
+  params.delete('premiumRoute');
   let pathname: string | undefined = key ? PREMIUM_REWRITE_PATHS[key] : undefined;
   if (key === 'case-events' || key === 'case-transition') {
-    const ids = params.getAll('__premium_case');
+    const ids = params.getAll('premiumCase');
     if (ids.length !== 1 || !ids[0] || !UUID_PATTERN.test(ids[0])) return null;
     pathname = '/api/hub/admin/premium/delivery/cases/' + ids[0] +
       (key === 'case-events' ? '/events' : '/transition');
-    params.delete('__premium_case');
-  } else if (params.has('__premium_case')) return null;
+    params.delete('premiumCase');
+  } else if (params.has('premiumCase')) return null;
   if (!pathname) return null;
   const output = new URL(pathname, input.origin);
   output.search = params.toString();
