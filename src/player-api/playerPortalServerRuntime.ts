@@ -1,5 +1,5 @@
-import { resolvePremiumStagingApiBaseUrl } from './premiumStagingBoundary';
-import { resolvePremiumLocalApiBaseUrl } from './premiumLocalBoundary';
+import { resolvePremiumStagingApiBaseUrl } from './premiumStagingBoundary.js';
+import { resolvePremiumLocalApiBaseUrl } from './premiumLocalBoundary.js';
 
 const PLAYER_PORTAL_API_BASE_URL = 'PLAYER_PORTAL_API_BASE_URL';
 

@@ -1,5 +1,5 @@
 import type { PlayerPortalFetcher } from './playerPortalClient';
-import { scopedSessionCookie, stageExchangeCookie, type SessionScope } from './premiumStagingSessionCookies';
+import { scopedSessionCookie, stageExchangeCookie, type SessionScope } from './premiumStagingSessionCookies.js';
 
 type PlayerPortalProxyOptions = {
   baseUrl: string | null;
