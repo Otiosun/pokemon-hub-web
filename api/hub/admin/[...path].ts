@@ -51,7 +51,25 @@ function resolvePremiumRewrite(input: URL): URL | null {
   input = normalized;
 
   const keys = input.searchParams.getAll('premiumRoute');
-  if (keys.length === 0) return input;
+  if (keys.length === 0) {
+    // Vercel's catch-all function can append its capture in the query even
+    // when the rewrite marker is not present in Request.url. For an already
+    // canonical Premium URL, remove ONLY a capture matching that URL.
+    // Other query parameters remain untouched for strict route validation.
+    if (!input.pathname.startsWith('/api/hub/admin/premium')) return input;
+    const clean = new URL(input);
+    const expectedCapture = input.pathname.slice('/api/hub/admin/'.length);
+    for (const capture of ['...path', 'path']) {
+      const values = clean.searchParams.getAll(capture);
+      if (values.length === 0) continue;
+      if (
+        values.length !== 1 ||
+        (values[0] !== expectedCapture && values[0] !== 'self')
+      ) return null;
+      clean.searchParams.delete(capture);
+    }
+    return clean;
+  }
   if (keys.length !== 1) return null;
   const key = keys[0];
   const params = new URLSearchParams(input.searchParams);
