@@ -262,4 +262,54 @@ describe('PC-hosted Premium manual BFF owner boundary', () => {
     expect(upstream).toHaveBeenCalledTimes(6);
   });
 
+
+  it('strips only Vercel protection metadata without weakening Premium routing or owner session', async () => {
+    configure();
+    const calls: string[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (target: string) => {
+      calls.push(target);
+      return new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), { status: 401 });
+    }));
+    const queryVariants = [
+      '__vercel_protection_bypass=opaque-share-link',
+      'x-vercel-protection-bypass=opaque-automation-secret',
+      'x-vercel-protection-bypass=opaque-automation-secret&x-vercel-set-bypass-cookie=true',
+    ];
+    for (const base of [
+      'https://hub.example.org/api/hub/admin/premium/delivery/catalog',
+      'https://hub.example.org/api/hub/admin/self?premiumRoute=catalog',
+      'https://hub.example.org/api/hub/admin/premium/delivery/catalog?premiumRoute=catalog',
+    ]) {
+      for (const suffix of queryVariants) {
+        const address = base + (base.includes('?') ? '&' : '?') + suffix;
+        const withoutStage = await adminHandler.fetch(new Request(address));
+        expect(withoutStage.status).toBe(401);
+        expect(await withoutStage.json()).toEqual({ error: 'STAGING_SESSION_REQUIRED' });
+        const withStage = await adminHandler.fetch(new Request(address, {
+          headers: { cookie: `${PREMIUM_STAGE_COOKIE}=isolated.session` },
+        }));
+        expect(withStage.status).toBe(401);
+        expect(calls.at(-1)).toBe(origin + '/v1/hub/admin/premium/delivery/catalog');
+      }
+    }
+    expect(calls).toHaveLength(9);
+
+    const rejected = [
+      'x-vercel-protection-bypass=',
+      'x-vercel-protection-bypass=one&x-vercel-protection-bypass=two',
+      '__vercel_protection_bypass=one&__vercel_protection_bypass=two',
+      'x-vercel-set-bypass-cookie=',
+      '__vercel_protection_bypass=token&unrecognized=1',
+      'premiumRoute=catalog&x-vercel-protection-bypass=token&unknown=1',
+    ];
+    for (const suffix of rejected) {
+      const response = await adminHandler.fetch(new Request(
+        'https://hub.example.org/api/hub/admin/premium/delivery/catalog?' + suffix,
+        { headers: { cookie: `${PREMIUM_STAGE_COOKIE}=isolated.session` } },
+      ));
+      expect(response.status).toBe(404);
+    }
+    expect(calls).toHaveLength(9);
+  });
+
 });
