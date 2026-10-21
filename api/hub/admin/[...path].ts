@@ -295,6 +295,14 @@ function premiumAccessError(status: number, error: string): Response {
  * is checked server-side for EVERY sensitive request; never trust UI visibility.
  * Preview staging remains isolated with a distinct cookie and backend.
  */
+function isLivePremiumDeployment(): boolean {
+  const runtime = Reflect.get(globalThis, 'process');
+  if (runtime === null || typeof runtime !== 'object') return false;
+  const env = Reflect.get(runtime, 'env');
+  return env !== null && typeof env === 'object' &&
+    Reflect.get(env, 'VERCEL_ENV') === 'production';
+}
+
 async function authorizeLivePremiumOwner(
   request: Request,
 ): Promise<{ admin: unknown } | Response> {
@@ -355,7 +363,7 @@ export default {
 
       // Owner of the live game does not need to redeem /hub a second time.
       // The legacy ticket exchange is only enabled in isolated preview staging.
-      if (process.env.VERCEL_ENV === 'production') {
+      if (isLivePremiumDeployment()) {
         if (url.pathname !== '/api/hub/admin/premium-auth/self' || request.method !== 'GET') {
           return Promise.resolve(jsonNotFound('auth-route'));
         }
@@ -422,7 +430,7 @@ export default {
       }
       const premiumRoute = resolvePremiumStageAdminRoute(url, request.method);
       if (premiumRoute === null) return Promise.resolve(jsonNotFound('premium-route'));
-      if (process.env.VERCEL_ENV === 'production') {
+      if (isLivePremiumDeployment()) {
         return (async () => {
           const owner = await authorizeLivePremiumOwner(request);
           if (owner instanceof Response) return owner;
