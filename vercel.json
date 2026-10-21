@@ -4,10 +4,6 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/api/hub/admin/premium-auth/self",
-      "destination": "/api/hub/admin/self?premiumRoute=auth-self"
-    },
-    {
       "source": "/api/hub/admin/premium-auth/player",
       "destination": "/api/hub/admin/self?premiumRoute=auth-player"
     },
