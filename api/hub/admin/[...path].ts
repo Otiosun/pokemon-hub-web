@@ -26,6 +26,30 @@ const PREMIUM_REWRITE_PATHS: Readonly<Record<string, string>> = {
 };
 
 function resolvePremiumRewrite(input: URL): URL | null {
+  // Vercel share/automation protection may pass its validated bypass query
+  // through to the function. Treat those fields solely as edge transport
+  // metadata: never forward them to the game API or interpret them as Hub auth.
+  // Keep this exception scoped to Premium URLs or the audited rewrite entrypoint.
+  const isPremiumEntry =
+    input.pathname.startsWith('/api/hub/admin/premium') ||
+    (input.pathname === '/api/hub/admin/self' && input.searchParams.has('premiumRoute'));
+  const query = new URLSearchParams(input.searchParams);
+  if (isPremiumEntry) {
+    for (const name of [
+      '__vercel_protection_bypass',
+      'x-vercel-protection-bypass',
+      'x-vercel-set-bypass-cookie',
+    ]) {
+      const values = query.getAll(name);
+      if (values.length > 1 || (values.length === 1 &&
+        (!values[0] || values[0].length > 2048))) return null;
+      query.delete(name);
+    }
+  }
+  const normalized = new URL(input);
+  normalized.search = query.toString();
+  input = normalized;
+
   const keys = input.searchParams.getAll('premiumRoute');
   if (keys.length === 0) return input;
   if (keys.length !== 1) return null;
