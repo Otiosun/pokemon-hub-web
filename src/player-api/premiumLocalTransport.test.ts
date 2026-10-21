@@ -227,4 +227,39 @@ describe('PC-hosted Premium manual BFF owner boundary', () => {
     expect(upstream).toHaveBeenCalledTimes(6);
   });
 
+  it('accepts Vercel-preserved original source paths only when the rewrite marker matches', async () => {
+    configure();
+    const upstream = vi.fn(async () => new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), { status: 401 }));
+    vi.stubGlobal('fetch', upstream);
+    const routes: Array<[string, string, string]> = [
+      ['premium-auth/self', 'auth-self', '/v1/hub/admin/self'],
+      ['premium/delivery/catalog', 'catalog', '/v1/hub/admin/premium/delivery/catalog'],
+      ['premium/delivery/cases/catalog', 'cases-catalog', '/v1/hub/admin/premium/delivery/cases/catalog'],
+    ];
+    for (const [original, key, target] of routes) {
+      const source = 'https://hub.example.org/api/hub/admin/' + original;
+      const withMarker = source + '?premiumRoute=' + key;
+      const noSession = await adminHandler.fetch(new Request(withMarker));
+      expect(noSession.status).toBe(401);
+      expect(await noSession.json()).toEqual({ error: 'STAGING_SESSION_REQUIRED' });
+      const direct = await adminHandler.fetch(new Request(withMarker, {
+        headers: { cookie: `${PREMIUM_STAGE_COOKIE}=signed.session` },
+      }));
+      expect(direct.status).toBe(401);
+      const captured = await adminHandler.fetch(new Request(
+        withMarker + '&...path=' + encodeURIComponent(original),
+        { headers: { cookie: `${PREMIUM_STAGE_COOKIE}=signed.session` } },
+      ));
+      expect(captured.status).toBe(401);
+      expect(upstream.mock.lastCall?.[0]).toBe(origin + target);
+    }
+    expect(upstream).toHaveBeenCalledTimes(6);
+    const mismatched = await adminHandler.fetch(new Request(
+      'https://hub.example.org/api/hub/admin/premium-auth/self?premiumRoute=catalog',
+      { headers: { cookie: `${PREMIUM_STAGE_COOKIE}=signed.session` } },
+    ));
+    expect(mismatched.status).toBe(404);
+    expect(upstream).toHaveBeenCalledTimes(6);
+  });
+
 });
