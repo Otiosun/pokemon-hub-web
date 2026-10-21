@@ -26,7 +26,6 @@ const PREMIUM_REWRITE_PATHS: Readonly<Record<string, string>> = {
 };
 
 function resolvePremiumRewrite(input: URL): URL | null {
-  if (input.pathname !== '/api/hub/admin/self') return input;
   const keys = input.searchParams.getAll('premiumRoute');
   if (keys.length === 0) return input;
   if (keys.length !== 1) return null;
@@ -42,6 +41,23 @@ function resolvePremiumRewrite(input: URL): URL | null {
     params.delete('premiumCase');
   } else if (params.has('premiumCase')) return null;
   if (!pathname) return null;
+
+  // A Vercel rewrite may preserve the SOURCE pathname in Request.url while
+  // appending the destination query. It may instead expose the destination
+  // pathname. Bind the marker to exactly one known Premium route in both cases.
+  if (input.pathname !== '/api/hub/admin/self' && input.pathname !== pathname) return null;
+
+  // The single-segment Vercel [...path] function may append its route capture
+  // to URL.search. Accept only the exact entrypoint/canonical route capture,
+  // never arbitrary or repeated user-controlled query values.
+  const routeCapture = pathname.slice('/api/hub/admin/'.length);
+  for (const capture of ['...path', 'path']) {
+    const values = params.getAll(capture);
+    if (values.length === 0) continue;
+    if (values.length !== 1 || (values[0] !== 'self' && values[0] !== routeCapture)) return null;
+    params.delete(capture);
+  }
+
   const output = new URL(pathname, input.origin);
   output.search = params.toString();
   return output;

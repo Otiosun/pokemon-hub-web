@@ -189,4 +189,77 @@ describe('PC-hosted Premium manual BFF owner boundary', () => {
     expect(forwarded).toHaveLength(before);
   });
 
+  it('ignores only the trusted Vercel catch-all capture, not arbitrary query parameters', async () => {
+    configure();
+    const upstream = vi.fn(async () => new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), {
+      status: 401,
+    }));
+    vi.stubGlobal('fetch', upstream);
+    for (const captureKey of ['...path', 'path']) {
+      for (const route of ['auth-self', 'catalog', 'cases-catalog']) {
+        const url = 'https://hub.example.org/api/hub/admin/self?premiumRoute=' + route +
+          '&' + encodeURIComponent(captureKey) + '=self';
+        const withoutSession = await adminHandler.fetch(new Request(url));
+        expect(withoutSession.status).toBe(401);
+        expect(await withoutSession.json()).toEqual({ error: 'STAGING_SESSION_REQUIRED' });
+
+        const withSession = await adminHandler.fetch(new Request(url, {
+          headers: { cookie: `${PREMIUM_STAGE_COOKIE}=signed.session` },
+        }));
+        expect(withSession.status).toBe(401);
+      }
+    }
+    expect(upstream).toHaveBeenCalledTimes(6);
+
+    for (const suffix of [
+      '&...path=another',
+      '&...path=self&...path=self',
+      '&path=wrong',
+      '&unknown=1',
+    ]) {
+      const result = await adminHandler.fetch(new Request(
+        'https://hub.example.org/api/hub/admin/self?premiumRoute=auth-self' + suffix,
+        { headers: { cookie: `${PREMIUM_STAGE_COOKIE}=signed.session` } },
+      ));
+      // Wrong/duplicate capture and unknown query must never reach the upstream.
+      expect(result.status).toBe(404);
+    }
+    expect(upstream).toHaveBeenCalledTimes(6);
+  });
+
+  it('accepts Vercel-preserved original source paths only when the rewrite marker matches', async () => {
+    configure();
+    const upstream = vi.fn(async (_target: string) => new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), { status: 401 }));
+    vi.stubGlobal('fetch', upstream);
+    const routes: Array<[string, string, string]> = [
+      ['premium-auth/self', 'auth-self', '/v1/hub/admin/self'],
+      ['premium/delivery/catalog', 'catalog', '/v1/hub/admin/premium/delivery/catalog'],
+      ['premium/delivery/cases/catalog', 'cases-catalog', '/v1/hub/admin/premium/delivery/cases/catalog'],
+    ];
+    for (const [original, key, target] of routes) {
+      const source = 'https://hub.example.org/api/hub/admin/' + original;
+      const withMarker = source + '?premiumRoute=' + key;
+      const noSession = await adminHandler.fetch(new Request(withMarker));
+      expect(noSession.status).toBe(401);
+      expect(await noSession.json()).toEqual({ error: 'STAGING_SESSION_REQUIRED' });
+      const direct = await adminHandler.fetch(new Request(withMarker, {
+        headers: { cookie: `${PREMIUM_STAGE_COOKIE}=signed.session` },
+      }));
+      expect(direct.status).toBe(401);
+      const captured = await adminHandler.fetch(new Request(
+        withMarker + '&...path=' + encodeURIComponent(original),
+        { headers: { cookie: `${PREMIUM_STAGE_COOKIE}=signed.session` } },
+      ));
+      expect(captured.status).toBe(401);
+      expect(upstream.mock.lastCall?.[0]).toBe(origin + target);
+    }
+    expect(upstream).toHaveBeenCalledTimes(6);
+    const mismatched = await adminHandler.fetch(new Request(
+      'https://hub.example.org/api/hub/admin/premium-auth/self?premiumRoute=catalog',
+      { headers: { cookie: `${PREMIUM_STAGE_COOKIE}=signed.session` } },
+    ));
+    expect(mismatched.status).toBe(404);
+    expect(upstream).toHaveBeenCalledTimes(6);
+  });
+
 });
