@@ -229,7 +229,7 @@ describe('PC-hosted Premium manual BFF owner boundary', () => {
 
   it('accepts Vercel-preserved original source paths only when the rewrite marker matches', async () => {
     configure();
-    const upstream = vi.fn(async () => new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), { status: 401 }));
+    const upstream = vi.fn(async (_target: string) => new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), { status: 401 }));
     vi.stubGlobal('fetch', upstream);
     const routes: Array<[string, string, string]> = [
       ['premium-auth/self', 'auth-self', '/v1/hub/admin/self'],
