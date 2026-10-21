@@ -33,6 +33,16 @@ function resolvePremiumRewrite(input: URL): URL | null {
   const key = keys[0];
   const params = new URLSearchParams(input.searchParams);
   params.delete('premiumRoute');
+  // Vercel's single-segment [...path] function can inject its own route
+  // capture into the query (usually "...path=self"). That parameter is
+  // transport metadata, not an input to any Premium endpoint.
+  // Accept it ONLY for this exact known entrypoint and reject ambiguity.
+  for (const capture of ['...path', 'path']) {
+    const values = params.getAll(capture);
+    if (values.length === 0) continue;
+    if (values.length !== 1 || values[0] !== 'self') return null;
+    params.delete(capture);
+  }
   let pathname: string | undefined = key ? PREMIUM_REWRITE_PATHS[key] : undefined;
   if (key === 'case-events' || key === 'case-transition') {
     const ids = params.getAll('premiumCase');
