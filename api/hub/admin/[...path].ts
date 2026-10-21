@@ -2,7 +2,7 @@ import { isSafePremiumStagingMutation, premiumStagingForbidden } from '../../../
 import { proxyPlayerPortalRequest } from '../../../src/player-api/playerPortalProxy.js';
 import { readPlayerPortalApiBaseUrl, readPremiumManualApiBaseUrl } from '../../../src/player-api/playerPortalServerRuntime.js';
 import { resolvePremiumStageAdminRoute } from '../../../src/player-api/premiumStagingRoutes.js';
-import { clearPremiumStageCookie } from '../../../src/player-api/premiumStagingSessionCookies.js';
+import { clearPremiumStageCookie, scopedSessionCookie } from '../../../src/player-api/premiumStagingSessionCookies.js';
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -283,6 +283,55 @@ export function resolveAdminProxyRoute(url: URL, requestMethod = 'GET'): AdminPr
   return null;
 }
 
+function premiumAccessError(status: number, error: string): Response {
+  return new Response(JSON.stringify({ error }), {
+    status,
+    headers: { 'cache-control': 'no-store', 'content-type': 'application/json; charset=utf-8' },
+  });
+}
+
+/**
+ * Live Premium uses the already verified Hub session. Its owner permission
+ * is checked server-side for EVERY sensitive request; never trust UI visibility.
+ * Preview staging remains isolated with a distinct cookie and backend.
+ */
+async function authorizeLivePremiumOwner(
+  request: Request,
+): Promise<{ admin: unknown } | Response> {
+  const baseUrl = readPremiumManualApiBaseUrl();
+  if (baseUrl === null) return premiumAccessError(503, 'PREMIUM_UNAVAILABLE');
+
+  const cookie = scopedSessionCookie(request.headers.get('cookie'), 'normal');
+  if (cookie === null) return premiumAccessError(401, 'HUB_SESSION_REQUIRED');
+
+  const check = await proxyPlayerPortalRequest(new Request(request.url, {
+    method: 'GET',
+    headers: { cookie },
+  }), {
+    baseUrl,
+    upstreamPath: '/v1/hub/admin/self',
+    allowedMethod: 'GET',
+    sessionScope: 'normal',
+    responseCookieMode: 'omit',
+  });
+
+  if (!check.ok) {
+    if (check.status === 401) return premiumAccessError(401, 'HUB_SESSION_REQUIRED');
+    if (check.status === 403) return premiumAccessError(403, 'PREMIUM_FORBIDDEN');
+    return premiumAccessError(503, 'PREMIUM_UNAVAILABLE');
+  }
+
+  const body: unknown = await check.json().catch(() => null);
+  if (typeof body !== 'object' || body === null || !('admin' in body) ||
+      typeof body.admin !== 'object' || body.admin === null ||
+      !('owner' in body.admin) || body.admin.owner !== true ||
+      !('capabilities' in body.admin) || !Array.isArray(body.admin.capabilities) ||
+      !body.admin.capabilities.includes('central.view')) {
+    return premiumAccessError(403, 'PREMIUM_FORBIDDEN');
+  }
+  return { admin: body.admin };
+}
+
 function jsonNotFound(reason = 'unmatched'): Response {
   return new Response(JSON.stringify({ error: 'NOT_FOUND' }), {
     status: 404,
@@ -303,6 +352,23 @@ export default {
         return Promise.resolve(premiumStagingForbidden());
       }
       if (url.search) return Promise.resolve(jsonNotFound('auth-query'));
+
+      // Owner of the live game does not need to redeem /hub a second time.
+      // The legacy ticket exchange is only enabled in isolated preview staging.
+      if (process.env.VERCEL_ENV === 'production') {
+        if (url.pathname !== '/api/hub/admin/premium-auth/self' || request.method !== 'GET') {
+          return Promise.resolve(jsonNotFound('auth-route'));
+        }
+        return (async () => {
+          const owner = await authorizeLivePremiumOwner(request);
+          if (owner instanceof Response) return owner;
+          return new Response(JSON.stringify(owner), {
+            status: 200,
+            headers: { 'cache-control': 'no-store', 'content-type': 'application/json' },
+          });
+        })();
+      }
+
       if (url.pathname === '/api/hub/admin/premium-auth/logout' && request.method === 'POST') {
         return Promise.resolve(new Response(JSON.stringify({ signedOut: true }), {
           status: 200,
@@ -356,7 +422,19 @@ export default {
       }
       const premiumRoute = resolvePremiumStageAdminRoute(url, request.method);
       if (premiumRoute === null) return Promise.resolve(jsonNotFound('premium-route'));
-      // Premium never receives the standard Hub/prod browser session.
+      if (process.env.VERCEL_ENV === 'production') {
+        return (async () => {
+          const owner = await authorizeLivePremiumOwner(request);
+          if (owner instanceof Response) return owner;
+          return proxyPlayerPortalRequest(request, {
+            baseUrl: readPremiumManualApiBaseUrl(),
+            sessionScope: 'normal',
+            responseCookieMode: 'omit',
+            ...premiumRoute,
+          });
+        })();
+      }
+      // Preview staging remains strictly isolated, with no normal Hub cookie.
       return proxyPlayerPortalRequest(request, {
         baseUrl: readPremiumManualApiBaseUrl(),
         sessionScope: 'premium-stage',
