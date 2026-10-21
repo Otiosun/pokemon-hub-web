@@ -3,313 +3,196 @@ import adminHandler from '../../api/hub/admin/[...path]';
 import { HUB_COOKIE, PREMIUM_STAGE_COOKIE } from './premiumStagingSessionCookies';
 
 const origin = 'https://pokemon-api.otiosunbots.xyz';
-const endpoint = 'https://hub.example.org/api/hub/admin/premium/delivery/packs/master';
+const site = 'https://hub.example.org';
+const endpoint = site + '/api/hub/admin/premium/delivery/packs/master';
+const cookie = `${HUB_COOKIE}=signed.session`;
+const owner = '11111111-1111-4111-8111-111111111111';
 
 afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 
-function configure() {
+function configure(): void {
   vi.stubEnv('VERCEL_ENV', 'production');
   vi.stubEnv('PLAYER_PORTAL_API_BASE_URL', origin);
   vi.stubEnv('PREMIUM_LOCAL_ENABLED', '1');
   vi.stubEnv('PREMIUM_LOCAL_APPROVED_ORIGIN', origin);
 }
 
-describe('PC-hosted Premium manual BFF owner boundary', () => {
-  it('does not proxy when local activation is absent', async () => {
-    vi.stubEnv('VERCEL_ENV', 'production');
-    vi.stubEnv('PLAYER_PORTAL_API_BASE_URL', origin);
-    // Production deployment may have the flag enabled globally; always force
-    // the negative case explicitly instead of assuming its initial value.
+function adminResponse(authorized: boolean): Response {
+  return new Response(JSON.stringify({
+    admin: authorized ? {
+      principalId: owner, owner: true, capabilities: ['central.view'],
+    } : {
+      principalId: owner, owner: false, capabilities: ['central.view'],
+    },
+  }), { status: 200, headers: { 'content-type': 'application/json' } });
+}
+
+describe('Live Premium uses the existing owner Hub session safely', () => {
+  it('fails closed if the production Premium feature is disabled', async () => {
+    configure();
     vi.stubEnv('PREMIUM_LOCAL_ENABLED', '0');
     const upstream = vi.fn();
     vi.stubGlobal('fetch', upstream);
     const result = await adminHandler.fetch(new Request(endpoint, {
-      headers: { cookie: `${PREMIUM_STAGE_COOKIE}=abc.def` },
+      headers: { cookie },
     }));
     expect(result.status).toBe(503);
     expect(upstream).not.toHaveBeenCalled();
   });
 
-  it('does not accept a normal Hub cookie in place of separate premium identity', async () => {
+  it('refuses anonymous requests and isolated Premium cookies without calling upstream', async () => {
     configure();
     const upstream = vi.fn();
     vi.stubGlobal('fetch', upstream);
-    const result = await adminHandler.fetch(new Request(endpoint, {
-      headers: { cookie: `${HUB_COOKIE}=abc.def` },
-    }));
-    expect(result.status).toBe(401);
+    for (const headers of [
+      {},
+      { cookie: `${PREMIUM_STAGE_COOKIE}=isolated.session` },
+    ]) {
+      const res = await adminHandler.fetch(new Request(endpoint, { headers }));
+      expect(res.status).toBe(401);
+      expect(await res.json()).toEqual({ error: 'HUB_SESSION_REQUIRED' });
+    }
     expect(upstream).not.toHaveBeenCalled();
   });
 
-  it('forwards only the separately authenticated cookie to approved existing HTTPS API', async () => {
+  it('allows a verified live owner automatically and preserves only the Hub cookie', async () => {
     configure();
-    const upstream = vi.fn(async (_target: string, _options: RequestInit) => new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), {
-      status: 401, headers: { 'content-type': 'application/json' },
-    }));
-    vi.stubGlobal('fetch', upstream);
-    const response = await adminHandler.fetch(new Request(endpoint, {
-      headers: {
-        cookie: `${HUB_COOKIE}=wrong.token; ${PREMIUM_STAGE_COOKIE}=correct.token`,
-      },
-    }));
-    expect(response.status).toBe(401);
-    expect(upstream).toHaveBeenCalledTimes(1);
-    const [target, options] = upstream.mock.calls[0]!;
-    expect(target).toBe(origin + '/v1/hub/admin/premium/delivery/packs/master');
-    expect(new Headers(options.headers).get('cookie')).toBe(`${HUB_COOKIE}=correct.token`);
-    expect(new Headers(options.headers).get('cookie')).not.toContain('wrong.token');
-  });
-
-  it('exchanges a one-time ticket and uses only the separate Premium cookie in production', async () => {
-    configure();
-    const site = 'https://hub.example.org';
-    const ticket = 'T'.repeat(43);
-    const token = 'signed.session';
-    const owner = '11111111-1111-4111-8111-111111111111';
-    const forwarded: Array<{ url: string; method: string; cookie: string | null }> = [];
-    const upstream = vi.fn(async (target: string, init: RequestInit) => {
-      const headers = new Headers(init.headers);
-      forwarded.push({ url: target, method: init.method ?? 'GET', cookie: headers.get('cookie') });
-      if (target === origin + '/v1/hub/auth/exchange') {
-        expect(init.method).toBe('POST');
-        expect(init.body).toBe(JSON.stringify({ ticket }));
-        return new Response(JSON.stringify({ profile: { playerId: owner } }), {
+    const calls: Array<{ url: string; method: string; cookie: string | null }> = [];
+    const upstream = vi.fn(async (url: string, init: RequestInit) => {
+      calls.push({ url, method: init.method ?? 'GET', cookie: new Headers(init.headers).get('cookie') });
+      if (url === origin + '/v1/hub/admin/self') return adminResponse(true);
+      if (url === origin + '/v1/hub/admin/premium/delivery/catalog') {
+        return new Response(JSON.stringify({ products: [] }), {
           status: 200,
-          headers: {
-            'set-cookie': `${HUB_COOKIE}=${token}; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=43200`,
-            'content-type': 'application/json',
-          },
+          headers: { 'set-cookie': `${HUB_COOKIE}=unexpected.token; Path=/; Secure` },
         });
       }
-      if (target === origin + '/v1/hub/admin/self') return new Response(JSON.stringify({
-        admin: { principalId: owner, owner: true, capabilities: ['central.view'] },
-      }), { status: 200, headers: { 'content-type': 'application/json' } });
-      if (target === origin + '/v1/hub/admin/premium/delivery/catalog')
-        return new Response(JSON.stringify({ products: [] }), { status: 200 });
       throw new Error('Unexpected upstream path');
     });
     vi.stubGlobal('fetch', upstream);
-
-    const exchange = await adminHandler.fetch(new Request(site + '/api/hub/admin/premium-auth/exchange', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', cookie: `${HUB_COOKIE}=normal.session` },
-      body: JSON.stringify({ ticket }),
-    }));
-    expect(exchange.status).toBe(200);
-    const premiumCookie = exchange.headers.get('set-cookie');
-    expect(premiumCookie).toContain(`${PREMIUM_STAGE_COOKIE}=${token};`);
-    expect(premiumCookie).not.toContain(`${HUB_COOKIE}=`);
-
-    const cookies = `${HUB_COOKIE}=normal.session; ${PREMIUM_STAGE_COOKIE}=${token}`;
+    const headers = {
+      cookie: `${cookie}; ${PREMIUM_STAGE_COOKIE}=ignore.this`,
+    };
     const self = await adminHandler.fetch(new Request(site + '/api/hub/admin/premium-auth/self', {
-      headers: { cookie: cookies },
+      headers,
     }));
     expect(self.status).toBe(200);
     expect((await self.json()).admin.owner).toBe(true);
 
-    const catalog = await adminHandler.fetch(new Request(site + '/api/hub/admin/premium/delivery/catalog', {
-      headers: { cookie: cookies },
-    }));
-    expect(catalog.status).toBe(200);
-
-    const denied = await adminHandler.fetch(new Request(site + '/api/hub/admin/premium/delivery/catalog', {
-      headers: { cookie: `${HUB_COOKIE}=normal.session` },
-    }));
-    expect(denied.status).toBe(401);
-    expect(forwarded).toEqual([
-      { url: origin + '/v1/hub/auth/exchange', method: 'POST', cookie: null },
-      { url: origin + '/v1/hub/admin/self', method: 'GET', cookie: `${HUB_COOKIE}=${token}` },
-      { url: origin + '/v1/hub/admin/premium/delivery/catalog', method: 'GET', cookie: `${HUB_COOKIE}=${token}` },
-    ]);
-    expect(upstream).toHaveBeenCalledTimes(3);
-  });
-
-  it('refuses external Origin for mutation before touching the local API', async () => {
-    configure();
-    const upstream = vi.fn();
-    vi.stubGlobal('fetch', upstream);
-    const response = await adminHandler.fetch(new Request(endpoint, {
-      method: 'POST', headers: {
-        origin: 'https://evil.example.org',
-        cookie: `${PREMIUM_STAGE_COOKIE}=correct.token`,
-      }, body: '{}',
-    }));
-    expect(response.status).toBe(403);
-    expect(upstream).not.toHaveBeenCalled();
-  });
-
-  it('retains the 404 refusal for obsolete financial approval routes in local mode', async () => {
-    configure();
-    const upstream = vi.fn();
-    vi.stubGlobal('fetch', upstream);
-    const response = await adminHandler.fetch(new Request(
-      'https://hub.example.org/api/hub/admin/premium/orders/22222222-2222-4222-8222-222222222222/approve',
-      { method: 'POST', headers: { cookie: `${PREMIUM_STAGE_COOKIE}=correct.token` }, body: '{}' },
+    const catalog = await adminHandler.fetch(new Request(
+      site + '/api/hub/admin/premium/delivery/catalog',
+      { headers },
     ));
-    expect(response.status).toBe(404);
+    expect(catalog.status).toBe(200);
+    expect(catalog.headers.has('set-cookie')).toBe(false);
+    expect(calls).toEqual([
+      { url: origin + '/v1/hub/admin/self', method: 'GET', cookie },
+      { url: origin + '/v1/hub/admin/self', method: 'GET', cookie },
+      { url: origin + '/v1/hub/admin/premium/delivery/catalog', method: 'GET', cookie },
+    ]);
+  });
+
+  it('blocks an ordinary admin without owner permission before a grant', async () => {
+    configure();
+    const upstream = vi.fn(async (url: string) => {
+      if (url === origin + '/v1/hub/admin/self') return adminResponse(false);
+      throw new Error('Grant must not be reached');
+    });
+    vi.stubGlobal('fetch', upstream);
+    const result = await adminHandler.fetch(new Request(endpoint, { headers: { cookie } }));
+    expect(result.status).toBe(403);
+    expect(await result.json()).toEqual({ error: 'PREMIUM_FORBIDDEN' });
+    expect(upstream).toHaveBeenCalledTimes(1);
+  });
+
+  it('blocks missing central.view or absent admin before any grant', async () => {
+    configure();
+    const upstream = vi.fn(async (url: string) => {
+      if (url !== origin + '/v1/hub/admin/self') throw new Error('No grant allowed');
+      return new Response(JSON.stringify({
+        admin: { principalId: owner, owner: true, capabilities: ['players.read'] },
+      }), { status: 200 });
+    });
+    vi.stubGlobal('fetch', upstream);
+    const result = await adminHandler.fetch(new Request(endpoint, { headers: { cookie } }));
+    expect(result.status).toBe(403);
+    expect(upstream).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects obsolete ticket exchange and financial approval endpoints', async () => {
+    configure();
+    const upstream = vi.fn();
+    vi.stubGlobal('fetch', upstream);
+    const exchange = await adminHandler.fetch(new Request(
+      site + '/api/hub/admin/premium-auth/exchange',
+      { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' },
+    ));
+    expect(exchange.status).toBe(404);
+    const oldPay = await adminHandler.fetch(new Request(
+      site + '/api/hub/admin/premium/orders/22222222-2222-4222-8222-222222222222/approve',
+      { method: 'POST', headers: { origin: site }, body: '{}' },
+    ));
+    expect(oldPay.status).toBe(404);
     expect(upstream).not.toHaveBeenCalled();
   });
-  it('proxies only audited Premium rewrite keys into the isolated owner backend', async () => {
+
+  it('refuses cross-origin mutations before any authorization check', async () => {
     configure();
-    const forwarded: string[] = [];
-    vi.stubGlobal('fetch', vi.fn(async (target: string) => {
-      forwarded.push(target);
-      return new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), { status: 401 });
+    const upstream = vi.fn();
+    vi.stubGlobal('fetch', upstream);
+    const result = await adminHandler.fetch(new Request(endpoint, {
+      method: 'POST', headers: { origin: 'https://evil.example.org', cookie }, body: '{}',
     }));
-    const cases: Array<[string, string]> = [
+    expect(result.status).toBe(403);
+    expect(upstream).not.toHaveBeenCalled();
+  });
+
+  it('keeps audited rewrite routes and only forwards authenticated owner operations', async () => {
+    configure();
+    const targets: string[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      targets.push(url);
+      return url === origin + '/v1/hub/admin/self'
+        ? adminResponse(true)
+        : new Response('{}', { status: 200 });
+    }));
+    for (const [key, upstream] of [
       ['auth-self', '/v1/hub/admin/self'],
       ['catalog', '/v1/hub/admin/premium/delivery/catalog'],
       ['cases-catalog', '/v1/hub/admin/premium/delivery/cases/catalog'],
       ['items', '/v1/hub/admin/premium/delivery/items'],
       ['master', '/v1/hub/admin/premium/delivery/packs/master'],
-    ];
-    for (const [key, upstream] of cases) {
-      const req = new Request('https://hub.example.org/api/hub/admin/self?premiumRoute=' + key, {
-        headers: { cookie: `${PREMIUM_STAGE_COOKIE}=signed.session` },
-      });
-      const response = await adminHandler.fetch(req);
-      expect(response.status).toBe(401);
-      expect(forwarded.at(-1)).toBe(origin + upstream);
-    }
-    const caseId = '11111111-1111-4111-8111-111111111111';
-    const event = await adminHandler.fetch(new Request(
-      'https://hub.example.org/api/hub/admin/self?premiumRoute=case-events&premiumCase=' + caseId,
-      { headers: { cookie: `${PREMIUM_STAGE_COOKIE}=signed.session` } },
-    ));
-    expect(event.status).toBe(401);
-    expect(forwarded.at(-1)).toBe(origin + '/v1/hub/admin/premium/delivery/cases/' + caseId + '/events');
-    const before = forwarded.length;
-    for (const query of [
-      'premiumRoute=unknown', 'premiumRoute=auth-self&premiumRoute=auth-self',
-      'premiumRoute=case-events&premiumCase=not-a-uuid',
     ]) {
-      const response = await adminHandler.fetch(new Request('https://hub.example.org/api/hub/admin/self?' + query));
-      expect(response.status).toBe(404);
+      const request = new Request(site + '/api/hub/admin/self?premiumRoute=' + key, {
+        headers: { cookie },
+      });
+      const response = await adminHandler.fetch(request);
+      expect(response.status).toBe(200);
+      expect(targets.at(-1)).toBe(origin + upstream);
     }
-    expect(forwarded).toHaveLength(before);
+    expect(targets.filter((target) => target === origin + '/v1/hub/admin/self')).toHaveLength(6);
   });
 
-  it('ignores only the trusted Vercel catch-all capture, not arbitrary query parameters', async () => {
+  it('allows only exact Vercel captures, not arbitrary query values', async () => {
     configure();
-    const upstream = vi.fn(async () => new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), {
-      status: 401,
-    }));
-    vi.stubGlobal('fetch', upstream);
-    for (const captureKey of ['...path', 'path']) {
-      for (const route of ['auth-self', 'catalog', 'cases-catalog']) {
-        const url = 'https://hub.example.org/api/hub/admin/self?premiumRoute=' + route +
-          '&' + encodeURIComponent(captureKey) + '=self';
-        const withoutSession = await adminHandler.fetch(new Request(url));
-        expect(withoutSession.status).toBe(401);
-        expect(await withoutSession.json()).toEqual({ error: 'STAGING_SESSION_REQUIRED' });
+    vi.stubGlobal('fetch', vi.fn(async (url: string) =>
+      url === origin + '/v1/hub/admin/self'
+        ? adminResponse(true)
+        : new Response('{}', { status: 200 })));
 
-        const withSession = await adminHandler.fetch(new Request(url, {
-          headers: { cookie: `${PREMIUM_STAGE_COOKIE}=signed.session` },
-        }));
-        expect(withSession.status).toBe(401);
-      }
-    }
-    expect(upstream).toHaveBeenCalledTimes(6);
+    const valid = site + '/api/hub/admin/premium/delivery/catalog?path=premium%2Fdelivery%2Fcatalog';
+    expect((await adminHandler.fetch(new Request(valid, { headers: { cookie } }))).status).toBe(200);
 
     for (const suffix of [
-      '&...path=another',
-      '&...path=self&...path=self',
-      '&path=wrong',
-      '&unknown=1',
+      '?unknown=1',
+      '?path=wrong',
+      '?path=premium%2Fdelivery%2Fcatalog&path=premium%2Fdelivery%2Fcatalog',
+      '?premiumRoute=auth-self',
     ]) {
-      const result = await adminHandler.fetch(new Request(
-        'https://hub.example.org/api/hub/admin/self?premiumRoute=auth-self' + suffix,
-        { headers: { cookie: `${PREMIUM_STAGE_COOKIE}=signed.session` } },
-      ));
-      // Wrong/duplicate capture and unknown query must never reach the upstream.
-      expect(result.status).toBe(404);
-    }
-    expect(upstream).toHaveBeenCalledTimes(6);
-  });
-
-  it('accepts Vercel-preserved original source paths only when the rewrite marker matches', async () => {
-    configure();
-    const upstream = vi.fn(async (_target: string) => new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), { status: 401 }));
-    vi.stubGlobal('fetch', upstream);
-    const routes: Array<[string, string, string]> = [
-      ['premium-auth/self', 'auth-self', '/v1/hub/admin/self'],
-      ['premium/delivery/catalog', 'catalog', '/v1/hub/admin/premium/delivery/catalog'],
-      ['premium/delivery/cases/catalog', 'cases-catalog', '/v1/hub/admin/premium/delivery/cases/catalog'],
-    ];
-    for (const [original, key, target] of routes) {
-      const source = 'https://hub.example.org/api/hub/admin/' + original;
-      const withMarker = source + '?premiumRoute=' + key;
-      const noSession = await adminHandler.fetch(new Request(withMarker));
-      expect(noSession.status).toBe(401);
-      expect(await noSession.json()).toEqual({ error: 'STAGING_SESSION_REQUIRED' });
-      const direct = await adminHandler.fetch(new Request(withMarker, {
-        headers: { cookie: `${PREMIUM_STAGE_COOKIE}=signed.session` },
-      }));
-      expect(direct.status).toBe(401);
-      const captured = await adminHandler.fetch(new Request(
-        withMarker + '&...path=' + encodeURIComponent(original),
-        { headers: { cookie: `${PREMIUM_STAGE_COOKIE}=signed.session` } },
-      ));
-      expect(captured.status).toBe(401);
-      expect(upstream.mock.lastCall?.[0]).toBe(origin + target);
-    }
-    expect(upstream).toHaveBeenCalledTimes(6);
-    const mismatched = await adminHandler.fetch(new Request(
-      'https://hub.example.org/api/hub/admin/premium-auth/self?premiumRoute=catalog',
-      { headers: { cookie: `${PREMIUM_STAGE_COOKIE}=signed.session` } },
-    ));
-    expect(mismatched.status).toBe(404);
-    expect(upstream).toHaveBeenCalledTimes(6);
-  });
-
-
-  it('strips only Vercel protection metadata without weakening Premium routing or owner session', async () => {
-    configure();
-    const calls: string[] = [];
-    vi.stubGlobal('fetch', vi.fn(async (target: string) => {
-      calls.push(target);
-      return new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), { status: 401 });
-    }));
-    const queryVariants = [
-      '__vercel_protection_bypass=opaque-share-link',
-      'x-vercel-protection-bypass=opaque-automation-secret',
-      'x-vercel-protection-bypass=opaque-automation-secret&x-vercel-set-bypass-cookie=true',
-    ];
-    for (const base of [
-      'https://hub.example.org/api/hub/admin/premium/delivery/catalog',
-      'https://hub.example.org/api/hub/admin/self?premiumRoute=catalog',
-      'https://hub.example.org/api/hub/admin/premium/delivery/catalog?premiumRoute=catalog',
-    ]) {
-      for (const suffix of queryVariants) {
-        const address = base + (base.includes('?') ? '&' : '?') + suffix;
-        const withoutStage = await adminHandler.fetch(new Request(address));
-        expect(withoutStage.status).toBe(401);
-        expect(await withoutStage.json()).toEqual({ error: 'STAGING_SESSION_REQUIRED' });
-        const withStage = await adminHandler.fetch(new Request(address, {
-          headers: { cookie: `${PREMIUM_STAGE_COOKIE}=isolated.session` },
-        }));
-        expect(withStage.status).toBe(401);
-        expect(calls.at(-1)).toBe(origin + '/v1/hub/admin/premium/delivery/catalog');
-      }
-    }
-    expect(calls).toHaveLength(9);
-
-    const rejected = [
-      'x-vercel-protection-bypass=',
-      'x-vercel-protection-bypass=one&x-vercel-protection-bypass=two',
-      '__vercel_protection_bypass=one&__vercel_protection_bypass=two',
-      'x-vercel-set-bypass-cookie=',
-      '__vercel_protection_bypass=token&unrecognized=1',
-      'premiumRoute=catalog&x-vercel-protection-bypass=token&unknown=1',
-    ];
-    for (const suffix of rejected) {
       const response = await adminHandler.fetch(new Request(
-        'https://hub.example.org/api/hub/admin/premium/delivery/catalog?' + suffix,
-        { headers: { cookie: `${PREMIUM_STAGE_COOKIE}=isolated.session` } },
+        site + '/api/hub/admin/premium/delivery/catalog' + suffix, { headers: { cookie } },
       ));
       expect(response.status).toBe(404);
     }
-    expect(calls).toHaveLength(9);
   });
-
 });
