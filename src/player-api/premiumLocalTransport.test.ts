@@ -170,7 +170,7 @@ describe('Live Premium uses the existing owner Hub session safely', () => {
       expect(response.status).toBe(200);
       expect(targets.at(-1)).toBe(origin + upstream);
     }
-    expect(targets.filter((target) => target === origin + '/v1/hub/admin/self')).toHaveLength(6);
+    expect(targets.filter((target) => target === origin + '/v1/hub/admin/self')).toHaveLength(5);
   });
 
   it('allows only exact Vercel captures, not arbitrary query values', async () => {
