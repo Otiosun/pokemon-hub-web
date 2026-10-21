@@ -265,10 +265,11 @@ export function resolveAdminProxyRoute(url: URL, requestMethod = 'GET'): AdminPr
   return null;
 }
 
-function jsonNotFound(): Response {
+function jsonNotFound(reason = 'unmatched'): Response {
   return new Response(JSON.stringify({ error: 'NOT_FOUND' }), {
     status: 404,
     headers: {
+      'x-beyond-route-state': reason,
       'cache-control': 'no-store',
       'content-type': 'application/json; charset=utf-8',
     },
@@ -278,12 +279,12 @@ function jsonNotFound(): Response {
 export default {
   fetch(request: Request): Promise<Response> {
     const url = resolvePremiumRewrite(new URL(request.url));
-    if (url === null) return Promise.resolve(jsonNotFound());
+    if (url === null) return Promise.resolve(jsonNotFound('invalid-rewrite'));
     if (url.pathname.startsWith('/api/hub/admin/premium-auth/')) {
       if (request.method === 'POST' && !isSafePremiumStagingMutation(request)) {
         return Promise.resolve(premiumStagingForbidden());
       }
-      if (url.search) return Promise.resolve(jsonNotFound());
+      if (url.search) return Promise.resolve(jsonNotFound('auth-query'));
       if (url.pathname === '/api/hub/admin/premium-auth/logout' && request.method === 'POST') {
         return Promise.resolve(new Response(JSON.stringify({ signedOut: true }), {
           status: 200,
@@ -329,14 +330,14 @@ export default {
           sessionScope: 'premium-stage',
         });
       }
-      return Promise.resolve(jsonNotFound());
+      return Promise.resolve(jsonNotFound('auth-route'));
     }
     if (url.pathname.startsWith('/api/hub/admin/premium')) {
       if (request.method === 'POST' && !isSafePremiumStagingMutation(request)) {
         return Promise.resolve(premiumStagingForbidden());
       }
       const premiumRoute = resolvePremiumStageAdminRoute(url, request.method);
-      if (premiumRoute === null) return Promise.resolve(jsonNotFound());
+      if (premiumRoute === null) return Promise.resolve(jsonNotFound('premium-route'));
       // Premium never receives the standard Hub/prod browser session.
       return proxyPlayerPortalRequest(request, {
         baseUrl: readPremiumManualApiBaseUrl(),
