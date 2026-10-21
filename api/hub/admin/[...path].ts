@@ -25,65 +25,66 @@ const PREMIUM_REWRITE_PATHS: Readonly<Record<string, string>> = {
   'master': '/api/hub/admin/premium/delivery/packs/master',
 };
 
+/**
+ * Rewrites from Vercel can carry framework/catch-all metadata in URL.search.
+ * Decode ONLY our server-authored finite route discriminator and the exact
+ * business query keys that a specific Premium endpoint needs.
+ *
+ * Arbitrary framework/search metadata must never become upstream parameters.
+ * Security does not depend on the pathname/capture metadata: every mapped
+ * destination is fixed here, POSTs use the CSRF guard, and real actions require
+ * the independently authenticated owner-only Premium session at the backend.
+ */
 function resolvePremiumRewrite(input: URL): URL | null {
-  // Vercel share/automation protection may pass its validated bypass query
-  // through to the function. Treat those fields solely as edge transport
-  // metadata: never forward them to the game API or interpret them as Hub auth.
-  // Keep this exception scoped to Premium URLs or the audited rewrite entrypoint.
-  const isPremiumEntry =
-    input.pathname.startsWith('/api/hub/admin/premium') ||
-    (input.pathname === '/api/hub/admin/self' && input.searchParams.has('premiumRoute'));
-  const query = new URLSearchParams(input.searchParams);
-  if (isPremiumEntry) {
-    for (const name of [
-      '__vercel_protection_bypass',
-      'x-vercel-protection-bypass',
-      'x-vercel-set-bypass-cookie',
-    ]) {
-      const values = query.getAll(name);
-      if (values.length > 1 || (values.length === 1 &&
-        (!values[0] || values[0].length > 2048))) return null;
-      query.delete(name);
-    }
-  }
-  const normalized = new URL(input);
-  normalized.search = query.toString();
-  input = normalized;
-
   const keys = input.searchParams.getAll('premiumRoute');
-  if (keys.length === 0) return input;
+  if (keys.length === 0) {
+    if (!input.pathname.startsWith('/api/hub/admin/premium')) return input;
+    // Direct (non-rewritten) Premium requests must still be allowlisted by
+    // the handler below. Do not pass Vercel transport metadata downstream.
+    const semantic = new URLSearchParams();
+    const allowed = input.pathname === '/api/hub/admin/premium'
+      ? ['playerId', 'resource']
+      : input.pathname === '/api/hub/admin/premium/players'
+        ? ['q']
+        : input.pathname === '/api/hub/admin/premium/delivery/cases'
+          ? ['playerId']
+          : [];
+    for (const name of allowed) {
+      for (const value of input.searchParams.getAll(name)) semantic.append(name, value);
+    }
+    const result = new URL(input.pathname, input.origin);
+    result.search = semantic.toString();
+    return result;
+  }
   if (keys.length !== 1) return null;
   const key = keys[0];
-  const params = new URLSearchParams(input.searchParams);
-  params.delete('premiumRoute');
   let pathname: string | undefined = key ? PREMIUM_REWRITE_PATHS[key] : undefined;
+  const query = new URLSearchParams();
+
   if (key === 'case-events' || key === 'case-transition') {
-    const ids = params.getAll('premiumCase');
+    const ids = input.searchParams.getAll('premiumCase');
     if (ids.length !== 1 || !ids[0] || !UUID_PATTERN.test(ids[0])) return null;
     pathname = '/api/hub/admin/premium/delivery/cases/' + ids[0] +
       (key === 'case-events' ? '/events' : '/transition');
-    params.delete('premiumCase');
-  } else if (params.has('premiumCase')) return null;
-  if (!pathname) return null;
-
-  // A Vercel rewrite may preserve the SOURCE pathname in Request.url while
-  // appending the destination query. It may instead expose the destination
-  // pathname. Bind the marker to exactly one known Premium route in both cases.
-  if (input.pathname !== '/api/hub/admin/self' && input.pathname !== pathname) return null;
-
-  // The single-segment Vercel [...path] function may append its route capture
-  // to URL.search. Accept only the exact entrypoint/canonical route capture,
-  // never arbitrary or repeated user-controlled query values.
-  const routeCapture = pathname.slice('/api/hub/admin/'.length);
-  for (const capture of ['...path', 'path']) {
-    const values = params.getAll(capture);
-    if (values.length === 0) continue;
-    if (values.length !== 1 || (values[0] !== 'self' && values[0] !== routeCapture)) return null;
-    params.delete(capture);
+  } else if (input.searchParams.has('premiumCase')) {
+    return null;
   }
+  if (!pathname || !input.pathname.startsWith('/api/hub/admin/')) return null;
 
+  // Only the expected payload keys are transferred. Duplicate values remain
+  // duplicates and are rejected later by resolvePremiumStageAdminRoute.
+  const accepted = pathname === '/api/hub/admin/premium'
+    ? ['playerId', 'resource']
+    : pathname === '/api/hub/admin/premium/players'
+      ? ['q']
+      : pathname === '/api/hub/admin/premium/delivery/cases'
+        ? ['playerId']
+        : [];
+  for (const name of accepted) {
+    for (const value of input.searchParams.getAll(name)) query.append(name, value);
+  }
   const output = new URL(pathname, input.origin);
-  output.search = params.toString();
+  output.search = query.toString();
   return output;
 }
 
