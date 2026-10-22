@@ -15,7 +15,7 @@ const ICON_ROOT =
   'https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/icons/Game%20Icons/Black/2x';
 const ICONS = {
   XP_2X: `${ICON_ROOT}/medal1.png`,
-  CAPTURE_CAPTURE_LUCK_2X: `${ICON_ROOT}/star.png`,
+  CAPTURE_LUCK_2X: `${ICON_ROOT}/star.png`,
   fallback: `${ICON_ROOT}/power.png`,
 } as const;
 
