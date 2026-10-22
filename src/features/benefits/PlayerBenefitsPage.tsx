@@ -80,6 +80,10 @@ export function PlayerBenefitsPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
+    const tick = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(tick);
+  }, []);
+  useEffect(() => {
     let alive = true;
     const load = async (silent = false) => {
       if (!silent) setState({ status: 'loading' });
