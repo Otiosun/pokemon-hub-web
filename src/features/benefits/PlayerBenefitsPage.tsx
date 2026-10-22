@@ -15,12 +15,12 @@ const ICON_ROOT =
   'https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/icons/Game%20Icons/Black/2x';
 const ICONS = {
   XP_2X: `${ICON_ROOT}/medal1.png`,
-  LUCK_2X: `${ICON_ROOT}/star.png`,
+  CAPTURE_CAPTURE_LUCK_2X: `${ICON_ROOT}/star.png`,
   fallback: `${ICON_ROOT}/power.png`,
 } as const;
 
 function benefitIcon(key: string) {
-  if (key === 'XP_2X' || key === 'LUCK_2X') return ICONS[key];
+  if (key === 'XP_2X' || key === 'CAPTURE_LUCK_2X') return ICONS[key];
   return ICONS.fallback;
 }
 
@@ -60,7 +60,7 @@ function BenefitCard({
         <h3>{benefitTitle(benefit.entitlementKey)}</h3>
         <p>{benefit.entitlementKey === 'XP_2X'
           ? 'Multiplicador de experiência conforme as regras do jogo.'
-          : benefit.entitlementKey === 'LUCK_2X'
+          : benefit.entitlementKey === 'CAPTURE_LUCK_2X'
             ? 'Vantagem de sorte enquanto o benefício estiver ativo.'
             : 'Benefício registrado oficialmente na sua conta.'}</p>
         <div className="benefit-entry-foot">
