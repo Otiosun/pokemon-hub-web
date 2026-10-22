@@ -33,6 +33,7 @@ import { usePlayerPortalLocation } from './usePlayerPortalLocation';
 import './journey-page.css';
 import './journey-page-review-fixes.css';
 import './journey-uat-polish.css';
+import './journey-benefits-link.css';
 
 const PROFESSION_LABELS: Record<TrainerProfession, string> = {
   CRIADOR: 'Criador',
@@ -829,6 +830,19 @@ export function JourneyPageV2({
           <span className="journey-share-action-copy">
             <strong>INVENTÁRIO</strong>
             <small>Consultar itens e quantidades do registro oficial</small>
+          </span>
+          <span className="journey-share-action-chevron">
+            <ChevronIcon />
+          </span>
+        </a>
+
+        <a className="journey-share-action journey-benefits-action" href="/jornada/beneficios">
+          <span className="journey-share-action-icon journey-benefits-symbol">
+            <img src="https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/icons/Game%20Icons/Black/2x/medal1.png" alt="" loading="lazy" />
+          </span>
+          <span className="journey-share-action-copy">
+            <strong>MEUS BENEFÍCIOS</strong>
+            <small>Vantagens ativas, prazos e registros anteriores</small>
           </span>
           <span className="journey-share-action-chevron">
             <ChevronIcon />
