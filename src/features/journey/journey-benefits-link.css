@@ -1,0 +1,27 @@
+/* Added last in the Journey styles: distinct from the existing Inventory link. */
+.journey-benefits-action {
+  border-color: rgba(132, 79, 55, .52);
+  background: linear-gradient(104deg, rgba(187, 142, 86, .13), rgba(255,255,255,.24) 70%);
+}
+.journey-benefits-action:hover {
+  background: linear-gradient(104deg, rgba(187, 142, 86, .21), rgba(255,255,255,.28) 70%);
+}
+.journey-benefits-symbol {
+  display: grid;
+  place-items: center;
+  background: #ede6d8;
+  border: 1px solid rgba(107,78,54,.23);
+  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+}
+.journey-benefits-symbol img {
+  width: 23px;
+  height: 23px;
+  object-fit: contain;
+  filter: sepia(.18) saturate(.7);
+}
+@media (max-width: 600px) {
+  .journey-benefits-action { min-height: 76px; }
+  .journey-benefits-action .journey-share-action-copy small { line-height: 1.45; }
+}
