@@ -40,3 +40,106 @@
 .premium-case-timeline{grid-column:1/-1}
 .premium-case-timeline>p{display:grid;gap:5px;padding:11px 0;border-bottom:1px solid #293b3b;color:#dae6e5;font-size:.78rem}
 .premium-case-timeline>p small{color:#96abaa;overflow-wrap:anywhere}
+
+
+/* Primary action: larger targets, visible requirements, no mystery controls. */
+.premium-delivery-console {
+  gap: 18px;
+  border-color: rgba(183,154,214,.27);
+  border-radius: 13px;
+}
+.premium-delivery-console > header { align-items: flex-start; }
+.premium-delivery-console > header > span { white-space: nowrap; }
+.premium-delivery-console > p { font-size: .9rem; line-height: 1.55; }
+.premium-delivery-form { row-gap: 17px; }
+.premium-delivery-form label { font-size: .88rem; line-height: 1.4; }
+.premium-delivery-form select,
+.premium-delivery-form input[type=number] {
+  min-height: 52px;
+  border-radius: 8px;
+  font-size: .99rem;
+}
+.premium-delivery-form textarea {
+  min-height: 110px;
+  border-radius: 8px;
+  font: 510 .97rem/1.55 'IBM Plex Sans',system-ui,sans-serif;
+}
+.premium-delivery-preview {
+  gap: 9px;
+  padding: 17px;
+  border-radius: 8px;
+  font-size: .92rem;
+  line-height: 1.55;
+}
+.premium-delivery-preview small { font-size: .75rem; }
+.premium-delivery-reason > small {
+  color: #91aaa9;
+  font: 550 .76rem/1.4 'IBM Plex Sans',system-ui,sans-serif;
+}
+.premium-delivery-reason > small.is-warning { color: #f0c58e; }
+.premium-delivery-form .premium-delivery-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  min-height: 74px;
+  padding: 16px;
+  border: 1px solid rgba(183,154,214,.31);
+  border-radius: 9px;
+  background: rgba(183,154,214,.07);
+  color: #e3eeee;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.premium-delivery-confirm:has(input:checked) {
+  border-color: #c1a0e0;
+  background: rgba(183,154,214,.14);
+}
+.premium-delivery-confirm input[type=checkbox] {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  accent-color: #c1a0e0;
+  cursor: pointer;
+}
+.premium-delivery-confirm span { display: grid; gap: 5px; min-width: 0; line-height: 1.5; }
+.premium-delivery-confirm span strong {
+  font: 700 .9rem/1.35 'IBM Plex Sans',system-ui,sans-serif;
+  color: #f0eff4;
+}
+.premium-delivery-confirm span small {
+  font: 490 .79rem/1.5 'IBM Plex Sans',system-ui,sans-serif;
+  color: #b2c4c3;
+}
+.premium-delivery-form > .premium-delivery-requirement {
+  grid-column: 1 / -1;
+  margin: -5px 0 -5px;
+  padding-left: 11px;
+  border-left: 2px solid #d4b583;
+  color: #e7ceae;
+  font: 550 .81rem/1.5 'IBM Plex Sans',system-ui,sans-serif;
+}
+.premium-delivery-form > button {
+  min-height: 54px;
+  border-radius: 8px;
+  font-size: .82rem;
+  letter-spacing: .01em;
+}
+.premium-delivery-form > button:disabled {
+  opacity: .62;
+  background: #71647d;
+  color: #e4dbea;
+}
+.premium-delivery-form > button:focus-visible {
+  outline: 2px solid #dcbffa;
+  outline-offset: 3px;
+}
+.premium-delivery-history h4 { font-size: 1.16rem; }
+.premium-delivery-history > p { font-size: .87rem; line-height: 1.55; }
+.premium-delivery-history > p.premium-history-error { color: #e4b2a9; }
+@media (max-width: 550px) {
+  .premium-delivery-console { padding: 17px; gap: 16px; }
+  .premium-delivery-console h3 { font-size: 1.7rem; line-height: 1.12; }
+  .premium-delivery-console > header > span { font-size: .6rem; padding: 8px; }
+  .premium-delivery-form { grid-template-columns: minmax(0,1fr); }
+}
