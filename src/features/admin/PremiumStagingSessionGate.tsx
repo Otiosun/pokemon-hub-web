@@ -9,13 +9,69 @@ import {
 } from '../../player-api/premiumStagingAuthClient';
 import './premium-staging-session-gate.css';
 import { currentPremiumManualUiMode } from '../../player-api/premiumManualUiMode';
+import { usePlayerPortalAdmin } from '../../player-api/usePlayerPortalAdmin';
 
 type GateState = PremiumStageSession | { status: 'loading' };
+
+/** Live Premium reuses the existing Hub login. Server-side checks remain mandatory. */
+function LivePremiumOwnerGate({ children }: { children: ReactNode }) {
+  const state = usePlayerPortalAdmin();
+
+  if (state.status === 'loading') {
+    return (
+      <section className="premium-stage-gate" aria-live="polite">
+        <strong>VERIFICANDO ACESSO ADMINISTRATIVO…</strong>
+      </section>
+    );
+  }
+
+  if (state.status === 'unavailable') {
+    return (
+      <section className="premium-stage-gate" aria-live="polite">
+        <strong>ACESSO TEMPORARIAMENTE INDISPONÍVEL</strong>
+        <p>Não foi possível consultar as permissões do Hub. Nenhuma entrega foi realizada.</p>
+      </section>
+    );
+  }
+
+  if (state.status !== 'admin' || !state.admin.owner ||
+      !state.admin.capabilities.includes('central.view')) {
+    // A player cannot enumerate administrator modules, even on direct URLs.
+    return (
+      <section className="premium-stage-gate">
+        <strong>404 · ENDEREÇO INDISPONÍVEL</strong>
+        <p>A Central Premium é restrita ao proprietário autenticado do jogo.</p>
+        <a href="/jornada">VOLTAR À JORNADA</a>
+      </section>
+    );
+  }
+
+  return (
+    <div className="premium-stage-gate-ready">
+      <div className="premium-stage-gate-identity">
+        <span>PROPRIETÁRIO AUTORIZADO · HUB</span>
+        <a href="/admin">VOLTAR À CENTRAL ADM</a>
+      </div>
+      {children}
+    </div>
+  );
+}
+
 export function PremiumStagingSessionGate({
   access,
   children,
 }: { access: PremiumStageRole; children: ReactNode }) {
-  const local = currentPremiumManualUiMode() === 'local';
+  if (currentPremiumManualUiMode() === 'local') {
+    return <LivePremiumOwnerGate>{children}</LivePremiumOwnerGate>;
+  }
+  return <IsolatedPreviewPremiumGate access={access}>{children}</IsolatedPreviewPremiumGate>;
+}
+
+function IsolatedPreviewPremiumGate({
+  access,
+  children,
+}: { access: PremiumStageRole; children: ReactNode }) {
+  const local = false;
   const environment = local ? 'API LOCAL' : 'STAGING';
   const [state, setState] = useState<GateState>({ status: 'loading' });
   const [ticket, setTicket] = useState('');

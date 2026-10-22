@@ -14,14 +14,13 @@ function configurePremium(): void {
 }
 
 describe('Vercel catch-all Premium routing with missing rewrite marker', () => {
-  it('requires the separate Premium cookie after removing only a matching capture', async () => {
+  it('requires the existing Hub session after removing only a matching capture', async () => {
     configurePremium();
     const upstream = vi.fn();
     vi.stubGlobal('fetch', upstream);
 
     for (const path of [
       'premium-auth/self',
-      'premium-auth/player',
       'premium/delivery/catalog',
       'premium/delivery/cases/catalog',
       'premium/delivery/items',
@@ -33,7 +32,7 @@ describe('Vercel catch-all Premium routing with missing rewrite marker', () => {
           url.searchParams.set(capture, value);
           const result = await adminHandler.fetch(new Request(url));
           expect(result.status).toBe(401);
-          expect(await result.json()).toEqual({ error: 'STAGING_SESSION_REQUIRED' });
+          expect(await result.json()).toEqual({ error: 'HUB_SESSION_REQUIRED' });
         }
       }
     }
@@ -56,7 +55,7 @@ describe('Vercel catch-all Premium routing with missing rewrite marker', () => {
       url.searchParams.set('path', path);
       const result = await adminHandler.fetch(new Request(url));
       expect(result.status).toBe(401);
-      expect(await result.json()).toEqual({ error: 'STAGING_SESSION_REQUIRED' });
+      expect(await result.json()).toEqual({ error: 'HUB_SESSION_REQUIRED' });
     }
     for (const suffix of [
       '?path=not-a-real-capture',
