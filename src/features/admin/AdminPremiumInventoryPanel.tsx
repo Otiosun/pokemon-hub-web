@@ -56,7 +56,7 @@ export function AdminPremiumInventoryPanel({ playerId }: { playerId: string | nu
         setNotice({
           UNAUTHORIZED: 'Sessão de testes expirada.',
           FORBIDDEN: 'Apenas o proprietário autorizado pode entregar.',
-          UNAVAILABLE: 'API de staging não disponível; nenhuma entrega confirmada.',
+          UNAVAILABLE: 'API Premium não disponível; nenhuma entrega confirmada.',
           REJECTED: 'Entrega recusada pelo bot. Confira os registros antes de tentar novamente.',
         }[outcome.code]);
       }
@@ -100,10 +100,11 @@ export function AdminPremiumInventoryPanel({ playerId }: { playerId: string | nu
               onChange={(event) => { changed(); setReason(event.target.value); }} />
           </label>
           <label className="premium-delivery-confirm">
-            <input type="checkbox" checked={confirmed} disabled={busy || !valid}
+            <input type="checkbox" checked={confirmed} disabled={busy}
               onChange={(event) => setConfirmed(event.target.checked)} />
             <span>Conferi o treinador, o item e a quantidade. Autorizo esta entrega individual.</span>
           </label>
+          {!valid && !busy ? <p className="premium-delivery-requirement" role="status">Falta informar um motivo válido (8 a 400 caracteres), selecionar um item e conferir a quantidade.</p> : null}
           <button type="button" disabled={!valid || !confirmed || busy} onClick={() => void deliver()}>
             {busy ? 'APLICANDO…' : 'ENTREGAR ITENS'}
           </button>
