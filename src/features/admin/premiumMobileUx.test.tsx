@@ -14,7 +14,7 @@ const player = {
 
 describe('Premium mobile operator experience', () => {
   it('looks up suggestions through the authenticated, read-only player search', async () => {
-    const fetcher = vi.fn(async () => new Response(JSON.stringify({ players: [player] }), { status: 200 }));
+    const fetcher = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => new Response(JSON.stringify({ players: [player] }), { status: 200 }));
     expect(await searchPremiumStagePlayers(' Au ', fetcher)).toEqual([player]);
     expect(fetcher.mock.calls[0]?.[0]).toBe('/api/hub/admin/premium/players?q=Au');
     expect(fetcher.mock.calls[0]?.[1]).toMatchObject({
@@ -25,7 +25,7 @@ describe('Premium mobile operator experience', () => {
   });
 
   it('does not send requests with too-short or control-character searches', async () => {
-    const fetcher = vi.fn(async () => new Response(JSON.stringify({ players: [] }), { status: 200 }));
+    const fetcher = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => new Response(JSON.stringify({ players: [] }), { status: 200 }));
     expect(await searchPremiumStagePlayers('A', fetcher)).toEqual([]);
     expect(await searchPremiumStagePlayers('a\\nb', fetcher)).toEqual([]);
     expect(fetcher).not.toHaveBeenCalled();
@@ -55,7 +55,7 @@ describe('Premium mobile operator experience', () => {
     expect(html).toContain('disabled=""');
     expect(html).toContain('Mínimo de 8 caracteres');
     expect(html).toContain('Confirmo a identidade do jogador');
-    expect(html).toContain('Marque a confirmação');
+    expect(html).toContain('Escreva um motivo verificável');
   });
 
   it('renders an explicit audit-loading state instead of pretending zero entries', () => {
