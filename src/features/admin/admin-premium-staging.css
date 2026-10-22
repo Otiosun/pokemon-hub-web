@@ -100,3 +100,138 @@
 .premium-stage-search li small{color:#9bafaf;overflow-wrap:anywhere}
 .premium-stage-search p{margin:0;color:#bfaee0;font-size:.72rem}
 @media(max-width:640px){.premium-stage-search form>div{flex-direction:column}}
+
+
+/* Premium recipient selection — approachable on phones, precise for operators. */
+.premium-staging-player {
+  grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr);
+  align-items: start;
+  gap: 18px 24px;
+}
+.premium-player-intro { min-width: 0; }
+.premium-staging-player .premium-player-intro > span { color: #c9a8e7; }
+.premium-staging-player .premium-player-intro p {
+  max-width: 32ch;
+  font-size: .9rem;
+  line-height: 1.55;
+}
+.premium-stage-search { gap: 10px; }
+.premium-staging-player .premium-stage-search > label {
+  font: 650 .88rem 'IBM Plex Sans',system-ui,sans-serif;
+  letter-spacing: 0;
+  color: #dbe6e6;
+}
+.premium-search-field { position: relative; }
+.premium-stage-search .premium-search-field input {
+  width: 100%;
+  min-height: 54px;
+  border-radius: 9px;
+  padding: 12px 46px 12px 16px;
+  font: 540 1rem 'IBM Plex Sans',system-ui,sans-serif;
+}
+.premium-search-indicator {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.5rem;
+  pointer-events: none;
+  line-height: 1;
+  color: #d6b8ec;
+}
+.premium-stage-search #premium-search-feedback {
+  color: #a9b9b9;
+  font: 480 .77rem/1.5 'IBM Plex Sans',system-ui,sans-serif;
+  margin: 0;
+}
+.premium-stage-search #premium-search-feedback.is-error { color: #e8b3a7; }
+.premium-stage-search ul { max-height: 340px; gap: 6px; }
+.premium-stage-search li button {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 64px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #151d1f;
+  border-color: #35474a;
+  color: #edf5f5;
+  font: inherit;
+}
+.premium-stage-search li button:active { background: #202c2d; }
+.premium-search-result-name { display: grid; gap: 4px; min-width: 0; text-align: left; }
+.premium-search-result-name strong {
+  color: #f1f5f5;
+  font: 700 .95rem/1.25 'Space Grotesk',system-ui,sans-serif;
+}
+.premium-search-result-name small {
+  color: #a2b7b6;
+  font: 500 .75rem/1.4 'IBM Plex Sans',system-ui,sans-serif;
+}
+.premium-search-choose {
+  flex: none;
+  color: #d6b8ee;
+  font: 660 .72rem 'IBM Plex Sans',system-ui,sans-serif;
+  letter-spacing: 0;
+}
+.premium-selected-player {
+  grid-column: 1 / -1;
+  border: 1px solid rgba(117,210,173,.33);
+  background: rgba(75,164,128,.075);
+  border-radius: 10px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.premium-selected-player > div { display: grid; min-width: 0; gap: 4px; }
+.premium-selected-player span { color: #8fdab5; font: 750 .62rem 'IBM Plex Mono',monospace; letter-spacing: .07em; }
+.premium-selected-player strong { color: #edfaf2; font: 740 1.12rem 'Space Grotesk',system-ui,sans-serif; }
+.premium-selected-player small { color: #bed3cb; font: 550 .83rem 'IBM Plex Sans',system-ui,sans-serif; }
+.premium-selected-player code { color: #8daaa2; font-size: .68rem; overflow-wrap: anywhere; }
+.premium-staging-player button.premium-player-change {
+  min-height: 44px;
+  padding: 0 15px;
+  border: 1px solid rgba(151,223,190,.5);
+  border-radius: 7px;
+  background: rgba(151,223,190,.06);
+  color: #c8f1dc;
+  font: 650 .76rem 'IBM Plex Sans',system-ui,sans-serif;
+  letter-spacing: 0;
+}
+.premium-id-fallback {
+  grid-column: 1 / -1;
+  min-width: 0;
+  border-top: 1px solid rgba(214,232,233,.11);
+  padding-top: 8px;
+}
+.premium-id-fallback summary {
+  min-height: 46px;
+  display: list-item;
+  padding: 14px 0;
+  cursor: pointer;
+  color: #baa9d1;
+  font: 600 .82rem 'IBM Plex Sans',system-ui,sans-serif;
+}
+.premium-id-fallback form { max-width: 660px; margin-top: 12px; }
+.premium-staging-player .premium-id-fallback label {
+  font: 650 .79rem 'IBM Plex Sans',system-ui,sans-serif;
+  letter-spacing: 0;
+  color: #d2ddde;
+}
+.premium-id-fallback form > small { color: #a1b2b1; font-size: .75rem; line-height: 1.5; }
+@media (max-width: 760px) {
+  .premium-staging-player {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 17px;
+    gap: 16px;
+  }
+  .premium-staging-player .premium-player-intro p { max-width: none; }
+  .premium-staging-player .premium-stage-search .premium-search-field { flex-direction: row; }
+  .premium-selected-player { flex-direction: column; align-items: stretch; }
+  .premium-selected-player button.premium-player-change { width: 100%; }
+  .premium-stage-search li button { width: 100%; }
+}

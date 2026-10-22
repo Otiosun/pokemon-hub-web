@@ -53,9 +53,9 @@ export function AdminPremiumMasterBallPanel({ playerId }: { playerId: string | n
           setConfirmed(false);
         }
         setNotice({
-          UNAUTHORIZED: 'Sessão de staging expirada. Nenhuma concessão confirmada.',
+          UNAUTHORIZED: 'Sua sessão do Hub expirou. Nenhuma concessão confirmada.',
           FORBIDDEN: 'Apenas o proprietário autorizado pode entregar.',
-          UNAVAILABLE: 'API de staging indisponível. Nenhuma concessão confirmada.',
+          UNAVAILABLE: 'API Premium indisponível. Nenhuma concessão confirmada.',
           NOT_PUBLISHED: 'Master Ball indisponível no catálogo publicado. A entrega foi bloqueada.',
           REJECTED: 'Entrega recusada; confira a operação antes de repetir.',
         }[outcome.code]);
@@ -71,7 +71,7 @@ export function AdminPremiumMasterBallPanel({ playerId }: { playerId: string | n
     <section className="premium-delivery-console" aria-label="Executor comercial Master Ball">
       <header>
         <div><small>SKU MASTER · CONCESSÃO POR PRODUTO</small><h3>Master Ball</h3></div>
-        <span>OWNER · STAGING</span>
+        <span>OWNER</span>
       </header>
       <p>Uma Master Ball por unidade (máximo 20). O próprio servidor identifica o item na
         release publicada; esta tela <strong>não escolhe itemID nem confirma pagamento</strong>.</p>
@@ -84,7 +84,7 @@ export function AdminPremiumMasterBallPanel({ playerId }: { playerId: string | n
           Nenhuma Master Ball única e publicada encontrada. Executor desabilitado, sem concessão.
         </p>
       ) : !playerId ? (
-        <p className="premium-delivery-notice">Selecione um treinador de staging acima.</p>
+        <p className="premium-delivery-notice">Selecione um treinador acima.</p>
       ) : (
         <div className="premium-delivery-form">
           <p className="premium-delivery-preview">
@@ -101,10 +101,11 @@ export function AdminPremiumMasterBallPanel({ playerId }: { playerId: string | n
               onChange={(event) => { changed(); setReason(event.target.value); }} />
           </label>
           <label className="premium-delivery-confirm">
-            <input type="checkbox" checked={confirmed} disabled={!valid || busy}
+            <input type="checkbox" checked={confirmed} disabled={busy}
               onChange={(event) => setConfirmed(event.target.checked)} />
             <span>Conferi o treinador, o SKU MASTER, a quantidade e a justificativa. Autorizo a entrega.</span>
           </label>
+          {!valid && !busy ? <p className="premium-delivery-requirement" role="status">Informe uma justificativa de 8 a 400 caracteres e uma quantidade permitida.</p> : null}
           <button type="button" disabled={!valid || !confirmed || busy} onClick={() => void deliver()}>
             {busy ? 'APLICANDO…' : 'ENTREGAR MASTER BALL'}
           </button>

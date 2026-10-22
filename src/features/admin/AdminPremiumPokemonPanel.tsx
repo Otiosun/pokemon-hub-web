@@ -52,7 +52,7 @@ export function AdminPremiumPokemonPanel({ playerId }: { playerId: string | null
           : `Pokémon criado pela operação auditada ${outcome.operationId}.`);
       } else {
         setNotice({
-          UNAUTHORIZED: 'Sessão de staging expirada.',
+          UNAUTHORIZED: 'Sua sessão do Hub expirou.',
           FORBIDDEN: 'Esta entrega exige proprietário autorizado.',
           UNAVAILABLE: 'API ou forma Pokémon indisponível no staging.',
           REJECTED: 'Concessão recusada. Confira os registros antes de tentar novamente.',
@@ -73,7 +73,7 @@ export function AdminPremiumPokemonPanel({ playerId }: { playerId: string | null
       </header>
       <p>Escolha uma forma liberada na versão ativa do jogo e confirme a criação.
         <strong> Isto não entrega automaticamente um ovo ou um pacote comercial</strong>, nem modifica pagamentos.</p>
-      {!playerId ? <p className="premium-delivery-notice">Primeiro selecione um treinador de staging.</p> : (
+      {!playerId ? <p className="premium-delivery-notice">Primeiro selecione um treinador.</p> : (
         <div className="premium-delivery-form">
           <label>
             Espécie / forma publicada
@@ -104,10 +104,11 @@ export function AdminPremiumPokemonPanel({ playerId }: { playerId: string | null
               onChange={(event) => { changed(); setReason(event.target.value); }} />
           </label>
           <label className="premium-delivery-confirm">
-            <input type="checkbox" checked={confirmed} disabled={!valid || busy}
+            <input type="checkbox" checked={confirmed} disabled={busy}
               onChange={(event) => setConfirmed(event.target.checked)} />
             <span>Conferi o destinatário, espécie, nível e Shiny. Confirmo esta criação individual.</span>
           </label>
+          {!valid && !busy ? <p className="premium-delivery-requirement" role="status">Selecione uma espécie, um nível válido e justifique em 8 a 400 caracteres.</p> : null}
           <button type="button" disabled={!valid || !confirmed || busy} onClick={() => void deliver()}>
             {busy ? 'CRIANDO…' : 'CONFIRMAR CRIAÇÃO'}
           </button>

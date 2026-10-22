@@ -9,7 +9,7 @@ import { AdminPremiumPokemonPanel } from './AdminPremiumPokemonPanel';
 import { AdminPremiumCasesPanel } from './AdminPremiumCasesPanel';
 import { AdminPremiumFulfillmentCatalog } from './AdminPremiumFulfillmentCatalog';
 import { AdminPremiumMasterBallPanel } from './AdminPremiumMasterBallPanel';
-import { PremiumStagePlayerSearch } from './PremiumStagePlayerSearch';
+import { PremiumStagePlayerSearch, type SearchPlayer } from './PremiumStagePlayerSearch';
 import { AdminPremiumSupportLedger } from './AdminPremiumSupportLedger';
 import './admin-page.css';
 import './admin-premium-support.css';
@@ -22,6 +22,7 @@ export function AdminPremiumStagingPage() {
   const local = currentPremiumManualUiMode() === 'local';
   const [draft, setDraft] = useState('');
   const [playerId, setPlayerId] = useState<string | null>(null);
+  const [selectedPlayer, setSelectedPlayer] = useState<SearchPlayer | null>(null);
   const [section, setSection] = useState<Section>('delivery');
   const valid = PLAYER_ID.test(draft.trim());
 
@@ -50,23 +51,57 @@ export function AdminPremiumStagingPage() {
               : 'Ambiente de integração em preparação. Os registros só aparecem quando uma API de staging independente e autenticada estiver habilitada. Não há pedidos ou pagamentos de demonstração.'}
           </p>
 
-          <section className="premium-staging-player" aria-label="Identificar treinador para entrega Premium">
-            <div>
-              <span>{local ? 'IDENTIFICAÇÃO DO DESTINATÁRIO' : 'IDENTIFICAÇÃO NO AMBIENTE DE TESTES'}</span>
-              <h2>{local ? "Destinatário da entrega" : "Treinador de teste"}</h2>
-              <p>{local ? "Selecione o Player ID real do destinatário somente após conferir a entrega autorizada externamente." : <>Insira apenas o Player ID de uma conta <strong>sintética de staging</strong>. Nunca utilize um ID de produção.</>}</p>
+          <section className="premium-staging-player" aria-label="Selecionar destinatário Premium">
+            <div className="premium-player-intro">
+              <span>ETAPA 01 · DESTINATÁRIO</span>
+              <h2>Para quem vamos entregar?</h2>
+              <p>Encontre o treinador pelo nome e confira a conta antes de autorizar qualquer benefício.</p>
             </div>
-            <PremiumStagePlayerSearch onSelect={(id) => { setDraft(id); setPlayerId(id); }} />
-            <form onSubmit={(event) => { event.preventDefault(); if (valid) setPlayerId(draft.trim()); }}>
-              <label htmlFor="premium-staging-player-id">PLAYER ID (UUID)</label>
-              <div>
-                <input id="premium-staging-player-id" value={draft}
-                  autoComplete="off" spellCheck={false}
-                  onChange={(event) => { setDraft(event.target.value); setPlayerId(null); }}
-                  placeholder="00000000-0000-4000-8000-000000000000" />
-                <button type="submit" disabled={!valid}>CONSULTAR</button>
+            <PremiumStagePlayerSearch
+              onEditing={() => { setSelectedPlayer(null); setPlayerId(null); }}
+              onSelect={(player) => {
+                setDraft(player.playerId);
+                setPlayerId(player.playerId);
+                setSelectedPlayer(player);
+              }}
+            />
+            {playerId ? (
+              <div className="premium-selected-player" role="status">
+                <div>
+                  <span>DESTINATÁRIO SELECIONADO</span>
+                  <strong>{selectedPlayer?.trainerName?.trim() || (selectedPlayer ? 'Treinador sem nome' : 'ID informado manualmente')}</strong>
+                  <small>{selectedPlayer
+                    ? `Nível ${selectedPlayer.trainerLevel} · ${selectedPlayer.status === 'ACTIVE' ? 'Ativo' : selectedPlayer.status}`
+                    : 'Confira a identidade antes de qualquer concessão.'}</small>
+                  <code>{playerId}</code>
+                </div>
+                <button type="button" className="premium-player-change" onClick={() => {
+                  setPlayerId(null);
+                  setSelectedPlayer(null);
+                  setDraft('');
+                }}>Trocar jogador</button>
               </div>
-            </form>
+            ) : null}
+            <details className="premium-id-fallback">
+              <summary>Não encontrou? Informar Player ID manualmente</summary>
+              <form onSubmit={(event) => {
+                event.preventDefault();
+                if (valid) {
+                  setPlayerId(draft.trim());
+                  setSelectedPlayer(null);
+                }
+              }}>
+                <label htmlFor="premium-staging-player-id">ID completo do jogador (UUID)</label>
+                <div>
+                  <input id="premium-staging-player-id" value={draft}
+                    autoComplete="off" spellCheck={false}
+                    onChange={(event) => { setDraft(event.target.value); setPlayerId(null); setSelectedPlayer(null); }}
+                    placeholder="00000000-0000-4000-8000-000000000000" />
+                  <button type="submit" disabled={!valid}>Selecionar ID</button>
+                </div>
+                <small>Use somente quando tiver conferido o ID no cadastro administrativo.</small>
+              </form>
+            </details>
           </section>
 
           <nav className="admin-premium-tabs premium-staging-tabs" aria-label="Seções da Central Premium">
