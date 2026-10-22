@@ -29,7 +29,7 @@ describe('Meus Benefícios — secure read-only player flow', () => {
   });
 
   it('reads signed player benefits without writing or passing any identity parameter', async () => {
-    const fetcher = vi.fn(async () => new Response(JSON.stringify({ entitlements: [valid] }), { status: 200 }));
+    const fetcher = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => new Response(JSON.stringify({ entitlements: [valid] }), { status: 200 }));
     const response = await readPlayerBenefits(fetcher);
     expect(response).toEqual({ status: 'ready', entitlements: [valid] });
     expect(fetcher.mock.calls[0]?.[0]).toBe('/api/hub/player/benefits');
