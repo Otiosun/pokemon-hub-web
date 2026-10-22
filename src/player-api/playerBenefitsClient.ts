@@ -70,7 +70,7 @@ export function benefitDisplayState(benefit: PlayerBenefit, at = Date.now()): Be
 export function benefitTitle(key: string) {
   const known: Record<string, string> = {
     XP_2X: 'Experiência em dobro',
-    LUCK_2X: 'Sorte em dobro',
+    CAPTURE_LUCK_2X: 'Bênção da Sorte',
   };
   return known[key] ?? key.replaceAll('_', ' ').replaceAll('-', ' ');
 }
