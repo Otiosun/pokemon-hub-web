@@ -27,7 +27,7 @@ describe('Premium mobile operator experience', () => {
   it('does not send requests with too-short or control-character searches', async () => {
     const fetcher = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => new Response(JSON.stringify({ players: [] }), { status: 200 }));
     expect(await searchPremiumStagePlayers('A', fetcher)).toEqual([]);
-    expect(await searchPremiumStagePlayers('a\\nb', fetcher)).toEqual([]);
+    expect(await searchPremiumStagePlayers('a\nb', fetcher)).toEqual([]);
     expect(fetcher).not.toHaveBeenCalled();
   });
 
