@@ -65,10 +65,11 @@ function BenefitCard({
             : 'Benefício registrado oficialmente na sua conta.'}</p>
         <div className="benefit-entry-foot">
           <span>Desde {dateLabel(benefit.startsAt)}</span>
-          <span>{benefit.grantModel === 'PERMANENT' ? 'Sem expiração'
-            : active && benefit.expiresAt ? remainingLabel(benefit.expiresAt, now)
-              : benefit.expiresAt ? `Encerrado em ${dateLabel(benefit.expiresAt)}`
-                : 'Prazo indisponível'}</span>
+          <span>{state === 'revoked' ? 'Acesso revogado'
+            : benefit.grantModel === 'PERMANENT' ? 'Sem expiração'
+              : active && benefit.expiresAt ? remainingLabel(benefit.expiresAt, now)
+                : benefit.expiresAt ? `Expirou em ${dateLabel(benefit.expiresAt)}`
+                  : 'Prazo indisponível'}</span>
         </div>
       </div>
     </article>
