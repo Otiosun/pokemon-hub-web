@@ -46,7 +46,7 @@ export function PremiumStagePlayerSearch({
 
   useEffect(() => {
     const version = ++requestVersion.current;
-    if (value.length < 2 || value.length > 80 || /[\x00-\x1F]/.test(value)) {
+    if (value.length < 2 || value.length > 80 || value.split('').some((char) => char.charCodeAt(0) < 32)) {
       setResults([]);
       setPhase('idle');
       return;
