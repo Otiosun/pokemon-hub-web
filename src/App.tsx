@@ -37,6 +37,9 @@ const TeamPage = lazy(() =>
 const InventoryPage = lazy(() =>
   import('./features/inventory/InventoryPage').then((module) => ({ default: module.InventoryPage })),
 );
+const BenefitsPage = lazy(() =>
+  import('./features/benefits/BenefitsPage').then((module) => ({ default: module.BenefitsPage })),
+);
 const SystemsPage = lazy(() =>
   import('./features/systems/SystemsPage').then((module) => ({ default: module.SystemsPage })),
 );
@@ -1031,6 +1034,16 @@ export function App() {
     return (
       <HubFrame active="store" destinations={hubDestinations}>
         <ChampionStorePage />
+      </HubFrame>
+    );
+  }
+
+  if (path === '/jornada/beneficios' || path === '/jornada/beneficios/') {
+    return (
+      <HubFrame active="journey" destinations={hubDestinations}>
+        <Suspense fallback={<RouteFallback module="journey" label="ABRINDO BENEFÍCIOS" />}>
+          <BenefitsPage />
+        </Suspense>
       </HubFrame>
     );
   }
