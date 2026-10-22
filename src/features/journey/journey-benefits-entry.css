@@ -1,0 +1,66 @@
+/* The benefits entry is intentionally not styled after the Inventory action. */
+.journey-benefits-entry {
+  position: relative;
+  display: grid;
+  grid-template-columns: 57px minmax(0,1fr) 26px;
+  align-items: center;
+  gap: 15px;
+  min-height: 98px;
+  margin: 12px 0 0;
+  padding: 16px 18px;
+  border: 1px solid #c8bc9f;
+  border-left: 4px solid #6f9076;
+  border-radius: 11px;
+  color: #27352c;
+  background: linear-gradient(116deg, #f8f5e9 0%,#eee8d6 100%);
+  text-decoration: none;
+  box-shadow: 0 4px 20px rgba(28,38,29,.035);
+  transition: background-color .15s ease,border-color .15s ease,transform .15s ease;
+}
+.journey-benefits-entry:hover {
+  border-color: #a5ad91;
+  border-left-color: #587c62;
+  transform: translateY(-1px);
+}
+.journey-benefits-entry:focus-visible { outline: 3px solid #a04337; outline-offset: 3px; }
+.journey-benefits-entry-art {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  border: 1px solid #c8b99d;
+  background: #e7dbc6;
+}
+.journey-benefits-entry-art img { display: block; width: 38px; height: 38px; object-fit: contain; }
+.journey-benefits-entry-copy { display: grid; gap: 3px; min-width: 0; }
+.journey-benefits-entry-copy small {
+  color: #8d5c4c;
+  font: 720 .56rem/1.3 'IBM Plex Mono',monospace;
+  letter-spacing: .08em;
+}
+.journey-benefits-entry-copy strong {
+  color: #26372d;
+  font: 790 1.05rem/1.25 'Space Grotesk',system-ui,sans-serif;
+  letter-spacing: -.018em;
+}
+.journey-benefits-entry-copy > span {
+  color: #657264;
+  font: 540 .76rem/1.45 'IBM Plex Sans',system-ui,sans-serif;
+}
+.journey-benefits-entry-arrow {
+  justify-self: end;
+  color: #627a68;
+  font: 380 2rem/1 'Space Grotesk',system-ui,sans-serif;
+}
+@media(max-width:500px) {
+  .journey-benefits-entry { grid-template-columns: 48px minmax(0,1fr) 18px; padding: 13px 12px; gap: 11px; min-height: 87px; }
+  .journey-benefits-entry-art { width: 46px; height: 46px; border-radius: 8px; }
+  .journey-benefits-entry-art img { width: 32px; height: 32px; }
+  .journey-benefits-entry-copy strong { font-size: .91rem; }
+  .journey-benefits-entry-copy > span { font-size: .7rem; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .journey-benefits-entry { transition: none; }
+  .journey-benefits-entry:hover { transform: none; }
+}
