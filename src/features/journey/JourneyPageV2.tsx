@@ -33,6 +33,7 @@ import { usePlayerPortalLocation } from './usePlayerPortalLocation';
 import './journey-page.css';
 import './journey-page-review-fixes.css';
 import './journey-uat-polish.css';
+import './journey-benefits-shortcut.css';
 
 const PROFESSION_LABELS: Record<TrainerProfession, string> = {
   CRIADOR: 'Criador',
@@ -833,6 +834,23 @@ export function JourneyPageV2({
           <span className="journey-share-action-chevron">
             <ChevronIcon />
           </span>
+        </a>
+
+        <a className="journey-share-action journey-benefits-shortcut" href="/jornada/beneficios">
+          <span className="journey-share-action-icon journey-benefits-shortcut-icon" aria-hidden="true">
+            <img
+              src="https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/2d/Medals/shaded_medal7.png"
+              alt=""
+              width="30"
+              height="30"
+              loading="lazy"
+            />
+          </span>
+          <span className="journey-share-action-copy">
+            <strong>MEUS BENEFÍCIOS</strong>
+            <small>Ver vantagens ativas, validade e histórico</small>
+          </span>
+          <span className="journey-share-action-chevron"><ChevronIcon /></span>
         </a>
 
         {firstPendingMove ? (
