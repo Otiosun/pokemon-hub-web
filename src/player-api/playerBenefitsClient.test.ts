@@ -64,6 +64,6 @@ describe('authenticated Meus Benefícios client', () => {
       expiresAt: null,
     }, after)).toBe('active');
     expect(benefitTitle('XP_2X')).toBe('Experiência em dobro');
-    expect(benefitTitle('LUCK_2X')).toBe('Sorte em dobro');
+    expect(benefitTitle('CAPTURE_LUCK_2X')).toBe('Bênção da Sorte');
   });
 });
