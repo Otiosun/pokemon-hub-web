@@ -1,0 +1,21 @@
+/* Authentic Kenney CC0 medal art; no generated iconography. */
+.journey-benefits-shortcut {
+  border-color: rgba(141, 103, 41, .6);
+  background: linear-gradient(105deg,rgba(217,174,84,.13),rgba(255,255,255,.12) 62%);
+}
+.journey-benefits-shortcut:hover { background: rgba(217,174,84,.16); }
+.journey-benefits-shortcut .journey-benefits-shortcut-icon {
+  border-color: #94733f;
+  background: rgba(241,218,167,.22);
+  color: #765521;
+}
+.journey-benefits-shortcut-icon img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+.journey-benefits-shortcut .journey-share-action-chevron { color: #80612e; }
+@media (max-width:720px) {
+  .journey-benefits-shortcut-icon img { width: 28px; height: 28px; }
+}
