@@ -240,3 +240,13 @@
 @media(prefers-reduced-motion:reduce) {
   .benefits-page * { scroll-behavior: auto; }
 }
+
+/* Remaining time has a consistent numeric rhythm without introducing another badge. */
+.benefits-card-details .is-remaining dd {
+  color: #385947;
+  font-variant-numeric: tabular-nums;
+}
+.benefits-card[data-benefit-state="expired"] .is-remaining dd,
+.benefits-card[data-benefit-state="revoked"] .is-remaining dd {
+  color: #817e72;
+}
