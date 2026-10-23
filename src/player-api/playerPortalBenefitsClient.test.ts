@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { benefitDisplayState, benefitPresentation, getOwnBenefits } from './playerPortalBenefitsClient';
+import { benefitDisplayState, benefitPresentation, getOwnBenefits, remainingTimeLabel } from './playerPortalBenefitsClient';
 import { resolvePlayerProxyRoute } from '../../api/hub/player/[...path]';
 import { resolveProductRoute } from '../navigation/productIntegrity';
 import { productRouteChunk } from '../navigation/productRoutePreload';
@@ -42,6 +42,18 @@ describe('personal benefits - read-only privacy boundary', () => {
     expect(benefitDisplayState({ ...original, administrativeStatus: 'REVOKED' })).toBe('revoked');
     expect(benefitPresentation('CAPTURE_LUCK_2X').name).toBe('Bênção da Sorte');
     expect(benefitPresentation('NOT_DEFINED').name).toBe('Benefício registrado');
+  });
+
+  it('calculates remaining duration from the actual expiry and handles permanent or inactive records', () => {
+    expect(remainingTimeLabel(original, Date.parse('2026-10-27T10:30:00.000Z')))
+      .toBe('1 dia · 1 h · 30 min');
+    expect(remainingTimeLabel(original, Date.parse('2026-10-28T11:59:20.000Z')))
+      .toBe('Menos de 1 min');
+    expect(remainingTimeLabel(original, Date.parse('2026-10-28T12:00:00.000Z')))
+      .toBe('Encerrado');
+    expect(remainingTimeLabel({ ...original, grantModel: 'PERMANENT', expiresAt: null })).toBe('Sem prazo');
+    expect(remainingTimeLabel({ ...original, administrativeStatus: 'REVOKED' })).toBe('Revogado');
+    expect(remainingTimeLabel({ ...original, currentlyActive: false })).toBe('Encerrado');
   });
 
   it('exposes only exact GET with no target player or POST route', () => {
