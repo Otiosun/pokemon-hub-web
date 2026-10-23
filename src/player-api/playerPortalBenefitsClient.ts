@@ -82,3 +82,28 @@ export function benefitPresentation(key: string): { name: string; description: s
       return { name: 'Benefício registrado', description: 'Vantagem vinculada oficialmente à sua conta.', kind: 'other' };
   }
 }
+
+/**
+ * Time left based on the absolute server expiration timestamp, never the original
+ * grant duration. Re-evaluate as the clock advances so expired grants never
+ * appear usable after the page has remained open.
+ */
+export function remainingTimeLabel(benefit: PlayerBenefit, now = Date.now()): string {
+  const state = benefitDisplayState(benefit, now);
+  if (state === 'revoked') return 'Revogado';
+  if (state === 'expired') return 'Encerrado';
+  if (benefit.grantModel === 'PERMANENT') return 'Sem prazo';
+  if (benefit.expiresAt === null) return 'Não informado';
+
+  const remainingMinutes = Math.floor((Date.parse(benefit.expiresAt) - now) / 60_000);
+  if (remainingMinutes < 1) return 'Menos de 1 min';
+  const days = Math.floor(remainingMinutes / 1_440);
+  const hours = Math.floor((remainingMinutes % 1_440) / 60);
+  const minutes = remainingMinutes % 60;
+  const parts = [
+    ...(days ? [`${days} ${days === 1 ? 'dia' : 'dias'}`] : []),
+    ...(hours ? [`${hours} h`] : []),
+    ...(minutes ? [`${minutes} min`] : []),
+  ];
+  return parts.join(' · ');
+}

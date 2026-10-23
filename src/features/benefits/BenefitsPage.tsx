@@ -4,6 +4,7 @@ import {
   benefitDisplayState,
   benefitPresentation,
   getOwnBenefits,
+  remainingTimeLabel,
   type OwnBenefitsResult,
   type PlayerBenefit,
 } from '../../player-api/playerPortalBenefitsClient';
@@ -35,8 +36,8 @@ function endLabel(benefit: PlayerBenefit): string {
   return benefit.expiresAt === null ? 'Prazo não informado' : `Até ${formattedDate(benefit.expiresAt)}`;
 }
 
-function BenefitCard({ benefit }: { benefit: PlayerBenefit }) {
-  const state = benefitDisplayState(benefit);
+function BenefitCard({ benefit, now }: { benefit: PlayerBenefit; now: number }) {
+  const state = benefitDisplayState(benefit, now);
   const presentation = benefitPresentation(benefit.entitlementKey);
   const status = state === 'active' ? 'ATIVO' : state === 'expired' ? 'EXPIRADO' : 'REVOGADO';
   return (
@@ -58,8 +59,8 @@ function BenefitCard({ benefit }: { benefit: PlayerBenefit }) {
         <dl className="benefits-card-details">
           <div><dt>Registrado em</dt><dd>{formattedDate(benefit.startsAt)}</dd></div>
           <div><dt>Validade</dt><dd>{endLabel(benefit)}</dd></div>
+          <div className="is-remaining"><dt>Tempo restante</dt><dd>{remainingTimeLabel(benefit, now)}</dd></div>
         </dl>
-        {presentation.kind === 'other' ? <small className="benefits-card-key">Registro: {benefit.entitlementKey}</small> : null}
       </div>
     </article>
   );
@@ -67,6 +68,7 @@ function BenefitCard({ benefit }: { benefit: PlayerBenefit }) {
 
 export function BenefitsPage() {
   const [state, setState] = useState<BenefitsState>({ status: 'loading' });
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     let mounted = true;
     const load = async () => {
@@ -75,12 +77,17 @@ export function BenefitsPage() {
     };
     void load();
     const refresh = () => {
-      if (document.visibilityState === 'visible') void load();
+      if (document.visibilityState === 'visible') {
+        setNow(Date.now());
+        void load();
+      }
     };
+    const clockInterval = window.setInterval(() => setNow(Date.now()), 15_000);
     window.addEventListener('focus', refresh);
     document.addEventListener('visibilitychange', refresh);
     return () => {
       mounted = false;
+      window.clearInterval(clockInterval);
       window.removeEventListener('focus', refresh);
       document.removeEventListener('visibilitychange', refresh);
     };
@@ -90,11 +97,11 @@ export function BenefitsPage() {
     if (state.status !== 'authenticated') return [];
     const order = { active: 0, expired: 1, revoked: 2 };
     return [...state.benefits].sort((a, b) =>
-      order[benefitDisplayState(a)] - order[benefitDisplayState(b)] ||
+      order[benefitDisplayState(a, now)] - order[benefitDisplayState(b, now)] ||
       a.entitlementKey.localeCompare(b.entitlementKey, 'pt-BR'));
-  }, [state]);
+  }, [state, now]);
 
-  const activeCount = benefits.filter((b) => benefitDisplayState(b) === 'active').length;
+  const activeCount = benefits.filter((b) => benefitDisplayState(b, now) === 'active').length;
   return (
     <main className="benefits-page">
       <HubModuleHeader module="journey"
@@ -142,7 +149,7 @@ export function BenefitsPage() {
               <p>O status de cada vantagem é confirmado pela API do jogo. Benefícios expirados ou revogados permanecem visíveis.</p>
             </div>
             <section className="benefits-list" aria-label="Benefícios do treinador">
-              {benefits.map((benefit) => <BenefitCard benefit={benefit} key={benefit.entitlementKey} />)}
+              {benefits.map((benefit) => <BenefitCard benefit={benefit} now={now} key={benefit.entitlementKey} />)}
             </section>
           </>
         )}
