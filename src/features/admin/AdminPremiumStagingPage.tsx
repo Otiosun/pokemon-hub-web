@@ -141,7 +141,7 @@ export function AdminPremiumStagingPage() {
           ) : null}
           {!deliveryOnly && section === 'catalog' ? (
             <>
-              <AdminPremiumFulfillmentCatalog />
+              <AdminPremiumFulfillmentCatalog onOpenCases={() => setSection('cases')} />
               <AdminPremiumMasterBallPanel key={playerId ?? 'unselected'} playerId={playerId} />
             </>
           ) : null}
