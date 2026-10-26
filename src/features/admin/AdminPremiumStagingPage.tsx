@@ -50,6 +50,9 @@ export function AdminPremiumStagingPage() {
           </header>
 
           {deliveryOnly ? <p className="premium-staging-disclaimer" role="status">Seu acesso está restrito à entrega de benefícios autorizados. Outras operações Premium continuam exclusivas do proprietário.</p> : null}
+          {deliveryOnly && admin.status === 'admin' && !admin.admin.capabilities.includes('player.read') ? (
+            <p className="premium-staging-disclaimer" role="status">A busca de jogadores também exige a permissão player.read. Peça essa permissão ao proprietário ou selecione um Player ID já verificado.</p>
+          ) : null}
           <p className="premium-staging-disclaimer" role="status">
             {local
               ? 'Este painel consulta a API do próprio operador, se habilitada e autenticada pelo servidor. Entregas alteram dados reais: confira destinatário e quantidade. Não aprova pagamentos.'
