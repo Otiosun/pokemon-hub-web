@@ -94,9 +94,11 @@ export function AdminPremiumDeliveryPanel({ playerId }: { playerId: string | nul
         // explicit input change, avoiding accidental re-issuance on another click.
       } else {
         setStatus({
-          unavailable: 'API de entregas indisponível. Nada foi confirmado.',
-          forbidden: 'Seu usuário não é proprietário autorizado.',
+          unavailable: 'A API de entregas não está disponível nesta versão do servidor. Nenhuma entrega foi confirmada.',
+          forbidden: 'Você não tem a permissão premium.delivery.grant. Solicite delegação ao proprietário.',
           unauthenticated: 'Sua sessão do Hub expirou. Entre novamente para continuar.',
+          'product-unavailable': 'Este Gamepass não está publicado para entrega no backend. Nenhum benefício foi concedido.',
+          conflict: 'Entrega em conflito com o estado atual. Consulte o histórico antes de tentar novamente.',
           rejected: 'Entrega recusada pelo servidor. Confira o histórico e tente novamente.',
         }[result.status]);
       }
