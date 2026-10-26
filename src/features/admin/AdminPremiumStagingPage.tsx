@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { usePlayerPortalAdmin } from '../../player-api/usePlayerPortalAdmin';
+import { isPremiumDeliveryDelegate } from './premiumDeliveryAccess';
 import { currentPremiumManualUiMode } from '../../player-api/premiumManualUiMode';
 import { HubMenuTrigger } from '../../components/HubNavigation';
 import { PremiumStagingSessionGate } from './PremiumStagingSessionGate';
@@ -20,6 +22,8 @@ const PLAYER_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[
 
 export function AdminPremiumStagingPage() {
   const local = currentPremiumManualUiMode() === 'local';
+  const admin = usePlayerPortalAdmin();
+  const deliveryOnly = local && admin.status === 'admin' && isPremiumDeliveryDelegate(admin.admin);
   const [draft, setDraft] = useState('');
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [selectedPlayer, setSelectedPlayer] = useState<SearchPlayer | null>(null);
@@ -45,6 +49,7 @@ export function AdminPremiumStagingPage() {
             <strong>{local ? 'API LOCAL · ATIVAÇÃO MANUAL' : 'STAGING · NÃO LIVE'}</strong>
           </header>
 
+          {deliveryOnly ? <p className="premium-staging-disclaimer" role="status">Seu acesso está restrito à entrega de benefícios autorizados. Outras operações Premium continuam exclusivas do proprietário.</p> : null}
           <p className="premium-staging-disclaimer" role="status">
             {local
               ? 'Este painel consulta a API do próprio operador, se habilitada e autenticada pelo servidor. Entregas alteram dados reais: confira destinatário e quantidade. Não aprova pagamentos.'
@@ -113,7 +118,7 @@ export function AdminPremiumStagingPage() {
               ['catalog', 'GAMEPASSES', 'COBERTURA DO CATÁLOGO'],
               ['entitlements', 'BENEFÍCIOS', 'EXPIRAÇÃO & ESTADO'],
               ['support', 'ATENDIMENTOS', 'REGISTROS AUDITÁVEIS'],
-            ] as const).map(([id, label, eyebrow]) => (
+            ] as const).filter(([id]) => !deliveryOnly || id === 'delivery').map(([id, label, eyebrow]) => (
               <button key={id} type="button" aria-pressed={section === id}
                 className={section === id ? 'is-active' : undefined}
                 onClick={() => setSection(id)}>
@@ -125,25 +130,25 @@ export function AdminPremiumStagingPage() {
           {section === 'delivery' ? (
             <AdminPremiumDeliveryPanel key={playerId ?? 'unselected'} playerId={playerId} />
           ) : null}
-          {section === 'cases' ? (
+          {!deliveryOnly && section === 'cases' ? (
             <AdminPremiumCasesPanel key={playerId ?? 'unselected'} playerId={playerId} />
           ) : null}
-          {section === 'inventory' ? (
+          {!deliveryOnly && section === 'inventory' ? (
             <AdminPremiumInventoryPanel key={playerId ?? 'unselected'} playerId={playerId} />
           ) : null}
-          {section === 'pokemon' ? (
+          {!deliveryOnly && section === 'pokemon' ? (
             <AdminPremiumPokemonPanel key={playerId ?? 'unselected'} playerId={playerId} />
           ) : null}
-          {section === 'catalog' ? (
+          {!deliveryOnly && section === 'catalog' ? (
             <>
               <AdminPremiumFulfillmentCatalog />
               <AdminPremiumMasterBallPanel key={playerId ?? 'unselected'} playerId={playerId} />
             </>
           ) : null}
-          {section === 'entitlements' ? (
+          {!deliveryOnly && section === 'entitlements' ? (
             <AdminPremiumReadPanel playerId={playerId} playerName={playerId} resource="entitlements" />
           ) : null}
-          {section === 'support' ? (
+          {!deliveryOnly && section === 'support' ? (
             <AdminPremiumSupportLedger playerId={playerId} playerName={playerId} />
           ) : null}
           <footer className="premium-staging-foot">
