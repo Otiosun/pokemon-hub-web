@@ -1,6 +1,7 @@
 import { HubMenuTrigger } from '../../components/HubNavigation';
 import { usePlayerPortalAdmin } from '../../player-api/usePlayerPortalAdmin';
 import { currentPremiumManualUiMode } from '../../player-api/premiumManualUiMode';
+import { canGrantPremiumDelivery } from './premiumDeliveryAccess';
 import './admin-page.css';
 
 const MODULES = [
@@ -170,7 +171,7 @@ export function AdminPage() {
               </article>
             );
           })}
-          {state.admin.owner && premiumMode !== null ? (
+          {canGrantPremiumDelivery(state.admin) && premiumMode !== null ? (
               <a className="admin-module-card is-authorized is-link" href="/admin/premium">
                 <header><span>CENTRAL PREMIUM</span><strong>{premiumMode === 'local' ? 'API LOCAL' : 'STAGING'}</strong></header>
                 <p>Entregas manuais de gamepasses e suporte. Sem confirmação de pagamento.</p>
