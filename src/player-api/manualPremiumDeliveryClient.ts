@@ -21,7 +21,7 @@ export interface ManualDeliveryEntry {
 
 export type ManualDeliveryResult =
   | { status: 'applied'; replayed: boolean; requestId: string }
-  | { status: 'unavailable' | 'forbidden' | 'unauthenticated' | 'rejected'; error?: string };
+  | { status: 'unavailable' | 'forbidden' | 'unauthenticated' | 'rejected' | 'product-unavailable' | 'conflict'; error?: string };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 function record(data: unknown): data is Record<string, unknown> {
@@ -87,7 +87,16 @@ export async function submitManualDelivery(
   });
   if (response.status === 401) return { status: 'unauthenticated' };
   if (response.status === 403) return { status: 'forbidden' };
-  if ([404, 502, 503].includes(response.status)) return { status: 'unavailable' };
+  if (response.status === 404) {
+    // An existing route can reject an unpublished SKU with the same HTTP code
+    // as a missing API route. Do not misreport either as a successful delivery.
+    const body: unknown = await response.json().catch(() => null);
+    return record(body) && body.error === 'PRODUCT_UNAVAILABLE'
+      ? { status: 'product-unavailable' }
+      : { status: 'unavailable' };
+  }
+  if (response.status === 502 || response.status === 503) return { status: 'unavailable' };
+  if (response.status === 409) return { status: 'conflict' };
   if (!response.ok) return { status: 'rejected', error: `HTTP_${response.status}` };
   const body: unknown = await response.json();
   if (!record(body) || body.applied !== true || typeof body.replayed !== 'boolean' ||
