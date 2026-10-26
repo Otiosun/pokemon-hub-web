@@ -10,6 +10,7 @@ import {
 import './premium-staging-session-gate.css';
 import { currentPremiumManualUiMode } from '../../player-api/premiumManualUiMode';
 import { usePlayerPortalAdmin } from '../../player-api/usePlayerPortalAdmin';
+import { canGrantPremiumDelivery, isPremiumDeliveryDelegate } from './premiumDeliveryAccess';
 
 type GateState = PremiumStageSession | { status: 'loading' };
 
@@ -34,13 +35,12 @@ function LivePremiumOwnerGate({ children }: { children: ReactNode }) {
     );
   }
 
-  if (state.status !== 'admin' || !state.admin.owner ||
-      !state.admin.capabilities.includes('central.view')) {
+  if (state.status !== 'admin' || !canGrantPremiumDelivery(state.admin)) {
     // A player cannot enumerate administrator modules, even on direct URLs.
     return (
       <section className="premium-stage-gate">
         <strong>404 · ENDEREÇO INDISPONÍVEL</strong>
-        <p>A Central Premium é restrita ao proprietário autenticado do jogo.</p>
+        <p>A Central Premium exige autorização específica de entrega ou acesso do proprietário.</p>
         <a href="/jornada">VOLTAR À JORNADA</a>
       </section>
     );
@@ -49,7 +49,7 @@ function LivePremiumOwnerGate({ children }: { children: ReactNode }) {
   return (
     <div className="premium-stage-gate-ready">
       <div className="premium-stage-gate-identity">
-        <span>PROPRIETÁRIO AUTORIZADO · HUB</span>
+        <span>{isPremiumDeliveryDelegate(state.admin) ? 'ENTREGAS AUTORIZADAS · HUB' : 'PROPRIETÁRIO AUTORIZADO · HUB'}</span>
         <a href="/admin">VOLTAR À CENTRAL ADM</a>
       </div>
       {children}
