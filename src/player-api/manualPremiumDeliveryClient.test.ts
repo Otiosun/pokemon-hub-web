@@ -39,7 +39,7 @@ describe('manual gamepass delivery UI contract', () => {
   it('does not treat a rejected, unauthorized or offline grant as delivered', async () => {
     for (const [status, outcome] of [
       [401, 'unauthenticated'], [403, 'forbidden'], [404, 'unavailable'],
-      [503, 'unavailable'], [409, 'rejected'],
+      [503, 'unavailable'], [409, 'conflict'],
     ] as const) {
       const fetcher = vi.fn(async () => new Response(null, { status }));
       expect((await submitManualDelivery({
@@ -47,6 +47,23 @@ describe('manual gamepass delivery UI contract', () => {
         reason: 'Concessão já confirmada pelo administrador.',
       }, fetcher)).status).toBe(outcome);
     }
+  });
+
+
+  it('distinguishes missing backend route from an unpublished commercial product', async () => {
+    const input = {
+      requestId, playerId, sku: 'LUCK', quantity: 1,
+      reason: 'Pedido verificado externamente pelo administrador.',
+    };
+    const unpublished = await submitManualDelivery(input, async () =>
+      new Response(JSON.stringify({ error: 'PRODUCT_UNAVAILABLE' }), {
+        status: 404, headers: { 'content-type': 'application/json' },
+      }));
+    expect(unpublished).toMatchObject({ status: 'product-unavailable' });
+
+    const routeAbsent = await submitManualDelivery(input, async () =>
+      new Response(null, { status: 404 }));
+    expect(routeAbsent).toMatchObject({ status: 'unavailable' });
   });
 
   it('reads the server-backed delivery audit trail and rejects malformed replies', async () => {
