@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { HubMenuTrigger } from '../../components/HubNavigation';
 import { getPlayerPortalInventory, type PlayerPortalInventoryItem } from '../../player-api/playerPortalClient';
 import { HubModuleHeader } from '../../components/HubModuleHeader';
@@ -147,7 +147,10 @@ export function OwnedPokemonDetailPage({
   const [evolutionMessage, setEvolutionMessage] = useState('');
   const [evolutionRequestId, setEvolutionRequestId] = useState<string | null>(null);
   const [evolutionRequestScope, setEvolutionRequestScope] = useState<string | null>(null);
+  const evolutionInstanceRef = useRef(instanceId);
   useEffect(() => {
+    if (evolutionInstanceRef.current === instanceId) return;
+    evolutionInstanceRef.current = instanceId;
     // Route changes must not carry one Pokémon's pending request to another.
     setEvolutionRequestId(null);
     setEvolutionRequestScope(null);
@@ -166,7 +169,7 @@ export function OwnedPokemonDetailPage({
       })
       .catch(() => { if (!cancelled) setEvolutionInventory({ status: 'unavailable' }); });
     return () => { cancelled = true; };
-  }, [instanceId]);
+  }, []);
   const pokemon = useMemo(
     () =>
       collection.status === 'authenticated'
