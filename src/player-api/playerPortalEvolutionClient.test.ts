@@ -15,8 +15,8 @@ describe('player evolution client', () => {
       .toEqual({ status: 'unavailable' });
     const submitted = fetcher.mock.calls;
     expect(submitted).toHaveLength(2);
-    expect(JSON.parse(submitted[0]![1]!.body as string)).toEqual(input);
-    expect(submitted[1]![1]!.body).toBe(submitted[0]![1]!.body);
+    expect(JSON.parse(submitted[0]?.[1]?.body as string)).toEqual(input);
+    expect(submitted[1]?.[1]?.body).toBe(submitted[0]?.[1]?.body);
   });
 
   it('does not invent successes on blocked, missing or forbidden operations', async () => {
