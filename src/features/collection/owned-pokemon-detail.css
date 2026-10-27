@@ -1023,3 +1023,32 @@
   font: 700 0.56rem 'IBM Plex Mono', monospace;
   letter-spacing: 0.045em;
 }
+
+
+/* Stage 2: evolution is an explicit, server-authorized player action. */
+.owned-evolution {
+  display: grid;
+  gap: 0.8rem;
+  margin: 1.25rem 0;
+  padding: 1rem;
+  border: 1px solid rgba(116, 129, 148, 0.35);
+  border-radius: 0.65rem;
+  background: rgba(116, 129, 148, 0.06);
+}
+.owned-evolution header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem; }
+.owned-evolution header span { font-size: 0.72rem; letter-spacing: 0.12em; }
+.owned-evolution p { margin: 0; line-height: 1.55; }
+.owned-evolution select,
+.owned-evolution button {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid currentColor;
+  border-radius: 0.4rem;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+}
+.owned-evolution button:not(:disabled) { cursor: pointer; }
+.owned-evolution button:disabled { opacity: 0.5; cursor: not-allowed; }
+.owned-evolution-approval { display: flex; align-items: flex-start; gap: 0.6rem; line-height: 1.45; }
+.owned-evolution-approval input { margin-top: 0.2rem; flex: 0 0 auto; }
