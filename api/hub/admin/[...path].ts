@@ -1,7 +1,7 @@
 import { isSafePremiumStagingMutation, premiumStagingForbidden } from '../../../src/player-api/premiumStagingRequestGuard.js';
 import { proxyPlayerPortalRequest } from '../../../src/player-api/playerPortalProxy.js';
 import { readPlayerPortalApiBaseUrl, readPremiumManualApiBaseUrl } from '../../../src/player-api/playerPortalServerRuntime.js';
-import { resolvePremiumStageAdminRoute } from '../../../src/player-api/premiumStagingRoutes.js';
+import { resolvePremiumStageAdminRoute, type PremiumStageRoute } from '../../../src/player-api/premiumStagingRoutes.js';
 import { clearPremiumStageCookie, scopedSessionCookie } from '../../../src/player-api/premiumStagingSessionCookies.js';
 
 const UUID_PATTERN =
@@ -319,7 +319,7 @@ export function canDelegatePremiumRoute(
   if (route.allowedMethod === 'POST' && target === '/v1/hub/admin/premium/delivery')
     return true;
   if (route.allowedMethod === 'GET' &&
-      /^\\/v1\\/hub\\/admin\\/premium\\/players\\/[0-9a-f-]{36}\\/deliveries$/i.test(target))
+      /^\/v1\/hub\/admin\/premium\/players\/[0-9a-f-]{36}\/deliveries$/i.test(target))
     return true;
   if (route.allowedMethod === 'GET' &&
       target.startsWith('/v1/hub/admin/players?q=') &&
