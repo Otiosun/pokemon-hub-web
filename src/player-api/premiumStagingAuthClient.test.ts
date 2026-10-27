@@ -46,6 +46,44 @@ describe('Premium staging-only session client', () => {
     expect(playerSession.mock.calls[0]![0]).toBe('/api/hub/admin/premium-auth/player');
   });
 
+  it('accepts delivery-only delegated staging sessions without owner privileges', async () => {
+    const response = (owner: boolean, capabilities: string[]) => vi.fn(
+      async (_url: RequestInfo | URL, _init?: RequestInit) =>
+        Response.json({ admin: { principalId: principal, owner, capabilities } }),
+    );
+    const delegate = response(false, ['central.view', 'premium.delivery.grant', 'player.read']);
+    expect(await readPremiumStageSession('delivery', delegate)).toMatchObject({
+      status: 'ready',
+      owner: false,
+      canSearchPlayers: true,
+      label: 'ENTREGAS AUTORIZADAS · STAGING',
+    });
+    expect(delegate.mock.calls[0]![0]).toBe('/api/hub/admin/premium-auth/self');
+    const noPlayerRead = response(false, ['central.view', 'premium.delivery.grant']);
+    expect(await readPremiumStageSession('delivery', noPlayerRead)).toMatchObject({
+      status: 'ready',
+      owner: false,
+      canSearchPlayers: false,
+    });
+    expect((await readPremiumStageSession('owner', delegate)).status).toBe('forbidden');
+    for (const caps of [
+      ['central.view', 'player.read', 'inventory.adjust'],
+      ['premium.delivery.grant', 'player.read'],
+      [],
+    ]) {
+      expect((await readPremiumStageSession('delivery', response(false, caps))).status)
+        .toBe('forbidden');
+    }
+    expect(await readPremiumStageSession('delivery', response(true, ['central.view'])))
+      .toMatchObject({ status: 'ready', owner: true, canSearchPlayers: true });
+    const malformed = vi.fn(async () =>
+      Response.json({ admin: { principalId: principal, owner: false, capabilities: [
+        'central.view', 'premium.delivery.grant', null,
+      ] } }),
+    );
+    expect((await readPremiumStageSession('delivery', malformed)).status).toBe('forbidden');
+  });
+
   it('returns unavailable or unauthenticated without inventing a staging session', async () => {
     for (const code of [401, 404, 502, 503]) {
       const fetcher = vi.fn(async () => new Response(null, { status: code }));
