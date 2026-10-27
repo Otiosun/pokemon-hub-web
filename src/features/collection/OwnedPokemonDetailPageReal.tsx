@@ -19,6 +19,7 @@ import { readCollectionSession } from './collectionSession';
 import { createOwnedPokemonView, findOwnedPokemonView, type OwnedPokemonSex } from './ownedPokemonView';
 import { useOwnedPokemonCollection } from './useOwnedPokemonCollection';
 import { usePlayerPortalMoveChoices } from './usePlayerPortalMoveChoices';
+import { ambiguousEvolutionKeys, evolutionTriggerKey, uniqueEvolutionOption } from './evolutionOptionSelection';
 import { requestPlayerEvolution } from '../../player-api/playerPortalEvolutionClient';
 import './owned-pokemon-detail.css';
 import './owned-pokemon-detail-menu.css';
@@ -303,10 +304,9 @@ export function OwnedPokemonDetailPage({
   const candidateEvolutions = evolutionOptions.status === 'authenticated'
     ? evolutionOptions.options
     : [];
-  const selectedEvolution = candidateEvolutions.find((option) =>
-    option.triggerKind === evolutionTrigger &&
-    (option.triggerKind !== 'ITEM' || option.itemId === evolutionItemId),
-  );
+  const chosenEvolutionKey = evolutionTrigger === 'ITEM' ? `ITEM:${evolutionItemId}` : evolutionTrigger;
+  const ambiguousKeys = ambiguousEvolutionKeys(candidateEvolutions);
+  const selectedEvolution = uniqueEvolutionOption(candidateEvolutions, chosenEvolutionKey);
   const hasItem = selectedEvolution?.triggerKind === 'ITEM' &&
     selectedEvolution.itemQuantity !== null &&
     BigInt(selectedEvolution.itemQuantity) > 0n;
@@ -857,10 +857,13 @@ export function OwnedPokemonDetailPage({
                       <option value="">Escolha uma evolução do catálogo</option>
                       {candidateEvolutions.map((option, index) => (
                         <option
-                          key={`${option.triggerKind}:${option.itemId ?? index}`}
-                          value={option.triggerKind === 'ITEM' ? `ITEM:${option.itemId}` : option.triggerKind}
+                          key={`${evolutionTriggerKey(option)}:${index}`}
+                          value={evolutionTriggerKey(option)}
+                          disabled={ambiguousKeys.has(evolutionTriggerKey(option))}
                         >
-                          {option.targetDisplayName} · {option.triggerKind === 'LEVEL'
+                          {option.targetDisplayName} · {ambiguousKeys.has(evolutionTriggerKey(option))
+                            ? 'Seleção ambígua — precisa de regra específica'
+                            : option.triggerKind === 'LEVEL'
                             ? `Nível ${option.requiredLevel}`
                             : option.triggerKind === 'ITEM'
                               ? `${option.itemDisplayName} (×${option.itemQuantity})`
@@ -868,6 +871,9 @@ export function OwnedPokemonDetailPage({
                         </option>
                       ))}
                     </select>
+                    {ambiguousKeys.size > 0 ? (
+                      <p>Algumas ramificações compartilham o mesmo gatilho e não podem ser escolhidas com segurança nesta interface. Consulte as opções no comando /evolucao do WhatsApp; nenhuma evolução ambígua será enviada.</p>
+                    ) : null}
                     {selectedEvolution ? (
                       <p>
                         Destino: <strong>{selectedEvolution.targetDisplayName}</strong>.
