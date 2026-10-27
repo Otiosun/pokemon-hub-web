@@ -303,8 +303,35 @@ function isLivePremiumDeployment(): boolean {
     Reflect.get(env, 'VERCEL_ENV') === 'production';
 }
 
-async function authorizeLivePremiumOwner(
+/** An explicit delegation applies ONLY to the three catalog/grant/history routes
+ * plus the read-only trainer search needed to select a recipient. It does not
+ * allow opening cases, granting inventory/Pokémon, or reading financial data. */
+export function canDelegatePremiumRoute(
+  admin: { owner: boolean; capabilities: readonly string[] },
+  route: PremiumStageRoute,
+): boolean {
+  if (!admin.capabilities.includes('central.view')) return false;
+  if (admin.owner) return true;
+  if (!admin.capabilities.includes('premium.delivery.grant')) return false;
+  const target = route.upstreamPath;
+  if (route.allowedMethod === 'GET' && target === '/v1/hub/admin/premium/delivery/catalog')
+    return true;
+  if (route.allowedMethod === 'POST' && target === '/v1/hub/admin/premium/delivery')
+    return true;
+  if (route.allowedMethod === 'GET' &&
+      /^\\/v1\\/hub\\/admin\\/premium\\/players\\/[0-9a-f-]{36}\\/deliveries$/i.test(target))
+    return true;
+  if (route.allowedMethod === 'GET' &&
+      target.startsWith('/v1/hub/admin/players?q=') &&
+      target.endsWith('&limit=8') &&
+      admin.capabilities.includes('player.read'))
+    return true;
+  return false;
+}
+
+async function authorizeLivePremiumAccess(
   request: Request,
+  route?: PremiumStageRoute,
 ): Promise<{ admin: unknown } | Response> {
   const baseUrl = readPremiumManualApiBaseUrl();
   if (baseUrl === null) return premiumAccessError(503, 'PREMIUM_UNAVAILABLE');
@@ -332,9 +359,16 @@ async function authorizeLivePremiumOwner(
   const body: unknown = await check.json().catch(() => null);
   if (typeof body !== 'object' || body === null || !('admin' in body) ||
       typeof body.admin !== 'object' || body.admin === null ||
-      !('owner' in body.admin) || body.admin.owner !== true ||
+      !('owner' in body.admin) || typeof body.admin.owner !== 'boolean' ||
       !('capabilities' in body.admin) || !Array.isArray(body.admin.capabilities) ||
-      !body.admin.capabilities.includes('central.view')) {
+      !body.admin.capabilities.every((value: unknown) => typeof value === 'string') ||
+      !body.admin.capabilities.includes('central.view') ||
+      !(route === undefined
+        ? body.admin.owner === true
+        : canDelegatePremiumRoute(
+            body.admin as { owner: boolean; capabilities: string[] },
+            route,
+          ))) {
     return premiumAccessError(403, 'PREMIUM_FORBIDDEN');
   }
   return { admin: body.admin };
@@ -368,7 +402,7 @@ export default {
           return Promise.resolve(jsonNotFound('auth-route'));
         }
         return (async () => {
-          const owner = await authorizeLivePremiumOwner(request);
+          const owner = await authorizeLivePremiumAccess(request);
           if (owner instanceof Response) return owner;
           return new Response(JSON.stringify(owner), {
             status: 200,
@@ -432,7 +466,7 @@ export default {
       if (premiumRoute === null) return Promise.resolve(jsonNotFound('premium-route'));
       if (isLivePremiumDeployment()) {
         return (async () => {
-          const owner = await authorizeLivePremiumOwner(request);
+          const owner = await authorizeLivePremiumAccess(request, premiumRoute);
           if (owner instanceof Response) return owner;
           return proxyPlayerPortalRequest(request, {
             baseUrl: readPremiumManualApiBaseUrl(),
