@@ -30,6 +30,7 @@ export type PlayerEvolutionResponse =
 export async function requestPlayerEvolution(
   input: PlayerEvolutionInput,
   fetcher: PlayerPortalFetcher = fetch,
+  showcaseActive: boolean = isAdvancedShowcaseActive(),
 ): Promise<PlayerEvolutionResponse> {
   if (
     !UUID.test(input.pokemonInstanceId) ||
@@ -42,7 +43,7 @@ export async function requestPlayerEvolution(
   ) throw new Error('Solicitação de evolução inválida.');
 
   // The showcase is deliberately read-only for evolutionary mutations.
-  if (isAdvancedShowcaseActive()) return { status: 'unavailable' };
+  if (showcaseActive) return { status: 'unavailable' };
 
   const response = await fetcher('/api/hub/player/pokemon/evolve', {
     method: 'POST',
