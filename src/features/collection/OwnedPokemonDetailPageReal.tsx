@@ -855,9 +855,9 @@ export function OwnedPokemonDetailPage({
                       }}
                     >
                       <option value="">Escolha uma evolução do catálogo</option>
-                      {candidateEvolutions.map((option, index) => (
+                      {candidateEvolutions.map((option) => (
                         <option
-                          key={`${evolutionTriggerKey(option)}:${index}`}
+                          key={`${evolutionTriggerKey(option)}:${option.targetDisplayName}:${option.requiredLevel ?? 'na'}:${option.relativePhysicalStats ?? 'na'}`}
                           value={evolutionTriggerKey(option)}
                           disabled={ambiguousKeys.has(evolutionTriggerKey(option))}
                         >
