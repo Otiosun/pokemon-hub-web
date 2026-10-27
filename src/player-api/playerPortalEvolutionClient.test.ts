@@ -8,7 +8,7 @@ const input = { pokemonInstanceId, requestId, trigger: { kind: 'LEVEL' as const 
 
 describe('player evolution client', () => {
   it('preserves the same request ID and same payload across repeated calls', async () => {
-    const fetcher = vi.fn(async () => new Response(null, { status: 503 }));
+    const fetcher = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => new Response(null, { status: 503 }));
     expect(await requestPlayerEvolution(input, fetcher, false))
       .toEqual({ status: 'unavailable' });
     expect(await requestPlayerEvolution(input, fetcher, false))
