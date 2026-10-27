@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { CHAMPION_STORE_PRODUCTS } from '../store/championStoreCatalog';
 import { AdminPremiumFulfillmentCatalog, getStoreFulfillmentReadiness } from './AdminPremiumFulfillmentCatalog';
@@ -12,9 +11,9 @@ describe('Champions Store: no product is falsely shown as delivered', () => {
       .map((p) => p.code)).toEqual(['LUCK', '2XP']);
   });
   it('shows a manual case route, never a fake automated-delivery button for undefined packs', () => {
-    const html = renderToStaticMarkup(createElement(AdminPremiumFulfillmentCatalog, {
-      onOpenCases: () => {},
-    }));
+    const html = renderToStaticMarkup(
+      <AdminPremiumFulfillmentCatalog onOpenCases={() => {}} />,
+    );
     expect(html).toContain('ABRIR ATENDIMENTO MANUAL DE GAMEPASSES');
     expect(html).toContain('ATENDIMENTO MANUAL · SEM EXECUTOR');
     expect(html).toContain('COM EXECUTOR');
