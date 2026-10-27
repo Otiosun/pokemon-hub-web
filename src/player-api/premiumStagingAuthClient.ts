@@ -1,7 +1,7 @@
 /** Isolated staging-only authentication. Never read the normal Hub session. */
-export type PremiumStageRole = 'owner' | 'player';
+export type PremiumStageRole = 'owner' | 'delivery' | 'player';
 export type PremiumStageSession =
-  | { status: 'ready'; label: string }
+  | { status: 'ready'; label: string; owner?: boolean; canSearchPlayers?: boolean }
   | { status: 'unauthenticated' | 'unavailable' | 'forbidden' };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -27,17 +27,29 @@ export async function readPremiumStageSession(
   if (!res.ok) throw new Error('Não foi possível conferir a sessão de testes.');
   const body: unknown = await res.json();
   if (!record(body)) throw new Error('Sessão de testes retornada em formato inválido.');
-  if (role === 'owner') {
-    if (body.admin === null) return { status: 'forbidden' };
+  if (role === 'owner' || role === 'delivery') {
     if (
       !record(body.admin) ||
       !UUID.test(String(body.admin.principalId)) ||
-      body.admin.owner !== true ||
+      typeof body.admin.owner !== 'boolean' ||
       !Array.isArray(body.admin.capabilities) ||
+      !body.admin.capabilities.every((capability: unknown) => typeof capability === 'string') ||
       !body.admin.capabilities.includes('central.view')
     )
       return { status: 'forbidden' };
-    return { status: 'ready', label: 'PROPRIETÁRIO DE STAGING' };
+    // The delivery role permits only an explicitly delegated grant capability.
+    // The backend independently authorizes every subsequent Premium route.
+    if (
+      !body.admin.owner &&
+      (role === 'owner' || !body.admin.capabilities.includes('premium.delivery.grant'))
+    )
+      return { status: 'forbidden' };
+    return {
+      status: 'ready',
+      label: body.admin.owner ? 'PROPRIETÁRIO DE STAGING' : 'ENTREGAS AUTORIZADAS · STAGING',
+      owner: body.admin.owner,
+      canSearchPlayers: body.admin.owner || body.admin.capabilities.includes('player.read'),
+    };
   }
   if (!record(body.profile) || !UUID.test(String(body.profile.playerId))) {
     throw new Error('Perfil de teste retornado em formato inválido.');
