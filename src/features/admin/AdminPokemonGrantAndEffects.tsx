@@ -86,7 +86,10 @@ export function AdminPokemonGrantAndEffects({
   const [effectState, setEffectState] = useState<Feedback>({ kind: 'idle', text: '' });
   const createIntentRef = useRef<PendingPokemonAdminIntent | null>(null);
   const effectIntentRef = useRef<PendingPokemonAdminIntent | null>(null);
+  const previousPlayerIdRef = useRef(playerId);
   useEffect(() => {
+    if (previousPlayerIdRef.current === playerId) return;
+    previousPlayerIdRef.current = playerId;
     createIntentRef.current = null;
     effectIntentRef.current = null;
   }, [playerId]);
