@@ -3,7 +3,8 @@ import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import premiumProxy from '../../api/hub/admin/[...path]';
-import { HUB_COOKIE } from './premiumStagingSessionCookies';
+import { HUB_COOKIE, PREMIUM_STAGE_COOKIE } from './premiumStagingSessionCookies';
+import { readPremiumStageSession } from './premiumStagingAuthClient';
 import {
   readManualDeliveryCatalog, readManualDeliveryHistory, submitManualDelivery,
 } from './manualPremiumDeliveryClient';
@@ -181,6 +182,84 @@ describe.sequential('Hub web + BFF + backend Premium HTTP + disposable PostgreSQ
       "(SELECT count(*)::text FROM premium_orders) AS orders",
     );
     expect(row.rows[0]).toEqual({ grants: '2', payments: '0', orders: '0' });
+  });
+
+
+  it('uses the REAL preview staging BFF cookie boundary for delegated Premium access', async () => {
+    // All origins are synthetic; the production base is deliberately inert.
+    // A full PostgreSQL-backed API and a distinct signed staging session live
+    // in this one disposable runner, never in the production game.
+    vi.stubEnv('VERCEL_ENV', 'preview');
+    vi.stubEnv('PLAYER_PORTAL_API_BASE_URL', 'https://never-contact-production.invalid');
+    vi.stubEnv('PREMIUM_STAGING_ENABLED', '1');
+    vi.stubEnv('PREMIUM_STAGING_API_BASE_URL', upstream);
+    vi.stubEnv('PREMIUM_STAGING_APPROVED_ORIGIN', upstream);
+    const stageCookie = PREMIUM_STAGE_COOKIE + '=synthetic.signed';
+    const stageFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const method = init?.method ?? 'GET';
+      const headers = new Headers(init?.headers);
+      headers.set('cookie', stageCookie);
+      if (method === 'POST') headers.set('origin', hub);
+      return premiumProxy.fetch(new Request(new URL(String(input), hub), {
+        method,
+        headers,
+        ...(init?.body ? { body: init.body } : {}),
+      }));
+    };
+    try {
+      adminRole = 'delegate';
+      expect(await readPremiumStageSession('delivery', stageFetch)).toMatchObject({
+        status: 'ready',
+        owner: false,
+        canSearchPlayers: true,
+        label: 'ENTREGAS AUTORIZADAS · STAGING',
+      });
+      expect((await readPremiumStageSession('owner', stageFetch)).status).toBe('forbidden');
+
+      const noCookie = await premiumProxy.fetch(
+        new Request(hub + '/api/hub/admin/premium/delivery/catalog'),
+      );
+      expect(noCookie.status).toBe(401);
+      const liveCookieOnly = await premiumProxy.fetch(
+        new Request(hub + '/api/hub/admin/premium/delivery/catalog', {
+          headers: { cookie },
+        }),
+      );
+      expect(liveCookieOnly.status).toBe(401);
+
+      const catalogue = await readManualDeliveryCatalog(stageFetch);
+      expect(catalogue.map((product) => product.sku)).toEqual(['2XP', 'LUCK']);
+      const grant = { requestId: randomUUID(), playerId, sku: '2XP', quantity: 1,
+        reason: 'Teste delegado isolado de staging com PostgreSQL descartável.' };
+      expect(await submitManualDelivery(grant, stageFetch)).toMatchObject({
+        status: 'applied', replayed: false,
+      });
+      expect(await submitManualDelivery(grant, stageFetch)).toMatchObject({
+        status: 'applied', replayed: true,
+      });
+      expect(await readManualDeliveryHistory(playerId, stageFetch)).toEqual(
+        expect.arrayContaining([expect.objectContaining({
+          requestId: grant.requestId, sku: '2XP', durationSeconds: 604800,
+        })]),
+      );
+      const ownerOnly = await stageFetch(
+        '/api/hub/admin/premium?playerId=' + playerId + '&resource=orders',
+      );
+      expect(ownerOnly.status).toBe(403);
+      adminRole = 'ordinary-adm';
+      expect((await readPremiumStageSession('delivery', stageFetch)).status).toBe('forbidden');
+      expect((await stageFetch('/api/hub/admin/premium/delivery/catalog')).status).toBe(403);
+      // No automated money flow has occurred, even through preview staging.
+      const row = await pool.query(
+        "SELECT (SELECT count(*)::text FROM premium_payment_events) AS payments, " +
+        "(SELECT count(*)::text FROM premium_orders) AS orders",
+      );
+      expect(row.rows[0]).toEqual({ payments: '0', orders: '0' });
+    } finally {
+      vi.stubEnv('VERCEL_ENV', 'production');
+      vi.stubEnv('PLAYER_PORTAL_API_BASE_URL', upstream);
+      adminRole = 'owner';
+    }
   });
 
 });
