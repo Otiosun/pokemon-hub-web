@@ -406,7 +406,10 @@ export function OwnedPokemonCollectionPage() {
       );
     } catch {
       setOrganizerStatus('error');
-      setOrganizerMessage('Não foi possível salvar a posição agora. A coleção não foi alterada.');
+      setLastMove(null);
+      setOrganizerPokemonId('');
+      setOrganizerMessage('Resultado incerto: a troca pode ter sido aplicada. Recarregando o Time/Box; confira a posição antes de repetir.');
+      void collection.refresh();
     }
   };
 
@@ -431,7 +434,10 @@ export function OwnedPokemonCollectionPage() {
       setOrganizerMessage('Última mudança desfeita.');
     } catch {
       setOrganizerStatus('error');
-      setOrganizerMessage('Não foi possível desfazer a última mudança.');
+      setLastMove(null);
+      setOrganizerPokemonId('');
+      setOrganizerMessage('Resultado incerto ao desfazer. Confira as posições atualizadas antes de outra movimentação.');
+      void collection.refresh();
     }
   };
 
