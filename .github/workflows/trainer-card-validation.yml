@@ -138,7 +138,6 @@ jobs:
               --no-sandbox \
               --disable-gpu \
               --disable-background-networking \
-            --disable-background-networking \
               --hide-scrollbars \
               --window-size=900,1000 \
               --virtual-time-budget=35000 \
@@ -174,7 +173,6 @@ jobs:
               --no-sandbox \
               --disable-gpu \
               --disable-background-networking \
-            --disable-background-networking \
               --hide-scrollbars \
               --window-size=900,1000 \
               --virtual-time-budget=35000 \
