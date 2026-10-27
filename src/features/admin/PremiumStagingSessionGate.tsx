@@ -140,7 +140,9 @@ function IsolatedPreviewPremiumGate({
       ) : (
         <>
           <p>{state.status === 'forbidden'
-            ? 'Esta sessão não tem a permissão de proprietário exigida.'
+            ? access === 'delivery'
+              ? 'Esta sessão não possui autorização para entregas Premium.'
+              : 'Esta sessão não tem a permissão de proprietário exigida.'
             : local ? 'Acesso ao próprio jogo: envie /hub ao bot, copie o link novo sem abri-lo e cole abaixo. O link expira em 5 minutos e só funciona uma vez. Nenhum pagamento é confirmado aqui.' : 'A sessão do jogo real não funciona aqui. Entre apenas com um ticket temporário emitido pela API isolada de testes.'}</p>
           <form onSubmit={(event) => { event.preventDefault(); void exchange(); }}>
             <label htmlFor={access === 'owner' ? 'premium-stage-ticket-owner' : 'premium-stage-ticket-player'}>
