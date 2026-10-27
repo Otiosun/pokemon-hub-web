@@ -163,7 +163,9 @@ export function TeamPage({ playerPortalSession }: TeamPageProps) {
       setSourceId(null);
       setOrganizingMessage(successMessage);
     } catch {
-      setOrganizingMessage('Não foi possível alterar a formação agora.');
+      setSourceId(null);
+      setOrganizingMessage('Resultado incerto: o servidor pode ter mudado o Time/Box. Recarregando a formação; confira antes de repetir.');
+      void collection.refresh();
     } finally {
       setOrganizingStatus('idle');
     }
