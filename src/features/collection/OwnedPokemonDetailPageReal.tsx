@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { HubMenuTrigger } from '../../components/HubNavigation';
+import { getPlayerPortalInventory, type PlayerPortalInventoryItem } from '../../player-api/playerPortalClient';
 import { HubModuleHeader } from '../../components/HubModuleHeader';
 import { OwnedPokemonImage } from '../../visual-assets/PokemonPreviewImage';
 import {
@@ -134,11 +135,30 @@ export function OwnedPokemonDetailPage({
   } | null>(null);
   const collection = useOwnedPokemonCollection();
   const moveChoices = usePlayerPortalMoveChoices();
-  const [evolutionTrigger, setEvolutionTrigger] = useState<'LEVEL' | 'CONDITION'>('LEVEL');
+  const [evolutionTrigger, setEvolutionTrigger] = useState<'LEVEL' | 'CONDITION' | 'ITEM'>('LEVEL');
+  const [evolutionItemId, setEvolutionItemId] = useState('');
+  const [evolutionInventory, setEvolutionInventory] = useState<
+    | { status: 'loading' }
+    | { status: 'ready'; items: readonly PlayerPortalInventoryItem[] }
+    | { status: 'unavailable' }
+  >({ status: 'loading' });
   const [evolutionConfirmed, setEvolutionConfirmed] = useState(false);
   const [evolutionBusy, setEvolutionBusy] = useState(false);
   const [evolutionMessage, setEvolutionMessage] = useState('');
   const [evolutionRequestId, setEvolutionRequestId] = useState<string | null>(null);
+  const [evolutionRequestScope, setEvolutionRequestScope] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void getPlayerPortalInventory()
+      .then((result) => {
+        if (cancelled) return;
+        setEvolutionInventory(result.status === 'authenticated'
+          ? { status: 'ready', items: result.inventory }
+          : { status: 'unavailable' });
+      })
+      .catch(() => { if (!cancelled) setEvolutionInventory({ status: 'unavailable' }); });
+    return () => { cancelled = true; };
+  }, [instanceId]);
   const pokemon = useMemo(
     () =>
       collection.status === 'authenticated'
@@ -276,32 +296,60 @@ export function OwnedPokemonDetailPage({
   const moveLearningBlocked =
     moveChoices.state.status === 'authenticated' && moveChoices.state.blockedByBattle;
 
+  const availableEvolutionItems = evolutionInventory.status === 'ready'
+    ? evolutionInventory.items.filter((item) => {
+        try { return BigInt(item.quantity) > 0n; } catch { return false; }
+      })
+    : [];
+  const selectedEvolutionItem = availableEvolutionItems.find((item) => item.itemId === evolutionItemId);
+  const currentEvolutionScope = `${instanceId}:${evolutionTrigger}:${evolutionTrigger === 'ITEM' ? evolutionItemId : ''}`;
+  const evolutionRetryLocked = evolutionRequestId !== null && evolutionRequestScope !== null;
+  const evolutionReady = evolutionConfirmed && !evolutionBusy &&
+    (evolutionTrigger !== 'ITEM' || selectedEvolutionItem !== undefined) &&
+    (!evolutionRetryLocked || evolutionRequestScope === currentEvolutionScope);
+
   const requestEvolution = async () => {
-    if (!evolutionConfirmed || evolutionBusy) return;
+    if (!evolutionReady) return;
     const requestId = evolutionRequestId ?? crypto.randomUUID();
-    setEvolutionRequestId(requestId); // Keep the same key after uncertain HTTP failures.
+    setEvolutionRequestId(requestId);
+    setEvolutionRequestScope(currentEvolutionScope); // Never change payload on an uncertain retry.
     setEvolutionBusy(true);
     setEvolutionMessage('');
     try {
       const result = await requestPlayerEvolution({
         pokemonInstanceId: instanceId,
         requestId,
-        trigger: { kind: evolutionTrigger },
+        trigger: evolutionTrigger === 'ITEM'
+          ? { kind: 'ITEM', itemId: evolutionItemId }
+          : { kind: evolutionTrigger },
       });
       if (result.status === 'applied') {
         setEvolutionRequestId(null);
+        setEvolutionRequestScope(null);
         setEvolutionConfirmed(false);
+        collection.replacePokemon(result.pokemon);
         setEvolutionMessage(result.replayed
           ? 'Evolução já registrada. O pedido não foi repetido.'
           : 'Evolução realizada. Os dados do Pokémon foram atualizados.');
         await collection.refresh();
       } else if (result.status === 'blocked') {
+        setEvolutionRequestId(null);
+        setEvolutionRequestScope(null);
         setEvolutionMessage('Evoluções são bloqueadas durante uma batalha ativa.');
       } else if (result.status === 'rejected') {
-        setEvolutionMessage('O Pokémon ainda não atende às condições desta evolução. Nenhuma evolução foi realizada.');
+        setEvolutionRequestId(null);
+        setEvolutionRequestScope(null);
+        setEvolutionConfirmed(false);
+        setEvolutionMessage(result.code === 'REVISION_CONFLICT'
+          ? 'A chave da tentativa entrou em conflito. Confira o Pokémon antes de tentar outro pedido.'
+          : 'O Pokémon não atende às condições desta evolução ou o item não é compatível. Nenhuma evolução foi confirmada.');
       } else if (result.status === 'not-found') {
+        setEvolutionRequestId(null);
+        setEvolutionRequestScope(null);
         setEvolutionMessage('Este Pokémon não foi encontrado na sua conta.');
       } else if (result.status === 'unauthenticated') {
+        setEvolutionRequestId(null);
+        setEvolutionRequestScope(null);
         setEvolutionMessage('Entre novamente no Hub para autorizar evoluções.');
       } else {
         setEvolutionMessage('Resposta indisponível. O resultado é incerto; ao tentar de novo, a mesma chave será reutilizada.');
@@ -759,27 +807,61 @@ export function OwnedPokemonDetailPage({
                 <label htmlFor="owned-evolution-trigger">Verificação</label>
                 <select
                   id="owned-evolution-trigger"
-                  disabled={evolutionBusy}
+                  disabled={evolutionBusy || evolutionRetryLocked}
                   value={evolutionTrigger}
                   onChange={(event) => {
-                    setEvolutionTrigger(event.target.value === 'CONDITION' ? 'CONDITION' : 'LEVEL');
+                    setEvolutionTrigger(event.target.value === 'ITEM' ? 'ITEM' : event.target.value === 'CONDITION' ? 'CONDITION' : 'LEVEL');
+                    setEvolutionItemId('');
                     setEvolutionRequestId(null);
+                    setEvolutionRequestScope(null);
                     setEvolutionConfirmed(false);
                     setEvolutionMessage('');
                   }}
                 >
                   <option value="LEVEL">Requisitos de nível</option>
                   <option value="CONDITION">Condição especial já ativada</option>
+                  <option value="ITEM">Usar um item do inventário</option>
                 </select>
+                {evolutionTrigger === 'ITEM' ? (
+                  <>
+                    <label htmlFor="owned-evolution-item">Item a utilizar</label>
+                    {evolutionInventory.status === 'loading' ? <p>Carregando inventário…</p>
+                    : evolutionInventory.status === 'unavailable' ? <p role="status">Inventário indisponível: não é seguro solicitar evolução por item agora.</p>
+                    : availableEvolutionItems.length === 0 ? <p>Nenhum item disponível no inventário.</p>
+                    : (
+                      <select
+                        id="owned-evolution-item"
+                        value={evolutionItemId}
+                        disabled={evolutionBusy || evolutionRetryLocked}
+                        onChange={(event) => {
+                          setEvolutionItemId(event.target.value);
+                          setEvolutionConfirmed(false);
+                          setEvolutionRequestId(null);
+                          setEvolutionRequestScope(null);
+                          setEvolutionMessage('');
+                        }}
+                      >
+                        <option value="">Selecione um item que possa evoluir este Pokémon</option>
+                        {availableEvolutionItems.map((item) => (
+                          <option key={item.itemId} value={item.itemId}>
+                            {item.displayName} · ×{item.quantity}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    <small>Esta lista mostra itens que você possui, não itens evolutivos confirmados. O servidor valida a compatibilidade antes de consumir uma unidade.</small>
+                  </>
+                ) : null}
                 <label className="owned-evolution-approval">
-                  <input type="checkbox" checked={evolutionConfirmed} disabled={evolutionBusy}
+                  <input type="checkbox" checked={evolutionConfirmed} disabled={evolutionBusy || (evolutionTrigger === 'ITEM' && !selectedEvolutionItem)}
                     onChange={(event) => setEvolutionConfirmed(event.target.checked)} />
                   Confirmo que desejo solicitar esta evolução ao servidor.
                 </label>
-                <button type="button" disabled={!evolutionConfirmed || evolutionBusy}
+                <button type="button" disabled={!evolutionReady}
                   onClick={() => void requestEvolution()}>
                   {evolutionBusy ? 'CONSULTANDO SERVIDOR…' : evolutionRequestId ? 'REPETIR MESMO PEDIDO' : 'CONFIRMAR EVOLUÇÃO'}
                 </button>
+                {evolutionRetryLocked ? <small>Há uma solicitação sem confirmação definitiva. Os dados estão travados para uma repetição segura com a mesma chave.</small> : null}
                 {evolutionMessage ? <p role="status">{evolutionMessage}</p> : null}
               </section>
 
