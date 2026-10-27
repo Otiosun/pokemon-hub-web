@@ -100,7 +100,9 @@ describe('manual gamepass delivery UI contract', () => {
   });
 
   it('treats a gateway failure as uncertain even when upstream may have granted the order', async () => {
-    const fetcher = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => new Response(null, { status: 502 }));
+    const fetcher = vi.fn(
+      async (_url: RequestInfo | URL, _init?: RequestInit) => new Response(null, { status: 502 }),
+    );
     const input = {
       requestId,
       playerId,
@@ -110,7 +112,9 @@ describe('manual gamepass delivery UI contract', () => {
     };
     expect(await submitManualDelivery(input, fetcher)).toEqual({ status: 'uncertain' });
     expect(await submitManualDelivery(input, fetcher)).toEqual({ status: 'uncertain' });
-    const sent = fetcher.mock.calls.map(([, init]) => JSON.parse(String(init?.body)) as typeof input);
+    const sent = fetcher.mock.calls.map(
+      ([, init]) => JSON.parse(String(init?.body)) as typeof input,
+    );
     expect(sent.map((payload) => payload.requestId)).toEqual([requestId, requestId]);
     expect(sent[1]).toEqual(sent[0]);
   });
