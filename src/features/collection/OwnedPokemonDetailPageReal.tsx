@@ -299,6 +299,7 @@ export function OwnedPokemonDetailPage({
   const moveLearningBlocked =
     moveChoices.state.status === 'authenticated' && moveChoices.state.blockedByBattle;
 
+  const evolutionBlocked = evolutionOptions.status === 'authenticated' && evolutionOptions.blockedByBattle;
   const candidateEvolutions = evolutionOptions.status === 'authenticated'
     ? evolutionOptions.options
     : [];
@@ -317,7 +318,7 @@ export function OwnedPokemonDetailPage({
   const currentEvolutionScope = `${instanceId}:${evolutionTrigger}:${evolutionTrigger === 'ITEM' ? evolutionItemId : ''}`;
   const evolutionRetryLocked = evolutionRequestId !== null && evolutionRequestScope !== null;
   const evolutionReady = evolutionConfirmed && !evolutionBusy &&
-    evolutionOptions.status === 'authenticated' && !evolutionOptions.blockedByBattle &&
+    evolutionOptions.status === 'authenticated' && !evolutionBlocked &&
     ruleReady && (!evolutionRetryLocked || evolutionRequestScope === currentEvolutionScope);
 
   const requestEvolution = async () => {
@@ -830,13 +831,13 @@ export function OwnedPokemonDetailPage({
                   <p>Nenhuma evolução cadastrada para esta forma na release atual.</p>
                 ) : (
                   <>
-                    {evolutionOptions.blockedByBattle ? (
+                    {evolutionBlocked ? (
                       <p role="status">Evoluções ficam bloqueadas durante uma batalha ativa.</p>
                     ) : null}
                     <label htmlFor="owned-evolution-trigger">Evolução disponível</label>
                     <select
                       id="owned-evolution-trigger"
-                      disabled={evolutionBusy || evolutionRetryLocked || evolutionOptions.blockedByBattle}
+                      disabled={evolutionBusy || evolutionRetryLocked || evolutionBlocked}
                       value={selectedEvolution
                         ? selectedEvolution.triggerKind === 'ITEM'
                           ? `ITEM:${selectedEvolution.itemId}`
@@ -887,7 +888,7 @@ export function OwnedPokemonDetailPage({
                     ) : null}
                     <label className="owned-evolution-approval">
                       <input type="checkbox" checked={evolutionConfirmed}
-                        disabled={evolutionBusy || evolutionOptions.blockedByBattle || !ruleReady}
+                        disabled={evolutionBusy || evolutionBlocked || !ruleReady}
                         onChange={(event) => setEvolutionConfirmed(event.target.checked)} />
                       Confirmo a evolução escolhida, sujeita à validação final do servidor.
                     </label>
