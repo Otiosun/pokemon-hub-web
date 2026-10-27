@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePlayerPortalAdmin } from '../../player-api/usePlayerPortalAdmin';
 import { isPremiumDeliveryDelegate } from './premiumDeliveryAccess';
+import { readPremiumStageSession, type PremiumStageSession } from '../../player-api/premiumStagingAuthClient';
 import { currentPremiumManualUiMode } from '../../player-api/premiumManualUiMode';
 import { HubMenuTrigger } from '../../components/HubNavigation';
 import { PremiumStagingSessionGate } from './PremiumStagingSessionGate';
@@ -21,9 +22,41 @@ type Section = 'delivery' | 'cases' | 'inventory' | 'pokemon' | 'catalog' | 'ent
 const PLAYER_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function AdminPremiumStagingPage() {
-  const local = currentPremiumManualUiMode() === 'local';
+  // Preview must never fetch the live Hub administrator session just to render
+  // a staging page. Keep the two session providers in separate components.
+  return currentPremiumManualUiMode() === 'local'
+    ? <LocalPremiumStagingPage />
+    : <PreviewPremiumStagingPage />;
+}
+
+function LocalPremiumStagingPage() {
   const admin = usePlayerPortalAdmin();
-  const deliveryOnly = local && admin.status === 'admin' && isPremiumDeliveryDelegate(admin.admin);
+  const deliveryOnly = admin.status !== 'admin' || isPremiumDeliveryDelegate(admin.admin);
+  const canSearchPlayers =
+    admin.status === 'admin' &&
+    (admin.admin.owner || admin.admin.capabilities.includes('player.read'));
+  return <PremiumStagingPageContent local deliveryOnly={deliveryOnly} canSearchPlayers={canSearchPlayers} />;
+}
+
+function PreviewPremiumStagingPage() {
+  const [session, setSession] = useState<PremiumStageSession | null>(null);
+  useEffect(() => {
+    let mounted = true;
+    void readPremiumStageSession('delivery')
+      .then((next) => { if (mounted) setSession(next); })
+      .catch(() => { if (mounted) setSession({ status: 'unavailable' }); });
+    return () => { mounted = false; };
+  }, []);
+  // Until the isolated backend establishes ownership, show delivery only.
+  // Non-owners never see owner-only navigation, even during loading.
+  const owner = session?.status === 'ready' && session.owner === true;
+  const canSearchPlayers = session?.status === 'ready' && session.canSearchPlayers === true;
+  return <PremiumStagingPageContent local={false} deliveryOnly={!owner} canSearchPlayers={canSearchPlayers} />;
+}
+
+function PremiumStagingPageContent({
+  local, deliveryOnly, canSearchPlayers,
+}: { local: boolean; deliveryOnly: boolean; canSearchPlayers: boolean }) {
   const [draft, setDraft] = useState('');
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [selectedPlayer, setSelectedPlayer] = useState<SearchPlayer | null>(null);
@@ -37,7 +70,7 @@ export function AdminPremiumStagingPage() {
         <HubMenuTrigger />
       </header>
 
-      <PremiumStagingSessionGate access="owner">
+      <PremiumStagingSessionGate access="delivery">
       <div className="admin-shell">
         <section className="admin-premium">
           <header className="admin-premium-heading">
@@ -50,7 +83,7 @@ export function AdminPremiumStagingPage() {
           </header>
 
           {deliveryOnly ? <p className="premium-staging-disclaimer" role="status">Seu acesso está restrito à entrega de benefícios autorizados. Outras operações Premium continuam exclusivas do proprietário.</p> : null}
-          {deliveryOnly && admin.status === 'admin' && !admin.admin.capabilities.includes('player.read') ? (
+          {deliveryOnly && !canSearchPlayers ? (
             <p className="premium-staging-disclaimer" role="status">A busca de jogadores também exige a permissão player.read. Peça essa permissão ao proprietário ou selecione um Player ID já verificado.</p>
           ) : null}
           <p className="premium-staging-disclaimer" role="status">
