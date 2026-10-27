@@ -1,0 +1,38 @@
+name: Pokemon Management Stage 2 (isolated draft)
+
+on:
+  push:
+    branches:
+      - feat/pokemon-management-stage2-20261027
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pokemon-stage2-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pokemon-stage2-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - name: Checkout isolated stage 2 branch
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+      - name: Activate pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.23.0 --activate
+      - name: Install without project scripts
+        run: pnpm install --ignore-scripts --no-frozen-lockfile
+      - name: Pokemon evolution lint
+        run: pnpm exec biome lint src/player-api/playerPortalEvolutionClient.ts src/player-api/playerPortalEvolutionClient.test.ts src/features/collection/OwnedPokemonDetailPageReal.tsx api/hub/player/pokemon/evolve.ts
+      - name: Typecheck entire Hub
+        run: pnpm typecheck
+      - name: Player evolution, roster and move-choice tests
+        run: pnpm exec vitest run src/player-api/playerPortalEvolutionClient.test.ts src/player-api/playerPortalMoveChoiceClient.test.ts src/player-api/playerPortalRosterClient.test.ts
