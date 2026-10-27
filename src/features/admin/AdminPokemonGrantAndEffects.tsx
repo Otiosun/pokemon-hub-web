@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   getAdminRewardCatalog,
   type AdminRewardCatalogAbility,
@@ -11,6 +11,7 @@ import type {
   AdminPlayerPokemon,
 } from '../../player-api/playerPortalAdminPlayersClient';
 import { runAdminPokemonOperation } from './adminPokemonOperationWorkflow';
+import { keepPokemonAdminIntent, type PendingPokemonAdminIntent } from './adminPokemonRetryIntent';
 
 type Props = {
   playerId: string;
@@ -83,6 +84,12 @@ export function AdminPokemonGrantAndEffects({
   const [removeEffectId, setRemoveEffectId] = useState('');
   const [effectReason, setEffectReason] = useState('');
   const [effectState, setEffectState] = useState<Feedback>({ kind: 'idle', text: '' });
+  const createIntentRef = useRef<PendingPokemonAdminIntent | null>(null);
+  const effectIntentRef = useRef<PendingPokemonAdminIntent | null>(null);
+  useEffect(() => {
+    createIntentRef.current = null;
+    effectIntentRef.current = null;
+  }, [playerId]);
 
   useEffect(() => {
     if (!canCreate && !canEffects) return;
@@ -196,9 +203,7 @@ export function AdminPokemonGrantAndEffects({
     );
     if (!confirmed) return;
 
-    setCreateState({ kind: 'busy', text: 'PREPARANDO ENTREGA…' });
-    try {
-      const result = await runAdminPokemonOperation({
+    const retry = keepPokemonAdminIntent(createIntentRef.current, {
         requestId: crypto.randomUUID(),
         operationType: 'pokemon.create',
         input: {
@@ -213,7 +218,16 @@ export function AdminPokemonGrantAndEffects({
           target,
         },
         reason: createReason.trim(),
-      });
+    });
+    if (retry.status === 'locked') {
+      setCreateState({ kind: 'error', text: 'Há uma entrega anterior sem desfecho confirmado. Não altere os dados; recarregue o histórico administrativo antes de abrir outro pedido.' });
+      return;
+    }
+    createIntentRef.current = retry.intent;
+    setCreateState({ kind: 'busy', text: 'PREPARANDO ENTREGA…' });
+    try {
+      const result = await runAdminPokemonOperation(retry.intent.request);
+      if (result.status !== 'awaiting-approval') createIntentRef.current = null;
       const feedback = resultMessage(result, 'Pokémon entregue e registrado na auditoria.');
       setCreateState(feedback);
       if (feedback.kind === 'success') {
@@ -226,7 +240,7 @@ export function AdminPokemonGrantAndEffects({
         onApplied();
       }
     } catch {
-      setCreateState({ kind: 'error', text: 'Falha de rede ao entregar o Pokémon.' });
+      setCreateState({ kind: 'error', text: 'Resposta incerta. A entrega pode ter sido aplicada: consulte a auditoria e repita somente com os mesmos dados e identificador.' });
     }
   };
 
@@ -239,15 +253,22 @@ export function AdminPokemonGrantAndEffects({
       setEffectState({ kind: 'error', text: 'Informe o motivo da alteração.' });
       return;
     }
+    const retry = keepPokemonAdminIntent(effectIntentRef.current, {
+      requestId: crypto.randomUUID(),
+      operationType: 'pokemon.effect.apply',
+      input: { playerId, pokemonInstanceId: selectedPokemon.id, effectId },
+      reason: effectReason.trim(),
+      expectedRevision: selectedPokemon.revision,
+    });
+    if (retry.status === 'locked') {
+      setEffectState({ kind: 'error', text: 'Uma operação anterior neste painel ainda precisa de reconciliação na auditoria. Não altere seus dados para repetir.' });
+      return;
+    }
+    effectIntentRef.current = retry.intent;
     setEffectState({ kind: 'busy', text: 'APLICANDO EFEITO…' });
     try {
-      const result = await runAdminPokemonOperation({
-        requestId: crypto.randomUUID(),
-        operationType: 'pokemon.effect.apply',
-        input: { playerId, pokemonInstanceId: selectedPokemon.id, effectId },
-        reason: effectReason.trim(),
-        expectedRevision: selectedPokemon.revision,
-      });
+      const result = await runAdminPokemonOperation(retry.intent.request);
+      if (result.status !== 'awaiting-approval') effectIntentRef.current = null;
       const feedback = resultMessage(result, 'Efeito aplicado e registrado na auditoria.');
       setEffectState(feedback);
       if (feedback.kind === 'success') {
@@ -255,7 +276,7 @@ export function AdminPokemonGrantAndEffects({
         onApplied();
       }
     } catch {
-      setEffectState({ kind: 'error', text: 'Falha de rede ao aplicar o efeito.' });
+      setEffectState({ kind: 'error', text: 'Resposta incerta ao aplicar efeito. Confira a auditoria; repetir mantém o identificador e os dados originais.' });
     }
   };
 
@@ -268,19 +289,26 @@ export function AdminPokemonGrantAndEffects({
       setEffectState({ kind: 'error', text: 'Informe o motivo da alteração.' });
       return;
     }
+    const retry = keepPokemonAdminIntent(effectIntentRef.current, {
+      requestId: crypto.randomUUID(),
+      operationType: 'pokemon.effect.remove',
+      input: {
+        playerId,
+        pokemonInstanceId: selectedPokemon.id,
+        activeEffectId: removeEffectId,
+      },
+      reason: effectReason.trim(),
+      expectedRevision: selectedPokemon.revision,
+    });
+    if (retry.status === 'locked') {
+      setEffectState({ kind: 'error', text: 'Outra alteração de efeito está com resultado incerto. Verifique a auditoria antes de modificar os dados ou tentar outra operação.' });
+      return;
+    }
+    effectIntentRef.current = retry.intent;
     setEffectState({ kind: 'busy', text: 'REMOVENDO EFEITO…' });
     try {
-      const result = await runAdminPokemonOperation({
-        requestId: crypto.randomUUID(),
-        operationType: 'pokemon.effect.remove',
-        input: {
-          playerId,
-          pokemonInstanceId: selectedPokemon.id,
-          activeEffectId: removeEffectId,
-        },
-        reason: effectReason.trim(),
-        expectedRevision: selectedPokemon.revision,
-      });
+      const result = await runAdminPokemonOperation(retry.intent.request);
+      if (result.status !== 'awaiting-approval') effectIntentRef.current = null;
       const feedback = resultMessage(result, 'Efeito removido e registrado na auditoria.');
       setEffectState(feedback);
       if (feedback.kind === 'success') {
@@ -288,7 +316,7 @@ export function AdminPokemonGrantAndEffects({
         onApplied();
       }
     } catch {
-      setEffectState({ kind: 'error', text: 'Falha de rede ao remover o efeito.' });
+      setEffectState({ kind: 'error', text: 'Resposta incerta ao remover efeito. Confira a auditoria; repetir mantém o identificador e os dados originais.' });
     }
   };
 
