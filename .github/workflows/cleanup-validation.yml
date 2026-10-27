@@ -73,6 +73,10 @@ jobs:
       - name: Full production verify
         run: pnpm verify
 
+      # Anonymous browser smoke must confirm protected trainer records fail closed.
+      # The authenticated 2XP/LUCK contract is tested separately with actual
+      # Hub+BFF+backend+disposable PostgreSQL in premium-crossrepo-acceptance.
+      # Do not fake a trainer's caught Pokémon or require LIVE Hub credentials.
       - name: Browser smoke against production build
         shell: bash
         run: |
@@ -127,11 +131,11 @@ jobs:
 
           smoke "/jornada" "TRAINER REGISTRATION LICENSE"
           smoke "/pokedex" "Índice Nacional"
-          smoke "/pokedex/4" "Nº 004"
+          smoke "/pokedex/4" "NÃO FOI POSSÍVEL CARREGAR SEU REGISTRO"
           smoke "/pokemon" "Time + Box"
-          smoke "/pokemon/pkm-charmander-a1" "Brasa"
+          smoke "/pokemon/pkm-charmander-a1" "REGISTRO INDISPONÍVEL"
           smoke "/team" "Meu Time"
-          smoke "/pokemon/demo-charmander" "Nº 004"
+          smoke "/pokemon/demo-charmander" "REGISTRO INDISPONÍVEL"
           smoke "/asset-lab" "ENDEREÇO INDISPONÍVEL"
           smoke "/pokemon/demo-inexistente" "ENDEREÇO INDISPONÍVEL"
           smoke "/pokedex/999" "ENDEREÇO INDISPONÍVEL"
@@ -311,6 +315,8 @@ jobs:
           echo "Cloudflare preview: $preview"
           echo "url=$preview" >> "$GITHUB_OUTPUT"
 
+      # External preview is also unauthenticated: check the protected-state UI,
+      # not fictional demo/Pokédex records.
       - name: Browser smoke against Cloudflare preview
         shell: bash
         env:
@@ -361,11 +367,11 @@ jobs:
 
           smoke "/jornada" "TRAINER REGISTRATION LICENSE"
           smoke "/pokedex" "Índice Nacional"
-          smoke "/pokedex/4" "Nº 004"
+          smoke "/pokedex/4" "NÃO FOI POSSÍVEL CARREGAR SEU REGISTRO"
           smoke "/pokemon" "Time + Box"
-          smoke "/pokemon/pkm-charmander-a1" "Brasa"
+          smoke "/pokemon/pkm-charmander-a1" "REGISTRO INDISPONÍVEL"
           smoke "/team" "Meu Time"
-          smoke "/pokemon/demo-charmander" "Nº 004"
+          smoke "/pokemon/demo-charmander" "REGISTRO INDISPONÍVEL"
           smoke "/asset-lab" "ENDEREÇO INDISPONÍVEL"
           smoke "/pokemon/demo-inexistente" "ENDEREÇO INDISPONÍVEL"
           smoke "/pokedex/999" "ENDEREÇO INDISPONÍVEL"
