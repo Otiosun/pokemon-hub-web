@@ -391,6 +391,16 @@ export function OwnedPokemonCollectionPage() {
         return;
       }
 
+      if (result.status === 'blocked' || result.status === 'rejected' || result.status === 'stale') {
+        setOrganizerStatus('error');
+        setOrganizerPokemonId('');
+        setLastMove(null);
+        setOrganizerMessage(result.status === 'blocked'
+          ? 'O Time/Box não pode ser reorganizado durante uma batalha ativa.'
+          : 'Esta movimentação não é mais válida. Atualize a coleção antes de escolher novamente.');
+        void collection.refresh();
+        return;
+      }
       collection.replacePokemon(result.pokemon);
       setLastMove({
         pokemonInstanceId: selectedOrganizerPokemon.instanceId,
@@ -426,6 +436,13 @@ export function OwnedPokemonCollectionPage() {
       if (result.status === 'unauthenticated') {
         setOrganizerStatus('error');
         setOrganizerMessage('Sua sessão expirou. Abra o Hub novamente pelo acesso oficial.');
+        return;
+      }
+      if (result.status === 'blocked' || result.status === 'rejected' || result.status === 'stale') {
+        setOrganizerStatus('error');
+        setLastMove(null);
+        setOrganizerMessage('Não foi possível desfazer: a operação foi recusada ou uma batalha está ativa.');
+        void collection.refresh();
         return;
       }
       collection.replacePokemon(result.pokemon);
