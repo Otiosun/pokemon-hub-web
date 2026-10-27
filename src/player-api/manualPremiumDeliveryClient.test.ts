@@ -100,7 +100,7 @@ describe('manual gamepass delivery UI contract', () => {
   });
 
   it('treats a gateway failure as uncertain even when upstream may have granted the order', async () => {
-    const fetcher = vi.fn(async () => new Response(null, { status: 502 }));
+    const fetcher = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => new Response(null, { status: 502 }));
     const input = {
       requestId,
       playerId,
