@@ -14,7 +14,7 @@ export async function readPremiumStageSession(
   fetcher: typeof fetch = fetch,
 ): Promise<PremiumStageSession> {
   const endpoint =
-    role === 'owner' ? '/api/hub/admin/premium-auth/self' : '/api/hub/admin/premium-auth/player';
+    role !== 'player' ? '/api/hub/admin/premium-auth/self' : '/api/hub/admin/premium-auth/player';
   const res = await fetcher(endpoint, {
     method: 'GET',
     credentials: 'include',
