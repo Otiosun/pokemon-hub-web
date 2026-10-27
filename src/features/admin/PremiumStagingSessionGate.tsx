@@ -60,17 +60,27 @@ function LivePremiumOwnerGate({ children }: { children: ReactNode }) {
 export function PremiumStagingSessionGate({
   access,
   children,
-}: { access: PremiumStageRole; children: ReactNode }) {
+  onSessionChange,
+}: {
+  access: PremiumStageRole;
+  children: ReactNode;
+  onSessionChange?: (session: PremiumStageSession) => void;
+}) {
   if (currentPremiumManualUiMode() === 'local') {
     return <LivePremiumOwnerGate>{children}</LivePremiumOwnerGate>;
   }
-  return <IsolatedPreviewPremiumGate access={access}>{children}</IsolatedPreviewPremiumGate>;
+  return <IsolatedPreviewPremiumGate access={access} onSessionChange={onSessionChange}>{children}</IsolatedPreviewPremiumGate>;
 }
 
 function IsolatedPreviewPremiumGate({
   access,
   children,
-}: { access: PremiumStageRole; children: ReactNode }) {
+  onSessionChange,
+}: {
+  access: PremiumStageRole;
+  children: ReactNode;
+  onSessionChange?: (session: PremiumStageSession) => void;
+}) {
   const local = false;
   const environment = local ? 'API LOCAL' : 'STAGING';
   const [state, setState] = useState<GateState>({ status: 'loading' });
@@ -82,10 +92,21 @@ function IsolatedPreviewPremiumGate({
   useEffect(() => {
     let mounted = true;
     void readPremiumStageSession(access)
-      .then((result) => { if (mounted) setState(result); })
-      .catch(() => { if (mounted) setState({ status: 'unavailable' }); });
+      .then((result) => {
+        if (mounted) {
+          setState(result);
+          onSessionChange?.(result);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          const unavailable = { status: 'unavailable' } as const;
+          setState(unavailable);
+          onSessionChange?.(unavailable);
+        }
+      });
     return () => { mounted = false; };
-  }, [access]);
+  }, [access, onSessionChange]);
 
   const exchange = async () => {
     if (busy) return;
@@ -95,11 +116,15 @@ function IsolatedPreviewPremiumGate({
       const result = await exchangePremiumStageTicket(loginTicket ?? '');
       setTicket('');
       if (result === 'unavailable') {
-        setState({ status: 'unavailable' });
+        const unavailable = { status: 'unavailable' } as const;
+        setState(unavailable);
+        onSessionChange?.(unavailable);
       } else if (result === 'invalid') {
         setError('Ticket inválido, usado ou expirado. Use somente um ticket da API autorizada.');
       } else {
-        setState(await readPremiumStageSession(access));
+        const authenticated = await readPremiumStageSession(access);
+        setState(authenticated);
+        onSessionChange?.(authenticated);
       }
     } catch {
       setError('Falha de conexão. Nenhuma sessão foi confirmada.');
@@ -112,7 +137,9 @@ function IsolatedPreviewPremiumGate({
     setBusy(true);
     try {
       await signOutPremiumStage();
-      setState({ status: 'unauthenticated' });
+      const loggedOut = { status: 'unauthenticated' } as const;
+      setState(loggedOut);
+      onSessionChange?.(loggedOut);
       setTicket('');
     } catch {
       setError(local ? 'Não foi possível encerrar a sessão da API local.' : 'Não foi possível encerrar a sessão de testes.');
