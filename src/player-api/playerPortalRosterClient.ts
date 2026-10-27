@@ -19,7 +19,10 @@ export type PlayerPortalRosterMoveInput = {
   target: PlayerPortalRosterPlacement;
 };
 
-export type PlayerPortalRosterMoveResult = PlayerPortalPokemonResult | { status: 'blocked' | 'rejected' | 'stale' };
+export type PlayerPortalRosterMoveResult = PlayerPortalPokemonResult
+  | { status: 'blocked' }
+  | { status: 'rejected' }
+  | { status: 'stale' };
 
 export async function movePlayerPortalPokemon(
   input: PlayerPortalRosterMoveInput,
