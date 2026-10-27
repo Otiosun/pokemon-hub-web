@@ -24,6 +24,7 @@ export type ManualDeliveryResult =
   | {
       status:
         | 'unavailable'
+        | 'uncertain'
         | 'forbidden'
         | 'unauthenticated'
         | 'rejected'
@@ -146,7 +147,9 @@ export async function submitManualDelivery(
       ? { status: 'product-unavailable' }
       : { status: 'unavailable' };
   }
-  if (response.status === 502 || response.status === 503) return { status: 'unavailable' };
+// A gateway error cannot prove that the upstream did NOT apply the grant.
+  // Preserve requestId so the operator can reconcile and retry idempotently.
+  if (response.status === 502 || response.status === 503) return { status: 'uncertain' };
   if (response.status === 409) return { status: 'conflict' };
   if (!response.ok) return { status: 'rejected', error: `HTTP_${response.status}` };
   const body: unknown = await response.json();
