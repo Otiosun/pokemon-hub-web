@@ -47,10 +47,10 @@ describe('Premium staging-only session client', () => {
   });
 
   it('accepts delivery-only delegated staging sessions without owner privileges', async () => {
-    const response = (owner: boolean, capabilities: string[]) => vi.fn(
-      async (_url: RequestInfo | URL, _init?: RequestInit) =>
+    const response = (owner: boolean, capabilities: string[]) =>
+      vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) =>
         Response.json({ admin: { principalId: principal, owner, capabilities } }),
-    );
+      );
     const delegate = response(false, ['central.view', 'premium.delivery.grant', 'player.read']);
     expect(await readPremiumStageSession('delivery', delegate)).toMatchObject({
       status: 'ready',
@@ -71,15 +71,21 @@ describe('Premium staging-only session client', () => {
       ['premium.delivery.grant', 'player.read'],
       [],
     ]) {
-      expect((await readPremiumStageSession('delivery', response(false, caps))).status)
-        .toBe('forbidden');
+      expect((await readPremiumStageSession('delivery', response(false, caps))).status).toBe(
+        'forbidden',
+      );
     }
-    expect(await readPremiumStageSession('delivery', response(true, ['central.view'])))
-      .toMatchObject({ status: 'ready', owner: true, canSearchPlayers: true });
+    expect(
+      await readPremiumStageSession('delivery', response(true, ['central.view'])),
+    ).toMatchObject({ status: 'ready', owner: true, canSearchPlayers: true });
     const malformed = vi.fn(async () =>
-      Response.json({ admin: { principalId: principal, owner: false, capabilities: [
-        'central.view', 'premium.delivery.grant', null,
-      ] } }),
+      Response.json({
+        admin: {
+          principalId: principal,
+          owner: false,
+          capabilities: ['central.view', 'premium.delivery.grant', null],
+        },
+      }),
     );
     expect((await readPremiumStageSession('delivery', malformed)).status).toBe('forbidden');
   });
