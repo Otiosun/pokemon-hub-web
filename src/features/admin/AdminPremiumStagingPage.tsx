@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { usePlayerPortalAdmin } from '../../player-api/usePlayerPortalAdmin';
 import { isPremiumDeliveryDelegate } from './premiumDeliveryAccess';
-import { readPremiumStageSession, type PremiumStageSession } from '../../player-api/premiumStagingAuthClient';
+import type { PremiumStageSession } from '../../player-api/premiumStagingAuthClient';
 import { currentPremiumManualUiMode } from '../../player-api/premiumManualUiMode';
 import { HubMenuTrigger } from '../../components/HubNavigation';
 import { PremiumStagingSessionGate } from './PremiumStagingSessionGate';
@@ -40,23 +40,21 @@ function LocalPremiumStagingPage() {
 
 function PreviewPremiumStagingPage() {
   const [session, setSession] = useState<PremiumStageSession | null>(null);
-  useEffect(() => {
-    let mounted = true;
-    void readPremiumStageSession('delivery')
-      .then((next) => { if (mounted) setSession(next); })
-      .catch(() => { if (mounted) setSession({ status: 'unavailable' }); });
-    return () => { mounted = false; };
-  }, []);
   // Until the isolated backend establishes ownership, show delivery only.
   // Non-owners never see owner-only navigation, even during loading.
   const owner = session?.status === 'ready' && session.owner === true;
   const canSearchPlayers = session?.status === 'ready' && session.canSearchPlayers === true;
-  return <PremiumStagingPageContent local={false} deliveryOnly={!owner} canSearchPlayers={canSearchPlayers} />;
+  return <PremiumStagingPageContent local={false} deliveryOnly={!owner} canSearchPlayers={canSearchPlayers} onStageSessionChange={setSession} />;
 }
 
 function PremiumStagingPageContent({
-  local, deliveryOnly, canSearchPlayers,
-}: { local: boolean; deliveryOnly: boolean; canSearchPlayers: boolean }) {
+  local, deliveryOnly, canSearchPlayers, onStageSessionChange,
+}: {
+  local: boolean;
+  deliveryOnly: boolean;
+  canSearchPlayers: boolean;
+  onStageSessionChange?: (session: PremiumStageSession) => void;
+}) {
   const [draft, setDraft] = useState('');
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [selectedPlayer, setSelectedPlayer] = useState<SearchPlayer | null>(null);
@@ -70,7 +68,7 @@ function PremiumStagingPageContent({
         <HubMenuTrigger />
       </header>
 
-      <PremiumStagingSessionGate access="delivery">
+      <PremiumStagingSessionGate access="delivery" onSessionChange={onStageSessionChange}>
       <div className="admin-shell">
         <section className="admin-premium">
           <header className="admin-premium-heading">
