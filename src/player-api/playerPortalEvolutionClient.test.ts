@@ -37,7 +37,7 @@ describe('player evolution client', () => {
     const pokemon = {
       pokemonInstanceId, formId, formSlug: 'charmeleon', speciesSlug: 'charmeleon',
       displayName: 'Charmeleon', nationalDex: 5, typeNames: ['FIRE'], nickname: null,
-      level: 16, xp: '4200', xpToNextLevel: 200, currentHp: 36, maxHp: 45,
+      level: 16, xp: '100', xpToNextLevel: 200, currentHp: 36, maxHp: 45,
       natureDisplayName: null, abilityDisplayName: null,
       ivs: { hp: 12, attack: 10, defense: 15, spAttack: 14, spDefense: 13, speed: 20 },
       gender: 'M', shiny: false, placementKind: 'TEAM', boxNo: null,
