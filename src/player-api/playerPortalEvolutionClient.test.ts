@@ -51,6 +51,25 @@ describe('player evolution client', () => {
     expect(result).toMatchObject({ status: 'applied', replayed: false, pokemon: [pokemon] });
   });
 
+  it('submits a real inventory item UUID to the canonical evolution route without guessing the target form', async () => {
+    const itemId = '44444444-4444-4444-8444-444444444444';
+    const chosen = { ...input, trigger: { kind: 'ITEM' as const, itemId } };
+    const fetcher = vi.fn(
+      async (_url: RequestInfo | URL, _init?: RequestInit) =>
+        Response.json({ error: 'ACTION_INVALID' }, { status: 409 }),
+    );
+    await expect(requestPlayerEvolution(chosen, fetcher, false)).resolves.toEqual({
+      status: 'rejected',
+      code: 'ACTION_INVALID',
+    });
+    expect(fetcher).toHaveBeenCalledWith('/api/hub/player/pokemon/evolve', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { accept: 'application/json', 'content-type': 'application/json' },
+      body: JSON.stringify(chosen),
+    });
+  });
+
   it('refuses unapproved triggers and never mutates showcase state', async () => {
     const fetcher = vi.fn(async () => Response.json({}));
     await expect(requestPlayerEvolution({
