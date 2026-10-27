@@ -328,6 +328,14 @@ export function OwnedPokemonDetailPage({
         setEvolutionRequestScope(null);
         setEvolutionConfirmed(false);
         collection.replacePokemon(result.pokemon);
+        // Evolution items are consumed atomically by the backend. Refresh their quantity.
+        void getPlayerPortalInventory()
+          .then((inventory) => {
+            setEvolutionInventory(inventory.status === 'authenticated'
+              ? { status: 'ready', items: inventory.inventory }
+              : { status: 'unavailable' });
+          })
+          .catch(() => setEvolutionInventory({ status: 'unavailable' }));
         setEvolutionMessage(result.replayed
           ? 'Evolução já registrada. O pedido não foi repetido.'
           : 'Evolução realizada. Os dados do Pokémon foram atualizados.');
