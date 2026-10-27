@@ -13,10 +13,12 @@ export async function readPremiumStageSession(
   role: PremiumStageRole,
   fetcher: typeof fetch = fetch,
 ): Promise<PremiumStageSession> {
-  const endpoint = role === 'owner'
-    ? '/api/hub/admin/premium-auth/self' : '/api/hub/admin/premium-auth/player';
+  const endpoint =
+    role === 'owner' ? '/api/hub/admin/premium-auth/self' : '/api/hub/admin/premium-auth/player';
   const res = await fetcher(endpoint, {
-    method: 'GET', credentials: 'include', cache: 'no-store',
+    method: 'GET',
+    credentials: 'include',
+    cache: 'no-store',
     headers: { accept: 'application/json' },
   });
   if (res.status === 401) return { status: 'unauthenticated' };
@@ -27,9 +29,14 @@ export async function readPremiumStageSession(
   if (!record(body)) throw new Error('Sessão de testes retornada em formato inválido.');
   if (role === 'owner') {
     if (body.admin === null) return { status: 'forbidden' };
-    if (!record(body.admin) || !UUID.test(String(body.admin.principalId)) ||
-      body.admin.owner !== true || !Array.isArray(body.admin.capabilities) ||
-      !body.admin.capabilities.includes('central.view')) return { status: 'forbidden' };
+    if (
+      !record(body.admin) ||
+      !UUID.test(String(body.admin.principalId)) ||
+      body.admin.owner !== true ||
+      !Array.isArray(body.admin.capabilities) ||
+      !body.admin.capabilities.includes('central.view')
+    )
+      return { status: 'forbidden' };
     return { status: 'ready', label: 'PROPRIETÁRIO DE STAGING' };
   }
   if (!record(body.profile) || !UUID.test(String(body.profile.playerId))) {
@@ -51,11 +58,16 @@ export function premiumTicketFromInput(input: string, siteOrigin: string): strin
   try {
     const link = new URL(value);
     const site = new URL(siteOrigin);
-    if (link.protocol !== 'https:' || site.protocol !== 'https:' ||
-      link.origin !== site.origin || link.username || link.password) return null;
+    if (
+      link.protocol !== 'https:' ||
+      site.protocol !== 'https:' ||
+      link.origin !== site.origin ||
+      link.username ||
+      link.password
+    )
+      return null;
     const ticketValues = new URLSearchParams(link.hash.slice(1)).getAll('hub_ticket');
-    return ticketValues.length === 1 && valid.test(ticketValues[0]!)
-      ? ticketValues[0]! : null;
+    return ticketValues.length === 1 && valid.test(ticketValues[0]!) ? ticketValues[0]! : null;
   } catch {
     return null;
   }
@@ -67,7 +79,9 @@ export async function exchangePremiumStageTicket(
 ): Promise<'ok' | 'invalid' | 'unavailable'> {
   if (!/^[A-Za-z0-9_-]{43}$/.test(ticket)) return 'invalid';
   const res = await fetcher('/api/hub/admin/premium-auth/exchange', {
-    method: 'POST', credentials: 'include', cache: 'no-store',
+    method: 'POST',
+    credentials: 'include',
+    cache: 'no-store',
     headers: { accept: 'application/json', 'content-type': 'application/json' },
     body: JSON.stringify({ ticket }),
   });
@@ -79,7 +93,9 @@ export async function exchangePremiumStageTicket(
 
 export async function signOutPremiumStage(fetcher: typeof fetch = fetch): Promise<void> {
   const res = await fetcher('/api/hub/admin/premium-auth/logout', {
-    method: 'POST', credentials: 'include', cache: 'no-store',
+    method: 'POST',
+    credentials: 'include',
+    cache: 'no-store',
   });
   if (!res.ok) throw new Error('Não foi possível encerrar a sessão de staging.');
 }

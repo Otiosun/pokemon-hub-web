@@ -70,18 +70,13 @@ describe('getPlayerPortalSelf', () => {
     expect(result).toEqual({ status: 'authenticated', profile });
   });
 
-  it(
-    'returns an explicit unauthenticated state for 401 without fabricating profile data',
-    async () => {
-      const fetcher = vi.fn(
-        async () => new Response('{"error":"UNAUTHENTICATED"}', { status: 401 }),
-      );
+  it('returns an explicit unauthenticated state for 401 without fabricating profile data', async () => {
+    const fetcher = vi.fn(async () => new Response('{"error":"UNAUTHENTICATED"}', { status: 401 }));
 
-      await expect(getPlayerPortalSelf(fetcher)).resolves.toEqual({
-        status: 'unauthenticated',
-      });
-    },
-  );
+    await expect(getPlayerPortalSelf(fetcher)).resolves.toEqual({
+      status: 'unauthenticated',
+    });
+  });
 
   it('accepts pre-profession profiles while validating a profession when present', async () => {
     const legacyProfile = { ...profile };
@@ -120,19 +115,14 @@ describe('getPlayerPortalSelf', () => {
     await expect(getPlayerPortalSelf(fetcher)).rejects.toThrow('Invalid player portal response');
   });
 
-  it(
-    'rejects malformed catalog presentation instead of accepting untrusted display metadata',
-    async () => {
-      const malformedProfile = { ...profile, originRegionName: 42 };
-      const fetcher = vi.fn(
-        async () => new Response(JSON.stringify({ profile: malformedProfile }), { status: 200 }),
-      );
+  it('rejects malformed catalog presentation instead of accepting untrusted display metadata', async () => {
+    const malformedProfile = { ...profile, originRegionName: 42 };
+    const fetcher = vi.fn(
+      async () => new Response(JSON.stringify({ profile: malformedProfile }), { status: 200 }),
+    );
 
-      await expect(getPlayerPortalSelf(fetcher)).rejects.toThrow(
-        'Invalid player portal response',
-      );
-    },
-  );
+    await expect(getPlayerPortalSelf(fetcher)).rejects.toThrow('Invalid player portal response');
+  });
 
   it('rejects non-authentication HTTP failures as API errors', async () => {
     const fetcher = vi.fn(async () => new Response('{"error":"INTERNAL_ERROR"}', { status: 503 }));
@@ -367,36 +357,33 @@ describe('getPlayerPortalLocation', () => {
 });
 
 describe('movePlayerPortalPokemon', () => {
-  it(
-    'persists a roster placement through the same-origin BFF and returns the authoritative collection',
-    async () => {
-      const fetcher = vi.fn(
-        async () =>
-          new Response(JSON.stringify({ pokemon: [] }), {
-            status: 200,
-            headers: { 'content-type': 'application/json' },
-          }),
-      );
-      const input = {
-        pokemonInstanceId: '66666666-6666-4666-8666-666666666666',
-        target: { placementKind: 'TEAM' as const, boxNo: null, slotNo: 2 },
-      };
+  it('persists a roster placement through the same-origin BFF and returns the authoritative collection', async () => {
+    const fetcher = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ pokemon: [] }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+    );
+    const input = {
+      pokemonInstanceId: '66666666-6666-4666-8666-666666666666',
+      target: { placementKind: 'TEAM' as const, boxNo: null, slotNo: 2 },
+    };
 
-      await expect(movePlayerPortalPokemon(input, fetcher)).resolves.toEqual({
-        status: 'authenticated',
-        pokemon: [],
-      });
-      expect(fetcher).toHaveBeenCalledWith('/api/hub/player/roster', {
-        method: 'PUT',
-        credentials: 'include',
-        headers: {
-          accept: 'application/json',
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify(input),
-      });
-    },
-  );
+    await expect(movePlayerPortalPokemon(input, fetcher)).resolves.toEqual({
+      status: 'authenticated',
+      pokemon: [],
+    });
+    expect(fetcher).toHaveBeenCalledWith('/api/hub/player/roster', {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {
+        accept: 'application/json',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(input),
+    });
+  });
 
   it('rejects a Box slot outside the canonical 30-slot capacity before the request', async () => {
     const fetcher = vi.fn(async () => new Response('{}', { status: 500 }));

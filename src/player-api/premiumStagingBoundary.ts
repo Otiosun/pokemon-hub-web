@@ -13,11 +13,24 @@ export interface PremiumStagingConfiguration {
 function asHttpsOrigin(value: string): URL | null {
   try {
     const url = new URL(value);
-    if (url.protocol !== 'https:' || url.username || url.password ||
-        url.pathname !== '/' || url.search || url.hash) return null;
-    if (!url.hostname.includes('.') || url.hostname === 'pokemon-api.otiosunbots.xyz' ||
-        /^[0-9.]+$/.test(url.hostname) || url.hostname.endsWith('.local') ||
-        url.hostname.endsWith('.internal') || url.port) return null;
+    if (
+      url.protocol !== 'https:' ||
+      url.username ||
+      url.password ||
+      url.pathname !== '/' ||
+      url.search ||
+      url.hash
+    )
+      return null;
+    if (
+      !url.hostname.includes('.') ||
+      url.hostname === 'pokemon-api.otiosunbots.xyz' ||
+      /^[0-9.]+$/.test(url.hostname) ||
+      url.hostname.endsWith('.local') ||
+      url.hostname.endsWith('.internal') ||
+      url.port
+    )
+      return null;
     return url;
   } catch {
     return null;
@@ -25,9 +38,16 @@ function asHttpsOrigin(value: string): URL | null {
 }
 
 /** Disabled by default, including every production deployment. */
-export function resolvePremiumStagingApiBaseUrl(config: PremiumStagingConfiguration): string | null {
-  if (config.vercelEnv !== 'preview' || config.enabled !== '1' ||
-      !config.apiBaseUrl || !config.approvedOrigin) return null;
+export function resolvePremiumStagingApiBaseUrl(
+  config: PremiumStagingConfiguration,
+): string | null {
+  if (
+    config.vercelEnv !== 'preview' ||
+    config.enabled !== '1' ||
+    !config.apiBaseUrl ||
+    !config.approvedOrigin
+  )
+    return null;
 
   const api = asHttpsOrigin(config.apiBaseUrl);
   const approved = asHttpsOrigin(config.approvedOrigin);

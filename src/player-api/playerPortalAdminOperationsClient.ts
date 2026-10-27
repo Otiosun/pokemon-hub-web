@@ -55,8 +55,7 @@ export type AdminOperationAction = 'simulate' | 'confirm' | 'approve' | 'apply';
 
 type Fetcher = typeof fetch;
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const OPERATION_TYPE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 const NON_NEGATIVE_INTEGER_PATTERN = /^(0|[1-9][0-9]*)$/;
 const OPERATION_STATUSES = new Set<AdminOperationStatus>([
@@ -128,7 +127,8 @@ async function rejectedOrThrow(
   if (!response.ok) {
     return {
       status: 'rejected',
-      code: isRecord(body) && typeof body.error === 'string' ? body.error : `HTTP_${response.status}`,
+      code:
+        isRecord(body) && typeof body.error === 'string' ? body.error : `HTTP_${response.status}`,
     };
   }
   throw new Error(`Invalid ${context} response`);

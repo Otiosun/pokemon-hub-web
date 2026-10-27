@@ -6,10 +6,10 @@ export function resolvePremiumManualUiMode(input: {
   localUi?: string;
   localTarget?: string;
 }): PremiumManualUiMode {
-  if (input.stageUi === '1' && input.stageTarget === 'preview' &&
-      input.localUi !== '1') return 'preview';
-  if (input.localUi === '1' && input.localTarget === 'production' &&
-      input.stageUi !== '1') return 'local';
+  if (input.stageUi === '1' && input.stageTarget === 'preview' && input.localUi !== '1')
+    return 'preview';
+  if (input.localUi === '1' && input.localTarget === 'production' && input.stageUi !== '1')
+    return 'local';
   return null;
 }
 export function currentPremiumManualUiMode(): PremiumManualUiMode {

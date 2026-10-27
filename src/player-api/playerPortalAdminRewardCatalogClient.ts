@@ -74,8 +74,7 @@ export type AdminRewardCatalogResult =
 
 type Fetcher = typeof fetch;
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -141,7 +140,9 @@ function isForm(value: unknown): value is AdminRewardCatalogForm {
     value.displayName.length > 0 &&
     (value.abilityIds === undefined ||
       (Array.isArray(value.abilityIds) &&
-        value.abilityIds.every((abilityId) => typeof abilityId === 'string' && UUID_PATTERN.test(abilityId))))
+        value.abilityIds.every(
+          (abilityId) => typeof abilityId === 'string' && UUID_PATTERN.test(abilityId),
+        )))
   );
 }
 
@@ -224,8 +225,7 @@ export async function getAdminRewardCatalog(
     !body.currencies.every(isCurrency) ||
     (body.species !== undefined &&
       (!Array.isArray(body.species) || !body.species.every(isSpecies))) ||
-    (body.forms !== undefined &&
-      (!Array.isArray(body.forms) || !body.forms.every(isForm))) ||
+    (body.forms !== undefined && (!Array.isArray(body.forms) || !body.forms.every(isForm))) ||
     (body.abilities !== undefined &&
       (!Array.isArray(body.abilities) || !body.abilities.every(isAbility))) ||
     (body.natures !== undefined &&

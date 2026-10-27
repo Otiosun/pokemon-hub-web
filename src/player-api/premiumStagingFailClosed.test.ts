@@ -17,13 +17,18 @@ describe('Premium staging transport never falls back to production', () => {
     const upstream = vi.fn(async () => new Response('unexpected'));
     vi.stubGlobal('fetch', upstream);
 
-    const checkout = await playerHandler.fetch(new Request('https://hub.example.org/api/hub/player/premium/orders', {
-      method: 'POST', body: '{}',
-    }));
-    const approval = await adminHandler.fetch(new Request(
-      'https://hub.example.org/api/hub/admin/premium/orders/22222222-2222-4222-8222-222222222222/approve',
-      { method: 'POST', body: '{}' },
-    ));
+    const checkout = await playerHandler.fetch(
+      new Request('https://hub.example.org/api/hub/player/premium/orders', {
+        method: 'POST',
+        body: '{}',
+      }),
+    );
+    const approval = await adminHandler.fetch(
+      new Request(
+        'https://hub.example.org/api/hub/admin/premium/orders/22222222-2222-4222-8222-222222222222/approve',
+        { method: 'POST', body: '{}' },
+      ),
+    );
 
     expect(checkout.status).toBe(404);
     expect(approval.status).toBe(404);
@@ -39,16 +44,20 @@ describe('Premium staging transport never falls back to production', () => {
     const upstream = vi.fn(async () => new Response('unexpected'));
     vi.stubGlobal('fetch', upstream);
 
-    const result = await playerHandler.fetch(new Request('https://hub.example.org/api/hub/player/premium/orders', {
-      method: 'POST', body: '{}',
-    }));
+    const result = await playerHandler.fetch(
+      new Request('https://hub.example.org/api/hub/player/premium/orders', {
+        method: 'POST',
+        body: '{}',
+      }),
+    );
     expect(result.status).toBe(404);
     // A genuinely supported manual grant still fails closed without the
     // approved staging origin (never falls back to the normal Player API).
-    const master = await adminHandler.fetch(new Request(
-      'https://hub.example.org/api/hub/admin/premium/delivery/packs/master',
-      { method: 'GET' },
-    ));
+    const master = await adminHandler.fetch(
+      new Request('https://hub.example.org/api/hub/admin/premium/delivery/packs/master', {
+        method: 'GET',
+      }),
+    );
     expect(master.status).toBe(503);
     expect(upstream).not.toHaveBeenCalled();
   });

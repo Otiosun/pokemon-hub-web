@@ -16,7 +16,9 @@ describe('Premium staging trust boundary', () => {
     expect(resolvePremiumStagingApiBaseUrl({ ...base, vercelEnv: 'production' })).toBeNull();
     expect(resolvePremiumStagingApiBaseUrl({ ...base, vercelEnv: undefined })).toBeNull();
     expect(resolvePremiumStagingApiBaseUrl({ ...base, approvedOrigin: undefined })).toBeNull();
-    expect(resolvePremiumStagingApiBaseUrl({ ...base, approvedOrigin: 'https://another.example.org' })).toBeNull();
+    expect(
+      resolvePremiumStagingApiBaseUrl({ ...base, approvedOrigin: 'https://another.example.org' }),
+    ).toBeNull();
   });
 
   it('rejects production, malformed, insecure or credential-bearing upstreams', () => {
@@ -28,15 +30,21 @@ describe('Premium staging trust boundary', () => {
       'https://pokemon-premium-staging.example.org/?debug=1',
       'not-a-url',
     ]) {
-      expect(resolvePremiumStagingApiBaseUrl({ ...base, apiBaseUrl, approvedOrigin: apiBaseUrl })).toBeNull();
+      expect(
+        resolvePremiumStagingApiBaseUrl({ ...base, apiBaseUrl, approvedOrigin: apiBaseUrl }),
+      ).toBeNull();
     }
-    expect(resolvePremiumStagingApiBaseUrl({
-      ...base,
-      productionApiBaseUrl: base.apiBaseUrl,
-    })).toBeNull();
-    expect(resolvePremiumStagingApiBaseUrl({
-      ...base,
-      productionApiBaseUrl: 'not-a-url',
-    })).toBeNull();
+    expect(
+      resolvePremiumStagingApiBaseUrl({
+        ...base,
+        productionApiBaseUrl: base.apiBaseUrl,
+      }),
+    ).toBeNull();
+    expect(
+      resolvePremiumStagingApiBaseUrl({
+        ...base,
+        productionApiBaseUrl: 'not-a-url',
+      }),
+    ).toBeNull();
   });
 });

@@ -370,7 +370,7 @@ export async function searchAdminPlayers(
   if (denied) return { status: denied };
   if (!response.ok) throw new Error(`Admin player search failed (${response.status})`);
 
-  const body = await response.json() as unknown;
+  const body = (await response.json()) as unknown;
   if (
     !isRecord(body) ||
     !Array.isArray(body.players) ||
@@ -398,7 +398,7 @@ export async function getAdminPlayer(
   if (response.status === 404) return { status: 'not-found' };
   if (!response.ok) throw new Error(`Admin player detail failed (${response.status})`);
 
-  const body = await response.json() as unknown;
+  const body = (await response.json()) as unknown;
   if (!isRecord(body) || !isPlayer360(body.player)) {
     throw new Error('Invalid admin player detail response');
   }

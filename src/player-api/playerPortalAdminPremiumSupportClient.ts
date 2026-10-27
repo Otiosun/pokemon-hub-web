@@ -32,15 +32,20 @@ function record(input: unknown): input is Record<string, unknown> {
 }
 
 function isSupportEvent(input: unknown): input is PremiumSupportEvent {
-  return record(input)
-    && typeof input.id === 'string' && UUID.test(input.id)
-    && typeof input.playerId === 'string' && UUID.test(input.playerId)
-    && (input.orderId === null || (typeof input.orderId === 'string' && UUID.test(input.orderId)))
-    && typeof input.actorPrincipalId === 'string' && UUID.test(input.actorPrincipalId)
-    && (input.kind === 'NOTE' || input.kind === 'REVIEW' || input.kind === 'RESOLVED')
-    && typeof input.body === 'string'
-    && typeof input.createdAt === 'string'
-    && Number.isFinite(new Date(input.createdAt).valueOf());
+  return (
+    record(input) &&
+    typeof input.id === 'string' &&
+    UUID.test(input.id) &&
+    typeof input.playerId === 'string' &&
+    UUID.test(input.playerId) &&
+    (input.orderId === null || (typeof input.orderId === 'string' && UUID.test(input.orderId))) &&
+    typeof input.actorPrincipalId === 'string' &&
+    UUID.test(input.actorPrincipalId) &&
+    (input.kind === 'NOTE' || input.kind === 'REVIEW' || input.kind === 'RESOLVED') &&
+    typeof input.body === 'string' &&
+    typeof input.createdAt === 'string' &&
+    Number.isFinite(new Date(input.createdAt).valueOf())
+  );
 }
 
 function endpoint(playerId: string): string {
@@ -60,7 +65,9 @@ export async function getPremiumSupportEvents(
   fetcher: typeof fetch = fetch,
 ): Promise<PremiumSupportListResult> {
   const response = await fetcher(endpoint(playerId), {
-    method: 'GET', credentials: 'include', cache: 'no-store',
+    method: 'GET',
+    credentials: 'include',
+    cache: 'no-store',
     headers: { accept: 'application/json' },
   });
   const failure = blocked(response.status);
@@ -79,15 +86,18 @@ export async function addPremiumSupportEvent(
   fetcher: typeof fetch = fetch,
 ): Promise<PremiumSupportAppendResult> {
   if (
-    !UUID.test(draft.eventId)
-    || (draft.orderId !== null && !UUID.test(draft.orderId))
-    || !['NOTE', 'REVIEW', 'RESOLVED'].includes(draft.kind)
-    || draft.body.trim().length < 8
-    || draft.body.trim().length > 1400
-  ) throw new Error('Preencha a observação e confira os identificadores.');
+    !UUID.test(draft.eventId) ||
+    (draft.orderId !== null && !UUID.test(draft.orderId)) ||
+    !['NOTE', 'REVIEW', 'RESOLVED'].includes(draft.kind) ||
+    draft.body.trim().length < 8 ||
+    draft.body.trim().length > 1400
+  )
+    throw new Error('Preencha a observação e confira os identificadores.');
 
   const response = await fetcher(endpoint(playerId), {
-    method: 'POST', credentials: 'include', cache: 'no-store',
+    method: 'POST',
+    credentials: 'include',
+    cache: 'no-store',
     headers: { accept: 'application/json', 'content-type': 'application/json' },
     body: JSON.stringify({ ...draft, body: draft.body.trim() }),
   });
@@ -98,10 +108,12 @@ export async function addPremiumSupportEvent(
   if (!response.ok) throw new Error('Não foi possível registrar o atendimento.');
   const result: unknown = await response.json();
   if (
-    !record(result) || !isSupportEvent(result.event)
-    || result.event.playerId !== playerId
-    || result.event.id !== draft.eventId
-    || typeof result.replayed !== 'boolean'
-  ) throw new Error('Registro de suporte retornado pelo servidor é inválido.');
+    !record(result) ||
+    !isSupportEvent(result.event) ||
+    result.event.playerId !== playerId ||
+    result.event.id !== draft.eventId ||
+    typeof result.replayed !== 'boolean'
+  )
+    throw new Error('Registro de suporte retornado pelo servidor é inválido.');
   return { status: 'saved', event: result.event, replayed: result.replayed };
 }

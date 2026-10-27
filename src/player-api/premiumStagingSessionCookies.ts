@@ -7,7 +7,10 @@ const SESSION_TOKEN = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/;
 
 function cookieValue(header: string | null, name: string): string | null {
   if (!header) return null;
-  const values = header.split(';').map((part) => part.trim()).filter((part) => part.startsWith(name + '='));
+  const values = header
+    .split(';')
+    .map((part) => part.trim())
+    .filter((part) => part.startsWith(name + '='));
   if (values.length !== 1) return null; // Fail closed on duplicates, never guess.
   const value = values[0]!.slice(name.length + 1);
   return value && value.length <= 4096 && !/[\r\n;,\s]/.test(value) ? value : null;
@@ -36,8 +39,13 @@ export function stageExchangeCookie(upstreamCookie: string | null): string | nul
     if (!key || attrs.has(key.toLowerCase())) return null;
     attrs.set(key.toLowerCase(), value.join('='));
   }
-  if (!attrs.has('secure') || !attrs.has('httponly') ||
-      attrs.get('path') !== '/' || attrs.has('domain')) return null;
+  if (
+    !attrs.has('secure') ||
+    !attrs.has('httponly') ||
+    attrs.get('path') !== '/' ||
+    attrs.has('domain')
+  )
+    return null;
   const maxAge = Number(attrs.get('max-age'));
   if (!Number.isSafeInteger(maxAge) || maxAge <= 0 || maxAge > 43200) return null;
   if (!['lax', 'strict'].includes(attrs.get('samesite')?.toLowerCase() ?? '')) return null;

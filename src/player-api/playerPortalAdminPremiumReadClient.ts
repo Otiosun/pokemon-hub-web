@@ -58,26 +58,29 @@ function isOrder(value: unknown): value is PremiumOrder {
     typeof value.playerId === 'string' &&
     UUID_PATTERN.test(value.playerId) &&
     ['PENDING', 'PAID', 'APPLIED', 'CANCELLED'].includes(String(value.status)) &&
-    typeof value.revision === 'string' && /^\\d{1,20}$/.test(value.revision) &&
+    typeof value.revision === 'string' &&
+    /^\\d{1,20}$/.test(value.revision) &&
     typeof value.currency === 'string' &&
     Number.isSafeInteger(value.totalCents) &&
     typeof value.createdAt === 'string' &&
     nullableString(value.paidAt) &&
     nullableString(value.appliedAt) &&
-    value.items.every((item: unknown) =>
-      object(item) &&
-      typeof item.id === 'string' &&
-      typeof item.sku === 'string' &&
-      typeof item.title === 'string' &&
-      Number.isSafeInteger(item.quantity) &&
-      Number.isSafeInteger(item.lineTotalCents) &&
-      typeof item.fulfilled === 'boolean'
+    value.items.every(
+      (item: unknown) =>
+        object(item) &&
+        typeof item.id === 'string' &&
+        typeof item.sku === 'string' &&
+        typeof item.title === 'string' &&
+        Number.isSafeInteger(item.quantity) &&
+        Number.isSafeInteger(item.lineTotalCents) &&
+        typeof item.fulfilled === 'boolean',
     )
   );
 }
 
 function isEntitlement(value: unknown): value is PremiumEntitlement {
-  return object(value) &&
+  return (
+    object(value) &&
     typeof value.playerId === 'string' &&
     UUID_PATTERN.test(value.playerId) &&
     typeof value.entitlementKey === 'string' &&
@@ -85,7 +88,8 @@ function isEntitlement(value: unknown): value is PremiumEntitlement {
     (value.administrativeStatus === 'ACTIVE' || value.administrativeStatus === 'REVOKED') &&
     typeof value.currentlyActive === 'boolean' &&
     typeof value.startsAt === 'string' &&
-    nullableString(value.expiresAt);
+    nullableString(value.expiresAt)
+  );
 }
 
 export async function getAdminPremiumRead(

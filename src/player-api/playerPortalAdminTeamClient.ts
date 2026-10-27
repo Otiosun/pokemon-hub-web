@@ -107,7 +107,8 @@ export async function replaceAdminTeamCapabilities(
   if (response.status === 409) return { status: 'conflict' };
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as unknown;
-    const code = isRecord(body) && typeof body.error === 'string' ? body.error : 'ADMIN_TEAM_REJECTED';
+    const code =
+      isRecord(body) && typeof body.error === 'string' ? body.error : 'ADMIN_TEAM_REJECTED';
     return { status: 'rejected', code };
   }
   const body = (await response.json()) as unknown;
@@ -141,7 +142,8 @@ export async function addAdminTeamPrincipal(
   if (response.status === 403) return { status: 'forbidden' };
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as unknown;
-    const code = isRecord(body) && typeof body.error === 'string' ? body.error : 'ADMIN_TEAM_REJECTED';
+    const code =
+      isRecord(body) && typeof body.error === 'string' ? body.error : 'ADMIN_TEAM_REJECTED';
     return { status: 'rejected', code };
   }
   const body = (await response.json()) as unknown;
@@ -168,7 +170,8 @@ export async function setAdminTeamReceptionStaff(
   if (response.status === 403) return { status: 'forbidden' };
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as unknown;
-    const code = isRecord(body) && typeof body.error === 'string' ? body.error : 'ADMIN_TEAM_REJECTED';
+    const code =
+      isRecord(body) && typeof body.error === 'string' ? body.error : 'ADMIN_TEAM_REJECTED';
     return { status: 'rejected', code };
   }
   const body = (await response.json()) as unknown;

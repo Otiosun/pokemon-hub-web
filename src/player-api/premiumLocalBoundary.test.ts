@@ -5,14 +5,18 @@ import { readPremiumManualApiBaseUrl } from './playerPortalServerRuntime';
 const origin = 'https://pokemon-api.otiosunbots.xyz';
 const local = { vercelEnv: 'production', enabled: '1', apiBaseUrl: origin, approvedOrigin: origin };
 
-afterEach(() => { vi.unstubAllEnvs(); });
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 describe('Premium local operator origin, disabled by default', () => {
   it('requires explicit production-only approval matching the existing HTTPS Hub API', () => {
     expect(resolvePremiumLocalApiBaseUrl(local)).toBe(origin);
     expect(resolvePremiumLocalApiBaseUrl({ ...local, enabled: undefined })).toBeNull();
     expect(resolvePremiumLocalApiBaseUrl({ ...local, vercelEnv: 'preview' })).toBeNull();
-    expect(resolvePremiumLocalApiBaseUrl({ ...local, approvedOrigin: 'https://other.example.org' })).toBeNull();
+    expect(
+      resolvePremiumLocalApiBaseUrl({ ...local, approvedOrigin: 'https://other.example.org' }),
+    ).toBeNull();
     expect(resolvePremiumLocalApiBaseUrl({ ...local, apiBaseUrl: undefined })).toBeNull();
   });
   it('refuses arbitrary ports, local addresses, spoofed origins and protocol downgrades', () => {

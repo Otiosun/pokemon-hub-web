@@ -5,10 +5,13 @@ const id = '11111111-1111-4111-8111-111111111111';
 
 describe('Admin Premium protected read client', () => {
   it('passes only player id and resource to the allowlisted proxy', async () => {
-    const mock = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => new Response(JSON.stringify({ orders: [] }), {
-      status: 200,
-      headers: { 'content-type': 'application/json' },
-    }));
+    const mock = vi.fn(
+      async (_url: RequestInfo | URL, _init?: RequestInit) =>
+        new Response(JSON.stringify({ orders: [] }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+    );
     const result = await getAdminPremiumRead(id, 'orders', mock);
     expect(result).toEqual({ status: 'ok', orders: [] });
     expect(mock).toHaveBeenCalledTimes(1);
@@ -26,10 +29,13 @@ describe('Admin Premium protected read client', () => {
   it('preserves forbidden state and rejects malformed payloads', async () => {
     const forbidden = vi.fn(async () => new Response(null, { status: 403 }));
     expect(await getAdminPremiumRead(id, 'orders', forbidden)).toEqual({ status: 'forbidden' });
-    const malformed = vi.fn(async () => new Response(JSON.stringify({ orders: [{ status: 'PAID' }] }), {
-      status: 200,
-      headers: { 'content-type': 'application/json' },
-    }));
+    const malformed = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ orders: [{ status: 'PAID' }] }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+    );
     await expect(getAdminPremiumRead(id, 'orders', malformed)).rejects.toThrow('formato inválido');
   });
 

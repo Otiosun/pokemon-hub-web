@@ -15,7 +15,9 @@ describe('player portal roster showcase sandbox', () => {
     expect(result.status).toBe('authenticated');
     expect(fetcher).not.toHaveBeenCalled();
     if (result.status !== 'authenticated') return;
-    const moved = result.pokemon.find((entry) => entry.pokemonInstanceId === VALID_MOVE.pokemonInstanceId);
+    const moved = result.pokemon.find(
+      (entry) => entry.pokemonInstanceId === VALID_MOVE.pokemonInstanceId,
+    );
     expect(moved?.placementKind).toBe('TEAM');
     expect(moved?.slotNo).toBe(2);
   });

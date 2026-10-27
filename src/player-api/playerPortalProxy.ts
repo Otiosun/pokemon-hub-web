@@ -1,5 +1,9 @@
 import type { PlayerPortalFetcher } from './playerPortalClient';
-import { scopedSessionCookie, stageExchangeCookie, type SessionScope } from './premiumStagingSessionCookies.js';
+import {
+  scopedSessionCookie,
+  stageExchangeCookie,
+  type SessionScope,
+} from './premiumStagingSessionCookies.js';
 
 type PlayerPortalProxyOptions = {
   baseUrl: string | null;
@@ -96,7 +100,10 @@ function selectRequestHeaders(source: Headers, scope: SessionScope): Headers {
   return selected;
 }
 
-function selectResponseHeaders(source: Headers, mode: 'normal' | 'omit' | 'premium-stage-exchange'): Headers {
+function selectResponseHeaders(
+  source: Headers,
+  mode: 'normal' | 'omit' | 'premium-stage-exchange',
+): Headers {
   const selected = new Headers();
   for (const name of RESPONSE_HEADERS) {
     const value = source.get(name);

@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react';
 import { usePlayerPortalBrowserSession } from './playerPortalBrowserSession';
-import {
-  getPlayerPortalAdmin,
-  type PlayerPortalAdminAccess,
-} from './playerPortalAdminClient';
+import { getPlayerPortalAdmin, type PlayerPortalAdminAccess } from './playerPortalAdminClient';
 
 export type PlayerPortalAdminState =
   | { status: 'loading'; admin: null }

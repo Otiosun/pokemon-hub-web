@@ -48,23 +48,41 @@ function syntheticPremiumBridge() {
     expect(new Headers(init?.headers).get('cookie')).toBe(cookie);
     if (url === api + '/v1/hub/admin/self') {
       if (role === 'player') return Response.json({ admin: null });
-      const capabilities = role === 'owner'
-        ? ['central.view']
-        : role === 'delegate'
-          ? ['central.view', 'premium.delivery.grant', 'player.read']
-          : ['central.view', 'player.read', 'reward.grant'];
-      return Response.json({ admin: {
-        principalId: actorId, owner: role === 'owner', capabilities,
-      } });
+      const capabilities =
+        role === 'owner'
+          ? ['central.view']
+          : role === 'delegate'
+            ? ['central.view', 'premium.delivery.grant', 'player.read']
+            : ['central.view', 'player.read', 'reward.grant'];
+      return Response.json({
+        admin: {
+          principalId: actorId,
+          owner: role === 'owner',
+          capabilities,
+        },
+      });
     }
     if (url === api + '/v1/hub/admin/premium/delivery/catalog') {
-      return Response.json({ products: [
-        { sku: '2XP', title: 'XP em Dobro', maxQuantity: 52,
-          entitlementKey: 'XP_2X', grantModel: 'TIMED', durationSecondsPerUnit: 604800 },
-        { sku: 'LUCK', title: 'Bênção da Sorte', maxQuantity: 1,
-          entitlementKey: 'CAPTURE_LUCK_2X', grantModel: 'PERMANENT',
-          durationSecondsPerUnit: null },
-      ] });
+      return Response.json({
+        products: [
+          {
+            sku: '2XP',
+            title: 'XP em Dobro',
+            maxQuantity: 52,
+            entitlementKey: 'XP_2X',
+            grantModel: 'TIMED',
+            durationSecondsPerUnit: 604800,
+          },
+          {
+            sku: 'LUCK',
+            title: 'Bênção da Sorte',
+            maxQuantity: 1,
+            entitlementKey: 'CAPTURE_LUCK_2X',
+            grantModel: 'PERMANENT',
+            durationSecondsPerUnit: null,
+          },
+        ],
+      });
     }
     if (url === api + `/v1/hub/admin/premium/players/${playerId}/deliveries`) {
       return Response.json({ deliveries: [...entries].reverse() });
@@ -77,25 +95,39 @@ function syntheticPremiumBridge() {
         if (previous !== fingerprint) {
           return Response.json({ error: 'IDEMPOTENCY_CONFLICT' }, { status: 409 });
         }
-        return Response.json({ applied: true, replayed: true,
-          requestId: input.requestId, entitlement: { playerId: input.playerId } });
+        return Response.json({
+          applied: true,
+          replayed: true,
+          requestId: input.requestId,
+          entitlement: { playerId: input.playerId },
+        });
       }
       const durationSeconds = input.sku === '2XP' ? 604800 * input.quantity : null;
       fingerprintByRequest.set(input.requestId, fingerprint);
       entries.push({
-        id: input.requestId, requestId: input.requestId,
+        id: input.requestId,
+        requestId: input.requestId,
         entitlementKey: input.sku === '2XP' ? 'XP_2X' : 'CAPTURE_LUCK_2X',
-        durationSeconds, actorPrincipalId: actorId,
-        sku: input.sku, quantity: input.quantity, reason: input.reason,
+        durationSeconds,
+        actorPrincipalId: actorId,
+        sku: input.sku,
+        quantity: input.quantity,
+        reason: input.reason,
         createdAt: '2026-10-27T00:00:00.000Z',
       });
       if (loseFirstResponse) {
         loseFirstResponse = false;
         throw new Error('Synthetic connection lost AFTER applying the grant');
       }
-      return Response.json({ applied: true, replayed: false,
-        requestId: input.requestId, entitlement: { playerId: input.playerId } },
-      { status: 201 });
+      return Response.json(
+        {
+          applied: true,
+          replayed: false,
+          requestId: input.requestId,
+          entitlement: { playerId: input.playerId },
+        },
+        { status: 201 },
+      );
     }
     throw new Error('Unexpected upstream route in synthetic Premium fixture: ' + url);
   });
@@ -116,8 +148,12 @@ function syntheticPremiumBridge() {
     browserFetch,
     upstream,
     entries,
-    actingAs: (next: Role) => { role = next; },
-    dropNextResponse: () => { loseFirstResponse = true; },
+    actingAs: (next: Role) => {
+      role = next;
+    },
+    dropNextResponse: () => {
+      loseFirstResponse = true;
+    },
   };
 }
 
@@ -138,47 +174,82 @@ describe('Premium synthetic journey: client → BFF → backend contract', () =>
     const catalog = await readManualDeliveryCatalog(bridge.browserFetch);
     expect(catalog.map((p) => p.sku)).toEqual(['2XP', 'LUCK']);
 
-    const xp = { requestId: xpRequestId, playerId, sku: '2XP', quantity: 2,
-      reason: 'Pagamento 2XP conferido por canal externo.' };
-    expect(await submitManualDelivery(xp, bridge.browserFetch))
-      .toEqual({ status: 'applied', replayed: false, requestId: xpRequestId });
-    expect(await submitManualDelivery(xp, bridge.browserFetch))
-      .toEqual({ status: 'applied', replayed: true, requestId: xpRequestId });
-    expect((await readManualDeliveryHistory(playerId, bridge.browserFetch)))
-      .toMatchObject([{ sku: '2XP', quantity: 2, durationSeconds: 1209600 }]);
+    const xp = {
+      requestId: xpRequestId,
+      playerId,
+      sku: '2XP',
+      quantity: 2,
+      reason: 'Pagamento 2XP conferido por canal externo.',
+    };
+    expect(await submitManualDelivery(xp, bridge.browserFetch)).toEqual({
+      status: 'applied',
+      replayed: false,
+      requestId: xpRequestId,
+    });
+    expect(await submitManualDelivery(xp, bridge.browserFetch)).toEqual({
+      status: 'applied',
+      replayed: true,
+      requestId: xpRequestId,
+    });
+    expect(await readManualDeliveryHistory(playerId, bridge.browserFetch)).toMatchObject([
+      { sku: '2XP', quantity: 2, durationSeconds: 1209600 },
+    ]);
 
-    const luck = { requestId: luckRequestId, playerId, sku: 'LUCK', quantity: 1,
-      reason: 'Bênção verificada externamente pelo administrador.' };
-    expect(await submitManualDelivery(luck, bridge.browserFetch))
-      .toMatchObject({ status: 'applied', replayed: false });
+    const luck = {
+      requestId: luckRequestId,
+      playerId,
+      sku: 'LUCK',
+      quantity: 1,
+      reason: 'Bênção verificada externamente pelo administrador.',
+    };
+    expect(await submitManualDelivery(luck, bridge.browserFetch)).toMatchObject({
+      status: 'applied',
+      replayed: false,
+    });
     const second = { ...xp, requestId: secondRequestId };
-    expect(await submitManualDelivery(second, bridge.browserFetch))
-      .toMatchObject({ status: 'applied', replayed: false });
+    expect(await submitManualDelivery(second, bridge.browserFetch)).toMatchObject({
+      status: 'applied',
+      replayed: false,
+    });
     const history = await readManualDeliveryHistory(playerId, bridge.browserFetch);
     expect(history).toHaveLength(3);
     expect(history.filter((entry) => entry.sku === '2XP')).toHaveLength(2);
-    expect(history.find((entry) => entry.sku === 'LUCK'))
-      .toMatchObject({ durationSeconds: null, entitlementKey: 'CAPTURE_LUCK_2X' });
+    expect(history.find((entry) => entry.sku === 'LUCK')).toMatchObject({
+      durationSeconds: null,
+      entitlementKey: 'CAPTURE_LUCK_2X',
+    });
     expect(bridge.entries).toHaveLength(3);
-    expect(bridge.upstream.mock.calls.filter(([url]) =>
-      url === api + '/v1/hub/admin/premium/delivery')).toHaveLength(4);
+    expect(
+      bridge.upstream.mock.calls.filter(([url]) => url === api + '/v1/hub/admin/premium/delivery'),
+    ).toHaveLength(4);
   });
 
   it('recovers an uncertain HTTP response by replaying the SAME request ID', async () => {
     const bridge = syntheticPremiumBridge();
     bridge.dropNextResponse();
-    const input = { requestId: xpRequestId, playerId, sku: '2XP', quantity: 1,
-      reason: 'Pagamento conferido fora do sistema por operador.' };
-    expect(await submitManualDelivery(input, bridge.browserFetch))
-      .toMatchObject({ status: 'unavailable' });
+    const input = {
+      requestId: xpRequestId,
+      playerId,
+      sku: '2XP',
+      quantity: 1,
+      reason: 'Pagamento conferido fora do sistema por operador.',
+    };
+    expect(await submitManualDelivery(input, bridge.browserFetch)).toMatchObject({
+      status: 'unavailable',
+    });
     expect(bridge.entries).toHaveLength(1);
-    expect(await submitManualDelivery(input, bridge.browserFetch))
-      .toMatchObject({ status: 'applied', replayed: true });
+    expect(await submitManualDelivery(input, bridge.browserFetch)).toMatchObject({
+      status: 'applied',
+      replayed: true,
+    });
     expect(bridge.entries).toHaveLength(1);
-    expect((await readManualDeliveryHistory(playerId, bridge.browserFetch))[0])
-      .toMatchObject({ requestId: xpRequestId, quantity: 1 });
-    expect(await submitManualDelivery({ ...input, quantity: 2 }, bridge.browserFetch))
-      .toMatchObject({ status: 'conflict' });
+    expect((await readManualDeliveryHistory(playerId, bridge.browserFetch))[0]).toMatchObject({
+      requestId: xpRequestId,
+      quantity: 1,
+    });
+    expect(
+      await submitManualDelivery({ ...input, quantity: 2 }, bridge.browserFetch),
+    ).toMatchObject({ status: 'conflict' });
     expect(bridge.entries).toHaveLength(1);
   });
 
@@ -187,15 +258,23 @@ describe('Premium synthetic journey: client → BFF → backend contract', () =>
     bridge.actingAs('owner');
     expect(await readManualDeliveryCatalog(bridge.browserFetch)).toHaveLength(2);
     bridge.actingAs('ordinary-adm');
-    const input = { requestId: xpRequestId, playerId, sku: '2XP', quantity: 1,
-      reason: 'Este usuário não recebeu delegação Premium.' };
-    expect(await submitManualDelivery(input, bridge.browserFetch))
-      .toMatchObject({ status: 'forbidden' });
+    const input = {
+      requestId: xpRequestId,
+      playerId,
+      sku: '2XP',
+      quantity: 1,
+      reason: 'Este usuário não recebeu delegação Premium.',
+    };
+    expect(await submitManualDelivery(input, bridge.browserFetch)).toMatchObject({
+      status: 'forbidden',
+    });
     bridge.actingAs('player');
-    expect(await submitManualDelivery(input, bridge.browserFetch))
-      .toMatchObject({ status: 'forbidden' });
+    expect(await submitManualDelivery(input, bridge.browserFetch)).toMatchObject({
+      status: 'forbidden',
+    });
     expect(bridge.entries).toHaveLength(0);
-    expect(bridge.upstream.mock.calls.some(([url]) =>
-      url === api + '/v1/hub/admin/premium/delivery')).toBe(false);
+    expect(
+      bridge.upstream.mock.calls.some(([url]) => url === api + '/v1/hub/admin/premium/delivery'),
+    ).toBe(false);
   });
 });

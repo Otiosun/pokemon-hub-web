@@ -21,31 +21,58 @@ export interface ManualDeliveryEntry {
 
 export type ManualDeliveryResult =
   | { status: 'applied'; replayed: boolean; requestId: string }
-  | { status: 'unavailable' | 'forbidden' | 'unauthenticated' | 'rejected' | 'product-unavailable' | 'conflict'; error?: string };
+  | {
+      status:
+        | 'unavailable'
+        | 'forbidden'
+        | 'unauthenticated'
+        | 'rejected'
+        | 'product-unavailable'
+        | 'conflict';
+      error?: string;
+    };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 function record(data: unknown): data is Record<string, unknown> {
   return typeof data === 'object' && data !== null && !Array.isArray(data);
 }
 async function resultOrError(response: Response): Promise<unknown> {
-  if (response.status === 401 || response.status === 403 || response.status === 503 ||
-      response.status === 404 || response.status === 502) return null;
+  if (
+    response.status === 401 ||
+    response.status === 403 ||
+    response.status === 503 ||
+    response.status === 404 ||
+    response.status === 502
+  )
+    return null;
   if (!response.ok) throw new Error(`Requisição de entrega falhou (HTTP ${response.status}).`);
   return response.json() as Promise<unknown>;
 }
 
-export async function readManualDeliveryCatalog(fetcher: typeof fetch = fetch): Promise<DeliveryProduct[]> {
+export async function readManualDeliveryCatalog(
+  fetcher: typeof fetch = fetch,
+): Promise<DeliveryProduct[]> {
   const response = await fetcher('/api/hub/admin/premium/delivery/catalog', {
-    method: 'GET', credentials: 'include', cache: 'no-store',
+    method: 'GET',
+    credentials: 'include',
+    cache: 'no-store',
     headers: { accept: 'application/json' },
   });
   const body = await resultOrError(response);
-  if (!record(body) || !Array.isArray(body.products)) throw new Error('Catálogo de entregas indisponível.');
-  if (!body.products.every((p: unknown) =>
-    record(p) && typeof p.sku === 'string' && typeof p.title === 'string' &&
-    Number.isSafeInteger(p.maxQuantity) && typeof p.entitlementKey === 'string' &&
-    (p.grantModel === 'TIMED' || p.grantModel === 'PERMANENT') &&
-    (p.durationSecondsPerUnit === null || Number.isSafeInteger(p.durationSecondsPerUnit)))) {
+  if (!record(body) || !Array.isArray(body.products))
+    throw new Error('Catálogo de entregas indisponível.');
+  if (
+    !body.products.every(
+      (p: unknown) =>
+        record(p) &&
+        typeof p.sku === 'string' &&
+        typeof p.title === 'string' &&
+        Number.isSafeInteger(p.maxQuantity) &&
+        typeof p.entitlementKey === 'string' &&
+        (p.grantModel === 'TIMED' || p.grantModel === 'PERMANENT') &&
+        (p.durationSecondsPerUnit === null || Number.isSafeInteger(p.durationSecondsPerUnit)),
+    )
+  ) {
     throw new Error('Catálogo retornou dados inválidos.');
   }
   return body.products as DeliveryProduct[];
@@ -58,15 +85,31 @@ export async function readManualDeliveryHistory(
   if (!UUID.test(playerId)) throw new Error('Jogador inválido.');
   const response = await fetcher(
     `/api/hub/admin/premium?playerId=${encodeURIComponent(playerId)}&resource=deliveries`,
-    { method: 'GET', credentials: 'include', cache: 'no-store', headers: { accept: 'application/json' } },
+    {
+      method: 'GET',
+      credentials: 'include',
+      cache: 'no-store',
+      headers: { accept: 'application/json' },
+    },
   );
   const body = await resultOrError(response);
-  if (!record(body) || !Array.isArray(body.deliveries)) throw new Error('Histórico de entregas indisponível.');
-  if (!body.deliveries.every((x: unknown) => record(x) && UUID.test(String(x.id)) &&
-    UUID.test(String(x.requestId)) && UUID.test(String(x.actorPrincipalId)) &&
-    typeof x.sku === 'string' && typeof x.entitlementKey === 'string' &&
-    Number.isSafeInteger(x.quantity) && typeof x.reason === 'string' &&
-    typeof x.createdAt === 'string')) throw new Error('Histórico retornou dados inválidos.');
+  if (!record(body) || !Array.isArray(body.deliveries))
+    throw new Error('Histórico de entregas indisponível.');
+  if (
+    !body.deliveries.every(
+      (x: unknown) =>
+        record(x) &&
+        UUID.test(String(x.id)) &&
+        UUID.test(String(x.requestId)) &&
+        UUID.test(String(x.actorPrincipalId)) &&
+        typeof x.sku === 'string' &&
+        typeof x.entitlementKey === 'string' &&
+        Number.isSafeInteger(x.quantity) &&
+        typeof x.reason === 'string' &&
+        typeof x.createdAt === 'string',
+    )
+  )
+    throw new Error('Histórico retornou dados inválidos.');
   return body.deliveries as ManualDeliveryEntry[];
 }
 
@@ -74,14 +117,22 @@ export async function submitManualDelivery(
   payload: { requestId: string; playerId: string; sku: string; quantity: number; reason: string },
   fetcher: typeof fetch = fetch,
 ): Promise<ManualDeliveryResult> {
-  if (!UUID.test(payload.requestId) || !UUID.test(payload.playerId) ||
+  if (
+    !UUID.test(payload.requestId) ||
+    !UUID.test(payload.playerId) ||
     !/^[A-Z0-9][A-Z0-9_.:-]{1,127}$/.test(payload.sku) ||
-    !Number.isSafeInteger(payload.quantity) || payload.quantity < 1 || payload.quantity > 99 ||
-    payload.reason.trim().length < 8 || payload.reason.trim().length > 400) {
+    !Number.isSafeInteger(payload.quantity) ||
+    payload.quantity < 1 ||
+    payload.quantity > 99 ||
+    payload.reason.trim().length < 8 ||
+    payload.reason.trim().length > 400
+  ) {
     throw new Error('Confira os campos antes de entregar.');
   }
   const response = await fetcher('/api/hub/admin/premium/delivery', {
-    method: 'POST', credentials: 'include', cache: 'no-store',
+    method: 'POST',
+    credentials: 'include',
+    cache: 'no-store',
     headers: { accept: 'application/json', 'content-type': 'application/json' },
     body: JSON.stringify({ ...payload, reason: payload.reason.trim() }),
   });
@@ -99,9 +150,14 @@ export async function submitManualDelivery(
   if (response.status === 409) return { status: 'conflict' };
   if (!response.ok) return { status: 'rejected', error: `HTTP_${response.status}` };
   const body: unknown = await response.json();
-  if (!record(body) || body.applied !== true || typeof body.replayed !== 'boolean' ||
-    body.requestId !== payload.requestId || !record(body.entitlement) ||
-    body.entitlement.playerId !== payload.playerId) {
+  if (
+    !record(body) ||
+    body.applied !== true ||
+    typeof body.replayed !== 'boolean' ||
+    body.requestId !== payload.requestId ||
+    !record(body.entitlement) ||
+    body.entitlement.playerId !== payload.playerId
+  ) {
     throw new Error('Resposta de entrega inválida: confira o histórico antes de repetir.');
   }
   return { status: 'applied', replayed: body.replayed, requestId: payload.requestId };

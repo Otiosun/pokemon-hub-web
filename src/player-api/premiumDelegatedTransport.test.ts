@@ -16,9 +16,12 @@ function configure(): void {
 }
 
 function self(capabilities: string[], owner = false): Response {
-  return new Response(JSON.stringify({
-    admin: { principalId: playerId, owner, capabilities },
-  }), { status: 200, headers: { 'content-type': 'application/json' } });
+  return new Response(
+    JSON.stringify({
+      admin: { principalId: playerId, owner, capabilities },
+    }),
+    { status: 200, headers: { 'content-type': 'application/json' } },
+  );
 }
 
 afterEach(() => {
@@ -35,9 +38,9 @@ describe('delegated Premium API boundary: owner remains required elsewhere', () 
       throw new Error('Unexpected grant attempt');
     });
     vi.stubGlobal('fetch', upstream);
-    const result = await premiumProxy.fetch(new Request(
-      hub + '/api/hub/admin/premium/delivery/catalog', { headers: { cookie } },
-    ));
+    const result = await premiumProxy.fetch(
+      new Request(hub + '/api/hub/admin/premium/delivery/catalog', { headers: { cookie } }),
+    );
     expect(result.status).toBe(403);
     expect(upstream).toHaveBeenCalledTimes(1);
   });
@@ -61,20 +64,30 @@ describe('delegated Premium API boundary: owner remains required elsewhere', () 
     });
     vi.stubGlobal('fetch', upstream);
 
-    const get = async (p: string) => premiumProxy.fetch(new Request(hub + p, {
-      headers: { cookie },
-    }));
+    const get = async (p: string) =>
+      premiumProxy.fetch(
+        new Request(hub + p, {
+          headers: { cookie },
+        }),
+      );
     expect((await get('/api/hub/admin/premium/delivery/catalog')).status).toBe(200);
-    const grant = await premiumProxy.fetch(new Request(
-      hub + '/api/hub/admin/premium/delivery', {
+    const grant = await premiumProxy.fetch(
+      new Request(hub + '/api/hub/admin/premium/delivery', {
         method: 'POST',
         headers: { cookie, origin: hub, 'content-type': 'application/json' },
-        body: JSON.stringify({ requestId: playerId, playerId, sku: '2XP', quantity: 1,
-          reason: 'Comprovante validado fora do sistema.' }),
-      },
-    ));
+        body: JSON.stringify({
+          requestId: playerId,
+          playerId,
+          sku: '2XP',
+          quantity: 1,
+          reason: 'Comprovante validado fora do sistema.',
+        }),
+      }),
+    );
     expect(grant.status).toBe(200);
-    expect((await get(`/api/hub/admin/premium?playerId=${playerId}&resource=deliveries`)).status).toBe(200);
+    expect(
+      (await get(`/api/hub/admin/premium?playerId=${playerId}&resource=deliveries`)).status,
+    ).toBe(200);
     expect((await get('/api/hub/admin/premium/players?q=Ash')).status).toBe(200);
 
     expect(calls.filter((url) => url === api + '/v1/hub/admin/self')).toHaveLength(4);
@@ -112,16 +125,20 @@ describe('delegated Premium API boundary: owner remains required elsewhere', () 
       throw new Error('Player search must not be reached');
     });
     vi.stubGlobal('fetch', upstream);
-    const result = await premiumProxy.fetch(new Request(
-      hub + '/api/hub/admin/premium/players?q=Ash', { headers: { cookie } },
-    ));
+    const result = await premiumProxy.fetch(
+      new Request(hub + '/api/hub/admin/premium/players?q=Ash', { headers: { cookie } }),
+    );
     expect(result.status).toBe(403);
     expect(upstream).toHaveBeenCalledTimes(1);
   });
 
   it('matches only exact allowlisted route+method pairs, not arbitrary Proxy targets', () => {
-    const admin = { owner: false, capabilities: ['central.view', 'premium.delivery.grant', 'player.read'] };
-    const route = (p: string, method: string) => resolvePremiumStageAdminRoute(new URL(hub + p), method);
+    const admin = {
+      owner: false,
+      capabilities: ['central.view', 'premium.delivery.grant', 'player.read'],
+    };
+    const route = (p: string, method: string) =>
+      resolvePremiumStageAdminRoute(new URL(hub + p), method);
     const allowed = route('/api/hub/admin/premium/delivery', 'POST');
     expect(allowed && canDelegatePremiumRoute(admin, allowed)).toBe(true);
     const blocked = route('/api/hub/admin/premium/delivery/packs/master', 'POST');
