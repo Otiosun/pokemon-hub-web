@@ -86,6 +86,20 @@ describe('Player 360 Pokemon operation workflow', () => {
     });
   });
 
+  it('refuses PC slots outside the canonical 1–30 range before contacting the backend', () => {
+    for (const slotNo of ['0', '31', '999']) {
+      const result = buildAdminPokemonOperation({
+        action: 'ROSTER',
+        playerId,
+        pokemon,
+        fields: { ...baseFields, placementKind: 'BOX', boxNo: '2', slotNo },
+        reason: 'Reorganização administrativa de Box',
+        requestId,
+      });
+      expect(result).toEqual({ ok: false, message: 'O slot da Box deve estar entre 1 e 30.' });
+    }
+  });
+
   it('validates mechanical corrections before preparing an admin operation', () => {
     expect(
       buildAdminPokemonOperation({
