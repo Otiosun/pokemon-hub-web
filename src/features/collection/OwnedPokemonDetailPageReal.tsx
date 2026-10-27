@@ -148,6 +148,14 @@ export function OwnedPokemonDetailPage({
   const [evolutionRequestId, setEvolutionRequestId] = useState<string | null>(null);
   const [evolutionRequestScope, setEvolutionRequestScope] = useState<string | null>(null);
   useEffect(() => {
+    // Route changes must not carry one Pokémon's pending request to another.
+    setEvolutionRequestId(null);
+    setEvolutionRequestScope(null);
+    setEvolutionConfirmed(false);
+    setEvolutionItemId('');
+    setEvolutionMessage('');
+  }, [instanceId]);
+  useEffect(() => {
     let cancelled = false;
     void getPlayerPortalInventory()
       .then((result) => {
@@ -849,7 +857,7 @@ export function OwnedPokemonDetailPage({
                           setEvolutionMessage('');
                         }}
                       >
-                        <option value="">Selecione um item que possa evoluir este Pokémon</option>
+                        <option value="">Selecione um item do seu inventário</option>
                         {availableEvolutionItems.map((item) => (
                           <option key={item.itemId} value={item.itemId}>
                             {item.displayName} · ×{item.quantity}
