@@ -19,11 +19,13 @@ export type PlayerPortalRosterMoveInput = {
   target: PlayerPortalRosterPlacement;
 };
 
+export type PlayerPortalRosterMoveResult = PlayerPortalPokemonResult | { status: 'blocked' | 'rejected' | 'stale' };
+
 export async function movePlayerPortalPokemon(
   input: PlayerPortalRosterMoveInput,
   fetcher: PlayerPortalFetcher = fetch,
   showcaseActive: boolean = isAdvancedShowcaseActive(),
-): Promise<PlayerPortalPokemonResult> {
+): Promise<PlayerPortalRosterMoveResult> {
   if (!isRosterMoveInput(input)) {
     throw new Error('Invalid player portal roster request');
   }
@@ -46,6 +48,12 @@ export async function movePlayerPortalPokemon(
   });
 
   if (response.status === 401) return { status: 'unauthenticated' };
+  if (response.status === 404) return { status: 'stale' };
+  if (response.status === 409) {
+    const body: unknown = await response.json().catch(() => null);
+    if (isRecord(body) && body.error === 'FLOW_BLOCKED') return { status: 'blocked' };
+    return { status: 'rejected' };
+  }
   if (!response.ok) throw new Error(`Player portal roster request failed (${response.status})`);
 
   let body: unknown;
