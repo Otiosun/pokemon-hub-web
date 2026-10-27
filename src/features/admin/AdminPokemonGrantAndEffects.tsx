@@ -153,6 +153,10 @@ export function AdminPokemonGrantAndEffects({
       setCreateState({ kind: 'error', text: 'Informe um slot válido.' });
       return;
     }
+    if (placementKind === 'BOX' && parsedSlotNo > 30) {
+      setCreateState({ kind: 'error', text: 'A Box possui slots de 1 a 30.' });
+      return;
+    }
     if (placementKind === 'TEAM' && parsedSlotNo > 6) {
       setCreateState({ kind: 'error', text: 'O time possui slots de 1 a 6.' });
       return;
