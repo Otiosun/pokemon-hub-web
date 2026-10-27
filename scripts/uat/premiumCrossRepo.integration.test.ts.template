@@ -137,4 +137,50 @@ describe.sequential('Hub web + BFF + backend Premium HTTP + disposable PostgreSQ
     );
     expect(rows.rows[0]).toEqual({ grants: '2', payments: '0', orders: '0' });
   });
+
+  it('rejects absent/forged Hub sessions, cross-site mutations and delegated owner-only routes', async () => {
+    const base = hub + '/api/hub/admin/premium/delivery';
+    adminRole = 'owner';
+    const noCookie = await premiumProxy.fetch(new Request(base + '/catalog'));
+    expect(noCookie.status).toBe(401);
+
+    // The signed staging cookie must never authorize a production Hub operation.
+    const stagedCookie = '__Host-pokemon_hub_premium_stage_session=fake.signed';
+    const crossed = await premiumProxy.fetch(new Request(base + '/catalog', {
+      headers: { cookie: stagedCookie },
+    }));
+    expect(crossed.status).toBe(401);
+
+    const hostile = await premiumProxy.fetch(new Request(base, {
+      method: 'POST',
+      headers: { cookie, origin: 'https://attacker.example', 'content-type': 'application/json' },
+      body: JSON.stringify({
+        requestId: randomUUID(), playerId, sku: '2XP', quantity: 1,
+        reason: 'Cross-origin request must be refused before a grant.',
+      }),
+    }));
+    expect(hostile.status).toBe(403);
+
+    adminRole = 'delegate';
+    const ownerRoutes = [
+      '/api/hub/admin/premium/delivery/cases/catalog',
+      '/api/hub/admin/premium?playerId=' + playerId + '&resource=orders',
+      '/api/hub/admin/premium?playerId=' + playerId + '&resource=entitlements',
+      '/api/hub/admin/premium/delivery/items',
+      '/api/hub/admin/premium/delivery/pokemon',
+    ];
+    for (const route of ownerRoutes) {
+      const denied = await premiumProxy.fetch(new Request(hub + route, {
+        headers: { cookie },
+      }));
+      expect(denied.status, route).toBe(403);
+    }
+    const row = await pool.query(
+      "SELECT (SELECT count(*)::text FROM entitlement_grants) AS grants, " +
+      "(SELECT count(*)::text FROM premium_payment_events) AS payments, " +
+      "(SELECT count(*)::text FROM premium_orders) AS orders",
+    );
+    expect(row.rows[0]).toEqual({ grants: '2', payments: '0', orders: '0' });
+  });
+
 });
