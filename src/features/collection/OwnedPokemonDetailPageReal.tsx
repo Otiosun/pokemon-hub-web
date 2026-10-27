@@ -18,6 +18,7 @@ import { readCollectionSession } from './collectionSession';
 import { createOwnedPokemonView, findOwnedPokemonView, type OwnedPokemonSex } from './ownedPokemonView';
 import { useOwnedPokemonCollection } from './useOwnedPokemonCollection';
 import { usePlayerPortalMoveChoices } from './usePlayerPortalMoveChoices';
+import { requestPlayerEvolution } from '../../player-api/playerPortalEvolutionClient';
 import './owned-pokemon-detail.css';
 import './owned-pokemon-detail-menu.css';
 
@@ -133,6 +134,11 @@ export function OwnedPokemonDetailPage({
   } | null>(null);
   const collection = useOwnedPokemonCollection();
   const moveChoices = usePlayerPortalMoveChoices();
+  const [evolutionTrigger, setEvolutionTrigger] = useState<'LEVEL' | 'CONDITION'>('LEVEL');
+  const [evolutionConfirmed, setEvolutionConfirmed] = useState(false);
+  const [evolutionBusy, setEvolutionBusy] = useState(false);
+  const [evolutionMessage, setEvolutionMessage] = useState('');
+  const [evolutionRequestId, setEvolutionRequestId] = useState<string | null>(null);
   const pokemon = useMemo(
     () =>
       collection.status === 'authenticated'
@@ -269,6 +275,43 @@ export function OwnedPokemonDetailPage({
       : [];
   const moveLearningBlocked =
     moveChoices.state.status === 'authenticated' && moveChoices.state.blockedByBattle;
+
+  const requestEvolution = async () => {
+    if (!evolutionConfirmed || evolutionBusy) return;
+    const requestId = evolutionRequestId ?? crypto.randomUUID();
+    setEvolutionRequestId(requestId); // Keep the same key after uncertain HTTP failures.
+    setEvolutionBusy(true);
+    setEvolutionMessage('');
+    try {
+      const result = await requestPlayerEvolution({
+        pokemonInstanceId: instanceId,
+        requestId,
+        trigger: { kind: evolutionTrigger },
+      });
+      if (result.status === 'applied') {
+        setEvolutionRequestId(null);
+        setEvolutionConfirmed(false);
+        setEvolutionMessage(result.replayed
+          ? 'Evolução já registrada. O pedido não foi repetido.'
+          : 'Evolução realizada. Os dados do Pokémon foram atualizados.');
+        await collection.refresh();
+      } else if (result.status === 'blocked') {
+        setEvolutionMessage('Evoluções são bloqueadas durante uma batalha ativa.');
+      } else if (result.status === 'rejected') {
+        setEvolutionMessage('O Pokémon ainda não atende às condições desta evolução. Nenhuma evolução foi realizada.');
+      } else if (result.status === 'not-found') {
+        setEvolutionMessage('Este Pokémon não foi encontrado na sua conta.');
+      } else if (result.status === 'unauthenticated') {
+        setEvolutionMessage('Entre novamente no Hub para autorizar evoluções.');
+      } else {
+        setEvolutionMessage('Resposta indisponível. O resultado é incerto; ao tentar de novo, a mesma chave será reutilizada.');
+      }
+    } catch {
+      setEvolutionMessage('Sem confirmação da API. O resultado pode ser incerto. Repetir mantém a mesma chave do pedido.');
+    } finally {
+      setEvolutionBusy(false);
+    }
+  };
 
   const resolvePendingMove = async (choiceId: string, replaceSlotNo: number | null) => {
     const result = await moveChoices.resolve(choiceId, replaceSlotNo);
@@ -706,6 +749,39 @@ export function OwnedPokemonDetailPage({
                 <div><dt>SP. DEF</dt><dd>{ivLabel(record.ivs.spDefense)}</dd></div>
                 <div><dt>SPEED</dt><dd>{ivLabel(record.ivs.speed)}</dd></div>
               </dl>
+
+              <section className="owned-evolution" aria-label="Solicitar evolução">
+                <header>
+                  <span>EVOLUÇÃO</span>
+                  <strong>CONDIÇÕES DO JOGO</strong>
+                </header>
+                <p>A evolução só é aplicada quando o servidor confirma os requisitos da espécie. Evoluções por nível podem já ter ocorrido automaticamente ao receber XP.</p>
+                <label htmlFor="owned-evolution-trigger">Verificação</label>
+                <select
+                  id="owned-evolution-trigger"
+                  disabled={evolutionBusy}
+                  value={evolutionTrigger}
+                  onChange={(event) => {
+                    setEvolutionTrigger(event.target.value === 'CONDITION' ? 'CONDITION' : 'LEVEL');
+                    setEvolutionRequestId(null);
+                    setEvolutionConfirmed(false);
+                    setEvolutionMessage('');
+                  }}
+                >
+                  <option value="LEVEL">Requisitos de nível</option>
+                  <option value="CONDITION">Condição especial já ativada</option>
+                </select>
+                <label className="owned-evolution-approval">
+                  <input type="checkbox" checked={evolutionConfirmed} disabled={evolutionBusy}
+                    onChange={(event) => setEvolutionConfirmed(event.target.checked)} />
+                  Confirmo que desejo solicitar esta evolução ao servidor.
+                </label>
+                <button type="button" disabled={!evolutionConfirmed || evolutionBusy}
+                  onClick={() => void requestEvolution()}>
+                  {evolutionBusy ? 'CONSULTANDO SERVIDOR…' : evolutionRequestId ? 'REPETIR MESMO PEDIDO' : 'CONFIRMAR EVOLUÇÃO'}
+                </button>
+                {evolutionMessage ? <p role="status">{evolutionMessage}</p> : null}
+              </section>
 
               {dex !== null ? (
                 <a className="owned-detail-species-link" href={`/pokedex/${dex}`}>
