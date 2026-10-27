@@ -108,11 +108,9 @@ function syntheticPremiumBridge() {
     const headers = new Headers(init?.headers);
     headers.set('cookie', cookie);
     if (method === 'POST') headers.set('origin', hub);
-    return premiumProxy.fetch(new Request(new URL(String(input), hub), {
-      method,
-      headers,
-      ...(method === 'POST' ? { body: init?.body } : {}),
-    }));
+    const requestInit: RequestInit = { method, headers };
+    if (method === 'POST' && init?.body != null) requestInit.body = init.body;
+    return premiumProxy.fetch(new Request(new URL(String(input), hub), requestInit));
   };
   return {
     browserFetch,
