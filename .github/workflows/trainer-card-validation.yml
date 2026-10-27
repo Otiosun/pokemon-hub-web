@@ -88,6 +88,7 @@ jobs:
             --headless=new \
             --no-sandbox \
             --disable-gpu \
+            --disable-background-networking \
             --hide-scrollbars \
             --virtual-time-budget=25000 \
             --dump-dom \
@@ -116,6 +117,7 @@ jobs:
             --headless=new \
             --no-sandbox \
             --disable-gpu \
+            --disable-background-networking \
             --hide-scrollbars \
             --window-size=1536,1250 \
             --virtual-time-budget=25000 \
@@ -128,16 +130,30 @@ jobs:
             LABEL="${WIDTH}x${HEIGHT}"
             UAT_URL="http://127.0.0.1:4173/scripts/trainer-card-mobile-viewport-uat.html?width=${WIDTH}&height=${HEIGHT}"
 
-            timeout 90s "$BROWSER" \
+            # Bound and retry cold Chromium processes per viewport; only the
+            # actual ready/fresh/correct-size marker set can satisfy UAT.
+            for browser_attempt in 1 2 3; do
+              if timeout 55s "$BROWSER" \
               --headless=new \
               --no-sandbox \
               --disable-gpu \
+              --disable-background-networking \
+            --disable-background-networking \
               --hide-scrollbars \
               --window-size=900,1000 \
               --virtual-time-budget=35000 \
               --dump-dom \
               "$UAT_URL" \
-              > "/tmp/trainer-card-modal-${LABEL}.html"
+                > "/tmp/trainer-card-modal-${LABEL}.html"; then
+                if grep -q 'data-viewport-ready="true"' "/tmp/trainer-card-modal-${LABEL}.html" &&
+                   grep -q 'data-viewport-fresh="true"' "/tmp/trainer-card-modal-${LABEL}.html" &&
+                   grep -q "data-viewport-child=\"${WIDTH}x${HEIGHT}\"" "/tmp/trainer-card-modal-${LABEL}.html"; then
+                  break
+                fi
+              fi
+              echo "Trainer Card viewport ${LABEL} pending ($browser_attempt/3)"
+              sleep 2
+            done
 
             grep -q 'data-viewport-ready="true"' "/tmp/trainer-card-modal-${LABEL}.html" || {
               cat "/tmp/trainer-card-modal-${LABEL}.html"
@@ -157,6 +173,8 @@ jobs:
               --headless=new \
               --no-sandbox \
               --disable-gpu \
+              --disable-background-networking \
+            --disable-background-networking \
               --hide-scrollbars \
               --window-size=900,1000 \
               --virtual-time-budget=35000 \
