@@ -80,7 +80,11 @@ jobs:
             exit 1
           fi
 
-          "$BROWSER" \
+          # Chromium may dump the DOM before image composition finishes on a
+          # cold Vite transform. Retry only while the required UAT markers are
+          # absent; a script error never becomes a passing test.
+          for attempt in 1 2 3; do
+            if timeout 90s "$BROWSER" \
             --headless=new \
             --no-sandbox \
             --disable-gpu \
@@ -88,7 +92,15 @@ jobs:
             --virtual-time-budget=25000 \
             --dump-dom \
             http://127.0.0.1:4173/scripts/trainer-card-visual-uat.html \
-            > /tmp/trainer-card-uat-dom.html
+              > /tmp/trainer-card-uat-dom.html; then
+              if grep -q 'data-uat-ready="true"' /tmp/trainer-card-uat-dom.html &&
+                 grep -q 'data-uat-fresh="true"' /tmp/trainer-card-uat-dom.html; then
+                break
+              fi
+            fi
+            echo "Trainer Card visual UAT not ready (attempt $attempt/3)"
+            sleep 2
+          done
 
           grep -q 'data-uat-ready="true"' /tmp/trainer-card-uat-dom.html || {
             cat /tmp/trainer-card-uat-dom.html
@@ -100,7 +112,7 @@ jobs:
             exit 1
           }
 
-          "$BROWSER" \
+          timeout 90s "$BROWSER" \
             --headless=new \
             --no-sandbox \
             --disable-gpu \
@@ -116,7 +128,7 @@ jobs:
             LABEL="${WIDTH}x${HEIGHT}"
             UAT_URL="http://127.0.0.1:4173/scripts/trainer-card-mobile-viewport-uat.html?width=${WIDTH}&height=${HEIGHT}"
 
-            "$BROWSER" \
+            timeout 90s "$BROWSER" \
               --headless=new \
               --no-sandbox \
               --disable-gpu \
@@ -141,7 +153,7 @@ jobs:
               exit 1
             }
 
-            "$BROWSER" \
+            timeout 90s "$BROWSER" \
               --headless=new \
               --no-sandbox \
               --disable-gpu \
