@@ -64,7 +64,7 @@ export function PremiumStagingSessionGate({
 }: {
   access: PremiumStageRole;
   children: ReactNode;
-  onSessionChange?: (session: PremiumStageSession) => void;
+  onSessionChange?: ((session: PremiumStageSession) => void) | undefined;
 }) {
   if (currentPremiumManualUiMode() === 'local') {
     return <LivePremiumOwnerGate>{children}</LivePremiumOwnerGate>;
@@ -79,7 +79,7 @@ function IsolatedPreviewPremiumGate({
 }: {
   access: PremiumStageRole;
   children: ReactNode;
-  onSessionChange?: (session: PremiumStageSession) => void;
+  onSessionChange?: ((session: PremiumStageSession) => void) | undefined;
 }) {
   const local = false;
   const environment = local ? 'API LOCAL' : 'STAGING';
