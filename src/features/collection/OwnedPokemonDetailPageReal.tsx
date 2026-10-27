@@ -310,11 +310,11 @@ export function OwnedPokemonDetailPage({
   const hasItem = selectedEvolution?.triggerKind === 'ITEM' &&
     selectedEvolution.itemQuantity !== null &&
     BigInt(selectedEvolution.itemQuantity) > 0n;
-  const levelReady = selectedEvolution?.triggerKind === 'LEVEL' &&
-    selectedEvolution.requiredLevel !== null && record.level >= selectedEvolution.requiredLevel;
+  // The progression engine evolves level-based forms on XP award.
+  // Hub requests are only for manual ITEM or CONDITION triggers.
   const conditionReady = selectedEvolution?.triggerKind === 'CONDITION' &&
     selectedEvolution.conditionActive === true;
-  const ruleReady = hasItem || levelReady || conditionReady;
+  const ruleReady = hasItem || conditionReady;
   const currentEvolutionScope = `${instanceId}:${evolutionTrigger}:${evolutionTrigger === 'ITEM' ? evolutionItemId : ''}`;
   const evolutionRetryLocked = evolutionRequestId !== null && evolutionRequestScope !== null;
   const evolutionReady = evolutionConfirmed && !evolutionBusy &&
@@ -889,7 +889,9 @@ export function OwnedPokemonDetailPage({
                           : ''}
                       </p>
                     ) : null}
-                    {selectedEvolution && !ruleReady ? (
+                    {selectedEvolution?.triggerKind === 'LEVEL' ? (
+                      <p>A evolução por nível acontece automaticamente quando o Pokémon recebe XP. Não é necessário nem permitido solicitar manualmente por aqui.</p>
+                    ) : selectedEvolution && !ruleReady ? (
                       <p role="status">Os requisitos conhecidos ainda não foram atendidos.</p>
                     ) : null}
                     <label className="owned-evolution-approval">
