@@ -235,7 +235,7 @@ describe('Premium synthetic journey: client → BFF → backend contract', () =>
       reason: 'Pagamento conferido fora do sistema por operador.',
     };
     expect(await submitManualDelivery(input, bridge.browserFetch)).toMatchObject({
-      status: 'unavailable',
+      status: 'uncertain',
     });
     expect(bridge.entries).toHaveLength(1);
     expect(await submitManualDelivery(input, bridge.browserFetch)).toMatchObject({
