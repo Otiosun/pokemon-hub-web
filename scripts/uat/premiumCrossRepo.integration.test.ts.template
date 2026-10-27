@@ -1,0 +1,140 @@
+import { randomUUID } from 'node:crypto';
+import { createRequire } from 'node:module';
+import { resolve } from 'node:path';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import premiumProxy from '../../api/hub/admin/[...path]';
+import { HUB_COOKIE } from './premiumStagingSessionCookies';
+import {
+  readManualDeliveryCatalog, readManualDeliveryHistory, submitManualDelivery,
+} from './manualPremiumDeliveryClient';
+import { EntitlementService } from '../../backend/src/modules/entitlements/service';
+import { PlayerPortalHttpHandler } from '../../backend/src/modules/player-portal/http-handler';
+import { ManualPremiumDeliveryService } from '../../backend/src/modules/premium-orders/manual-delivery-service';
+import { runMigrations } from '../../backend/src/platform/db/migrations';
+import { PostgresEntitlementRepository } from '../../backend/src/platform/entitlements/postgres-entitlement-repository';
+import { ok } from '../../backend/src/shared-kernel/result';
+
+// CI-only test template: checkout of backend and ephemeral PostgreSQL required.
+// Never import real environment variables or connect to running game services.
+const backendRequire = createRequire(resolve(process.cwd(), 'backend/package.json'));
+const { Pool } = backendRequire('pg');
+const dbURL = process.env.DATABASE_URL;
+if (!dbURL?.startsWith('postgresql://')) throw new Error('Disposable DATABASE_URL required');
+const hub = 'https://synthetic-web.invalid';
+const upstream = 'https://synthetic-api.invalid';
+const cookie = HUB_COOKIE + '=cross.repo';
+const identity = { provider: 'baileys' as const, externalId: '5511999999999@s.whatsapp.net' };
+const actorId = randomUUID();
+const dbName = 'pokemon_premium_cross_' + process.pid + '_' + Date.now();
+
+describe.sequential('Hub web + BFF + backend Premium HTTP + disposable PostgreSQL', () => {
+  let adminPool: InstanceType<typeof Pool>;
+  let pool: InstanceType<typeof Pool>;
+  let playerId: string;
+  let adminRole: 'owner' | 'delegate' | 'ordinary-adm' | 'player' = 'owner';
+
+  beforeAll(async () => {
+    const postgresUrl = new URL(dbURL);
+    postgresUrl.pathname = '/postgres';
+    adminPool = new Pool({ connectionString: postgresUrl.toString(), max: 1 });
+    await adminPool.query('CREATE DATABASE "' + dbName + '"');
+    const databaseUrl = new URL(dbURL);
+    databaseUrl.pathname = '/' + dbName;
+    pool = new Pool({ connectionString: databaseUrl.toString(), max: 6 });
+    await runMigrations(pool, { appliedBy: 'premium-crossrepo-ci' });
+    playerId = randomUUID();
+    await pool.query("INSERT INTO players (id, status) VALUES ($1, 'ACTIVE')", [playerId]);
+    const service = new ManualPremiumDeliveryService(
+      pool, new EntitlementService(new PostgresEntitlementRepository(pool)),
+    );
+
+    const handler = new PlayerPortalHttpHandler({
+      sessions: { verify: () => ok(identity) },
+      admin: {
+        resolvePrincipal: async () =>
+          adminRole === 'player' ? null : { principalId: actorId },
+        capabilitiesFor: async () =>
+          adminRole === 'owner' ? ['central.view'] :
+          adminRole === 'delegate' ? ['central.view', 'premium.delivery.grant', 'player.read'] :
+          ['central.view'],
+      },
+      adminTeam: { isOwner: async () => adminRole === 'owner' },
+      premiumDelivery: service,
+    } as unknown as ConstructorParameters<typeof PlayerPortalHttpHandler>[0]);
+
+    vi.stubEnv('VERCEL_ENV', 'production');
+    vi.stubEnv('PLAYER_PORTAL_API_BASE_URL', upstream);
+    vi.stubEnv('PREMIUM_LOCAL_ENABLED', '1');
+    vi.stubEnv('PREMIUM_LOCAL_APPROVED_ORIGIN', upstream);
+    vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
+      if (!url.startsWith(upstream + '/v1/hub/')) {
+        throw new Error('Unexpected non-synthetic upstream URL');
+      }
+      return handler.handle(new Request(url, init));
+    }));
+  }, 30_000);
+
+  afterAll(async () => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+    if (pool) await pool.end();
+    if (adminPool) {
+      await adminPool.query(
+        'SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname=$1 AND pid<>pg_backend_pid()',
+        [dbName],
+      );
+      await adminPool.query('DROP DATABASE IF EXISTS "' + dbName + '"');
+      await adminPool.end();
+    }
+  }, 30_000);
+
+  const browserFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+    const method = init?.method ?? 'GET';
+    const headers = new Headers(init?.headers);
+    headers.set('cookie', cookie);
+    if (method === 'POST') headers.set('origin', hub);
+    const requestInit: RequestInit = { method, headers };
+    if (method === 'POST' && init?.body != null) requestInit.body = init.body;
+    return premiumProxy.fetch(new Request(new URL(String(input), hub), requestInit));
+  };
+
+  it('owner 2XP and replay, delegate LUCK, history, blocked ADM and zero payments', async () => {
+    const catalog = await readManualDeliveryCatalog(browserFetch);
+    expect(catalog.map((product) => product.sku)).toEqual(['2XP', 'LUCK']);
+    const xp = { requestId: randomUUID(), playerId, sku: '2XP', quantity: 2,
+      reason: 'Benefício autorizado externamente em ambiente descartável.' };
+    expect(await submitManualDelivery(xp, browserFetch))
+      .toMatchObject({ status: 'applied', replayed: false });
+    expect(await submitManualDelivery(xp, browserFetch))
+      .toMatchObject({ status: 'applied', replayed: true });
+    expect(await submitManualDelivery({ ...xp, quantity: 3 }, browserFetch))
+      .toMatchObject({ status: 'conflict' });
+
+    adminRole = 'delegate';
+    const luck = { requestId: randomUUID(), playerId, sku: 'LUCK', quantity: 1,
+      reason: 'LUCK autorizada externamente por ADM delegado em teste.' };
+    expect(await submitManualDelivery(luck, browserFetch))
+      .toMatchObject({ status: 'applied', replayed: false });
+    const audit = await readManualDeliveryHistory(playerId, browserFetch);
+    expect(audit).toEqual(expect.arrayContaining([
+      expect.objectContaining({ sku: '2XP', requestId: xp.requestId, durationSeconds: 1209600 }),
+      expect.objectContaining({ sku: 'LUCK', requestId: luck.requestId,
+        entitlementKey: 'CAPTURE_LUCK_2X', durationSeconds: null }),
+    ]));
+
+    adminRole = 'ordinary-adm';
+    expect(await submitManualDelivery({ ...luck, requestId: randomUUID() }, browserFetch))
+      .toMatchObject({ status: 'forbidden' });
+    await expect(readManualDeliveryHistory(playerId, browserFetch)).rejects.toThrow();
+    adminRole = 'player';
+    expect(await submitManualDelivery({ ...xp, requestId: randomUUID() }, browserFetch))
+      .toMatchObject({ status: 'forbidden' });
+
+    const rows = await pool.query(
+      "SELECT (SELECT count(*)::text FROM entitlement_grants) AS grants, " +
+      "(SELECT count(*)::text FROM premium_payment_events) AS payments, " +
+      "(SELECT count(*)::text FROM premium_orders) AS orders",
+    );
+    expect(rows.rows[0]).toEqual({ grants: '2', payments: '0', orders: '0' });
+  });
+});
