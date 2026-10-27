@@ -147,7 +147,7 @@ export async function submitManualDelivery(
       ? { status: 'product-unavailable' }
       : { status: 'unavailable' };
   }
-// A gateway error cannot prove that the upstream did NOT apply the grant.
+// A gateway error cannot prove whether upstream applied the grant.
   // Preserve requestId so the operator can reconcile and retry idempotently.
   if (response.status === 502 || response.status === 503) return { status: 'uncertain' };
   if (response.status === 409) return { status: 'conflict' };
