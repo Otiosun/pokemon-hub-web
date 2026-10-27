@@ -77,7 +77,8 @@ describe('manual gamepass delivery UI contract', () => {
       [401, 'unauthenticated'],
       [403, 'forbidden'],
       [404, 'unavailable'],
-      [503, 'unavailable'],
+      [502, 'uncertain'],
+      [503, 'uncertain'],
       [409, 'conflict'],
     ] as const) {
       const fetcher = vi.fn(async () => new Response(null, { status }));
@@ -96,6 +97,22 @@ describe('manual gamepass delivery UI contract', () => {
         ).status,
       ).toBe(outcome);
     }
+  });
+
+  it('treats a gateway failure as uncertain even when upstream may have granted the order', async () => {
+    const fetcher = vi.fn(async () => new Response(null, { status: 502 }));
+    const input = {
+      requestId,
+      playerId,
+      sku: '2XP',
+      quantity: 2,
+      reason: 'Pedido conferido externamente pelo operador autorizado.',
+    };
+    expect(await submitManualDelivery(input, fetcher)).toEqual({ status: 'uncertain' });
+    expect(await submitManualDelivery(input, fetcher)).toEqual({ status: 'uncertain' });
+    const sent = fetcher.mock.calls.map(([, init]) => JSON.parse(String(init?.body)) as typeof input);
+    expect(sent.map((payload) => payload.requestId)).toEqual([requestId, requestId]);
+    expect(sent[1]).toEqual(sent[0]);
   });
 
   it('distinguishes missing backend route from an unpublished commercial product', async () => {
