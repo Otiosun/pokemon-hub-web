@@ -53,7 +53,7 @@ function PremiumStagingPageContent({
   local: boolean;
   deliveryOnly: boolean;
   canSearchPlayers: boolean;
-  onStageSessionChange?: (session: PremiumStageSession) => void;
+  onStageSessionChange?: ((session: PremiumStageSession) => void) | undefined;
 }) {
   const [draft, setDraft] = useState('');
   const [playerId, setPlayerId] = useState<string | null>(null);
