@@ -113,7 +113,7 @@ export function AdminPremiumDeliveryPanel({ playerId }: { playerId: string | nul
     <section className="premium-delivery-console" aria-label="Entregas manuais de gamepasses">
       <header>
         <div><small>ENTREGA MANUAL · SEM SISTEMA DE PAGAMENTO</small><h3>Conceder benefício</h3></div>
-        <span>OWNER</span>
+        <span>ENTREGA AUTORIZADA</span>
       </header>
       <p>Após verificar o pagamento fora do sistema, escolha o benefício e registre a justificativa.
         <strong> Nenhuma compra é aprovada automaticamente.</strong></p>
