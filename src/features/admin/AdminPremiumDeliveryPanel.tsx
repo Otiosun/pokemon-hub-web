@@ -18,6 +18,7 @@ export function AdminPremiumDeliveryPanel({ playerId }: { playerId: string | nul
   const [confirmed, setConfirmed] = useState(false);
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
+  const [needsReconciliation, setNeedsReconciliation] = useState(false);
   const [loading, setLoading] = useState(true);
   const intent = useRef<string | null>(null);
   const selected = products.find((p) => p.sku === sku);
@@ -61,9 +62,37 @@ export function AdminPremiumDeliveryPanel({ playerId }: { playerId: string | nul
     // A changed input is a different owner decision. Failed/uncertain HTTP
     // responses retain the SAME requestId for safe retries.
     intent.current = null;
+    setNeedsReconciliation(false);
     setConfirmed(false);
     setStatus('');
   };
+  // The history is authoritative when the HTTP response is lost after a grant.
+  // Absence from a refreshed history is NOT evidence that no grant occurred.
+  const reconcile = async () => {
+    if (!playerId || busy || !intent.current) return;
+    const requestId = intent.current;
+    setBusy(true);
+    setHistoryState('loading');
+    try {
+      const updatedHistory = await readManualDeliveryHistory(playerId);
+      setHistory(updatedHistory);
+      setHistoryState('ready');
+      if (updatedHistory.some((entry) => entry.requestId === requestId)) {
+        setNeedsReconciliation(false);
+        setConfirmed(false);
+        setStatus('Pedido localizado no histórico. Entrega confirmada; não gere outra concessão.');
+      } else {
+        setNeedsReconciliation(true);
+        setStatus('Este pedido ainda não aparece no histórico. O resultado continua incerto; se repetir, preserve os dados e a mesma chave do pedido.');
+      }
+    } catch {
+      setHistoryState('error');
+      setStatus('Não foi possível consultar o histórico. Não crie outro pedido; repita somente com os mesmos dados e a mesma chave.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const deliver = async () => {
     if (!playerId || !selected || !valid || !confirmed || busy) return;
     setBusy(true);
@@ -78,6 +107,7 @@ export function AdminPremiumDeliveryPanel({ playerId }: { playerId: string | nul
         reason,
       });
       if (result.status === 'applied') {
+        setNeedsReconciliation(false);
         setConfirmed(false);
         setStatus(result.replayed
           ? 'Entrega já registrada anteriormente. Nenhum benefício duplicado.'
@@ -92,6 +122,9 @@ export function AdminPremiumDeliveryPanel({ playerId }: { playerId: string | nul
         }
         // Do NOT clear the intent on success: the next delivery requires an
         // explicit input change, avoiding accidental re-issuance on another click.
+      } else if (result.status === 'uncertain') {
+        setNeedsReconciliation(true);
+        setStatus('A API não confirmou o resultado (HTTP 502/503). O servidor pode ter concedido o benefício: consulte o histórico ou repita com a mesma chave.');
       } else {
         setStatus({
           unavailable: 'A API de entregas não está disponível nesta versão do servidor. Nenhuma entrega foi confirmada.',
@@ -103,7 +136,8 @@ export function AdminPremiumDeliveryPanel({ playerId }: { playerId: string | nul
         }[result.status]);
       }
     } catch {
-      setStatus('Resultado incerto. Verifique o histórico; repetir com os mesmos dados mantém a chave da primeira tentativa.');
+      setNeedsReconciliation(true);
+      setStatus('Resultado incerto. O servidor pode ter aplicado a entrega: consulte o histórico antes de tentar novamente. A chave do pedido foi preservada.');
     } finally {
       setBusy(false);
     }
@@ -164,9 +198,14 @@ export function AdminPremiumDeliveryPanel({ playerId }: { playerId: string | nul
           {missing && !busy ? <p className="premium-delivery-requirement" role="status">{missing}</p> : null}
           <button type="button" disabled={busy || !valid || !confirmed}
             onClick={() => void deliver()}>
-            {busy ? 'REGISTRANDO ENTREGA…' : 'CONFIRMAR ENTREGA'}
+            {busy ? 'REGISTRANDO ENTREGA…' : needsReconciliation ? 'REPETIR COM A MESMA CHAVE' : 'CONFIRMAR ENTREGA'}
           </button>
           {status ? <p role="status" className="premium-delivery-notice">{status}</p> : null}
+          {needsReconciliation ? (
+            <button type="button" disabled={busy} onClick={() => void reconcile()}>
+              {busy ? 'CONSULTANDO…' : 'VERIFICAR ESTE PEDIDO NO HISTÓRICO'}
+            </button>
+          ) : null}
         </div>
       )}
       <div className="premium-delivery-history">
@@ -181,7 +220,7 @@ export function AdminPremiumDeliveryPanel({ playerId }: { playerId: string | nul
               <li key={entry.id}>
                 <strong>{entry.quantity}× {entry.sku}</strong>
                 <span>{entry.reason}</span>
-                <small>{new Date(entry.createdAt).toLocaleString('pt-BR')} · ADM {entry.actorPrincipalId}</small>
+                <small>Pedido {entry.requestId} · {new Date(entry.createdAt).toLocaleString('pt-BR')} · ADM {entry.actorPrincipalId}</small>
               </li>
             ))}</ul>}
       </div>
