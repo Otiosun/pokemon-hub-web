@@ -310,11 +310,14 @@ export function OwnedPokemonDetailPage({
   const hasItem = selectedEvolution?.triggerKind === 'ITEM' &&
     selectedEvolution.itemQuantity !== null &&
     BigInt(selectedEvolution.itemQuantity) > 0n;
-  // The progression engine evolves level-based forms on XP award.
-  // Hub requests are only for manual ITEM or CONDITION triggers.
+  // Normal LEVEL evolutions happen during XP awards. Only a threshold already
+  // reached on an unchanged form enables the explicit overdue-recovery action.
+  const overdueLevelReady = selectedEvolution?.triggerKind === 'LEVEL' &&
+    selectedEvolution.requiredLevel !== null &&
+    record.level >= selectedEvolution.requiredLevel;
   const conditionReady = selectedEvolution?.triggerKind === 'CONDITION' &&
     selectedEvolution.conditionActive === true;
-  const ruleReady = hasItem || conditionReady;
+  const ruleReady = hasItem || conditionReady || overdueLevelReady;
   const currentEvolutionScope = `${instanceId}:${evolutionTrigger}:${evolutionTrigger === 'ITEM' ? evolutionItemId : ''}`;
   const evolutionRetryLocked = evolutionRequestId !== null && evolutionRequestScope !== null;
   const evolutionReady = evolutionConfirmed && !evolutionBusy &&
@@ -335,6 +338,7 @@ export function OwnedPokemonDetailPage({
         trigger: evolutionTrigger === 'ITEM'
           ? { kind: 'ITEM', itemId: evolutionItemId }
           : { kind: evolutionTrigger },
+        ...(evolutionTrigger === 'LEVEL' ? { recovery: true as const } : {}),
       });
       if (result.status === 'applied') {
         setEvolutionRequestId(null);
@@ -890,7 +894,9 @@ export function OwnedPokemonDetailPage({
                       </p>
                     ) : null}
                     {selectedEvolution?.triggerKind === 'LEVEL' ? (
-                      <p>A evolução por nível acontece automaticamente quando o Pokémon recebe XP. Não é necessário nem permitido solicitar manualmente por aqui.</p>
+                      <p>{overdueLevelReady
+                        ? 'Este Pokémon já alcançou o nível exigido sem evoluir. Você pode regularizar o registro sem ganhar XP nem consumir item; o servidor verificará os atributos e o único destino válido.'
+                        : 'A evolução por nível acontece automaticamente ao ganhar XP. Ainda não há evolução atrasada para regularizar.'}</p>
                     ) : selectedEvolution && !ruleReady ? (
                       <p role="status">Os requisitos conhecidos ainda não foram atendidos.</p>
                     ) : null}
@@ -903,7 +909,8 @@ export function OwnedPokemonDetailPage({
                     <button type="button" disabled={!evolutionReady}
                       onClick={() => void requestEvolution()}>
                       {evolutionBusy ? 'CONSULTANDO SERVIDOR…'
-                        : evolutionRequestId ? 'REPETIR MESMO PEDIDO' : 'CONFIRMAR EVOLUÇÃO'}
+                        : evolutionRequestId ? 'REPETIR MESMO PEDIDO' : overdueLevelReady
+                          ? 'REGULARIZAR EVOLUÇÃO' : 'CONFIRMAR EVOLUÇÃO'}
                     </button>
                     {evolutionRetryLocked ? (
                       <small>Pedido sem resposta definitiva. A seleção está travada para repetição com a mesma chave.</small>
