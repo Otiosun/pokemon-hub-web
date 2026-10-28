@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { AdminPlayerPokemon } from '../../player-api/playerPortalAdminPlayersClient';
 import {
   buildAdminPokemonOperation,
@@ -7,6 +7,12 @@ import {
   type AdminPokemonAction,
   type AdminPokemonOperationFields,
 } from './adminPokemonOperationWorkflow';
+import {
+  decodePendingAdminPokemonOperation,
+  encodePendingAdminPokemonOperation,
+  pendingAdminPokemonStorageKey,
+  type PendingAdminPokemonOperation,
+} from './adminPokemonPendingIntent';
 
 type AdminPokemonOperationsProps = {
   playerId: string;
@@ -39,6 +45,15 @@ function fieldsForPokemon(pokemon: AdminPlayerPokemon | undefined): AdminPokemon
   };
 }
 
+function loadPending(playerId: string): PendingAdminPokemonOperation | null {
+  if(typeof window === 'undefined') return null;
+  try {
+    return decodePendingAdminPokemonOperation(
+      window.sessionStorage.getItem(pendingAdminPokemonStorageKey(playerId)), playerId,
+    );
+  } catch { return null; }
+}
+
 export function AdminPokemonOperations({
   playerId,
   capabilities,
@@ -62,7 +77,12 @@ export function AdminPokemonOperations({
     fieldsForPokemon(selectedPokemon),
   );
   const [reason, setReason] = useState('');
-  const [pendingRequestId, setPendingRequestId] = useState<string | null>(null);
+  const [pendingIntent, setPendingIntent] = useState<PendingAdminPokemonOperation | null>(
+    () => loadPending(playerId),
+  );
+  useEffect(() => {
+    setPendingIntent(loadPending(playerId));
+  }, [playerId]);
   const [state, setState] = useState<
     | { kind: 'idle' }
     | { kind: 'submitting'; text: string }
@@ -72,25 +92,25 @@ export function AdminPokemonOperations({
   >({ kind: 'idle' });
 
   const patchFields = (patch: Partial<AdminPokemonOperationFields>) => {
+    if (pendingIntent !== null) return;
     setFields((current) => ({ ...current, ...patch }));
-    setPendingRequestId(null);
     setState({ kind: 'idle' });
   };
 
   const switchPokemon = (pokemonId: string) => {
+    if (pendingIntent !== null) return;
     const nextPokemon = activePokemon.find((entry) => entry.id === pokemonId);
     setSelectedPokemonId(pokemonId);
     setFields(fieldsForPokemon(nextPokemon));
     setReason('');
-    setPendingRequestId(null);
     setState({ kind: 'idle' });
   };
 
   const switchAction = (action: AdminPokemonAction) => {
+    if (pendingIntent !== null) return;
     setSelectedAction(action);
     setFields(fieldsForPokemon(selectedPokemon));
     setReason('');
-    setPendingRequestId(null);
     setState({ kind: 'idle' });
   };
 
@@ -113,75 +133,70 @@ export function AdminPokemonOperations({
     );
   }
 
+  const finishPending = () => {
+    setPendingIntent(null);
+    try { window.sessionStorage.removeItem(pendingAdminPokemonStorageKey(playerId)); } catch {
+      // The operation is resolved server-side; no request is resubmitted automatically.
+    }
+  };
+
+  const executePending = async (intent: PendingAdminPokemonOperation) => {
+    setState({ kind: 'submitting', text: 'RECONCILIANDO OPERAÇÃO…' });
+    try {
+      const result = await runAdminPokemonOperation(intent.request);
+      if (result.status === 'applied') {
+        finishPending();
+        setReason('');
+        setState({ kind: 'success', text: 'Operação aplicada e registrada na trilha administrativa.' });
+        onApplied();
+        return;
+      }
+      if (result.status === 'awaiting-approval') {
+        finishPending();
+        setState({ kind: 'approval', text: `Operação ${result.operationId} aguarda aprovação de outro administrador.` });
+        return;
+      }
+      if (result.status === 'denied') {
+        setState({ kind: 'error', text: 'Operação sem permissão nesta sessão. O pedido original permanece guardado para reconciliação.' });
+        return;
+      }
+      setState({ kind: 'error', text: `O servidor rejeitou ${result.code}. O pedido original continua guardado; confira a auditoria antes de qualquer novo pedido.` });
+    } catch {
+      setState({ kind: 'error', text: 'Resposta de rede incerta. Repita apenas a solicitação original ou confira a auditoria; a chave não será trocada.' });
+    }
+  };
+
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (pendingIntent !== null) {
+      setState({ kind: 'error', text: 'Existe uma solicitação sem desfecho. Retome o pedido original antes de alterar qualquer campo.' });
+      return;
+    }
     if (!selectedPokemon) {
       setState({ kind: 'error', text: 'Selecione um Pokémon ativo.' });
       return;
     }
-
-    const requestId = pendingRequestId ?? crypto.randomUUID();
+    const requestId = crypto.randomUUID();
     const built = buildAdminPokemonOperation({
-      action: activeAction,
-      playerId,
-      pokemon: selectedPokemon,
-      fields,
-      reason,
-      requestId,
+      action: activeAction, playerId, pokemon: selectedPokemon, fields, reason, requestId,
     });
-
     if (!built.ok) {
       setState({ kind: 'error', text: built.message });
       return;
     }
-
-    if (pendingRequestId === null) setPendingRequestId(requestId);
-    setState({
-      kind: 'submitting',
-      text:
-        activeAction === 'ARCHIVE'
-          ? 'VALIDANDO ARQUIVAMENTO…'
-          : 'VALIDANDO OPERAÇÃO…',
-    });
-
+    let intent: PendingAdminPokemonOperation;
     try {
-      const result = await runAdminPokemonOperation(built.request);
-      if (result.status === 'applied') {
-        setPendingRequestId(null);
-        setReason('');
-        setState({
-          kind: 'success',
-          text: 'Operação aplicada e registrada na trilha administrativa.',
-        });
-        onApplied();
-        return;
-      }
-
-      if (result.status === 'awaiting-approval') {
-        setPendingRequestId(null);
-        setState({
-          kind: 'approval',
-          text: `Operação ${result.operationId} aguarda aprovação de outro administrador.`,
-        });
-        return;
-      }
-
-      if (result.status === 'denied') {
-        setPendingRequestId(null);
-        setState({ kind: 'error', text: 'Sua sessão não possui autorização para esta operação.' });
-        return;
-      }
-
-      setPendingRequestId(null);
-      setState({ kind: 'error', text: `Operação rejeitada: ${result.code}` });
+      const key=pendingAdminPokemonStorageKey(playerId);
+      window.sessionStorage.setItem(key, encodePendingAdminPokemonOperation(playerId,built.request));
+      intent = loadPending(playerId)!;
+      if (!intent) throw new Error("Could not verify persisted admin intent");
     } catch {
-      setState({
-        kind: 'error',
-        text: 'Falha de rede. O mesmo requestId será reutilizado na próxima tentativa.',
-      });
+      setState({kind:'error', text:'Não foi possível preservar a operação no navegador. Nenhuma mutação foi enviada; libere o armazenamento da sessão e tente novamente.'});
+      return;
     }
+    setPendingIntent(intent);
+    await executePending(intent);
   };
-
   const submitLabel =
     state.kind === 'submitting'
       ? state.text
@@ -202,6 +217,7 @@ export function AdminPokemonOperations({
       <label className="admin-pokemon-target">
         <span>POKÉMON</span>
         <select
+          disabled={pendingIntent !== null}
           value={selectedPokemon?.id ?? ''}
           onChange={(event) => switchPokemon(event.target.value)}
         >
@@ -223,6 +239,7 @@ export function AdminPokemonOperations({
           <button
             key={action}
             type="button"
+            disabled={pendingIntent !== null}
             className={activeAction === action ? 'is-active' : ''}
             onClick={() => switchAction(action)}
           >
@@ -231,12 +248,24 @@ export function AdminPokemonOperations({
         ))}
       </nav>
 
+      {pendingIntent !== null ? (
+        <div className="admin-pokemon-operation-warning" role="alert">
+          <strong>OPERAÇÃO PENDENTE DE RECONCILIAÇÃO</strong>
+          <p>Uma operação anterior pode já ter sido aplicada. O formulário está bloqueado.
+            Reutilize o pedido original; nunca abra outra chave antes de confirmar na auditoria.</p>
+          <button type="button" disabled={state.kind === 'submitting'}
+            onClick={() => void executePending(pendingIntent)}>
+            RECONCILIAR PEDIDO ORIGINAL
+          </button>
+        </div>
+      ) : null}
       <form onSubmit={submit}>
         {activeAction === 'ROSTER' ? (
           <>
             <label>
               <span>DESTINO</span>
               <select
+                disabled={pendingIntent !== null}
                 value={fields.placementKind}
                 onChange={(event) =>
                   patchFields({ placementKind: event.target.value as 'TEAM' | 'BOX' })
@@ -250,7 +279,8 @@ export function AdminPokemonOperations({
               <label>
                 <span>BOX</span>
                 <input
-                  inputMode="numeric"
+                  disabled={pendingIntent !== null}
+                inputMode="numeric"
                   value={fields.boxNo}
                   onChange={(event) => patchFields({ boxNo: event.target.value })}
                   autoComplete="off"
@@ -260,6 +290,7 @@ export function AdminPokemonOperations({
             <label>
               <span>SLOT</span>
               <input
+                disabled={pendingIntent !== null}
                 inputMode="numeric"
                 value={fields.slotNo}
                 onChange={(event) => patchFields({ slotNo: event.target.value })}
@@ -274,6 +305,7 @@ export function AdminPokemonOperations({
             <label>
               <span>NÍVEL</span>
               <input
+                disabled={pendingIntent !== null}
                 inputMode="numeric"
                 value={fields.level}
                 onChange={(event) => patchFields({ level: event.target.value })}
@@ -283,6 +315,7 @@ export function AdminPokemonOperations({
             <label>
               <span>XP</span>
               <input
+                disabled={pendingIntent !== null}
                 inputMode="numeric"
                 value={fields.xp}
                 onChange={(event) => patchFields({ xp: event.target.value })}
@@ -296,7 +329,8 @@ export function AdminPokemonOperations({
           <label>
             <span>HP ATUAL</span>
             <input
-              inputMode="numeric"
+              disabled={pendingIntent !== null}
+                inputMode="numeric"
               value={fields.currentHp}
               onChange={(event) => patchFields({ currentHp: event.target.value })}
               autoComplete="off"
@@ -309,6 +343,7 @@ export function AdminPokemonOperations({
             <label>
               <span>STATUS PRINCIPAL</span>
               <select
+                disabled={pendingIntent !== null}
                 value={fields.majorStatus}
                 onChange={(event) =>
                   patchFields({
@@ -329,7 +364,8 @@ export function AdminPokemonOperations({
               <label>
                 <span>CONTADOR</span>
                 <input
-                  inputMode="numeric"
+                  disabled={pendingIntent !== null}
+                inputMode="numeric"
                   value={fields.statusCounter}
                   onChange={(event) => patchFields({ statusCounter: event.target.value })}
                   placeholder="opcional · 0–10"
@@ -353,10 +389,10 @@ export function AdminPokemonOperations({
         <label className="is-reason">
           <span>MOTIVO</span>
           <textarea
+            disabled={pendingIntent !== null}
             value={reason}
             onChange={(event) => {
               setReason(event.target.value);
-              setPendingRequestId(null);
               setState({ kind: 'idle' });
             }}
             placeholder="Explique por que esta manutenção está sendo realizada."
@@ -374,7 +410,7 @@ export function AdminPokemonOperations({
           </div>
           <button
             type="submit"
-            disabled={state.kind === 'submitting'}
+            disabled={pendingIntent !== null || state.kind === 'submitting'}
             className={activeAction === 'ARCHIVE' ? 'is-danger' : ''}
           >
             {submitLabel}
