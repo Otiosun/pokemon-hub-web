@@ -13,6 +13,8 @@ export type PlayerEvolutionInput = {
   pokemonInstanceId: string;
   requestId: string;
   trigger: PlayerEvolutionTrigger;
+  /** Explicit historical repair of a reached LEVEL threshold; never for normal XP evolution. */
+  recovery?: true;
 };
 
 export type PlayerEvolutionResponse =
@@ -39,7 +41,8 @@ export async function requestPlayerEvolution(
       input.trigger.kind === 'LEVEL' ||
       input.trigger.kind === 'CONDITION' ||
       (input.trigger.kind === 'ITEM' && UUID.test(input.trigger.itemId))
-    )
+    ) ||
+    (input.trigger.kind === 'LEVEL') !== (input.recovery === true)
   ) throw new Error('Solicitação de evolução inválida.');
 
   // The showcase is deliberately read-only for evolutionary mutations.
