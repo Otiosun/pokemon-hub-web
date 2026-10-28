@@ -21,11 +21,13 @@ describe('uncertain admin Pokémon operation stays idempotent across reloads', (
     });
     expect(pendingAdminPokemonStorageKey(playerId)).toContain(playerId);
   });
-  it('does not load another player, malformed entry or expired request', () => {
+  it('does not load another player or malformed entry and preserves stale uncertain requests', () => {
     const raw = encodePendingAdminPokemonOperation(playerId, request, 100);
     expect(decodePendingAdminPokemonOperation(raw, '44444444-4444-4444-8444-444444444444', 101)).toBeNull();
     expect(decodePendingAdminPokemonOperation('not json',playerId,101)).toBeNull();
-    expect(decodePendingAdminPokemonOperation(raw,playerId,100+13*60*60*1000)).toBeNull();
+    // Even 13 hours later, losing a reply must NOT permit a second grant.
+    expect(decodePendingAdminPokemonOperation(raw,playerId,100+13*60*60*1000))
+      .toMatchObject({playerId,request});
   });
   it('rejects wrong recipient and non Pokémon mutation', () => {
     expect(() => encodePendingAdminPokemonOperation(playerId,{
