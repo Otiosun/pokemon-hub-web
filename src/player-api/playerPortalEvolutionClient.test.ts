@@ -4,7 +4,7 @@ import { requestPlayerEvolution } from './playerPortalEvolutionClient';
 const pokemonInstanceId = '11111111-1111-4111-8111-111111111111';
 const requestId = '22222222-2222-4222-8222-222222222222';
 const formId = '33333333-3333-4333-8333-333333333333';
-const input = { pokemonInstanceId, requestId, trigger: { kind: 'LEVEL' as const } };
+const input = { pokemonInstanceId, requestId, trigger: { kind: 'LEVEL' as const }, recovery: true as const };
 
 describe('player evolution client', () => {
   it('preserves the same request ID and same payload across repeated calls', async () => {
@@ -53,7 +53,7 @@ describe('player evolution client', () => {
 
   it('submits a real inventory item UUID to the canonical evolution route without guessing the target form', async () => {
     const itemId = '44444444-4444-4444-8444-444444444444';
-    const chosen = { ...input, trigger: { kind: 'ITEM' as const, itemId } };
+    const chosen = { pokemonInstanceId, requestId, trigger: { kind: 'ITEM' as const, itemId } };
     const fetcher = vi.fn(
       async (_url: RequestInfo | URL, _init?: RequestInit) =>
         Response.json({ error: 'ACTION_INVALID' }, { status: 409 }),
@@ -75,6 +75,11 @@ describe('player evolution client', () => {
     await expect(requestPlayerEvolution({
       ...input, trigger: { kind: 'ITEM', itemId: 'invalid' },
     }, fetcher, false)).rejects.toThrow();
+    await expect(requestPlayerEvolution({pokemonInstanceId,requestId,trigger:{kind:'LEVEL'}},fetcher,false))
+      .rejects.toThrow();
+    await expect(requestPlayerEvolution({
+      ...input,trigger:{kind:'ITEM',itemId:formId},
+    },fetcher,false)).rejects.toThrow();
     expect(await requestPlayerEvolution(input, fetcher, true))
       .toEqual({ status: 'unavailable' });
     expect(fetcher).not.toHaveBeenCalled();
