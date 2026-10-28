@@ -6,7 +6,6 @@ export type PendingAdminPokemonOperation = {
   readonly createdAt: number;
 };
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const TIME_TO_LIVE_MS = 12 * 60 * 60 * 1000;
 
 /**
  * Session-scoped uncertain request. This is NOT proof of success: only the
@@ -37,8 +36,11 @@ export function decodePendingAdminPokemonOperation(
   if(typeof value!=='object'||value===null||Array.isArray(value))return null;
   const record=value as Record<string,unknown>;
   if(record.version!==1||record.playerId!==playerId||!ID.test(playerId))return null;
+  // A previous request can remain uncertain after 12 hours or longer.
+  // Never silently expire it and permit a new request ID: only a server-side
+  // terminal outcome may clear a pending financial/mechanical mutation.
   if(typeof record.createdAt!=='number'||!Number.isFinite(record.createdAt)||
-     record.createdAt>now||now-record.createdAt>TIME_TO_LIVE_MS)return null;
+     record.createdAt>now)return null;
   const request=record.request;
   if(typeof request!=='object'||request===null||Array.isArray(request))return null;
   const payload=request as Record<string,unknown>;
