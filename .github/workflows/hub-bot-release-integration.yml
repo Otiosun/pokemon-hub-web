@@ -1,9 +1,9 @@
-name: Hub + Bot Release Candidate Integration
+name: Hub + Bot Exploration Release Candidate Integration
 
 on:
   pull_request:
     branches:
-      - feat/pokemon-management-stage2-20261027
+      - integration/hub-release-gate-20261030
     paths:
       - ".github/workflows/hub-bot-release-integration.yml"
       - "src/features/admin/**"
@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   disposable-hub-and-bot:
-    if: github.head_ref == 'integration/hub-release-gate-20261030'
+    if: github.head_ref == 'integration/hub-exploration-release-20261030'
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     services:
@@ -45,7 +45,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: Otiosun/sla
-          ref: db7538d385bf798bf78c3101db604fb6bd2c33f0
+          ref: abf8f376953eed8e931edd67c4ecc4d5814720b5
           path: backend
           persist-credentials: false
       - name: Set up Node
@@ -63,7 +63,7 @@ jobs:
       - name: Verify disposable database and source SHAs
         run: |
           node -e "const u=new URL(process.env.DATABASE_URL);if(u.hostname!=='127.0.0.1'||u.port!=='5432'||u.pathname!=='/postgres'||process.env.APP_ENV!=='test')process.exit(1)"
-          test "$(git -C backend rev-parse HEAD)" = "db7538d385bf798bf78c3101db604fb6bd2c33f0"
+          test "$(git -C backend rev-parse HEAD)" = "abf8f376953eed8e931edd67c4ecc4d5814720b5"
           git rev-parse HEAD
       - name: Typecheck Hub candidate
         run: pnpm typecheck
