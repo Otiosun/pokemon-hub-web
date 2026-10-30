@@ -246,7 +246,7 @@ jobs:
 
           test "$(find /tmp/mobile-viewport-evidence -type f -name '*.png' | wc -l)" -eq 24
           test "$(find /tmp/mobile-viewer-diagnostics -type f -name '*.dom.html' | wc -l)" -eq 24
-          test "$(grep -c '= ready' /tmp/mobile-viewer-diagnostics/viewer-state-summary.txt)" -eq 8
+          test "$(grep -c '= protected' /tmp/mobile-viewer-diagnostics/viewer-state-summary.txt)" -eq 8
 
           cp /tmp/pokemon-hub-mobile-preview.log /tmp/mobile-viewer-diagnostics/vite-preview.log
           cp /tmp/pokemon-hub-cdp-chrome.log /tmp/mobile-viewer-diagnostics/chrome-cdp.log
