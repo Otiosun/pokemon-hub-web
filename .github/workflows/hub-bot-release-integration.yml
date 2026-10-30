@@ -45,7 +45,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: Otiosun/sla
-          ref: 6f0150a19420a043d6501c59a80884be826fe2ef
+          ref: df74ac93f9f1740ebe90c251174db2dc9babc1a2
           path: backend
           persist-credentials: false
       - name: Set up Node
@@ -63,7 +63,7 @@ jobs:
       - name: Verify disposable database and source SHAs
         run: |
           node -e "const u=new URL(process.env.DATABASE_URL);if(u.hostname!=='127.0.0.1'||u.port!=='5432'||u.pathname!=='/postgres'||process.env.APP_ENV!=='test')process.exit(1)"
-          test "$(git -C backend rev-parse HEAD)" = "6f0150a19420a043d6501c59a80884be826fe2ef"
+          test "$(git -C backend rev-parse HEAD)" = "df74ac93f9f1740ebe90c251174db2dc9babc1a2"
           git rev-parse HEAD
       - name: Typecheck Hub candidate
         run: pnpm typecheck
