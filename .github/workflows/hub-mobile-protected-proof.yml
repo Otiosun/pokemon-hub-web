@@ -1,0 +1,63 @@
+name: Hub Release Mobile Protected Preview Proof
+on:
+  pull_request:
+    branches:
+      - feat/pokemon-management-stage2-20261027
+    paths:
+      - scripts/capture-mobile-cdp.mjs
+      - .github/workflows/hub-mobile-protected-proof.yml
+permissions:
+  contents: read
+jobs:
+  anonymous-mobile:
+    if: github.head_ref == 'integration/hub-release-gate-20261030'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.19.0
+          package-manager-cache: false
+      - run: npm install --global pnpm@11.23.0
+      - run: pnpm install --ignore-scripts --no-frozen-lockfile
+      - name: Build Hub SPA from candidate
+        run: pnpm exec vite build
+      - name: Capture 24 mobile screenshots and privacy evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          mkdir -p /tmp/mobile-viewport-evidence /tmp/mobile-viewer-diagnostics
+          pnpm exec vite preview --host 127.0.0.1 --port 4174 > /tmp/mobile-preview.log 2>&1 &
+          PREVIEW_PID=$!
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage \
+            --remote-debugging-address=127.0.0.1 --remote-debugging-port=9222 \
+            --user-data-dir=/tmp/pokemon-hub-mobile-release-proof about:blank \
+            > /tmp/mobile-chrome.log 2>&1 &
+          CHROME_PID=$!
+          trap 'kill "$CHROME_PID" "$PREVIEW_PID" 2>/dev/null || true' EXIT
+          for n in $(seq 1 80); do
+            if curl --fail --silent http://127.0.0.1:4174/jornada >/dev/null &&
+               curl --fail --silent http://127.0.0.1:9222/json/version >/dev/null; then break; fi
+            if [ "$n" -eq 80 ]; then cat /tmp/mobile-preview.log /tmp/mobile-chrome.log; exit 1; fi
+            sleep 0.25
+          done
+          CDP_ENDPOINT=http://127.0.0.1:9222 BASE_URL=http://127.0.0.1:4174 \
+            OUTPUT_DIR=/tmp/mobile-viewport-evidence DIAGNOSTICS_DIR=/tmp/mobile-viewer-diagnostics \
+            timeout 150s node scripts/capture-mobile-cdp.mjs
+          test "$(find /tmp/mobile-viewport-evidence -type f -name '*.png' | wc -l)" -eq 24
+          test "$(find /tmp/mobile-viewer-diagnostics -type f -name '*.dom.html' | wc -l)" -eq 24
+          test "$(grep -c '= protected' /tmp/mobile-viewer-diagnostics/viewer-state-summary.txt)" -eq 8
+          ! grep -E '= (leak|unknown|failed)' /tmp/mobile-viewer-diagnostics/viewer-state-summary.txt
+      - name: Upload only synthetic anonymous mobile evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hub-release-anonymous-mobile
+          path: |
+            /tmp/mobile-viewport-evidence/*.png
+            /tmp/mobile-viewer-diagnostics/viewer-state-summary.txt
+          if-no-files-found: warn
