@@ -80,49 +80,37 @@ jobs:
             exit 1
           fi
 
-          # Chromium may dump the DOM before image composition finishes on a
-          # cold Vite transform. Retry only while the required UAT markers are
-          # absent; a script error never becomes a passing test.
-          for attempt in 1 2 3; do
-            if timeout 90s "$BROWSER" \
+          # Keep a single Chrome page alive while the actual async compositor
+          # resolves; dump-dom virtual-time shortcuts can return GENERATING.
+          rm -rf /tmp/trainer-card-cdp-profile
+          "$BROWSER" \
             --headless=new \
             --no-sandbox \
             --disable-gpu \
-            --disable-background-networking \
-            --hide-scrollbars \
-            --virtual-time-budget=25000 \
-            --dump-dom \
-            http://127.0.0.1:4173/scripts/trainer-card-visual-uat.html \
-              > /tmp/trainer-card-uat-dom.html; then
-              if grep -q 'data-uat-ready="true"' /tmp/trainer-card-uat-dom.html &&
-                 grep -q 'data-uat-fresh="true"' /tmp/trainer-card-uat-dom.html; then
-                break
-              fi
+            --disable-dev-shm-usage \
+            --remote-debugging-address=127.0.0.1 \
+            --remote-debugging-port=9225 \
+            --user-data-dir=/tmp/trainer-card-cdp-profile \
+            about:blank > /tmp/trainer-card-cdp.log 2>&1 &
+          CHROME_PID=$!
+          trap 'kill "$CHROME_PID" 2>/dev/null || true; kill "$VITE_PID" 2>/dev/null || true' EXIT
+
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:9225/json/version >/dev/null; then
+              break
             fi
-            echo "Trainer Card visual UAT not ready (attempt $attempt/3)"
-            sleep 2
+            if [ "$attempt" -eq 60 ]; then
+              cat /tmp/trainer-card-cdp.log
+              exit 1
+            fi
+            sleep 0.25
           done
 
-          grep -q 'data-uat-ready="true"' /tmp/trainer-card-uat-dom.html || {
-            cat /tmp/trainer-card-uat-dom.html
-            cat /tmp/trainer-card-vite.log
-            exit 1
-          }
-          grep -q 'data-uat-fresh="true"' /tmp/trainer-card-uat-dom.html || {
-            cat /tmp/trainer-card-uat-dom.html
-            exit 1
-          }
-
-          timeout 90s "$BROWSER" \
-            --headless=new \
-            --no-sandbox \
-            --disable-gpu \
-            --disable-background-networking \
-            --hide-scrollbars \
-            --window-size=1536,1250 \
-            --virtual-time-budget=25000 \
-            --screenshot=/tmp/trainer-card-browser-uat.png \
-            http://127.0.0.1:4173/scripts/trainer-card-visual-uat.html
+          CDP_ENDPOINT=http://127.0.0.1:9225 \
+          BASE_URL=http://127.0.0.1:4173 \
+          UAT_SCREENSHOT=/tmp/trainer-card-browser-uat.png \
+          timeout 110s node scripts/check-trainer-card-visual-cdp.mjs
+          kill "$CHROME_PID" 2>/dev/null || true
 
           for VIEWPORT in 360,800 390,844; do
             WIDTH="${VIEWPORT%,*}"
