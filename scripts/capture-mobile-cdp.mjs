@@ -9,14 +9,14 @@ const diagnosticsDir = process.env.DIAGNOSTICS_DIR ?? '/tmp/mobile-viewer-diagno
 const captures = [
   { name: 'jornada', route: '/jornada', marker: 'TRAINER REGISTRATION LICENSE' },
   { name: 'pokedex', route: '/pokedex', marker: 'Índice Nacional' },
-  { name: 'species-004', route: '/pokedex/4', marker: 'Charmander · Idle', viewer: true },
+  { name: 'species-004', route: '/pokedex/4', marker: 'NÃO FOI POSSÍVEL CARREGAR SEU REGISTRO', protected: true },
   { name: 'box', route: '/pokemon', marker: 'Time + Box' },
   { name: 'team', route: '/team', marker: 'Meu Time' },
   {
     name: 'owned-charmander',
     route: '/pokemon/pkm-charmander-a1',
-    marker: 'Charmander · Idle',
-    viewer: true,
+    marker: 'REGISTRO INDISPONÍVEL',
+    protected: true,
   },
 ];
 const widths = [320, 360, 390, 430];
@@ -148,6 +148,12 @@ async function navigateAndWait(client, capture) {
       `${capture.route} 3D canvas`,
     );
   }
+  if (capture.protected) {
+    await waitFor(client,
+      "document.querySelector('canvas.generations-canvas') === null && !document.body.textContent.includes('Charmander · Idle')",
+      `${capture.route} protected from private Pokémon and 3D leaks`,
+    );
+  }
   await settleVisualFrame(client, capture.viewer);
 }
 
@@ -194,9 +200,13 @@ async function main() {
         const dom = await runtimeValue(client, 'document.documentElement.outerHTML');
         await writeFile(path.join(diagnosticsDir, `${fileBase}.dom.html`), dom, 'utf8');
 
-        if (capture.viewer) {
+        if (capture.viewer || capture.protected) {
           const text = await runtimeValue(client, 'document.body?.textContent ?? ""');
-          const state = text.includes('Charmander · Idle')
+          const state = capture.protected
+            ? text.includes(capture.marker) && !text.includes('Charmander · Idle')
+              ? 'protected'
+              : 'leak'
+            : text.includes('Charmander · Idle')
             ? 'ready'
             : text.includes('Falha ao carregar Charmander.')
               ? 'failed'
