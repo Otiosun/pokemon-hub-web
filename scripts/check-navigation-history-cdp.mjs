@@ -162,10 +162,11 @@ async function main() {
     await reload(client, '/pokedex/4', protectedDexMarker, false);
     console.log('RELOAD_HOT /pokedex/4 = protected');
 
-    // The index intentionally emits zero-padded dex hrefs (e.g. #004 -> /pokedex/004).
-    // Preserve and test the actual player-facing path instead of coercing it to /pokedex/4.
+    // Anonymous players have no private Pokédex species entries. The index
+    // correctly hides species links, so verify the zero-padded protected URL
+    // directly and use actual browser back/forward traversal (not a fake click).
     await navigate(client, '/pokedex', 'Índice Nacional');
-    await clickRoute(client, '/pokedex/004', protectedDexMarker);
+    await navigate(client, '/pokedex/004', protectedDexMarker);
     await traverseHistory(client, 'back', '/pokedex', 'Índice Nacional');
     await traverseHistory(client, 'forward', '/pokedex/004', protectedDexMarker);
     console.log('BACK_FORWARD Pokédex = OK');
