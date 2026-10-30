@@ -73,14 +73,14 @@ export function buildAdminPokemonOperation(input: {
     const slotNo =
       input.fields.placementKind === 'TEAM'
         ? positiveIntegerWithin(input.fields.slotNo, 1, 6)
-        : positiveIntegerWithin(input.fields.slotNo, 1, 1_000_000);
+        : positiveIntegerWithin(input.fields.slotNo, 1, 30);
     if (slotNo === null) {
       return {
         ok: false,
         message:
           input.fields.placementKind === 'TEAM'
             ? 'O slot do time deve estar entre 1 e 6.'
-            : 'Informe um slot válido da Box.',
+            : 'O slot da Box deve estar entre 1 e 30.',
       };
     }
 

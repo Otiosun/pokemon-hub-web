@@ -159,11 +159,24 @@ export function TeamPage({ playerPortalSession }: TeamPageProps) {
         setOrganizingMessage('Sua sessão expirou. Abra o Hub novamente pelo acesso oficial.');
         return;
       }
+      if (result.status === 'blocked') {
+        setSourceId(null);
+        setOrganizingMessage('Não é possível reorganizar o Time durante uma batalha ativa.');
+        return;
+      }
+      if (result.status === 'rejected' || result.status === 'stale') {
+        setSourceId(null);
+        setOrganizingMessage('O servidor recusou esta troca ou o elenco mudou. Recarregue e escolha a posição atualizada.');
+        void collection.refresh();
+        return;
+      }
       collection.replacePokemon(result.pokemon);
       setSourceId(null);
       setOrganizingMessage(successMessage);
     } catch {
-      setOrganizingMessage('Não foi possível alterar a formação agora.');
+      setSourceId(null);
+      setOrganizingMessage('Resultado incerto: o servidor pode ter mudado o Time/Box. Recarregando a formação; confira antes de repetir.');
+      void collection.refresh();
     } finally {
       setOrganizingStatus('idle');
     }

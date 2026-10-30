@@ -1023,3 +1023,93 @@
   font: 700 0.56rem 'IBM Plex Mono', monospace;
   letter-spacing: 0.045em;
 }
+
+
+/* Stage 2: match the approved dark research-panel language of the Move Learning tab. */
+.owned-evolution {
+  display: grid;
+  gap: 12px;
+  margin: 14px 0;
+  padding: 16px;
+  border: 1px solid rgba(139, 225, 231, 0.16);
+  border-radius: 14px;
+  color: #ecf5f5;
+  background: rgba(15, 29, 32, 0.88);
+}
+.owned-evolution > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.owned-evolution > header span,
+.owned-evolution > label,
+.owned-evolution > header strong {
+  color: #9db4b5;
+  font: 650 0.57rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+.owned-evolution > header strong { color: #8be1e7; }
+.owned-evolution p,
+.owned-evolution small {
+  margin: 0;
+  color: #c3d2d1;
+  font: 500 0.72rem/1.55 'Space Grotesk', sans-serif;
+}
+.owned-evolution p strong { color: #f2fbfb; }
+.owned-evolution select {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 12px;
+  border: 1px solid rgba(180, 211, 212, 0.28);
+  border-radius: 10px;
+  color: #edf7f7;
+  background: #192b2e;
+  font: 650 0.7rem 'Space Grotesk', sans-serif;
+}
+.owned-evolution select option { color: #edf7f7; background: #192b2e; }
+.owned-evolution select:focus-visible,
+.owned-evolution button:focus-visible,
+.owned-evolution input:focus-visible {
+  outline: 2px solid #8be1e7;
+  outline-offset: 3px;
+}
+.owned-evolution-approval {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #d6e5e5;
+  font: 600 0.74rem/1.5 'Space Grotesk', sans-serif;
+}
+.owned-evolution-approval input {
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
+  margin-top: 3px;
+  accent-color: #8be1e7;
+}
+.owned-evolution button {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1px solid rgba(139, 225, 231, 0.55);
+  border-radius: 10px;
+  color: #112124;
+  background: #8be1e7;
+  font: 750 0.69rem 'IBM Plex Mono', monospace;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+.owned-evolution button:hover:not(:disabled) { background: #acecf0; }
+.owned-evolution button:disabled,
+.owned-evolution select:disabled { cursor: not-allowed; opacity: 0.5; }
+.owned-evolution [role='status'] {
+  padding-left: 10px;
+  border-left: 2px solid #8be1e7;
+}
+@media (max-width: 560px) {
+  .owned-evolution { padding: 14px; }
+  .owned-evolution > header { align-items: flex-start; }
+}
