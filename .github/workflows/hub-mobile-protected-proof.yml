@@ -53,7 +53,7 @@ jobs:
           test "$(grep -c '= protected' /tmp/mobile-viewer-diagnostics/viewer-state-summary.txt)" -eq 8
           ! grep -E '= (leak|unknown|failed)' /tmp/mobile-viewer-diagnostics/viewer-state-summary.txt
       - name: Upload only synthetic anonymous mobile evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
           name: hub-release-anonymous-mobile
