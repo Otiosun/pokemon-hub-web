@@ -122,15 +122,7 @@ export type PlayerPortalBattleCombatant = {
 
 export type PlayerPortalBattle = {
   battleType: 'WILD' | 'NPC' | 'PVP';
-  status:
-    | 'CREATED'
-    | 'ACTIVE'
-    | 'RESOLVING_TURN'
-    | 'WON'
-    | 'LOST'
-    | 'FLED'
-    | 'DRAW'
-    | 'CANCELLED';
+  status: 'CREATED' | 'ACTIVE' | 'RESOLVING_TURN' | 'WON' | 'LOST' | 'FLED' | 'DRAW' | 'CANCELLED';
   turnNumber: number;
   playerSideNo: number;
   combatants: PlayerPortalBattleCombatant[];
@@ -515,7 +507,12 @@ function isPlayerPortalProfileCustomization(
   }
   if (
     value.age !== null &&
-    !(typeof value.age === 'number' && Number.isInteger(value.age) && value.age >= 1 && value.age <= 150)
+    !(
+      typeof value.age === 'number' &&
+      Number.isInteger(value.age) &&
+      value.age >= 1 &&
+      value.age <= 150
+    )
   ) {
     return false;
   }
@@ -714,9 +711,7 @@ function isPlayerPortalBattleMove(value: unknown): value is PlayerPortalBattleMo
   );
 }
 
-function isPlayerPortalBattleCombatant(
-  value: unknown,
-): value is PlayerPortalBattleCombatant {
+function isPlayerPortalBattleCombatant(value: unknown): value is PlayerPortalBattleCombatant {
   if (!isRecord(value)) return false;
   if (
     !isPositiveInteger(value.sideNo) ||
@@ -779,7 +774,8 @@ function isPlayerPortalBattle(value: unknown): value is PlayerPortalBattle {
   if (
     sideNos.some(
       (sideNo) =>
-        combatants.filter((combatant) => combatant.sideNo === sideNo && combatant.active).length > 1,
+        combatants.filter((combatant) => combatant.sideNo === sideNo && combatant.active).length >
+        1,
     )
   ) {
     return false;
@@ -809,9 +805,7 @@ function playerPortalLocationView(location: PlayerPortalLocation): PlayerPortalL
   };
 }
 
-function isPlayerPortalLocationConnection(
-  value: unknown,
-): value is PlayerPortalLocationConnection {
+function isPlayerPortalLocationConnection(value: unknown): value is PlayerPortalLocationConnection {
   if (!isRecord(value)) return false;
   return (
     isUuid(value.connectionId) &&
@@ -879,8 +873,7 @@ function isDisplayString(value: unknown): value is string {
 
 function isOptionalSlug(value: unknown): value is string | undefined {
   return (
-    value === undefined ||
-    (typeof value === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value))
+    value === undefined || (typeof value === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value))
   );
 }
 

@@ -18,35 +18,33 @@ function jsonResponse(status: number, body: unknown) {
 
 describe('Player 360 admin client', () => {
   it('keeps normal authenticated users outside Player 360', async () => {
-    expect(
-      await searchAdminPlayers({}, () => jsonResponse(403, { error: 'FORBIDDEN' })),
-    ).toEqual({ status: 'forbidden' });
+    expect(await searchAdminPlayers({}, () => jsonResponse(403, { error: 'FORBIDDEN' }))).toEqual({
+      status: 'forbidden',
+    });
   });
 
   it('parses an authorized player search page', async () => {
-    const result = await searchAdminPlayers(
-      { query: 'Nat', status: 'ACTIVE', limit: 25 },
-      () =>
-        jsonResponse(200, {
-          players: [
-            {
-              playerId,
-              status: 'ACTIVE',
-              trainerName: 'Natan',
-              originRegionId: null,
-              trainerLevel: 7,
-              insigniaPoints: '1234',
-              areaId: null,
-              activeEncounterId: null,
-              activeEncounterStatus: null,
-              activeBattleId: null,
-              activeBattleStatus: null,
-              identities: [],
-              createdAt: '2026-09-23T10:00:00.000Z',
-            },
-          ],
-          nextCursor: null,
-        }),
+    const result = await searchAdminPlayers({ query: 'Nat', status: 'ACTIVE', limit: 25 }, () =>
+      jsonResponse(200, {
+        players: [
+          {
+            playerId,
+            status: 'ACTIVE',
+            trainerName: 'Natan',
+            originRegionId: null,
+            trainerLevel: 7,
+            insigniaPoints: '1234',
+            areaId: null,
+            activeEncounterId: null,
+            activeEncounterStatus: null,
+            activeBattleId: null,
+            activeBattleStatus: null,
+            identities: [],
+            createdAt: '2026-09-23T10:00:00.000Z',
+          },
+        ],
+        nextCursor: null,
+      }),
     );
 
     expect(result).toEqual({

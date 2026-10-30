@@ -9,16 +9,31 @@ export function resolvePremiumLocalApiBaseUrl(config: {
   approvedOrigin: string | null | undefined;
   apiBaseUrl: string | null | undefined;
 }): string | null {
-  if (config.vercelEnv !== 'production' || config.enabled !== '1' ||
-      !config.approvedOrigin || !config.apiBaseUrl) return null;
+  if (
+    config.vercelEnv !== 'production' ||
+    config.enabled !== '1' ||
+    !config.approvedOrigin ||
+    !config.apiBaseUrl
+  )
+    return null;
   try {
     const api = new URL(config.apiBaseUrl);
     const approved = new URL(config.approvedOrigin);
     for (const url of [api, approved]) {
-      if (url.protocol !== 'https:' || url.username || url.password ||
-          url.pathname !== '/' || url.search || url.hash || url.port ||
-          !url.hostname.includes('.') || url.hostname.endsWith('.local') ||
-          url.hostname.endsWith('.internal') || /^[0-9.]+$/.test(url.hostname)) return null;
+      if (
+        url.protocol !== 'https:' ||
+        url.username ||
+        url.password ||
+        url.pathname !== '/' ||
+        url.search ||
+        url.hash ||
+        url.port ||
+        !url.hostname.includes('.') ||
+        url.hostname.endsWith('.local') ||
+        url.hostname.endsWith('.internal') ||
+        /^[0-9.]+$/.test(url.hostname)
+      )
+        return null;
     }
     if (api.origin !== approved.origin) return null;
     return api.origin;

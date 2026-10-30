@@ -40,7 +40,7 @@ export async function getPlayerPortalAdmin(
   if (response.status === 401) return { status: 'unauthenticated' };
   if (!response.ok) throw new Error(`Admin portal request failed (${response.status})`);
 
-  const body = await response.json() as unknown;
+  const body = (await response.json()) as unknown;
   if (!isRecord(body) || !('admin' in body)) {
     throw new Error('Invalid admin portal response');
   }

@@ -7,9 +7,14 @@ describe('Premium manual UI is explicitly environment-scoped', () => {
     expect(resolvePremiumManualUiMode({ localUi: '1' })).toBeNull();
     expect(resolvePremiumManualUiMode({ localUi: '1', localTarget: 'preview' })).toBeNull();
     expect(resolvePremiumManualUiMode({ stageUi: '1', stageTarget: 'production' })).toBeNull();
-    expect(resolvePremiumManualUiMode({
-      stageUi: '1', stageTarget: 'preview', localUi: '1', localTarget: 'production',
-    })).toBeNull();
+    expect(
+      resolvePremiumManualUiMode({
+        stageUi: '1',
+        stageTarget: 'preview',
+        localUi: '1',
+        localTarget: 'production',
+      }),
+    ).toBeNull();
   });
   it('supports mutually exclusive staging preview or local operator production', () => {
     expect(resolvePremiumManualUiMode({ stageUi: '1', stageTarget: 'preview' })).toBe('preview');

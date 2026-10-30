@@ -19,14 +19,24 @@ function object(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-export function checkoutIntentId(quantity: number, storage: Pick<Storage, 'getItem' | 'setItem'>, newId: () => string): string {
-  if (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > 52) throw new Error('Quantidade inválida.');
+export function checkoutIntentId(
+  quantity: number,
+  storage: Pick<Storage, 'getItem' | 'setItem'>,
+  newId: () => string,
+): string {
+  if (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > 52)
+    throw new Error('Quantidade inválida.');
   const fingerprint = `2XP:${quantity}`;
   try {
     const previous = storage.getItem(STORAGE_KEY);
     if (previous) {
       const parsed: unknown = JSON.parse(previous);
-      if (object(parsed) && parsed.fingerprint === fingerprint && typeof parsed.requestId === 'string' && UUID.test(parsed.requestId)) {
+      if (
+        object(parsed) &&
+        parsed.fingerprint === fingerprint &&
+        typeof parsed.requestId === 'string' &&
+        UUID.test(parsed.requestId)
+      ) {
         return parsed.requestId;
       }
     }
@@ -36,14 +46,21 @@ export function checkoutIntentId(quantity: number, storage: Pick<Storage, 'getIt
 
   const requestId = newId();
   if (!UUID.test(requestId)) throw new Error('Falha ao criar identificador de pedido.');
-  try { storage.setItem(STORAGE_KEY, JSON.stringify({ fingerprint, requestId })); } catch { /* optional */ }
+  try {
+    storage.setItem(STORAGE_KEY, JSON.stringify({ fingerprint, requestId }));
+  } catch {
+    /* optional */
+  }
   return requestId;
 }
 
 /** Release the persisted retry key ONLY after the server confirms an order.
  * Failed/uncertain responses retain the key so retries cannot duplicate a charge intent.
  */
-export function completeCheckoutIntent(requestId: string, storage: Pick<Storage, 'getItem' | 'removeItem'>): void {
+export function completeCheckoutIntent(
+  requestId: string,
+  storage: Pick<Storage, 'getItem' | 'removeItem'>,
+): void {
   if (!UUID.test(requestId)) return;
   try {
     const previous = storage.getItem(STORAGE_KEY);
@@ -80,9 +97,10 @@ export async function createPending2XpOrder(
   if (response.status === 503 || response.status === 404 || response.status === 502) {
     return { status: 'unavailable' };
   }
-  const body = await response.json().catch((): unknown => null) as unknown;
+  const body = (await response.json().catch((): unknown => null)) as unknown;
   if (!response.ok) {
-    const code = object(body) && typeof body.error === 'string' ? body.error : `HTTP_${response.status}`;
+    const code =
+      object(body) && typeof body.error === 'string' ? body.error : `HTTP_${response.status}`;
     return { status: 'rejected', code };
   }
   if (

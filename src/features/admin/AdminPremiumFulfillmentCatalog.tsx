@@ -10,7 +10,7 @@ export function getStoreFulfillmentReadiness(code: string): FulfillmentReadiness
   return product.code === 'MASTER' ? 'CONDITIONAL' : 'NOT_CONFIGURED';
 }
 
-export function AdminPremiumFulfillmentCatalog() {
+export function AdminPremiumFulfillmentCatalog({ onOpenCases }: { onOpenCases?: () => void } = {}) {
   const ready = CHAMPION_STORE_PRODUCTS.filter((product) =>
     getStoreFulfillmentReadiness(product.code) === 'AUTOMATED').length;
   const pending = CHAMPION_STORE_PRODUCTS.filter((product) =>
@@ -23,7 +23,7 @@ export function AdminPremiumFulfillmentCatalog() {
         <div><small>CATÁLOGO OFICIAL · CONTROLE DE COMPATIBILIDADE</small>
           <h3>Gamepasses da loja</h3>
         </div>
-        <span>{ready} PRONTO</span>
+        <span>{ready} COM EXECUTOR</span>
       </header>
       <p>{ready} benefício(s) com executor próprio; {conditional} executor condicionado ao item publicado
         no catálogo ativo do backend; {pending} aguardando definição técnica da entrega.
@@ -38,7 +38,7 @@ export function AdminPremiumFulfillmentCatalog() {
                 {state === 'AUTOMATED' ? 'EXECUTOR IMPLEMENTADO'
                   : state === 'UNAVAILABLE' ? 'INDISPONÍVEL NA LOJA'
                     : state === 'CONDITIONAL' ? 'EXECUTOR CONDICIONAL · VERIFICAR CATÁLOGO'
-                      : 'ENTREGA POR DEFINIR'}
+                      : 'ATENDIMENTO MANUAL · SEM EXECUTOR'}
               </span>
             </div>
           );
@@ -46,6 +46,11 @@ export function AdminPremiumFulfillmentCatalog() {
       </div>
       <p>Para itens publicados, use a aba <strong>Itens</strong>. Para Pokémon, ovos e packs, a
         receita precisa ser definida antes de permitir um botão de entrega automática.</p>
+      {onOpenCases && pending > 0 ? (
+        <button type="button" onClick={onOpenCases}>
+          ABRIR ATENDIMENTO MANUAL DE GAMEPASSES
+        </button>
+      ) : null}
     </section>
   );
 }

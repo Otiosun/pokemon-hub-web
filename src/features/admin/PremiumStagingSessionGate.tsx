@@ -10,6 +10,7 @@ import {
 import './premium-staging-session-gate.css';
 import { currentPremiumManualUiMode } from '../../player-api/premiumManualUiMode';
 import { usePlayerPortalAdmin } from '../../player-api/usePlayerPortalAdmin';
+import { canGrantPremiumDelivery, isPremiumDeliveryDelegate } from './premiumDeliveryAccess';
 
 type GateState = PremiumStageSession | { status: 'loading' };
 
@@ -34,13 +35,12 @@ function LivePremiumOwnerGate({ children }: { children: ReactNode }) {
     );
   }
 
-  if (state.status !== 'admin' || !state.admin.owner ||
-      !state.admin.capabilities.includes('central.view')) {
+  if (state.status !== 'admin' || !canGrantPremiumDelivery(state.admin)) {
     // A player cannot enumerate administrator modules, even on direct URLs.
     return (
       <section className="premium-stage-gate">
         <strong>404 · ENDEREÇO INDISPONÍVEL</strong>
-        <p>A Central Premium é restrita ao proprietário autenticado do jogo.</p>
+        <p>A Central Premium exige autorização específica de entrega ou acesso do proprietário.</p>
         <a href="/jornada">VOLTAR À JORNADA</a>
       </section>
     );
@@ -49,7 +49,7 @@ function LivePremiumOwnerGate({ children }: { children: ReactNode }) {
   return (
     <div className="premium-stage-gate-ready">
       <div className="premium-stage-gate-identity">
-        <span>PROPRIETÁRIO AUTORIZADO · HUB</span>
+        <span>{isPremiumDeliveryDelegate(state.admin) ? 'ENTREGAS AUTORIZADAS · HUB' : 'PROPRIETÁRIO AUTORIZADO · HUB'}</span>
         <a href="/admin">VOLTAR À CENTRAL ADM</a>
       </div>
       {children}
@@ -60,17 +60,27 @@ function LivePremiumOwnerGate({ children }: { children: ReactNode }) {
 export function PremiumStagingSessionGate({
   access,
   children,
-}: { access: PremiumStageRole; children: ReactNode }) {
+  onSessionChange,
+}: {
+  access: PremiumStageRole;
+  children: ReactNode;
+  onSessionChange?: ((session: PremiumStageSession) => void) | undefined;
+}) {
   if (currentPremiumManualUiMode() === 'local') {
     return <LivePremiumOwnerGate>{children}</LivePremiumOwnerGate>;
   }
-  return <IsolatedPreviewPremiumGate access={access}>{children}</IsolatedPreviewPremiumGate>;
+  return <IsolatedPreviewPremiumGate access={access} onSessionChange={onSessionChange}>{children}</IsolatedPreviewPremiumGate>;
 }
 
 function IsolatedPreviewPremiumGate({
   access,
   children,
-}: { access: PremiumStageRole; children: ReactNode }) {
+  onSessionChange,
+}: {
+  access: PremiumStageRole;
+  children: ReactNode;
+  onSessionChange?: ((session: PremiumStageSession) => void) | undefined;
+}) {
   const local = false;
   const environment = local ? 'API LOCAL' : 'STAGING';
   const [state, setState] = useState<GateState>({ status: 'loading' });
@@ -82,10 +92,21 @@ function IsolatedPreviewPremiumGate({
   useEffect(() => {
     let mounted = true;
     void readPremiumStageSession(access)
-      .then((result) => { if (mounted) setState(result); })
-      .catch(() => { if (mounted) setState({ status: 'unavailable' }); });
+      .then((result) => {
+        if (mounted) {
+          setState(result);
+          onSessionChange?.(result);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          const unavailable = { status: 'unavailable' } as const;
+          setState(unavailable);
+          onSessionChange?.(unavailable);
+        }
+      });
     return () => { mounted = false; };
-  }, [access]);
+  }, [access, onSessionChange]);
 
   const exchange = async () => {
     if (busy) return;
@@ -95,11 +116,15 @@ function IsolatedPreviewPremiumGate({
       const result = await exchangePremiumStageTicket(loginTicket ?? '');
       setTicket('');
       if (result === 'unavailable') {
-        setState({ status: 'unavailable' });
+        const unavailable = { status: 'unavailable' } as const;
+        setState(unavailable);
+        onSessionChange?.(unavailable);
       } else if (result === 'invalid') {
         setError('Ticket inválido, usado ou expirado. Use somente um ticket da API autorizada.');
       } else {
-        setState(await readPremiumStageSession(access));
+        const authenticated = await readPremiumStageSession(access);
+        setState(authenticated);
+        onSessionChange?.(authenticated);
       }
     } catch {
       setError('Falha de conexão. Nenhuma sessão foi confirmada.');
@@ -112,7 +137,9 @@ function IsolatedPreviewPremiumGate({
     setBusy(true);
     try {
       await signOutPremiumStage();
-      setState({ status: 'unauthenticated' });
+      const loggedOut = { status: 'unauthenticated' } as const;
+      setState(loggedOut);
+      onSessionChange?.(loggedOut);
       setTicket('');
     } catch {
       setError(local ? 'Não foi possível encerrar a sessão da API local.' : 'Não foi possível encerrar a sessão de testes.');
@@ -140,7 +167,9 @@ function IsolatedPreviewPremiumGate({
       ) : (
         <>
           <p>{state.status === 'forbidden'
-            ? 'Esta sessão não tem a permissão de proprietário exigida.'
+            ? access === 'delivery'
+              ? 'Esta sessão não possui autorização para entregas Premium.'
+              : 'Esta sessão não tem a permissão de proprietário exigida.'
             : local ? 'Acesso ao próprio jogo: envie /hub ao bot, copie o link novo sem abri-lo e cole abaixo. O link expira em 5 minutos e só funciona uma vez. Nenhum pagamento é confirmado aqui.' : 'A sessão do jogo real não funciona aqui. Entre apenas com um ticket temporário emitido pela API isolada de testes.'}</p>
           <form onSubmit={(event) => { event.preventDefault(); void exchange(); }}>
             <label htmlFor={access === 'owner' ? 'premium-stage-ticket-owner' : 'premium-stage-ticket-player'}>

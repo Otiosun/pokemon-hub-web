@@ -18,12 +18,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isIsoDate(value: unknown): value is string {
-  return typeof value === 'string' && Number.isFinite(Date.parse(value)) &&
-    /^\d{4}-\d{2}-\d{2}T/.test(value);
+  return (
+    typeof value === 'string' &&
+    Number.isFinite(Date.parse(value)) &&
+    /^\d{4}-\d{2}-\d{2}T/.test(value)
+  );
 }
 
 function isBenefit(value: unknown): value is PlayerBenefit {
-  return isRecord(value) &&
+  return (
+    isRecord(value) &&
     typeof value.playerId === 'string' &&
     /^[a-f0-9-]{36}$/i.test(value.playerId) &&
     typeof value.entitlementKey === 'string' &&
@@ -34,7 +38,8 @@ function isBenefit(value: unknown): value is PlayerBenefit {
     (value.expiresAt === null || isIsoDate(value.expiresAt)) &&
     typeof value.revision === 'string' &&
     /^\d+$/.test(value.revision) &&
-    typeof value.currentlyActive === 'boolean';
+    typeof value.currentlyActive === 'boolean'
+  );
 }
 
 export async function getOwnBenefits(fetcher: typeof fetch = fetch): Promise<OwnBenefitsResult> {
@@ -53,8 +58,11 @@ export async function getOwnBenefits(fetcher: typeof fetch = fetch): Promise<Own
   if (!response.ok) return { status: 'unavailable' };
   try {
     const payload: unknown = await response.json();
-    if (!isRecord(payload) || !Array.isArray(payload.entitlements) ||
-      !payload.entitlements.every(isBenefit)) {
+    if (
+      !isRecord(payload) ||
+      !Array.isArray(payload.entitlements) ||
+      !payload.entitlements.every(isBenefit)
+    ) {
       return { status: 'unavailable' };
     }
     return { status: 'authenticated', benefits: payload.entitlements };
@@ -64,22 +72,40 @@ export async function getOwnBenefits(fetcher: typeof fetch = fetch): Promise<Own
 }
 
 /** Server-provided active status is authoritative; the browser can only downgrade stale expiry. */
-export function benefitDisplayState(benefit: PlayerBenefit, now = Date.now()):
-  'active' | 'expired' | 'revoked' {
+export function benefitDisplayState(
+  benefit: PlayerBenefit,
+  now = Date.now(),
+): 'active' | 'expired' | 'revoked' {
   if (benefit.administrativeStatus === 'REVOKED') return 'revoked';
   if (!benefit.currentlyActive) return 'expired';
   if (benefit.expiresAt !== null && Date.parse(benefit.expiresAt) <= now) return 'expired';
   return 'active';
 }
 
-export function benefitPresentation(key: string): { name: string; description: string; kind: 'xp' | 'luck' | 'other' } {
+export function benefitPresentation(key: string): {
+  name: string;
+  description: string;
+  kind: 'xp' | 'luck' | 'other';
+} {
   switch (key) {
     case 'XP_2X':
-      return { name: 'Experiência em dobro', description: 'Multiplicador de experiência em atividades elegíveis.', kind: 'xp' };
+      return {
+        name: 'Experiência em dobro',
+        description: 'Multiplicador de experiência em atividades elegíveis.',
+        kind: 'xp',
+      };
     case 'CAPTURE_LUCK_2X':
-      return { name: 'Bênção da Sorte', description: 'Bônus de captura em encontros elegíveis.', kind: 'luck' };
+      return {
+        name: 'Bênção da Sorte',
+        description: 'Bônus de captura em encontros elegíveis.',
+        kind: 'luck',
+      };
     default:
-      return { name: 'Benefício registrado', description: 'Vantagem vinculada oficialmente à sua conta.', kind: 'other' };
+      return {
+        name: 'Benefício registrado',
+        description: 'Vantagem vinculada oficialmente à sua conta.',
+        kind: 'other',
+      };
   }
 }
 

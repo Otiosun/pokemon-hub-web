@@ -64,10 +64,7 @@ describe('player portal move choices', () => {
     );
 
     await expect(
-      resolvePlayerPortalMoveChoice(
-        { choiceId: choice.choiceId, replaceSlotNo: 1 },
-        fetcher,
-      ),
+      resolvePlayerPortalMoveChoice({ choiceId: choice.choiceId, replaceSlotNo: 1 }, fetcher),
     ).resolves.toEqual({ status: 'authenticated', ...responseBody });
   });
 
@@ -77,10 +74,7 @@ describe('player portal move choices', () => {
     );
 
     await expect(
-      resolvePlayerPortalMoveChoice(
-        { choiceId: choice.choiceId, replaceSlotNo: 1 },
-        fetcher,
-      ),
+      resolvePlayerPortalMoveChoice({ choiceId: choice.choiceId, replaceSlotNo: 1 }, fetcher),
     ).resolves.toEqual({ status: 'blocked' });
   });
 
@@ -88,10 +82,7 @@ describe('player portal move choices', () => {
     const fetcher = vi.fn(async () => new Response('{}', { status: 404 }));
 
     await expect(
-      resolvePlayerPortalMoveChoice(
-        { choiceId: choice.choiceId, replaceSlotNo: null },
-        fetcher,
-      ),
+      resolvePlayerPortalMoveChoice({ choiceId: choice.choiceId, replaceSlotNo: null }, fetcher),
     ).resolves.toEqual({ status: 'stale' });
   });
 

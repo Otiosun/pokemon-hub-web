@@ -80,35 +80,37 @@ jobs:
             exit 1
           fi
 
+          # Keep a single Chrome page alive while the actual async compositor
+          # resolves; dump-dom virtual-time shortcuts can return GENERATING.
+          rm -rf /tmp/trainer-card-cdp-profile
           "$BROWSER" \
             --headless=new \
             --no-sandbox \
             --disable-gpu \
-            --hide-scrollbars \
-            --virtual-time-budget=25000 \
-            --dump-dom \
-            http://127.0.0.1:4173/scripts/trainer-card-visual-uat.html \
-            > /tmp/trainer-card-uat-dom.html
+            --disable-dev-shm-usage \
+            --remote-debugging-address=127.0.0.1 \
+            --remote-debugging-port=9225 \
+            --user-data-dir=/tmp/trainer-card-cdp-profile \
+            about:blank > /tmp/trainer-card-cdp.log 2>&1 &
+          CHROME_PID=$!
+          trap 'kill "$CHROME_PID" 2>/dev/null || true; kill "$VITE_PID" 2>/dev/null || true' EXIT
 
-          grep -q 'data-uat-ready="true"' /tmp/trainer-card-uat-dom.html || {
-            cat /tmp/trainer-card-uat-dom.html
-            cat /tmp/trainer-card-vite.log
-            exit 1
-          }
-          grep -q 'data-uat-fresh="true"' /tmp/trainer-card-uat-dom.html || {
-            cat /tmp/trainer-card-uat-dom.html
-            exit 1
-          }
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:9225/json/version >/dev/null; then
+              break
+            fi
+            if [ "$attempt" -eq 60 ]; then
+              cat /tmp/trainer-card-cdp.log
+              exit 1
+            fi
+            sleep 0.25
+          done
 
-          "$BROWSER" \
-            --headless=new \
-            --no-sandbox \
-            --disable-gpu \
-            --hide-scrollbars \
-            --window-size=1536,1250 \
-            --virtual-time-budget=25000 \
-            --screenshot=/tmp/trainer-card-browser-uat.png \
-            http://127.0.0.1:4173/scripts/trainer-card-visual-uat.html
+          CDP_ENDPOINT=http://127.0.0.1:9225 \
+          BASE_URL=http://127.0.0.1:4173 \
+          UAT_SCREENSHOT=/tmp/trainer-card-browser-uat.png \
+          timeout 110s node scripts/check-trainer-card-visual-cdp.mjs
+          kill "$CHROME_PID" 2>/dev/null || true
 
           for VIEWPORT in 360,800 390,844; do
             WIDTH="${VIEWPORT%,*}"
@@ -116,16 +118,29 @@ jobs:
             LABEL="${WIDTH}x${HEIGHT}"
             UAT_URL="http://127.0.0.1:4173/scripts/trainer-card-mobile-viewport-uat.html?width=${WIDTH}&height=${HEIGHT}"
 
-            "$BROWSER" \
+            # Bound and retry cold Chromium processes per viewport; only the
+            # actual ready/fresh/correct-size marker set can satisfy UAT.
+            for browser_attempt in 1 2 3; do
+              if timeout 55s "$BROWSER" \
               --headless=new \
               --no-sandbox \
               --disable-gpu \
+              --disable-background-networking \
               --hide-scrollbars \
               --window-size=900,1000 \
               --virtual-time-budget=35000 \
               --dump-dom \
               "$UAT_URL" \
-              > "/tmp/trainer-card-modal-${LABEL}.html"
+                > "/tmp/trainer-card-modal-${LABEL}.html"; then
+                if grep -q 'data-viewport-ready="true"' "/tmp/trainer-card-modal-${LABEL}.html" &&
+                   grep -q 'data-viewport-fresh="true"' "/tmp/trainer-card-modal-${LABEL}.html" &&
+                   grep -q "data-viewport-child=\"${WIDTH}x${HEIGHT}\"" "/tmp/trainer-card-modal-${LABEL}.html"; then
+                  break
+                fi
+              fi
+              echo "Trainer Card viewport ${LABEL} pending ($browser_attempt/3)"
+              sleep 2
+            done
 
             grep -q 'data-viewport-ready="true"' "/tmp/trainer-card-modal-${LABEL}.html" || {
               cat "/tmp/trainer-card-modal-${LABEL}.html"
@@ -141,10 +156,11 @@ jobs:
               exit 1
             }
 
-            "$BROWSER" \
+            timeout 90s "$BROWSER" \
               --headless=new \
               --no-sandbox \
               --disable-gpu \
+              --disable-background-networking \
               --hide-scrollbars \
               --window-size=900,1000 \
               --virtual-time-budget=35000 \

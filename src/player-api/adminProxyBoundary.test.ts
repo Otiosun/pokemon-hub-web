@@ -8,14 +8,14 @@ describe('consolidated admin proxy boundary', () => {
       allowedMethod: 'GET',
     });
     expect(
-      resolveAdminProxyRoute(
-        new URL('https://hub.test/api/hub/admin/players?q=Nat&status=ACTIVE'),
-      ),
+      resolveAdminProxyRoute(new URL('https://hub.test/api/hub/admin/players?q=Nat&status=ACTIVE')),
     ).toEqual({
       upstreamPath: '/v1/hub/admin/players?q=Nat&status=ACTIVE',
       allowedMethod: 'GET',
     });
-    expect(resolveAdminProxyRoute(new URL('https://hub.test/api/hub/admin/reward-catalog'))).toEqual({
+    expect(
+      resolveAdminProxyRoute(new URL('https://hub.test/api/hub/admin/reward-catalog')),
+    ).toEqual({
       upstreamPath: '/v1/hub/admin/reward-catalog',
       allowedMethod: 'GET',
     });
@@ -26,10 +26,7 @@ describe('consolidated admin proxy boundary', () => {
       allowedMethod: 'GET',
     });
     expect(
-      resolveAdminProxyRoute(
-        new URL('https://hub.test/api/hub/admin/audit?limit=100'),
-        'POST',
-      ),
+      resolveAdminProxyRoute(new URL('https://hub.test/api/hub/admin/audit?limit=100'), 'POST'),
     ).toBeNull();
     expect(
       resolveAdminProxyRoute(
@@ -50,8 +47,7 @@ describe('consolidated admin proxy boundary', () => {
         'POST',
       ),
     ).toEqual({
-      upstreamPath:
-        '/v1/hub/admin/players/11111111-1111-4111-8111-111111111111/adjustments',
+      upstreamPath: '/v1/hub/admin/players/11111111-1111-4111-8111-111111111111/adjustments',
       allowedMethod: 'POST',
     });
     expect(
@@ -62,19 +58,15 @@ describe('consolidated admin proxy boundary', () => {
         'PUT',
       ),
     ).toEqual({
-      upstreamPath:
-        '/v1/hub/admin/team/11111111-1111-4111-8111-111111111111/capabilities',
+      upstreamPath: '/v1/hub/admin/team/11111111-1111-4111-8111-111111111111/capabilities',
       allowedMethod: 'PUT',
     });
     expect(
       resolveAdminProxyRoute(
-        new URL(
-          'https://hub.test/api/hub/admin/players/11111111-1111-4111-8111-111111111111',
-        ),
+        new URL('https://hub.test/api/hub/admin/players/11111111-1111-4111-8111-111111111111'),
       ),
     ).toEqual({
-      upstreamPath:
-        '/v1/hub/admin/players/11111111-1111-4111-8111-111111111111',
+      upstreamPath: '/v1/hub/admin/players/11111111-1111-4111-8111-111111111111',
       allowedMethod: 'GET',
     });
     expect(
@@ -84,19 +76,24 @@ describe('consolidated admin proxy boundary', () => {
         ),
       ),
     ).toEqual({
-      upstreamPath:
-        '/v1/hub/admin/players/11111111-1111-4111-8111-111111111111/adjustments',
+      upstreamPath: '/v1/hub/admin/players/11111111-1111-4111-8111-111111111111/adjustments',
       allowedMethod: 'POST',
     });
-    expect(resolveAdminProxyRoute(new URL('https://hub.test/api/hub/admin/operations'), 'GET')).toEqual({
+    expect(
+      resolveAdminProxyRoute(new URL('https://hub.test/api/hub/admin/operations'), 'GET'),
+    ).toEqual({
       upstreamPath: '/v1/hub/admin/operations',
       allowedMethod: 'GET',
     });
-    expect(resolveAdminProxyRoute(new URL('https://hub.test/api/hub/admin/operations'), 'POST')).toEqual({
+    expect(
+      resolveAdminProxyRoute(new URL('https://hub.test/api/hub/admin/operations'), 'POST'),
+    ).toEqual({
       upstreamPath: '/v1/hub/admin/operations',
       allowedMethod: 'POST',
     });
-    expect(resolveAdminProxyRoute(new URL('https://hub.test/api/hub/admin/operations'), 'DELETE')).toBeNull();
+    expect(
+      resolveAdminProxyRoute(new URL('https://hub.test/api/hub/admin/operations'), 'DELETE'),
+    ).toBeNull();
     expect(
       resolveAdminProxyRoute(
         new URL(
@@ -104,8 +101,7 @@ describe('consolidated admin proxy boundary', () => {
         ),
       ),
     ).toEqual({
-      upstreamPath:
-        '/v1/hub/admin/operations/22222222-2222-4222-8222-222222222222/confirm',
+      upstreamPath: '/v1/hub/admin/operations/22222222-2222-4222-8222-222222222222/confirm',
       allowedMethod: 'POST',
     });
     expect(
@@ -116,8 +112,7 @@ describe('consolidated admin proxy boundary', () => {
         'POST',
       ),
     ).toEqual({
-      upstreamPath:
-        '/v1/hub/admin/operations/22222222-2222-4222-8222-222222222222/simulate',
+      upstreamPath: '/v1/hub/admin/operations/22222222-2222-4222-8222-222222222222/simulate',
       allowedMethod: 'POST',
     });
   });
@@ -136,9 +131,7 @@ describe('consolidated admin proxy boundary', () => {
 
     expect(
       resolveAdminProxyRoute(
-        new URL(
-          'https://hub.test/api/hub/admin/operations?operationId=not-a-uuid&action=simulate',
-        ),
+        new URL('https://hub.test/api/hub/admin/operations?operationId=not-a-uuid&action=simulate'),
         'POST',
       ),
     ).toBeNull();

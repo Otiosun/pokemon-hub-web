@@ -1,0 +1,79 @@
+name: Premium Cross-Repo Acceptance (disposable DB)
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/player-api/**"
+      - "api/hub/admin/**"
+      - "scripts/uat/premiumCrossRepo.integration.test.ts.template"
+      - ".github/workflows/premium-crossrepo-acceptance.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: premium-crossrepo-draft
+  cancel-in-progress: true
+
+jobs:
+  http-and-postgres:
+    if: github.head_ref == 'fix/premium-delegated-delivery-20261026'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:18.6-alpine@sha256:d3e1620b530c944afa6e887d22eb899824da68e19c52024bf98f5220c88a65b2
+        env:
+          POSTGRES_USER: pokemon
+          POSTGRES_PASSWORD: test-only-password
+          POSTGRES_DB: pokemon_rpg_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pokemon -d pokemon_rpg_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgresql://pokemon:test-only-password@127.0.0.1:5432/postgres
+
+    steps:
+      - name: Checkout isolated Hub branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/premium-delegated-delivery-20261026
+          persist-credentials: false
+
+      - name: Checkout pinned backend PR #259 into backend
+        uses: actions/checkout@v4
+        with:
+          repository: Otiosun/sla
+          ref: 7a1749c4ac0ddb8939ffecea77627766c2348f77
+          path: backend
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+
+      - name: Install pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.23.0 --activate
+
+      - name: Install both projects without running lifecycle scripts
+        run: |
+          pnpm install --ignore-scripts --no-frozen-lockfile
+          cd backend
+          pnpm install --ignore-scripts --frozen-lockfile
+
+      - name: Execute actual Hub client/BFF/backend with disposable PostgreSQL
+        run: |
+          set -euo pipefail
+          cp scripts/uat/premiumCrossRepo.integration.test.ts.template src/player-api/premiumCrossRepo.integration.test.ts
+          trap 'rm -f src/player-api/premiumCrossRepo.integration.test.ts' EXIT
+          pnpm exec vitest run src/player-api/premiumCrossRepo.integration.test.ts

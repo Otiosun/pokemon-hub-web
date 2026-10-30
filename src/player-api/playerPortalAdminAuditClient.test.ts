@@ -47,9 +47,9 @@ describe('player portal admin audit client', () => {
   });
 
   it('keeps audit hidden when the backend denies the capability', async () => {
-    await expect(
-      getAdminAudit(100, () => response(403, { error: 'FORBIDDEN' })),
-    ).resolves.toEqual({ status: 'forbidden' });
+    await expect(getAdminAudit(100, () => response(403, { error: 'FORBIDDEN' }))).resolves.toEqual({
+      status: 'forbidden',
+    });
   });
 
   it('rejects malformed history instead of rendering untrusted data', async () => {

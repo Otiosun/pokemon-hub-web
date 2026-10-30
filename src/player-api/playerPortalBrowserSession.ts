@@ -96,15 +96,12 @@ export function usePlayerPortalBrowserSession(): PlayerPortalBrowserSessionState
     const onProfileUpdate = (event: Event) => {
       const profile = (event as CustomEvent<PlayerPortalProfile>).detail;
       setState((current) =>
-        current.status === 'authenticated'
-          ? { ...current, profile }
-          : current,
+        current.status === 'authenticated' ? { ...current, profile } : current,
       );
     };
 
     window.addEventListener(PLAYER_PORTAL_PROFILE_UPDATED_EVENT, onProfileUpdate);
-    return () =>
-      window.removeEventListener(PLAYER_PORTAL_PROFILE_UPDATED_EVENT, onProfileUpdate);
+    return () => window.removeEventListener(PLAYER_PORTAL_PROFILE_UPDATED_EVENT, onProfileUpdate);
   }, []);
 
   useEffect(() => {

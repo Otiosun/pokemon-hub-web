@@ -1,11 +1,22 @@
-import { isSafePremiumStagingMutation, premiumStagingForbidden } from '../../../src/player-api/premiumStagingRequestGuard.js';
+import {
+  isSafePremiumStagingMutation,
+  premiumStagingForbidden,
+} from '../../../src/player-api/premiumStagingRequestGuard.js';
 import { proxyPlayerPortalRequest } from '../../../src/player-api/playerPortalProxy.js';
-import { readPlayerPortalApiBaseUrl, readPremiumManualApiBaseUrl } from '../../../src/player-api/playerPortalServerRuntime.js';
-import { resolvePremiumStageAdminRoute } from '../../../src/player-api/premiumStagingRoutes.js';
-import { clearPremiumStageCookie, scopedSessionCookie } from '../../../src/player-api/premiumStagingSessionCookies.js';
+import {
+  readPlayerPortalApiBaseUrl,
+  readPremiumManualApiBaseUrl,
+} from '../../../src/player-api/playerPortalServerRuntime.js';
+import {
+  resolvePremiumStageAdminRoute,
+  type PremiumStageRoute,
+} from '../../../src/player-api/premiumStagingRoutes.js';
+import {
+  clearPremiumStageCookie,
+  scopedSessionCookie,
+} from '../../../src/player-api/premiumStagingSessionCookies.js';
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 // Vercel Hobby limits this project to 12 functions. Nested Premium URLs are
 // explicitly rewritten to the existing /api/hub/admin/premium function.
@@ -15,14 +26,14 @@ const PREMIUM_REWRITE_PATHS: Readonly<Record<string, string>> = {
   'auth-player': '/api/hub/admin/premium-auth/player',
   'auth-exchange': '/api/hub/admin/premium-auth/exchange',
   'auth-logout': '/api/hub/admin/premium-auth/logout',
-  'delivery': '/api/hub/admin/premium/delivery',
-  'players': '/api/hub/admin/premium/players',
-  'catalog': '/api/hub/admin/premium/delivery/catalog',
-  'items': '/api/hub/admin/premium/delivery/items',
-  'pokemon': '/api/hub/admin/premium/delivery/pokemon',
-  'cases': '/api/hub/admin/premium/delivery/cases',
+  delivery: '/api/hub/admin/premium/delivery',
+  players: '/api/hub/admin/premium/players',
+  catalog: '/api/hub/admin/premium/delivery/catalog',
+  items: '/api/hub/admin/premium/delivery/items',
+  pokemon: '/api/hub/admin/premium/delivery/pokemon',
+  cases: '/api/hub/admin/premium/delivery/cases',
   'cases-catalog': '/api/hub/admin/premium/delivery/cases/catalog',
-  'master': '/api/hub/admin/premium/delivery/packs/master',
+  master: '/api/hub/admin/premium/delivery/packs/master',
 };
 
 function resolvePremiumRewrite(input: URL): URL | null {
@@ -41,8 +52,8 @@ function resolvePremiumRewrite(input: URL): URL | null {
       'x-vercel-set-bypass-cookie',
     ]) {
       const values = query.getAll(name);
-      if (values.length > 1 || (values.length === 1 &&
-        (!values[0] || values[0].length > 2048))) return null;
+      if (values.length > 1 || (values.length === 1 && (!values[0] || values[0].length > 2048)))
+        return null;
       query.delete(name);
     }
   }
@@ -62,10 +73,8 @@ function resolvePremiumRewrite(input: URL): URL | null {
     for (const capture of ['...path', 'path']) {
       const values = clean.searchParams.getAll(capture);
       if (values.length === 0) continue;
-      if (
-        values.length !== 1 ||
-        (values[0] !== expectedCapture && values[0] !== 'self')
-      ) return null;
+      if (values.length !== 1 || (values[0] !== expectedCapture && values[0] !== 'self'))
+        return null;
       clean.searchParams.delete(capture);
     }
     return clean;
@@ -78,7 +87,9 @@ function resolvePremiumRewrite(input: URL): URL | null {
   if (key === 'case-events' || key === 'case-transition') {
     const ids = params.getAll('premiumCase');
     if (ids.length !== 1 || !ids[0] || !UUID_PATTERN.test(ids[0])) return null;
-    pathname = '/api/hub/admin/premium/delivery/cases/' + ids[0] +
+    pathname =
+      '/api/hub/admin/premium/delivery/cases/' +
+      ids[0] +
       (key === 'case-events' ? '/events' : '/transition');
     params.delete('premiumCase');
   } else if (params.has('premiumCase')) return null;
@@ -299,12 +310,41 @@ function isLivePremiumDeployment(): boolean {
   const runtime = Reflect.get(globalThis, 'process');
   if (runtime === null || typeof runtime !== 'object') return false;
   const env = Reflect.get(runtime, 'env');
-  return env !== null && typeof env === 'object' &&
-    Reflect.get(env, 'VERCEL_ENV') === 'production';
+  return env !== null && typeof env === 'object' && Reflect.get(env, 'VERCEL_ENV') === 'production';
 }
 
-async function authorizeLivePremiumOwner(
+/** An explicit delegation applies ONLY to the three catalog/grant/history routes
+ * plus the read-only trainer search needed to select a recipient. It does not
+ * allow opening cases, granting inventory/Pokémon, or reading financial data. */
+export function canDelegatePremiumRoute(
+  admin: { owner: boolean; capabilities: readonly string[] },
+  route: PremiumStageRoute,
+): boolean {
+  if (!admin.capabilities.includes('central.view')) return false;
+  if (admin.owner) return true;
+  if (!admin.capabilities.includes('premium.delivery.grant')) return false;
+  const target = route.upstreamPath;
+  if (route.allowedMethod === 'GET' && target === '/v1/hub/admin/premium/delivery/catalog')
+    return true;
+  if (route.allowedMethod === 'POST' && target === '/v1/hub/admin/premium/delivery') return true;
+  if (
+    route.allowedMethod === 'GET' &&
+    /^\/v1\/hub\/admin\/premium\/players\/[0-9a-f-]{36}\/deliveries$/i.test(target)
+  )
+    return true;
+  if (
+    route.allowedMethod === 'GET' &&
+    target.startsWith('/v1/hub/admin/players?q=') &&
+    target.endsWith('&limit=8') &&
+    admin.capabilities.includes('player.read')
+  )
+    return true;
+  return false;
+}
+
+async function authorizeLivePremiumAccess(
   request: Request,
+  route?: PremiumStageRoute,
 ): Promise<{ admin: unknown } | Response> {
   const baseUrl = readPremiumManualApiBaseUrl();
   if (baseUrl === null) return premiumAccessError(503, 'PREMIUM_UNAVAILABLE');
@@ -312,16 +352,19 @@ async function authorizeLivePremiumOwner(
   const cookie = scopedSessionCookie(request.headers.get('cookie'), 'normal');
   if (cookie === null) return premiumAccessError(401, 'HUB_SESSION_REQUIRED');
 
-  const check = await proxyPlayerPortalRequest(new Request(request.url, {
-    method: 'GET',
-    headers: { cookie },
-  }), {
-    baseUrl,
-    upstreamPath: '/v1/hub/admin/self',
-    allowedMethod: 'GET',
-    sessionScope: 'normal',
-    responseCookieMode: 'omit',
-  });
+  const check = await proxyPlayerPortalRequest(
+    new Request(request.url, {
+      method: 'GET',
+      headers: { cookie },
+    }),
+    {
+      baseUrl,
+      upstreamPath: '/v1/hub/admin/self',
+      allowedMethod: 'GET',
+      sessionScope: 'normal',
+      responseCookieMode: 'omit',
+    },
+  );
 
   if (!check.ok) {
     if (check.status === 401) return premiumAccessError(401, 'HUB_SESSION_REQUIRED');
@@ -330,11 +373,22 @@ async function authorizeLivePremiumOwner(
   }
 
   const body: unknown = await check.json().catch(() => null);
-  if (typeof body !== 'object' || body === null || !('admin' in body) ||
-      typeof body.admin !== 'object' || body.admin === null ||
-      !('owner' in body.admin) || body.admin.owner !== true ||
-      !('capabilities' in body.admin) || !Array.isArray(body.admin.capabilities) ||
-      !body.admin.capabilities.includes('central.view')) {
+  if (
+    typeof body !== 'object' ||
+    body === null ||
+    !('admin' in body) ||
+    typeof body.admin !== 'object' ||
+    body.admin === null ||
+    !('owner' in body.admin) ||
+    typeof body.admin.owner !== 'boolean' ||
+    !('capabilities' in body.admin) ||
+    !Array.isArray(body.admin.capabilities) ||
+    !body.admin.capabilities.every((value: unknown) => typeof value === 'string') ||
+    !body.admin.capabilities.includes('central.view') ||
+    !(route === undefined
+      ? body.admin.owner === true
+      : canDelegatePremiumRoute(body.admin as { owner: boolean; capabilities: string[] }, route))
+  ) {
     return premiumAccessError(403, 'PREMIUM_FORBIDDEN');
   }
   return { admin: body.admin };
@@ -368,7 +422,7 @@ export default {
           return Promise.resolve(jsonNotFound('auth-route'));
         }
         return (async () => {
-          const owner = await authorizeLivePremiumOwner(request);
+          const owner = await authorizeLivePremiumAccess(request);
           if (owner instanceof Response) return owner;
           return new Response(JSON.stringify(owner), {
             status: 200,
@@ -378,23 +432,35 @@ export default {
       }
 
       if (url.pathname === '/api/hub/admin/premium-auth/logout' && request.method === 'POST') {
-        return Promise.resolve(new Response(JSON.stringify({ signedOut: true }), {
-          status: 200,
-          headers: {
-            'cache-control': 'no-store',
-            'content-type': 'application/json',
-            'set-cookie': clearPremiumStageCookie(),
-          },
-        }));
+        return Promise.resolve(
+          new Response(JSON.stringify({ signedOut: true }), {
+            status: 200,
+            headers: {
+              'cache-control': 'no-store',
+              'content-type': 'application/json',
+              'set-cookie': clearPremiumStageCookie(),
+            },
+          }),
+        );
       }
       if (url.pathname === '/api/hub/admin/premium-auth/exchange' && request.method === 'POST') {
         return (async () => {
-          const input: unknown = await request.clone().json().catch(() => null);
-          if (typeof input !== 'object' || input === null || Array.isArray(input) ||
-            Object.keys(input).length !== 1 || !('ticket' in input) ||
-            typeof input.ticket !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(input.ticket)) {
+          const input: unknown = await request
+            .clone()
+            .json()
+            .catch(() => null);
+          if (
+            typeof input !== 'object' ||
+            input === null ||
+            Array.isArray(input) ||
+            Object.keys(input).length !== 1 ||
+            !('ticket' in input) ||
+            typeof input.ticket !== 'string' ||
+            !/^[A-Za-z0-9_-]{43}$/.test(input.ticket)
+          ) {
             return new Response(JSON.stringify({ error: 'VALIDATION_FAILED' }), {
-              status: 400, headers: { 'cache-control': 'no-store', 'content-type': 'application/json' },
+              status: 400,
+              headers: { 'cache-control': 'no-store', 'content-type': 'application/json' },
             });
           }
           return proxyPlayerPortalRequest(request, {
@@ -432,7 +498,7 @@ export default {
       if (premiumRoute === null) return Promise.resolve(jsonNotFound('premium-route'));
       if (isLivePremiumDeployment()) {
         return (async () => {
-          const owner = await authorizeLivePremiumOwner(request);
+          const owner = await authorizeLivePremiumAccess(request, premiumRoute);
           if (owner instanceof Response) return owner;
           return proxyPlayerPortalRequest(request, {
             baseUrl: readPremiumManualApiBaseUrl(),

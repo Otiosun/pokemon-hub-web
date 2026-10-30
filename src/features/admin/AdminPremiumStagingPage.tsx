@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { usePlayerPortalAdmin } from '../../player-api/usePlayerPortalAdmin';
+import { isPremiumDeliveryDelegate } from './premiumDeliveryAccess';
+import type { PremiumStageSession } from '../../player-api/premiumStagingAuthClient';
 import { currentPremiumManualUiMode } from '../../player-api/premiumManualUiMode';
 import { HubMenuTrigger } from '../../components/HubNavigation';
 import { PremiumStagingSessionGate } from './PremiumStagingSessionGate';
@@ -19,7 +22,39 @@ type Section = 'delivery' | 'cases' | 'inventory' | 'pokemon' | 'catalog' | 'ent
 const PLAYER_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function AdminPremiumStagingPage() {
-  const local = currentPremiumManualUiMode() === 'local';
+  // Preview must never fetch the live Hub administrator session just to render
+  // a staging page. Keep the two session providers in separate components.
+  return currentPremiumManualUiMode() === 'local'
+    ? <LocalPremiumStagingPage />
+    : <PreviewPremiumStagingPage />;
+}
+
+function LocalPremiumStagingPage() {
+  const admin = usePlayerPortalAdmin();
+  const deliveryOnly = admin.status !== 'admin' || isPremiumDeliveryDelegate(admin.admin);
+  const canSearchPlayers =
+    admin.status === 'admin' &&
+    (admin.admin.owner || admin.admin.capabilities.includes('player.read'));
+  return <PremiumStagingPageContent local deliveryOnly={deliveryOnly} canSearchPlayers={canSearchPlayers} />;
+}
+
+function PreviewPremiumStagingPage() {
+  const [session, setSession] = useState<PremiumStageSession | null>(null);
+  // Until the isolated backend establishes ownership, show delivery only.
+  // Non-owners never see owner-only navigation, even during loading.
+  const owner = session?.status === 'ready' && session.owner === true;
+  const canSearchPlayers = session?.status === 'ready' && session.canSearchPlayers === true;
+  return <PremiumStagingPageContent local={false} deliveryOnly={!owner} canSearchPlayers={canSearchPlayers} onStageSessionChange={setSession} />;
+}
+
+function PremiumStagingPageContent({
+  local, deliveryOnly, canSearchPlayers, onStageSessionChange,
+}: {
+  local: boolean;
+  deliveryOnly: boolean;
+  canSearchPlayers: boolean;
+  onStageSessionChange?: ((session: PremiumStageSession) => void) | undefined;
+}) {
   const [draft, setDraft] = useState('');
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [selectedPlayer, setSelectedPlayer] = useState<SearchPlayer | null>(null);
@@ -33,7 +68,7 @@ export function AdminPremiumStagingPage() {
         <HubMenuTrigger />
       </header>
 
-      <PremiumStagingSessionGate access="owner">
+      <PremiumStagingSessionGate access="delivery" onSessionChange={onStageSessionChange}>
       <div className="admin-shell">
         <section className="admin-premium">
           <header className="admin-premium-heading">
@@ -45,6 +80,10 @@ export function AdminPremiumStagingPage() {
             <strong>{local ? 'API LOCAL · ATIVAÇÃO MANUAL' : 'STAGING · NÃO LIVE'}</strong>
           </header>
 
+          {deliveryOnly ? <p className="premium-staging-disclaimer" role="status">Seu acesso está restrito à entrega de benefícios autorizados. Outras operações Premium continuam exclusivas do proprietário.</p> : null}
+          {deliveryOnly && !canSearchPlayers ? (
+            <p className="premium-staging-disclaimer" role="status">A busca de jogadores também exige a permissão player.read. Peça essa permissão ao proprietário ou selecione um Player ID já verificado.</p>
+          ) : null}
           <p className="premium-staging-disclaimer" role="status">
             {local
               ? 'Este painel consulta a API do próprio operador, se habilitada e autenticada pelo servidor. Entregas alteram dados reais: confira destinatário e quantidade. Não aprova pagamentos.'
@@ -113,7 +152,7 @@ export function AdminPremiumStagingPage() {
               ['catalog', 'GAMEPASSES', 'COBERTURA DO CATÁLOGO'],
               ['entitlements', 'BENEFÍCIOS', 'EXPIRAÇÃO & ESTADO'],
               ['support', 'ATENDIMENTOS', 'REGISTROS AUDITÁVEIS'],
-            ] as const).map(([id, label, eyebrow]) => (
+            ] as const).filter(([id]) => !deliveryOnly || id === 'delivery').map(([id, label, eyebrow]) => (
               <button key={id} type="button" aria-pressed={section === id}
                 className={section === id ? 'is-active' : undefined}
                 onClick={() => setSection(id)}>
@@ -125,25 +164,25 @@ export function AdminPremiumStagingPage() {
           {section === 'delivery' ? (
             <AdminPremiumDeliveryPanel key={playerId ?? 'unselected'} playerId={playerId} />
           ) : null}
-          {section === 'cases' ? (
+          {!deliveryOnly && section === 'cases' ? (
             <AdminPremiumCasesPanel key={playerId ?? 'unselected'} playerId={playerId} />
           ) : null}
-          {section === 'inventory' ? (
+          {!deliveryOnly && section === 'inventory' ? (
             <AdminPremiumInventoryPanel key={playerId ?? 'unselected'} playerId={playerId} />
           ) : null}
-          {section === 'pokemon' ? (
+          {!deliveryOnly && section === 'pokemon' ? (
             <AdminPremiumPokemonPanel key={playerId ?? 'unselected'} playerId={playerId} />
           ) : null}
-          {section === 'catalog' ? (
+          {!deliveryOnly && section === 'catalog' ? (
             <>
-              <AdminPremiumFulfillmentCatalog />
+              <AdminPremiumFulfillmentCatalog onOpenCases={() => setSection('cases')} />
               <AdminPremiumMasterBallPanel key={playerId ?? 'unselected'} playerId={playerId} />
             </>
           ) : null}
-          {section === 'entitlements' ? (
+          {!deliveryOnly && section === 'entitlements' ? (
             <AdminPremiumReadPanel playerId={playerId} playerName={playerId} resource="entitlements" />
           ) : null}
-          {section === 'support' ? (
+          {!deliveryOnly && section === 'support' ? (
             <AdminPremiumSupportLedger playerId={playerId} playerName={playerId} />
           ) : null}
           <footer className="premium-staging-foot">

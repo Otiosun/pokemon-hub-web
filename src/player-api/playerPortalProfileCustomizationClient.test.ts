@@ -54,9 +54,7 @@ describe('updatePlayerPortalProfileCustomization', () => {
   });
 
   it('does not pretend a profile update succeeded after session expiry', async () => {
-    const fetcher = vi.fn(
-      async () => new Response('{"error":"UNAUTHENTICATED"}', { status: 401 }),
-    );
+    const fetcher = vi.fn(async () => new Response('{"error":"UNAUTHENTICATED"}', { status: 401 }));
 
     await expect(
       updatePlayerPortalProfileCustomization(customization, fetcher, false),
@@ -66,9 +64,12 @@ describe('updatePlayerPortalProfileCustomization', () => {
   it('rejects malformed successful profile payloads', async () => {
     const fetcher = vi.fn(
       async () =>
-        new Response(JSON.stringify({ profile: { ...profile, profileCustomization: { accent: 'pink' } } }), {
-          status: 200,
-        }),
+        new Response(
+          JSON.stringify({ profile: { ...profile, profileCustomization: { accent: 'pink' } } }),
+          {
+            status: 200,
+          },
+        ),
     );
 
     await expect(

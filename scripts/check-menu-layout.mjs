@@ -4,7 +4,10 @@ const navigationCss = readFileSync(new URL('../src/components/hub-navigation.css
 const moduleHeaderCss = readFileSync(new URL('../src/components/hub-module-header.css', import.meta.url), 'utf8');
 const navigationSource = readFileSync(new URL('../src/components/HubNavigation.tsx', import.meta.url), 'utf8');
 const moduleHeaderSource = readFileSync(new URL('../src/components/HubModuleHeader.tsx', import.meta.url), 'utf8');
-const ownedDetailSource = readFileSync(new URL('../src/features/collection/OwnedPokemonDetailPage.tsx', import.meta.url), 'utf8');
+// The public entry now re-exports the actual page. Verify the rendered implementation,
+// rather than searching the two-line compatibility barrel for JSX.
+const ownedDetailEntrySource = readFileSync(new URL('../src/features/collection/OwnedPokemonDetailPage.tsx', import.meta.url), 'utf8');
+const ownedDetailSource = readFileSync(new URL('../src/features/collection/OwnedPokemonDetailPageReal.tsx', import.meta.url), 'utf8');
 const ownedDetailMenuCss = readFileSync(new URL('../src/features/collection/owned-pokemon-detail-menu.css', import.meta.url), 'utf8');
 
 function assert(condition, message) {
@@ -28,6 +31,10 @@ assert(
 assert(
   /\.hub-module-actions\s*\{[^}]*display:\s*flex/s.test(moduleHeaderCss),
   'the module header must reserve structural space for meta and menu actions',
+);
+assert(
+  ownedDetailEntrySource.includes("export { OwnedPokemonDetailPage } from './OwnedPokemonDetailPageReal';"),
+  'the owned-Pokémon route must still resolve to the implementation under menu verification',
 );
 assert(
   ownedDetailSource.includes('className="owned-detail-stage-actions"') && ownedDetailSource.includes('<HubMenuTrigger />'),

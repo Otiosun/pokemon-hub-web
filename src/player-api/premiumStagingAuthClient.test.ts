@@ -11,39 +11,98 @@ const player = '22222222-2222-4222-8222-222222222222';
 
 describe('Premium staging-only session client', () => {
   it('authorizes only a staging owner, not an ordinary admin or player', async () => {
-    const owner = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => new Response(
-      JSON.stringify({ admin: { principalId: principal, owner: true, capabilities: ['central.view'] } }),
-      { status: 200 },
-    ));
+    const owner = vi.fn(
+      async (_url: RequestInfo | URL, _init?: RequestInit) =>
+        new Response(
+          JSON.stringify({
+            admin: { principalId: principal, owner: true, capabilities: ['central.view'] },
+          }),
+          { status: 200 },
+        ),
+    );
     expect(await readPremiumStageSession('owner', owner)).toMatchObject({
-      status: 'ready', label: 'PROPRIETÁRIO DE STAGING',
+      status: 'ready',
+      label: 'PROPRIETÁRIO DE STAGING',
     });
     expect(owner.mock.calls[0]![0]).toBe('/api/hub/admin/premium-auth/self');
     expect(owner.mock.calls[0]![1]?.credentials).toBe('include');
 
-    const notOwner = vi.fn(async () => new Response(
-      JSON.stringify({ admin: { principalId: principal, owner: false, capabilities: ['central.view'] } }),
-      { status: 200 },
-    ));
+    const notOwner = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            admin: { principalId: principal, owner: false, capabilities: ['central.view'] },
+          }),
+          { status: 200 },
+        ),
+    );
     expect((await readPremiumStageSession('owner', notOwner)).status).toBe('forbidden');
 
-    const playerSession = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => new Response(
-      JSON.stringify({ profile: { playerId: player } }), { status: 200 },
-    ));
+    const playerSession = vi.fn(
+      async (_url: RequestInfo | URL, _init?: RequestInit) =>
+        new Response(JSON.stringify({ profile: { playerId: player } }), { status: 200 }),
+    );
     expect((await readPremiumStageSession('player', playerSession)).status).toBe('ready');
     expect(playerSession.mock.calls[0]![0]).toBe('/api/hub/admin/premium-auth/player');
+  });
+
+  it('accepts delivery-only delegated staging sessions without owner privileges', async () => {
+    const response = (owner: boolean, capabilities: string[]) =>
+      vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) =>
+        Response.json({ admin: { principalId: principal, owner, capabilities } }),
+      );
+    const delegate = response(false, ['central.view', 'premium.delivery.grant', 'player.read']);
+    expect(await readPremiumStageSession('delivery', delegate)).toMatchObject({
+      status: 'ready',
+      owner: false,
+      canSearchPlayers: true,
+      label: 'ENTREGAS AUTORIZADAS · STAGING',
+    });
+    expect(delegate.mock.calls[0]![0]).toBe('/api/hub/admin/premium-auth/self');
+    const noPlayerRead = response(false, ['central.view', 'premium.delivery.grant']);
+    expect(await readPremiumStageSession('delivery', noPlayerRead)).toMatchObject({
+      status: 'ready',
+      owner: false,
+      canSearchPlayers: false,
+    });
+    expect((await readPremiumStageSession('owner', delegate)).status).toBe('forbidden');
+    for (const caps of [
+      ['central.view', 'player.read', 'inventory.adjust'],
+      ['premium.delivery.grant', 'player.read'],
+      [],
+    ]) {
+      expect((await readPremiumStageSession('delivery', response(false, caps))).status).toBe(
+        'forbidden',
+      );
+    }
+    expect(
+      await readPremiumStageSession('delivery', response(true, ['central.view'])),
+    ).toMatchObject({ status: 'ready', owner: true, canSearchPlayers: true });
+    const malformed = vi.fn(async () =>
+      Response.json({
+        admin: {
+          principalId: principal,
+          owner: false,
+          capabilities: ['central.view', 'premium.delivery.grant', null],
+        },
+      }),
+    );
+    expect((await readPremiumStageSession('delivery', malformed)).status).toBe('forbidden');
   });
 
   it('returns unavailable or unauthenticated without inventing a staging session', async () => {
     for (const code of [401, 404, 502, 503]) {
       const fetcher = vi.fn(async () => new Response(null, { status: code }));
-      expect((await readPremiumStageSession('owner', fetcher)).status)
-        .toBe(code === 401 ? 'unauthenticated' : 'unavailable');
+      expect((await readPremiumStageSession('owner', fetcher)).status).toBe(
+        code === 401 ? 'unauthenticated' : 'unavailable',
+      );
     }
   });
 
   it('accepts only ticket-shaped one-time staging credentials and never saves them', async () => {
-    const fetcher = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => new Response('{}', { status: 200 }));
+    const fetcher = vi.fn(
+      async (_url: RequestInfo | URL, _init?: RequestInit) => new Response('{}', { status: 200 }),
+    );
     expect(await exchangePremiumStageTicket('not-a-ticket', fetcher)).toBe('invalid');
     expect(fetcher).not.toHaveBeenCalled();
     const ticket = 'A'.repeat(43);
@@ -60,12 +119,15 @@ describe('Premium staging-only session client', () => {
     const official = `${origin}/jornada?hub_open=1792500000000#hub_ticket=${ticket}`;
     expect(premiumTicketFromInput(ticket, origin)).toBe(ticket);
     expect(premiumTicketFromInput(official, origin)).toBe(ticket);
-    expect(premiumTicketFromInput(official.replace(origin, 'https://fake.example'), origin)).toBeNull();
+    expect(
+      premiumTicketFromInput(official.replace(origin, 'https://fake.example'), origin),
+    ).toBeNull();
     expect(premiumTicketFromInput(official.replace('https:', 'http:'), origin)).toBeNull();
-    expect(premiumTicketFromInput(`${origin}/#hub_ticket=${ticket}&hub_ticket=${ticket}`, origin)).toBeNull();
+    expect(
+      premiumTicketFromInput(`${origin}/#hub_ticket=${ticket}&hub_ticket=${ticket}`, origin),
+    ).toBeNull();
     expect(premiumTicketFromInput(`${origin}/#hub_ticket=invalid`, origin)).toBeNull();
     expect(premiumTicketFromInput('not-a-link', origin)).toBeNull();
     expect(premiumTicketFromInput(official + 'B'.repeat(2048), origin)).toBeNull();
   });
-
 });
