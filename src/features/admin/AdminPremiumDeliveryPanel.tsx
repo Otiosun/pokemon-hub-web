@@ -8,7 +8,14 @@ import {
 } from '../../player-api/manualPremiumDeliveryClient';
 import './admin-premium-delivery.css';
 
-export function AdminPremiumDeliveryPanel({ playerId }: { playerId: string | null }) {
+export function AdminPremiumDeliveryPanel({
+  playerId,
+  onPendingIntentChange,
+}: {
+  playerId: string | null;
+  /** Prevent switching recipient/section while an uncertain grant can exist. */
+  onPendingIntentChange?: ((pending: boolean) => void) | undefined;
+}) {
   const [products, setProducts] = useState<DeliveryProduct[]>([]);
   const [history, setHistory] = useState<ManualDeliveryEntry[]>([]);
   const [historyState, setHistoryState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
@@ -19,6 +26,7 @@ export function AdminPremiumDeliveryPanel({ playerId }: { playerId: string | nul
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
   const [needsReconciliation, setNeedsReconciliation] = useState(false);
+  useEffect(() => { onPendingIntentChange?.(needsReconciliation); }, [needsReconciliation, onPendingIntentChange]);
   const [loading, setLoading] = useState(true);
   const intent = useRef<string | null>(null);
   const selected = products.find((p) => p.sku === sku);
@@ -157,14 +165,14 @@ export function AdminPremiumDeliveryPanel({ playerId }: { playerId: string | nul
         <div className="premium-delivery-form">
           <label>
             Gamepass
-            <select value={sku} disabled={busy || loading} onChange={(event) => { reset(); setSku(event.target.value); }}>
+            <select value={sku} disabled={busy || loading || needsReconciliation} onChange={(event) => { reset(); setSku(event.target.value); }}>
               {products.map((product) => <option key={product.sku} value={product.sku}>{product.title} · {product.sku}</option>)}
             </select>
           </label>
           <label>
             Quantidade
             <input type="number" min={1} max={selected?.maxQuantity ?? 1} step={1}
-              value={quantity} disabled={busy}
+              value={quantity} disabled={busy || needsReconciliation}
               onChange={(event) => { reset(); setQuantity(Number(event.target.value)); }} />
           </label>
           {selected ? (
@@ -179,7 +187,7 @@ export function AdminPremiumDeliveryPanel({ playerId }: { playerId: string | nul
           <label className="premium-delivery-reason">
             Motivo / comprovante verificado pelo ADM
             <textarea value={reason} minLength={8} maxLength={400} rows={3}
-              disabled={busy} aria-describedby="premium-delivery-reason-hint"
+              disabled={busy || needsReconciliation} aria-describedby="premium-delivery-reason-hint"
               placeholder="Ex.: Pedido conferido externamente e autorizado pelo administrador."
               onChange={(event) => { reset(); setReason(event.target.value); }} />
             <small id="premium-delivery-reason-hint" className={reasonLength > 0 && !reasonValid ? 'is-warning' : undefined}>
@@ -202,9 +210,16 @@ export function AdminPremiumDeliveryPanel({ playerId }: { playerId: string | nul
           </button>
           {status ? <p role="status" className="premium-delivery-notice">{status}</p> : null}
           {needsReconciliation ? (
-            <button type="button" disabled={busy} onClick={() => void reconcile()}>
+            <>
+              <p className="premium-delivery-notice" role="status">
+                Resultado incerto: benefício, quantidade, justificativa e destinatário
+                ficam bloqueados até uma confirmação do pedido. Repetir usa
+                o mesmo identificador, sem criar uma nova entrega.
+              </p>
+              <button type="button" disabled={busy} onClick={() => void reconcile()}>
               {busy ? 'CONSULTANDO…' : 'VERIFICAR ESTE PEDIDO NO HISTÓRICO'}
-            </button>
+              </button>
+            </>
           ) : null}
         </div>
       )}
