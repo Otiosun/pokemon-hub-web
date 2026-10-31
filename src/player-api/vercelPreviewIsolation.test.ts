@@ -6,8 +6,10 @@ import {
   readPremiumStagingApiBaseUrl,
 } from './playerPortalServerRuntime';
 
-const config: { env?: Record<string, string>; build?: { env?: Record<string, string> } } =
-  rawVercelConfig;
+const config = rawVercelConfig as unknown as {
+  env?: Record<string, string>;
+  build?: { env?: Record<string, string> };
+};
 
 afterEach(() => vi.unstubAllEnvs());
 
