@@ -60,8 +60,8 @@ export default {
     const route = resolvePlayerProxyRoute(new URL(request.url), request.method);
     if (route === null) return Promise.resolve(jsonNotFound());
     if (
-      route.premiumStaging &&
       request.method === 'POST' &&
+      (route.premiumStaging || new URL(request.url).pathname === '/api/hub/player/pokemon/evolve') &&
       !isSafePremiumStagingMutation(request)
     ) {
       return Promise.resolve(premiumStagingForbidden());
