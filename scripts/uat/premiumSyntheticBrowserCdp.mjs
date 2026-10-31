@@ -188,6 +188,19 @@ async function runScenario(client, role, width) {
     await until(client,
       'document.body?.textContent?.includes("A API não confirmou o resultado")',
       role+' uncertain upstream response');
+    await until(client, `(() => {
+      const form=document.querySelector('.premium-delivery-form');
+      const sectionTabs=Array.from(document.querySelectorAll('nav[aria-label="Seções da Central Premium"] button'));
+      return Boolean(
+        form?.querySelector('select')?.disabled &&
+        form?.querySelector('input[type="number"]')?.disabled &&
+        form?.querySelector('textarea')?.disabled &&
+        document.querySelector('.premium-stage-search input')?.disabled &&
+        document.querySelector('.premium-id-fallback input')?.disabled &&
+        document.querySelector('.premium-player-change')?.disabled &&
+        sectionTabs.filter(b=>!b.textContent.includes('ENTREGAS')).every(b=>b.disabled)
+      );
+    })()`,role+' locked identity, product, quantity and reason until reconciliation');
     await until(client,
       'Boolean(Array.from(document.querySelectorAll(".premium-delivery-form button")).find(b=>b.textContent.includes("REPETIR COM A MESMA CHAVE")&&!b.disabled))',
       role+' stable idempotent retry');
@@ -195,6 +208,14 @@ async function runScenario(client, role, width) {
     await until(client,
       'document.body?.textContent?.includes("Entrega aplicada ao jogador")',
       role+' acknowledged retry');
+    await until(client,`(() => {
+      const form=document.querySelector('.premium-delivery-form');
+      return Boolean(
+        form?.querySelector('select') && !form.querySelector('select').disabled &&
+        !document.querySelector('.premium-stage-search input')?.disabled &&
+        !document.querySelector('.premium-player-change')?.disabled
+      );
+    })()`,role+' unlocked after confirmed idempotent response');
     const attempts=await evalIn(client,'window.__premiumSyntheticGrantAttempts');
     assert(attempts.length===2,role+' created incorrect number of POST requests');
     assert(JSON.stringify(attempts[0])===JSON.stringify(attempts[1]),

@@ -59,6 +59,7 @@ function PremiumStagingPageContent({
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [selectedPlayer, setSelectedPlayer] = useState<SearchPlayer | null>(null);
   const [section, setSection] = useState<Section>('delivery');
+  const [deliveryLocked, setDeliveryLocked] = useState(false);
   const valid = PLAYER_ID.test(draft.trim());
 
   return (
@@ -97,8 +98,10 @@ function PremiumStagingPageContent({
               <p>Encontre o treinador pelo nome e confira a conta antes de autorizar qualquer benefício.</p>
             </div>
             <PremiumStagePlayerSearch
-              onEditing={() => { setSelectedPlayer(null); setPlayerId(null); }}
+              disabled={deliveryLocked}
+              onEditing={() => { if (deliveryLocked) return; setSelectedPlayer(null); setPlayerId(null); }}
               onSelect={(player) => {
+                if (deliveryLocked) return;
                 setDraft(player.playerId);
                 setPlayerId(player.playerId);
                 setSelectedPlayer(player);
@@ -114,7 +117,7 @@ function PremiumStagingPageContent({
                     : 'Confira a identidade antes de qualquer concessão.'}</small>
                   <code>{playerId}</code>
                 </div>
-                <button type="button" className="premium-player-change" onClick={() => {
+                <button type="button" className="premium-player-change" disabled={deliveryLocked} onClick={() => {
                   setPlayerId(null);
                   setSelectedPlayer(null);
                   setDraft('');
@@ -125,18 +128,18 @@ function PremiumStagingPageContent({
               <summary>Não encontrou? Informar Player ID manualmente</summary>
               <form onSubmit={(event) => {
                 event.preventDefault();
-                if (valid) {
+                if (valid && !deliveryLocked) {
                   setPlayerId(draft.trim());
                   setSelectedPlayer(null);
                 }
               }}>
                 <label htmlFor="premium-staging-player-id">ID completo do jogador (UUID)</label>
                 <div>
-                  <input id="premium-staging-player-id" value={draft}
+                  <input id="premium-staging-player-id" value={draft} disabled={deliveryLocked}
                     autoComplete="off" spellCheck={false}
                     onChange={(event) => { setDraft(event.target.value); setPlayerId(null); setSelectedPlayer(null); }}
                     placeholder="00000000-0000-4000-8000-000000000000" />
-                  <button type="submit" disabled={!valid}>Selecionar ID</button>
+                  <button type="submit" disabled={!valid || deliveryLocked}>Selecionar ID</button>
                 </div>
                 <small>Use somente quando tiver conferido o ID no cadastro administrativo.</small>
               </form>
@@ -154,6 +157,7 @@ function PremiumStagingPageContent({
               ['support', 'ATENDIMENTOS', 'REGISTROS AUDITÁVEIS'],
             ] as const).filter(([id]) => !deliveryOnly || id === 'delivery').map(([id, label, eyebrow]) => (
               <button key={id} type="button" aria-pressed={section === id}
+                disabled={deliveryLocked && id !== "delivery"}
                 className={section === id ? 'is-active' : undefined}
                 onClick={() => setSection(id)}>
                 <small>{eyebrow}</small><span>{label}</span>
@@ -162,7 +166,8 @@ function PremiumStagingPageContent({
           </nav>
 
           {section === 'delivery' ? (
-            <AdminPremiumDeliveryPanel key={playerId ?? 'unselected'} playerId={playerId} />
+            <AdminPremiumDeliveryPanel key={playerId ?? 'unselected'} playerId={playerId}
+              onPendingIntentChange={setDeliveryLocked} />
           ) : null}
           {!deliveryOnly && section === 'cases' ? (
             <AdminPremiumCasesPanel key={playerId ?? 'unselected'} playerId={playerId} />

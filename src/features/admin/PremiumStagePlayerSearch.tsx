@@ -34,9 +34,11 @@ export async function searchPremiumStagePlayers(query: string, fetcher: typeof f
 export function PremiumStagePlayerSearch({
   onSelect,
   onEditing,
+  disabled = false,
 }: {
   onSelect: (player: SearchPlayer) => void;
   onEditing: () => void;
+  disabled?: boolean;
 }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchPlayer[]>([]);
@@ -88,6 +90,7 @@ export function PremiumStagePlayerSearch({
         <input
           id="premium-stage-search-name"
           type="search"
+          disabled={disabled}
           inputMode="search"
           value={query}
           maxLength={80}
@@ -116,6 +119,7 @@ export function PremiumStagePlayerSearch({
             <li key={player.playerId}>
               <button
                 type="button"
+                disabled={disabled}
                 onClick={() => {
                   ++requestVersion.current;
                   onSelect(player);

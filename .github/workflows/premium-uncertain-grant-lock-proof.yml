@@ -1,0 +1,65 @@
+name: Premium Uncertain Delivery Intent Lock Proof
+on:
+  pull_request:
+    branches:
+      - integration/hub-exploration-release-20261030
+    paths:
+      - scripts/uat/premiumSyntheticBrowserCdp.mjs
+      - .github/workflows/premium-uncertain-grant-lock-proof.yml
+      - src/features/admin/AdminPremiumDeliveryPanel.tsx
+      - src/features/admin/PremiumStagePlayerSearch.tsx
+      - src/features/admin/AdminPremiumStagingPage.tsx
+      - src/features/admin/premium-staging.css
+permissions:
+  contents: read
+jobs:
+  premium-synthetic-browser:
+    if: github.head_ref == 'fix/premium-uncertain-grant-lock-20261030'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      VITE_PREMIUM_STAGING_UI: "1"
+      VITE_PREMIUM_STAGING_TARGET: preview
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.19.0
+          package-manager-cache: false
+      - run: npm install --global pnpm@11.23.0
+      - run: pnpm install --ignore-scripts --no-frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm exec vite build
+      - name: Run ephemeral Chrome synthetic premium UI proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          mkdir -p /tmp/premium-browser-synthetic
+          pnpm exec vite preview --host 127.0.0.1 --port 4177 > /tmp/premium-vite.log 2>&1 &
+          SERVER_PID=$!
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage \
+            --remote-debugging-address=127.0.0.1 --remote-debugging-port=9227 \
+            --user-data-dir=/tmp/premium-browser-disposable-profile about:blank \
+            > /tmp/premium-chrome.log 2>&1 &
+          CHROME_PID=$!
+          trap 'kill "$CHROME_PID" "$SERVER_PID" 2>/dev/null || true' EXIT
+          for n in $(seq 1 80); do
+            if curl -fsS http://127.0.0.1:4177/admin/premium >/dev/null && \
+               curl -fsS http://127.0.0.1:9227/json/version >/dev/null; then break; fi
+            if [ "$n" -eq 80 ]; then cat /tmp/premium-vite.log /tmp/premium-chrome.log; exit 1; fi
+            sleep 0.25
+          done
+          BASE_URL=http://127.0.0.1:4177 CDP_ENDPOINT=http://127.0.0.1:9227 \
+            OUTPUT_DIR=/tmp/premium-browser-synthetic \
+            timeout 130s node scripts/uat/premiumSyntheticBrowserCdp.mjs
+          test "$(find /tmp/premium-browser-synthetic -name '*.png' | wc -l)" -eq 8
+      - name: Publish synthetic screenshots (not live data)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: premium-synthetic-browser-360-390
+          path: /tmp/premium-browser-synthetic/*.png
+          if-no-files-found: warn
