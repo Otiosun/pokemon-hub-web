@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import rawVercelConfig from '../../vercel.json';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   readPlayerPortalApiBaseUrl,
@@ -6,9 +6,8 @@ import {
   readPremiumStagingApiBaseUrl,
 } from './playerPortalServerRuntime';
 
-const config = JSON.parse(
-  readFileSync(new URL('../../vercel.json', import.meta.url), 'utf8'),
-) as { env?: Record<string, string>; build?: { env?: Record<string, string> } };
+const config: { env?: Record<string, string>; build?: { env?: Record<string, string> } } =
+  rawVercelConfig;
 
 afterEach(() => vi.unstubAllEnvs());
 
