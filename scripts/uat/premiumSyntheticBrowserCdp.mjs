@@ -250,7 +250,7 @@ async function runScenario(client, role, width) {
       'Boolean(document.querySelector(".premium-delivery-feedback[data-kind=success][aria-live=polite]") && Array.from(document.querySelectorAll(".premium-delivery-form button")).some(b=>b.textContent.includes("ENTREGA REGISTRADA")&&b.disabled))',
       role+' accessible success feedback without duplicate submission');
     await until(client,
-      'Boolean(document.querySelector(".premium-delivery-history ul[aria-label=\"Entregas manuais registradas\"] .premium-delivery-history-request") && document.querySelector(".premium-delivery-history .premium-delivery-history-meta")?.textContent?.includes("ADM responsável") && document.querySelector(".premium-delivery-history .premium-delivery-history-reason")?.textContent?.includes("Motivo:"))',
+      'Boolean(document.querySelector(".premium-delivery-history ul[aria-label] .premium-delivery-history-request") && document.querySelector(".premium-delivery-history ul")?.getAttribute("aria-label")==="Entregas manuais registradas" && document.querySelector(".premium-delivery-history .premium-delivery-history-meta")?.textContent?.includes("ADM responsável") && document.querySelector(".premium-delivery-history .premium-delivery-history-reason")?.textContent?.includes("Motivo:"))',
       role+' auditable manual delivery history');
     await until(client,`(() => {
       const form=document.querySelector('.premium-delivery-form');
