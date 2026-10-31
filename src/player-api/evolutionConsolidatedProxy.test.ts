@@ -1,5 +1,5 @@
 import { describe,expect,it } from 'vitest';
-import { resolvePlayerProxyRoute } from '../../api/hub/player/[...path]';
+import playerProxy, { resolvePlayerProxyRoute } from '../../api/hub/player/[...path]';
 
 const base='https://preview.invalid';
 const id='11111111-1111-4111-8111-111111111111';
@@ -26,5 +26,17 @@ describe('Evolution routes reuse existing protected Hub proxy function',()=>{
     expect(route('/api/hub/player/pokemon/evolve','GET')).toBeNull();
     expect(route('/api/hub/player/pokemon/evolve?playerId='+id,'POST')).toBeNull();
     expect(route('/api/hub/player/pokemon/capture','POST')).toBeNull();
+  });
+  it('rejects foreign browser Origin on evolution mutation before any backend access',async()=>{
+    for(const headers of [
+      {origin:'https://attacker.invalid','content-type':'application/json'},
+      {'sec-fetch-site':'cross-site','content-type':'application/json'},
+    ]) {
+      const response=await playerProxy.fetch(new Request(base+'/api/hub/player/pokemon/evolve',{
+        method:'POST',headers,body:'{}',
+      }));
+      expect(response.status).toBe(403);
+      expect(await response.json()).toEqual({error:'CROSS_ORIGIN_PLAYER_MUTATION'});
+    }
   });
 });
