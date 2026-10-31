@@ -12,7 +12,16 @@ function readRuntimeEnv(name: string): string | null {
   return typeof value === 'string' && value.trim() !== '' ? value.trim() : null;
 }
 
+/**
+ * A Preview must never inherit the live player-portal upstream, even if
+ * someone accidentally exposes PLAYER_PORTAL_API_BASE_URL to that branch.
+ * Normal Hub requests and Premium both use the explicitly approved isolated
+ * staging API in Preview, with their respective session scopes unchanged.
+ */
 export function readPlayerPortalApiBaseUrl(): string | null {
+  if (readRuntimeEnv('VERCEL_ENV') === 'preview') {
+    return readPremiumStagingApiBaseUrl();
+  }
   return readRuntimeEnv(PLAYER_PORTAL_API_BASE_URL);
 }
 
@@ -23,7 +32,9 @@ export function readPremiumStagingApiBaseUrl(): string | null {
     enabled: readRuntimeEnv('PREMIUM_STAGING_ENABLED'),
     apiBaseUrl: readRuntimeEnv('PREMIUM_STAGING_API_BASE_URL'),
     approvedOrigin: readRuntimeEnv('PREMIUM_STAGING_APPROVED_ORIGIN'),
-    productionApiBaseUrl: readPlayerPortalApiBaseUrl(),
+    // Read the raw Production setting; the Preview-resolved normal API is
+    // itself staging, and comparing against it would reject a safe origin.
+    productionApiBaseUrl: readRuntimeEnv(PLAYER_PORTAL_API_BASE_URL),
   });
 }
 
