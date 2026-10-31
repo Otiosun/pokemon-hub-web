@@ -17,8 +17,6 @@ const ALLOWED_HUB_API_MODULES = [
   '../../api/hub/player/move-choices/resolve.ts',
   '../../api/hub/player/pokedex.ts',
   '../../api/hub/player/pokemon.ts',
-  '../../api/hub/player/pokemon/evolution-options.ts',
-  '../../api/hub/player/pokemon/evolve.ts',
   '../../api/hub/player/profile-customization.ts',
   '../../api/hub/player/roster.ts',
   '../../api/hub/player/self.ts',
