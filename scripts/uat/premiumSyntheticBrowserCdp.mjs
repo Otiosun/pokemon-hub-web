@@ -114,12 +114,19 @@ async function runScenario(client, role, width) {
   await until(client, 'document.readyState==="complete"', 'document ready');
   const marker=role==='owner' || role==='delegate' ? 'Conceder benefício' : 'ACESSO ISOLADO';
   await until(client, 'document.body?.textContent?.includes('+JSON.stringify(marker)+')',role+' marker');
+  if (role === 'owner' || role === 'delegate') {
+    await until(client,
+      'Array.from(document.querySelectorAll("select option")).some(o=>o.textContent.includes("Sorte em Dobro"))',
+      role+' asynchronously loaded synthetic delivery catalog');
+  }
   const state=await evalIn(client, `(() => ({
     body: document.body.textContent,
     tabs: Array.from(document.querySelectorAll('nav[aria-label="Seções da Central Premium"] button')).map(b=>b.textContent),
     requests: window.__premiumSyntheticCalls,
     width: document.documentElement.scrollWidth
   }))()`);
+  const shot=await client.send('Page.captureScreenshot', {format:'png', captureBeyondViewport:false});
+  await writeFile(output+'/'+role+'-'+width+'.png', Buffer.from(shot.data,'base64'));
   assert(state.width <= width+1,role+' layout horizontal overflow at '+width+'px: '+state.width);
   if (role === 'owner') {
     assert(state.tabs.length===7,'Owner lost Premium tabs');
@@ -133,8 +140,6 @@ async function runScenario(client, role, width) {
     assert(!state.requests.some(r=>r.path.includes('/delivery/catalog')),
       'Unauthorized user loaded private catalog');
   }
-  const shot=await client.send('Page.captureScreenshot', {format:'png', captureBeyondViewport:false});
-  await writeFile(output+'/'+role+'-'+width+'.png', Buffer.from(shot.data,'base64'));
   console.log('PREMIUM_SYNTHETIC_BROWSER '+role+' '+width+'px PASS');
 }
 
