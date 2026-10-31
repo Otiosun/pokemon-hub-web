@@ -28,3 +28,13 @@ Data: 30/10/2026. Estado: **NO-GO**. Não executar concessões reais ou ativaç�
 - Qualquer ausência/mismatch de ambiente, autorização ou origem: **NO-GO** com falha fechada.
 - Com `vercel.json` sem `env` global, Preview que não tenha API configurada por alvo **não deve acessar a API live como fallback**.
 - Nenhuma mudança de configuração Vercel, alias, PM2, banco ou git main foi efetuada nesta alteração.
+
+## Fechamento de segurança adicional — proxy normal do Hub
+
+O teste inicial do PR #130 cobria somente o Preview Premium e o `vercel.json`. A mesma auditoria identificou que `readPlayerPortalApiBaseUrl()` podia devolver `PLAYER_PORTAL_API_BASE_URL` também em Preview se um operador ampliasse acidentalmente o alvo dessa variável.
+
+Na branch Draft, **todos** os endpoints normais de Hub passam a usar, durante `VERCEL_ENV=preview`, somente o origin HTTPS validado pela mesma configuração isolada `PREMIUM_STAGING_ENABLED=1`, `PREMIUM_STAGING_API_BASE_URL` e `PREMIUM_STAGING_APPROVED_ORIGIN`; na ausência desses parâmetros, respondem `503 PLAYER_PORTAL_UNAVAILABLE` sem chamar o jogo. Em `VERCEL_ENV=production`, permanece o endereço `PLAYER_PORTAL_API_BASE_URL` definido somente em Project Settings Production.
+
+O escopo da sessão continua separado: endpoints normais usam o cookie normal emitido pelo backend **staging**, enquanto os endpoints Premium Preview exigem o cookie específico de staging. O uso do mesmo backend isolado não mescla identidades, concessões nem tickets.
+
+Os testes exercitam o handler HTTP real `/api/hub/admin/self`, com `fetch` interceptado e nenhuma rede externa: (a) origin live injetado indevidamente não é acessado e retorna 503; (b) staging HTTPS aprovado é o único destinatário; (c) fluxo Production mantém o endereço cadastrado, mas não é chamado no teste. Falta validar login real e ledger em infraestrutura staging independente. Nenhuma variável foi editada na Vercel.
