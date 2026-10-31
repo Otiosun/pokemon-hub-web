@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   readManualDeliveryCatalog,
   readManualDeliveryHistory,
@@ -26,7 +26,12 @@ export function AdminPremiumDeliveryPanel({
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
   const [needsReconciliation, setNeedsReconciliation] = useState(false);
-  useEffect(() => { onPendingIntentChange?.(needsReconciliation); }, [needsReconciliation, onPendingIntentChange]);
+  // Lock the parent's recipient selector and owner navigation before paint,
+  // including during the FIRST pending HTTP request (not only after a 503).
+  // The server still enforces owner/capability and requestId idempotency.
+  useLayoutEffect(() => {
+    onPendingIntentChange?.(busy || needsReconciliation);
+  }, [busy, needsReconciliation, onPendingIntentChange]);
   const [loading, setLoading] = useState(true);
   const intent = useRef<string | null>(null);
   const selected = products.find((p) => p.sku === sku);
