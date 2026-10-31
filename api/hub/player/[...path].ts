@@ -64,7 +64,11 @@ export default {
       (route.premiumStaging || new URL(request.url).pathname === '/api/hub/player/pokemon/evolve') &&
       !isSafePremiumStagingMutation(request)
     ) {
-      return Promise.resolve(premiumStagingForbidden());
+      if (route.premiumStaging) return Promise.resolve(premiumStagingForbidden());
+      return Promise.resolve(new Response(
+        JSON.stringify({ error: 'CROSS_ORIGIN_PLAYER_MUTATION' }),
+        { status: 403, headers: { 'cache-control': 'no-store', 'content-type': 'application/json' } },
+      ));
     }
 
     return proxyPlayerPortalRequest(request, {
