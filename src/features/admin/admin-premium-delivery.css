@@ -143,3 +143,46 @@
   .premium-delivery-console > header > span { font-size: .6rem; padding: 8px; }
   .premium-delivery-form { grid-template-columns: minmax(0,1fr); }
 }
+
+/* Manual-delivery feedback fidelity from the prior Windows Hub UX.
+ * Preserve the in-flight recipient/navigation guard from PR #131. */
+.premium-delivery-form > .premium-delivery-feedback {
+  grid-column: 1 / -1;
+  margin: 0;
+  scroll-margin-block: 18px;
+  border-radius: 7px;
+  font: 600 .86rem/1.55 'IBM Plex Sans', system-ui, sans-serif;
+}
+.premium-delivery-feedback[data-kind=success] {
+  border-left-color: #83d3ad;
+  background: rgba(72,153,115,.13);
+  color: #c9f5dc!important;
+}
+.premium-delivery-feedback[data-kind=warning] {
+  border-left-color: #d8b67c;
+  background: rgba(181,129,50,.12);
+  color: #f5e1bd!important;
+}
+.premium-delivery-feedback[data-kind=error] {
+  border-left-color: #e09a91;
+  background: rgba(191,75,79,.12);
+  color: #ffd5d0!important;
+}
+.premium-delivery-reason-guidance { display: block; max-width: 72ch; }
+.premium-delivery-history li .premium-delivery-history-benefit {
+  color: #eaf6f1;
+  font-size: .89rem;
+}
+.premium-delivery-history li .premium-delivery-history-reason {
+  overflow-wrap: anywhere;
+  line-height: 1.55;
+}
+.premium-delivery-history li .premium-delivery-history-meta {
+  color: #9baead;
+  line-height: 1.45;
+}
+.premium-delivery-history li .premium-delivery-history-request {
+  color: #baa7d7;
+  font-size: .72rem;
+  overflow-wrap: anywhere;
+}
