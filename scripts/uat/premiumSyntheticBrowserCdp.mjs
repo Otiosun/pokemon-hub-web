@@ -115,6 +115,22 @@ async function runScenario(client, role, width) {
   const marker=role==='owner' || role==='delegate' ? 'Conceder benefício' : 'ACESSO ISOLADO';
   await until(client, 'document.body?.textContent?.includes('+JSON.stringify(marker)+')',role+' marker');
   if (role === 'owner' || role === 'delegate') {
+    const opened = await evalIn(client, `(() => {
+      const box=document.querySelector('details.premium-id-fallback');
+      const input=box?.querySelector('input');
+      if (!box || !input) return false;
+      box.open=true; input.focus(); return true;
+    })()`);
+    assert(opened,role+' did not offer the documented manual Player ID fallback');
+    await client.send('Input.insertText',{text:playerId});
+    await until(client,
+      'Boolean(document.querySelector("details.premium-id-fallback form button[type=submit]:not([disabled])"))',
+      role+' valid synthetic player ID');
+    await evalIn(client,
+      'document.querySelector("details.premium-id-fallback form button[type=submit]").click()');
+    await until(client,
+      'document.body?.textContent?.includes("DESTINATÁRIO SELECIONADO")',
+      role+' selected synthetic recipient');
     await until(client,
       'Array.from(document.querySelectorAll("select option")).some(o=>o.textContent.includes("Sorte em Dobro"))',
       role+' asynchronously loaded synthetic delivery catalog');
