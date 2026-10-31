@@ -110,7 +110,7 @@ async function runScenario(client, role, width) {
   await client.send('Emulation.setDeviceMetricsOverride', {
     width, height:800, deviceScaleFactor:1, mobile:true,
   });
-  await client.send('Page.navigate', {url:base+'/admin/premium#role='+role});
+  await client.send('Page.navigate', {url:base+'/admin/premium?synthetic='+role+'-'+width+'#role='+role});
   await until(client, 'document.readyState==="complete"', 'document ready');
   const marker=role==='owner' || role==='delegate' ? 'Conceder benefício' : 'ACESSO ISOLADO';
   await until(client, 'document.body?.textContent?.includes('+JSON.stringify(marker)+')',role+' marker');
