@@ -62,6 +62,7 @@ function assert(v, why) { if(!v) throw Error(why); }
 const injected = `(() => {
   const nativeFetch = window.fetch.bind(window);
   window.__premiumSyntheticCalls = [];
+  window.__premiumSyntheticGrantAttempts = [];
   const playerId = '${playerId}';
   const adminId = '${adminId}';
   const json = (body, status=200) => Promise.resolve(new Response(JSON.stringify(body), {
@@ -99,6 +100,11 @@ const injected = `(() => {
       const body=JSON.parse(init.body||'{}');
       if (body.playerId!==playerId || !body.requestId || !body.reason || body.reason.length<8)
         return json({error:'INVALID'},400);
+      window.__premiumSyntheticGrantAttempts.push(body);
+      // First POST resembles a lost gateway response after an uncertain
+      // upstream result. The next POST must reuse the same requestId + payload.
+      if (window.__premiumSyntheticGrantAttempts.length === 1)
+        return json({error:'UPSTREAM_UNCERTAIN'},503);
       return json({applied:true,replayed:false,requestId:body.requestId,
         entitlement:{playerId:body.playerId}});
     }
@@ -155,6 +161,48 @@ async function runScenario(client, role, width) {
     assert(state.tabs.length===0,'Unauthorized user sees Premium tabs');
     assert(!state.requests.some(r=>r.path.includes('/delivery/catalog')),
       'Unauthorized user loaded private catalog');
+  }
+  if (role==='owner' || role==='delegate') {
+    const focusReason=await evalIn(client, `(() => {
+      const el=document.querySelector('.premium-delivery-reason textarea');
+      if (!el) return false;
+      el.focus(); return true;
+    })()`);
+    assert(focusReason,role+' missing grant justification');
+    await client.send('Input.insertText',{
+      text:'Pedido fictício de homologação, nenhum pagamento ou benefício real.',
+    });
+    await until(client,
+      'document.querySelector(".premium-delivery-reason textarea")?.value.length >= 8',
+      role+' filled justification');
+    const agreed=await evalIn(client, `(() => {
+      const el=document.querySelector('.premium-delivery-confirm input[type="checkbox"]');
+      if(!el) return false;
+      el.click(); return true;
+    })()`);
+    assert(agreed,role+' confirmation not available');
+    await until(client,
+      'Boolean(Array.from(document.querySelectorAll(".premium-delivery-form button")).find(b=>b.textContent.includes("CONFIRMAR ENTREGA")&&!b.disabled))',
+      role+' authorized confirmation enabled');
+    await evalIn(client, `Array.from(document.querySelectorAll(".premium-delivery-form button")).find(b=>b.textContent.includes("CONFIRMAR ENTREGA")).click()`);
+    await until(client,
+      'document.body?.textContent?.includes("A API não confirmou o resultado")',
+      role+' uncertain upstream response');
+    await until(client,
+      'Boolean(Array.from(document.querySelectorAll(".premium-delivery-form button")).find(b=>b.textContent.includes("REPETIR COM A MESMA CHAVE")&&!b.disabled))',
+      role+' stable idempotent retry');
+    await evalIn(client, `Array.from(document.querySelectorAll(".premium-delivery-form button")).find(b=>b.textContent.includes("REPETIR COM A MESMA CHAVE")).click()`);
+    await until(client,
+      'document.body?.textContent?.includes("Entrega aplicada ao jogador")',
+      role+' acknowledged retry');
+    const attempts=await evalIn(client,'window.__premiumSyntheticGrantAttempts');
+    assert(attempts.length===2,role+' created incorrect number of POST requests');
+    assert(JSON.stringify(attempts[0])===JSON.stringify(attempts[1]),
+      role+' changed grant payload/requestId after HTTP 503');
+    assert(attempts[0].playerId===playerId &&
+      attempts[0].sku==='2XP' && attempts[0].quantity===1,
+      role+' granted something other than the authorized synthetic 2XP');
+    console.log('PREMIUM_SYNTHETIC_RETRY '+role+' '+width+'px SAME_REQUEST_ID_PASS');
   }
   console.log('PREMIUM_SYNTHETIC_BROWSER '+role+' '+width+'px PASS');
 }
