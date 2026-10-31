@@ -103,8 +103,17 @@ const injected = `(() => {
       window.__premiumSyntheticGrantAttempts.push(body);
       // First POST resembles a lost gateway response after an uncertain
       // upstream result. The next POST must reuse the same requestId + payload.
-      if (window.__premiumSyntheticGrantAttempts.length === 1)
-        return json({error:'UPSTREAM_UNCERTAIN'},503);
+      if (window.__premiumSyntheticGrantAttempts.length === 1) {
+        // Hold the first HTTP response to prove the parent locks BEFORE 503.
+        // No live endpoint or real entitlement is ever contacted.
+        window.__premiumSyntheticPendingFirstGrant = true;
+        return new Promise((resolve) => {
+          window.__premiumSyntheticReleaseFirstGrant = () => {
+            window.__premiumSyntheticPendingFirstGrant = false;
+            resolve(json({error:'UPSTREAM_UNCERTAIN'},503));
+          };
+        });
+      }
       return json({applied:true,replayed:false,requestId:body.requestId,
         entitlement:{playerId:body.playerId}});
     }
@@ -185,6 +194,20 @@ async function runScenario(client, role, width) {
       'Boolean(Array.from(document.querySelectorAll(".premium-delivery-form button")).find(b=>b.textContent.includes("CONFIRMAR ENTREGA")&&!b.disabled))',
       role+' authorized confirmation enabled');
     await evalIn(client, `Array.from(document.querySelectorAll(".premium-delivery-form button")).find(b=>b.textContent.includes("CONFIRMAR ENTREGA")).click()`);
+    // The first request is deliberately unresolved; recipient/navigation must
+    // be disabled BEFORE an uncertain 503 is received (owner and delegate).
+    await until(client, `(() => {
+      const tabs=Array.from(document.querySelectorAll('nav[aria-label="Seções da Central Premium"] button'));
+      const form=document.querySelector('.premium-delivery-form');
+      return window.__premiumSyntheticPendingFirstGrant === true &&
+        document.querySelector('.premium-player-change')?.disabled === true &&
+        document.querySelector('.premium-stage-search input')?.disabled === true &&
+        document.querySelector('.premium-id-fallback input')?.disabled === true &&
+        form?.querySelector('select')?.disabled === true &&
+        form?.querySelector('input[type="number"]')?.disabled === true &&
+        tabs.filter(b=>!b.textContent.includes('ENTREGAS')).every(b=>b.disabled);
+    })()`, role+' in-flight navigation lock before response');
+    await evalIn(client, 'window.__premiumSyntheticReleaseFirstGrant?.()');
     await until(client,
       'document.body?.textContent?.includes("A API não confirmou o resultado")',
       role+' uncertain upstream response');
