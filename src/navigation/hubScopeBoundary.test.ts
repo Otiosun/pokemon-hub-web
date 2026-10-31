@@ -17,6 +17,8 @@ const ALLOWED_HUB_API_MODULES = [
   '../../api/hub/player/move-choices/resolve.ts',
   '../../api/hub/player/pokedex.ts',
   '../../api/hub/player/pokemon.ts',
+  '../../api/hub/player/pokemon/evolution-options.ts',
+  '../../api/hub/player/pokemon/evolve.ts',
   '../../api/hub/player/profile-customization.ts',
   '../../api/hub/player/roster.ts',
   '../../api/hub/player/self.ts',
@@ -36,7 +38,7 @@ const FORBIDDEN_GAMEPLAY_PATH_FRAGMENTS = [
 ] as const;
 
 describe('Hub scope boundary', () => {
-  it('exposes only companion/admin reads, auth, profile customization, roster organization and move learning through the same-origin Hub API', () => {
+  it('exposes only authorized companion/admin APIs, evolution, profile customization, roster and move learning through the same-origin Hub API', () => {
     expect(Object.keys(hubApiModules).sort()).toEqual([...ALLOWED_HUB_API_MODULES].sort());
   });
 
