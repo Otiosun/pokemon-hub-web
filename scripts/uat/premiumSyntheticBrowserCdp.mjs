@@ -203,6 +203,36 @@ async function runScenario(client, role, width) {
       attempts[0].sku==='2XP' && attempts[0].quantity===1,
       role+' granted something other than the authorized synthetic 2XP');
     console.log('PREMIUM_SYNTHETIC_RETRY '+role+' '+width+'px SAME_REQUEST_ID_PASS');
+    if ((role==='owner' && width===360) || (role==='delegate' && width===390)) {
+      const changed=await evalIn(client,`(() => {
+        const el=document.querySelector('.premium-delivery-form select');
+        if (!el) return false;
+        const setter=Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'value')?.set;
+        if (!setter) return false;
+        setter.call(el,'LUCK');
+        el.dispatchEvent(new Event('change',{bubbles:true}));
+        return true;
+      })()`);
+      assert(changed,role+' cannot select synthetic LUCK gamepass');
+      await until(client,
+        'document.querySelector(".premium-delivery-preview")?.textContent?.includes("permanente")',
+        role+' permanent LUCK preview');
+      await evalIn(client, `document.querySelector('.premium-delivery-confirm input[type="checkbox"]').click()`);
+      await until(client,
+        'Boolean(Array.from(document.querySelectorAll(".premium-delivery-form button")).find(b=>b.textContent.includes("CONFIRMAR ENTREGA")&&!b.disabled))',
+        role+' LUCK confirmation enabled');
+      await evalIn(client, `Array.from(document.querySelectorAll(".premium-delivery-form button")).find(b=>b.textContent.includes("CONFIRMAR ENTREGA")).click()`);
+      await until(client,
+        'document.body?.textContent?.includes("Entrega aplicada ao jogador")',
+        role+' synthetic LUCK delivery acknowledged');
+      const all=await evalIn(client,'window.__premiumSyntheticGrantAttempts');
+      assert(all.length===3 && all[2].sku==='LUCK' && all[2].quantity===1,
+        role+' LUCK delivery was not the expected synthetic product');
+      assert(all[2].requestId !== all[0].requestId &&
+        all[2].playerId===all[0].playerId,
+        role+' reused a 2XP idempotency key for a different product');
+      console.log('PREMIUM_SYNTHETIC_LUCK '+role+' '+width+'px NEW_REQUEST_ID_PASS');
+    }
   }
   console.log('PREMIUM_SYNTHETIC_BROWSER '+role+' '+width+'px PASS');
 }
