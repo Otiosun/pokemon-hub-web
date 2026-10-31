@@ -1,0 +1,37 @@
+name: Release1 Vercel Preview/Live API Isolation Proof
+on:
+  pull_request:
+    branches:
+      - fix/premium-uncertain-grant-lock-20261030
+    paths:
+      - "vercel.json"
+      - "src/player-api/vercelPreviewIsolation.test.ts"
+      - "src/player-api/playerPortalServerRuntime.ts"
+      - "src/player-api/premiumStagingBoundary.ts"
+      - "docs/release1-preview-premium-isolation-20261030.md"
+      - ".github/workflows/release1-vercel-preview-isolation-proof.yml"
+permissions:
+  contents: read
+jobs:
+  isolated-preview:
+    if: github.head_ref == 'fix/release1-preview-upstream-isolation-20261030'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.19.0
+          package-manager-cache: false
+      - run: npm install --global pnpm@11.23.0
+      - run: pnpm install --no-frozen-lockfile --ignore-scripts
+      - name: Enforce serverless Preview not inheriting live upstream
+        run: pnpm exec vitest run src/player-api/vercelPreviewIsolation.test.ts src/player-api/premiumStagingBoundary.test.ts src/player-api/premiumLocalBoundary.test.ts
+      - run: pnpm typecheck
+      - name: Enforce config JSON parse and no live global fallback
+        run: |
+          node --input-type=module -e "import fs from 'node:fs';const c=JSON.parse(fs.readFileSync('vercel.json','utf8'));if(c.env?.PLAYER_PORTAL_API_BASE_URL||JSON.stringify(c).includes('pokemon-api.otiosunbots.xyz'))process.exit(1)"
+      - name: Evidence is not a production authorization
+        run: echo "PREVIEW_BACKEND_LIVE_FALLBACK_REMOVED_STAGING_REAL_UAT_STILL_NO_GO"
