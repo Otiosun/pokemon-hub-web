@@ -67,7 +67,7 @@ describe('Vercel Preview must not inherit the live Pokémon API', () => {
     vi.stubEnv('PREMIUM_STAGING_ENABLED', '1');
     vi.stubEnv('PREMIUM_STAGING_API_BASE_URL', 'https://isolated-staging.example.org');
     vi.stubEnv('PREMIUM_STAGING_APPROVED_ORIGIN', 'https://isolated-staging.example.org');
-    const fetcher = vi.fn(async () => new Response('{"admin":null}', {
+    const fetcher = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => new Response('{"admin":null}', {
       status: 200,
       headers: { 'content-type': 'application/json' },
     }));
