@@ -63,6 +63,7 @@ const injected = `(() => {
   const nativeFetch = window.fetch.bind(window);
   window.__premiumSyntheticCalls = [];
   window.__premiumSyntheticGrantAttempts = [];
+  window.__premiumSyntheticAppliedEntries = [];
   const playerId = '${playerId}';
   const adminId = '${adminId}';
   const json = (body, status=200) => Promise.resolve(new Response(JSON.stringify(body), {
@@ -95,7 +96,7 @@ const injected = `(() => {
     if (url.pathname === '/api/hub/admin/premium/players')
       return json({players:[{playerId,trainerName:'Treinador Sintético',trainerLevel:8,status:'ACTIVE'}]});
     if (url.pathname === '/api/hub/admin/premium' && url.searchParams.get('resource')==='deliveries')
-      return json({deliveries:[]});
+      return json({deliveries:window.__premiumSyntheticAppliedEntries});
     if (url.pathname === '/api/hub/admin/premium/delivery' && init.method==='POST') {
       const body=JSON.parse(init.body||'{}');
       if (body.playerId!==playerId || !body.requestId || !body.reason || body.reason.length<8)
@@ -114,6 +115,13 @@ const injected = `(() => {
           };
         });
       }
+      window.__premiumSyntheticAppliedEntries.push({
+        id:crypto.randomUUID(),requestId:body.requestId,
+        entitlementKey:body.sku==='LUCK'?'premium.luck':'premium.xp2x',
+        durationSeconds:body.sku==='LUCK'?null:604800,
+        actorPrincipalId:adminId,sku:body.sku,quantity:body.quantity,
+        reason:body.reason,createdAt:new Date().toISOString(),
+      });
       return json({applied:true,replayed:false,requestId:body.requestId,
         entitlement:{playerId:body.playerId}});
     }
@@ -178,6 +186,10 @@ async function runScenario(client, role, width) {
       el.focus(); return true;
     })()`);
     assert(focusReason,role+' missing grant justification');
+    const guidance = await evalIn(client,
+      'document.querySelector(".premium-delivery-reason-guidance")?.textContent');
+    assert(guidance?.includes('Evite dados pessoais'),
+      role+' missing privacy-friendly justification guidance');
     await client.send('Input.insertText',{
       text:'Pedido fictício de homologação, nenhum pagamento ou benefício real.',
     });
@@ -211,6 +223,9 @@ async function runScenario(client, role, width) {
     await until(client,
       'document.body?.textContent?.includes("A API não confirmou o resultado")',
       role+' uncertain upstream response');
+    await until(client,
+      'document.querySelector(".premium-delivery-feedback[data-kind=warning][role=status]")?.textContent?.includes("A API não confirmou")',
+      role+' accessible uncertainty warning');
     await until(client, `(() => {
       const form=document.querySelector('.premium-delivery-form');
       const sectionTabs=Array.from(document.querySelectorAll('nav[aria-label="Seções da Central Premium"] button'));
@@ -231,6 +246,12 @@ async function runScenario(client, role, width) {
     await until(client,
       'document.body?.textContent?.includes("Entrega aplicada ao jogador")',
       role+' acknowledged retry');
+    await until(client,
+      'Boolean(document.querySelector(".premium-delivery-feedback[data-kind=success][aria-live=polite]") && Array.from(document.querySelectorAll(".premium-delivery-form button")).some(b=>b.textContent.includes("ENTREGA REGISTRADA")&&b.disabled))',
+      role+' accessible success feedback without duplicate submission');
+    await until(client,
+      'Boolean(document.querySelector(".premium-delivery-history ul[aria-label=\"Entregas manuais registradas\"] .premium-delivery-history-request") && document.querySelector(".premium-delivery-history .premium-delivery-history-meta")?.textContent?.includes("ADM responsável") && document.querySelector(".premium-delivery-history .premium-delivery-history-reason")?.textContent?.includes("Motivo:"))',
+      role+' auditable manual delivery history');
     await until(client,`(() => {
       const form=document.querySelector('.premium-delivery-form');
       return Boolean(
