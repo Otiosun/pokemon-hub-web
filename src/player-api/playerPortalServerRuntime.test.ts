@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { readPlayerPortalApiBaseUrl } from './playerPortalServerRuntime';
 
 function runtimeEnvironment(): Record<string, unknown> {
@@ -16,9 +16,22 @@ function runtimeEnvironment(): Record<string, unknown> {
 }
 
 const originalPlayerPortalBaseUrl = runtimeEnvironment().PLAYER_PORTAL_API_BASE_URL;
+const originalVercelEnv = runtimeEnvironment().VERCEL_ENV;
+
+// These cases exercise the configured production endpoint. In Vercel Preview,
+// the runtime intentionally refuses to inherit production; that fail-closed
+// behavior is covered separately by the Premium staging boundary tests.
+beforeEach(() => {
+  Reflect.set(runtimeEnvironment(), 'VERCEL_ENV', 'production');
+});
 
 afterEach(() => {
   const environment = runtimeEnvironment();
+  if (originalVercelEnv === undefined) {
+    Reflect.deleteProperty(environment, 'VERCEL_ENV');
+  } else {
+    Reflect.set(environment, 'VERCEL_ENV', originalVercelEnv);
+  }
   if (originalPlayerPortalBaseUrl === undefined) {
     Reflect.deleteProperty(environment, 'PLAYER_PORTAL_API_BASE_URL');
   } else {

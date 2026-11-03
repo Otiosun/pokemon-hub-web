@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   readManualDeliveryCatalog,
   readManualDeliveryHistory,
@@ -24,6 +24,8 @@ export function AdminPremiumDeliveryPanel({
   const [reason, setReason] = useState('');
   const [confirmed, setConfirmed] = useState(false);
   const [status, setStatus] = useState('');
+  const [noticeKind, setNoticeKind] = useState<'success' | 'warning' | 'error'>('warning');
+  const noticeRef = useRef<HTMLParagraphElement>(null);
   const [busy, setBusy] = useState(false);
   const [needsReconciliation, setNeedsReconciliation] = useState(false);
   // Lock the parent's recipient selector and owner navigation before paint,
@@ -45,6 +47,16 @@ export function AdminPremiumDeliveryPanel({
     : !quantityValid ? 'Confira a quantidade permitida para este benefício.'
       : !confirmed ? 'Marque a confirmação para habilitar a entrega.' : null;
 
+  const updateNotice = useCallback((kind: 'success' | 'warning' | 'error', message: string) => {
+    setNoticeKind(kind);
+    setStatus(message);
+  }, []);
+
+  // The operator must find the outcome immediately after a manual grant.
+  useEffect(() => {
+    if (status) noticeRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [status]);
+
   useEffect(() => {
     let active = true;
     void readManualDeliveryCatalog()
@@ -54,10 +66,10 @@ export function AdminPremiumDeliveryPanel({
           setSku(data[0]?.sku ?? '');
         }
       })
-      .catch(() => { if (active) setStatus('Catálogo indisponível. Nenhuma entrega foi autorizada.'); })
+      .catch(() => { if (active) updateNotice('error', 'Catálogo indisponível. Nenhuma entrega foi autorizada.'); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, []);
+  }, [updateNotice]);
 
   useEffect(() => {
     let active = true;
@@ -77,6 +89,7 @@ export function AdminPremiumDeliveryPanel({
     intent.current = null;
     setNeedsReconciliation(false);
     setConfirmed(false);
+    setNoticeKind('warning');
     setStatus('');
   };
   // The history is authoritative when the HTTP response is lost after a grant.
@@ -93,14 +106,14 @@ export function AdminPremiumDeliveryPanel({
       if (updatedHistory.some((entry) => entry.requestId === requestId)) {
         setNeedsReconciliation(false);
         setConfirmed(false);
-        setStatus('Pedido localizado no histórico. Entrega confirmada; não gere outra concessão.');
+        updateNotice('success', 'Pedido localizado no histórico. Entrega confirmada; não gere outra concessão.');
       } else {
         setNeedsReconciliation(true);
-        setStatus('Este pedido ainda não aparece no histórico. O resultado continua incerto; se repetir, preserve os dados e a mesma chave do pedido.');
+        updateNotice('warning', 'Este pedido ainda não aparece no histórico. O resultado continua incerto; se repetir, preserve os dados e a mesma chave do pedido.');
       }
     } catch {
       setHistoryState('error');
-      setStatus('Não foi possível consultar o histórico. Não crie outro pedido; repita somente com os mesmos dados e a mesma chave.');
+      updateNotice('error', 'Não foi possível consultar o histórico. Não crie outro pedido; repita somente com os mesmos dados e a mesma chave.');
     } finally {
       setBusy(false);
     }
@@ -109,6 +122,7 @@ export function AdminPremiumDeliveryPanel({
   const deliver = async () => {
     if (!playerId || !selected || !valid || !confirmed || busy) return;
     setBusy(true);
+    setNoticeKind('warning');
     setStatus('');
     try {
       intent.current ??= crypto.randomUUID();
@@ -122,7 +136,7 @@ export function AdminPremiumDeliveryPanel({
       if (result.status === 'applied') {
         setNeedsReconciliation(false);
         setConfirmed(false);
-        setStatus(result.replayed
+        updateNotice('success', result.replayed
           ? 'Entrega já registrada anteriormente. Nenhum benefício duplicado.'
           : 'Entrega aplicada ao jogador e registrada no histórico.');
         try {
@@ -137,9 +151,9 @@ export function AdminPremiumDeliveryPanel({
         // explicit input change, avoiding accidental re-issuance on another click.
       } else if (result.status === 'uncertain') {
         setNeedsReconciliation(true);
-        setStatus('A API não confirmou o resultado (HTTP 502/503). O servidor pode ter concedido o benefício: consulte o histórico ou repita com a mesma chave.');
+        updateNotice('warning', 'A API não confirmou o resultado (HTTP 502/503). O servidor pode ter concedido o benefício: consulte o histórico ou repita com a mesma chave.');
       } else {
-        setStatus({
+        updateNotice(result.status === 'conflict' ? 'warning' : 'error', {
           unavailable: 'A API de entregas não está disponível nesta versão do servidor. Nenhuma entrega foi confirmada.',
           forbidden: 'Você não tem a permissão premium.delivery.grant. Solicite delegação ao proprietário.',
           unauthenticated: 'Sua sessão do Hub expirou. Entre novamente para continuar.',
@@ -150,7 +164,7 @@ export function AdminPremiumDeliveryPanel({
       }
     } catch {
       setNeedsReconciliation(true);
-      setStatus('Resultado incerto. O servidor pode ter aplicado a entrega: consulte o histórico antes de tentar novamente. A chave do pedido foi preservada.');
+      updateNotice('warning', 'Resultado incerto. O servidor pode ter aplicado a entrega: consulte o histórico antes de tentar novamente. A chave do pedido foi preservada.');
     } finally {
       setBusy(false);
     }
@@ -200,6 +214,7 @@ export function AdminPremiumDeliveryPanel({
                 ? `Mínimo de 8 caracteres · ${reasonLength}/8`
                 : `${reasonLength}/400 caracteres · justificativa preenchida`}
             </small>
+            <small className="premium-delivery-reason-guidance">Descreva a autorização verificada (por exemplo, referência do pedido e conferência externa). Evite dados pessoais ou textos genéricos.</small>
           </label>
           <label className="premium-delivery-confirm">
             <input type="checkbox" checked={confirmed} disabled={busy}
@@ -208,12 +223,15 @@ export function AdminPremiumDeliveryPanel({
               <small>Verifiquei o benefício, a quantidade e o comprovante antes de autorizar.</small>
             </span>
           </label>
-          {missing && !busy ? <p className="premium-delivery-requirement" role="status">{missing}</p> : null}
+          {missing && !busy && !(status && noticeKind === 'success') ? <p className="premium-delivery-requirement" role="status">{missing}</p> : null}
+          {status ? (
+            <p ref={noticeRef} role="status" aria-live="polite" data-kind={noticeKind}
+              className="premium-delivery-notice premium-delivery-feedback">{status}</p>
+          ) : null}
           <button type="button" disabled={busy || !valid || !confirmed}
             onClick={() => void deliver()}>
-            {busy ? 'REGISTRANDO ENTREGA…' : needsReconciliation ? 'REPETIR COM A MESMA CHAVE' : 'CONFIRMAR ENTREGA'}
+            {busy ? 'REGISTRANDO ENTREGA…' : status && noticeKind === 'success' ? 'ENTREGA REGISTRADA' : needsReconciliation ? 'REPETIR COM A MESMA CHAVE' : 'CONFIRMAR ENTREGA'}
           </button>
-          {status ? <p role="status" className="premium-delivery-notice">{status}</p> : null}
           {needsReconciliation ? (
             <>
               <p className="premium-delivery-notice" role="status">
@@ -236,11 +254,12 @@ export function AdminPremiumDeliveryPanel({
                 Não foi possível carregar o histórico. Isso não significa que não existam entregas.
               </p>
               : history.length === 0 ? <p>Nenhuma entrega manual registrada para este jogador.</p>
-                : <ul>{history.map((entry) => (
+                : <ul aria-label="Entregas manuais registradas">{history.map((entry) => (
               <li key={entry.id}>
-                <strong>{entry.quantity}× {entry.sku}</strong>
-                <span>{entry.reason}</span>
-                <small>Pedido {entry.requestId} · {new Date(entry.createdAt).toLocaleString('pt-BR')} · ADM {entry.actorPrincipalId}</small>
+                <strong className="premium-delivery-history-benefit">{entry.quantity}× {entry.sku}</strong>
+                <span className="premium-delivery-history-reason">Motivo: {entry.reason}</span>
+                <small className="premium-delivery-history-meta">Registrado em {new Date(entry.createdAt).toLocaleString('pt-BR')} · ADM responsável: {entry.actorPrincipalId}</small>
+                <code className="premium-delivery-history-request">Pedido: {entry.requestId}</code>
               </li>
             ))}</ul>}
       </div>
