@@ -130,6 +130,7 @@ export function OwnedPokemonDetailPage({
   const [pendingMoveDecision, setPendingMoveDecision] = useState<{
     choiceId: string;
     replaceSlotNo: number | null;
+    expectedPokemonRevision: string;
   } | null>(null);
   const collection = useOwnedPokemonCollection();
   const moveChoices = usePlayerPortalMoveChoices();
@@ -270,8 +271,8 @@ export function OwnedPokemonDetailPage({
   const moveLearningBlocked =
     moveChoices.state.status === 'authenticated' && moveChoices.state.blockedByBattle;
 
-  const resolvePendingMove = async (choiceId: string, replaceSlotNo: number | null) => {
-    const result = await moveChoices.resolve(choiceId, replaceSlotNo);
+  const resolvePendingMove = async (choiceId: string, replaceSlotNo: number | null, expectedPokemonRevision: string) => {
+    const result = await moveChoices.resolve({ choiceId, replaceSlotNo, expectedPokemonRevision });
     if (result.status === 'authenticated' || result.status === 'stale') {
       setPendingMoveDecision(null);
       await collection.refresh();
@@ -543,6 +544,9 @@ export function OwnedPokemonDetailPage({
                 )}
               </section>
 
+              {pendingMoveChoices.length === 0 && moveChoices.message ? (
+                <p role="status">{moveChoices.message}</p>
+              ) : null}
               {pendingMoveChoices.length > 0 ? (
                 <section className="owned-detail-move-learning" aria-label="Aprendizado pendente">
                   <header>
@@ -553,7 +557,8 @@ export function OwnedPokemonDetailPage({
                   {pendingMoveChoices.map((choice) => {
                     const saving = moveChoices.savingChoiceId === choice.choiceId;
                     const decision =
-                      pendingMoveDecision?.choiceId === choice.choiceId
+                      pendingMoveDecision?.choiceId === choice.choiceId &&
+                      pendingMoveDecision.expectedPokemonRevision === choice.revision
                         ? pendingMoveDecision
                         : null;
                     const replacedMove =
@@ -583,13 +588,14 @@ export function OwnedPokemonDetailPage({
                               <button
                                 key={move.slotNo}
                                 type="button"
-                                disabled={moveLearningBlocked || saving}
+                                disabled={moveLearningBlocked || moveChoices.savingChoiceId !== null || !choice.revision}
                                 aria-pressed={selected}
                                 className={selected ? 'is-selected' : undefined}
                                 onClick={() =>
                                   setPendingMoveDecision({
                                     choiceId: choice.choiceId,
                                     replaceSlotNo: move.slotNo,
+                                    expectedPokemonRevision: choice.revision ?? '',
                                   })
                                 }
                               >
@@ -609,12 +615,13 @@ export function OwnedPokemonDetailPage({
                           <button
                             type="button"
                             className={`is-skip${decision?.replaceSlotNo === null ? ' is-selected' : ''}`}
-                            disabled={moveLearningBlocked || saving}
+                            disabled={moveLearningBlocked || moveChoices.savingChoiceId !== null || !choice.revision}
                             aria-pressed={decision?.replaceSlotNo === null}
                             onClick={() =>
                               setPendingMoveDecision({
                                 choiceId: choice.choiceId,
                                 replaceSlotNo: null,
+                                expectedPokemonRevision: choice.revision ?? '',
                               })
                             }
                           >
@@ -648,11 +655,12 @@ export function OwnedPokemonDetailPage({
                               <button
                                 type="button"
                                 className="is-confirm"
-                                disabled={moveLearningBlocked || saving}
+                                disabled={moveLearningBlocked || moveChoices.savingChoiceId !== null || !choice.revision}
                                 onClick={() =>
                                   void resolvePendingMove(
                                     choice.choiceId,
                                     decision.replaceSlotNo,
+                                    decision.expectedPokemonRevision,
                                   )
                                 }
                               >

@@ -11,6 +11,7 @@ const choice = {
   learnLevel: 16,
   moveId: '33333333-3333-4333-8333-333333333333',
   moveDisplayName: 'Dragon Rage',
+  revision: '9007199254740993',
   currentMoves: [
     {
       slotNo: 1,
@@ -65,7 +66,7 @@ describe('player portal move choices', () => {
 
     await expect(
       resolvePlayerPortalMoveChoice(
-        { choiceId: choice.choiceId, replaceSlotNo: 1 },
+        { choiceId: choice.choiceId, replaceSlotNo: 1, expectedPokemonRevision: choice.revision },
         fetcher,
       ),
     ).resolves.toEqual({ status: 'authenticated', ...responseBody });
@@ -78,7 +79,7 @@ describe('player portal move choices', () => {
 
     await expect(
       resolvePlayerPortalMoveChoice(
-        { choiceId: choice.choiceId, replaceSlotNo: 1 },
+        { choiceId: choice.choiceId, replaceSlotNo: 1, expectedPokemonRevision: choice.revision },
         fetcher,
       ),
     ).resolves.toEqual({ status: 'blocked' });
@@ -89,7 +90,7 @@ describe('player portal move choices', () => {
 
     await expect(
       resolvePlayerPortalMoveChoice(
-        { choiceId: choice.choiceId, replaceSlotNo: null },
+        { choiceId: choice.choiceId, replaceSlotNo: null, expectedPokemonRevision: choice.revision },
         fetcher,
       ),
     ).resolves.toEqual({ status: 'stale' });
